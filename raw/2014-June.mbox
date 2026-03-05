@@ -1,0 +1,1469 @@
+From lindsey.messinger at huskers.unl.edu  Tue Jun  3 23:03:46 2014
+From: lindsey.messinger at huskers.unl.edu (lnmessinger)
+Date: Tue, 3 Jun 2014 14:03:46 -0700 (PDT)
+Subject: [R-sig-eco] problem with kernel UD estimation using adehabitatHR
+Message-ID: <1401829426442-7578930.post@n2.nabble.com>
+
+I have data containing locations of 100+ pheasants during 3 seasons. I am
+looking to estimate kernel home ranges for each of the seasons for each
+individual. I run the kernelUD() function with no errors or warnings, but am
+receiving an error message when I attempt to use the getverticeshr() and
+kernel.area() functions to extract 95% polygons and area estimates from the
+kernel UD's.
+
+Here is the structure of the input data set:
+
+Formal class 'SpatialPointsDataFrame' [package "sp"] with 5 slots
+  ..@ data       :'data.frame':	2376 obs. of  1 variable:
+  .. ..$ ID: Factor w/ 122 levels "150.002_2013_KOR",..: 1 1 1 1 1 1 2 2 2 2
+...
+  ..@ coords.nrs : num(0) 
+  ..@ coords     : num [1:2376, 1:2] 347887 347862 347948 347964 348200 ...
+  .. ..- attr(*, "dimnames")=List of 2
+  .. .. ..$ : NULL
+  .. .. ..$ : chr [1:2] "X_Estimate" "Y_Estimate"
+  ..@ bbox       : num [1:2, 1:2] 315869 4442294 349590 4472129
+  .. ..- attr(*, "dimnames")=List of 2
+  .. .. ..$ : chr [1:2] "X_Estimate" "Y_Estimate"
+  .. .. ..$ : chr [1:2] "min" "max"
+  ..@ proj4string:Formal class 'CRS' [package "sp"] with 1 slots
+  .. .. ..@ projargs: chr NA
+
+The following code works without errors or warnings for my "pre" season
+data:
+
+kud.pre<-kernelUD(pre.hr.id[,1],h="href",extent=1)
+pre.hr.poly<-getverticeshr(kud.pre, percent=95)
+pre.kud.area<-kernel.area(kud.pre,percent=95)
+
+However, when I repeat my other 2 seasons, kernelUD() runs with no errors or
+warnings:
+
+kud.early<-kernelUD(early.hr.id[,1],h="href",extent=1)
+
+but I get the following error when running the getverticeshr() function:
+
+early.hr.poly<-getverticeshr(kud.early, percent=95)
+
+Error in getverticeshr.estUD(x[[i]], percent, ida = names(x)[i], unin,  : 
+  The grid is too small to allow the estimation of home-range.
+You should rerun kernelUD with a larger extent parameter
+
+I have adjusted the extent parameter as requested, using values of
+0.5,1,5,10,25,100 and all produce the same error. I am able to generate
+mcp's using the same data without a problem and like I said, kernelUD()
+works with no errors or warnings for all 3 seasons and I am able to see each
+UD when I look at the image.
+
+What I find particularly strange is that I am able to run kernel.area() and
+even with warnings that say:
+
+1: In kernel.area(j, percent, unin, unout) :
+  The grid is too small to allow the estimation of home-range
+for the following value of percent: 95. You should rerun kernelUD with a
+larger extent parameter
+
+I still get a data frame with area values for each individual. It seems as
+if an area is estimated regardless of the error warning of small extent
+size.
+
+Has anyone experienced a similar issue or have a suggestion as to how I
+should proceed?
+
+Thanks,
+Lindsey
+
+
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/problem-with-kernel-UD-estimation-using-adehabitatHR-tp7578930.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From rodriguesmsb at gmail.com  Fri Jun  6 15:39:54 2014
+From: rodriguesmsb at gmail.com (Rodrigues)
+Date: Fri, 6 Jun 2014 06:39:54 -0700 (PDT)
+Subject: [R-sig-eco] Help with a function
+Message-ID: <1402061994399-7578931.post@n2.nabble.com>
+
+Dear R users,
+
+
+I?m trying to build a function to select random samples idf?s from a
+database.
+So, my data frame had 2 columns and 575 rows. Follow bellow an example of my
+database
+Idf1	casod
+12	1
+14	1
+15	1
+16	1
+17	3
+18	3
+19	3
+21	3
+25	1
+24	1
+26	1
+28	1
+29	3
+32	3
+33	3
+35	1
+36	3
+37	1
+48	3
+
+So my function is
+
+blinding=function(sample){
+  sort=sample(idf1,10,replace=F) 
+  return(sort2)
+}
+
+It is pretty simple and I would like to add one more step in my choice. I
+would like to link my choice to casod stats. Thus if casod==3 sample would
+be random idfs could not be an idf with casod=1. Does someone can help me?
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Help-with-a-function-tp7578931.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From n.hamilton at student.unsw.edu.au  Fri Jun  6 15:49:41 2014
+From: n.hamilton at student.unsw.edu.au (Nicholas Hamilton)
+Date: Fri, 6 Jun 2014 14:49:41 +0100
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <1402061994399-7578931.post@n2.nabble.com>
+References: <1402061994399-7578931.post@n2.nabble.com>
+Message-ID: <8AEDFD07-D160-4AA2-9333-70C751AF6954@student.unsw.edu.au>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140606/ed6ccf96/attachment.pl>
+
+From chaco001 at umn.edu  Fri Jun  6 15:57:48 2014
+From: chaco001 at umn.edu (Jeremy Chacon)
+Date: Fri, 6 Jun 2014 08:57:48 -0500
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <1402061994399-7578931.post@n2.nabble.com>
+References: <1402061994399-7578931.post@n2.nabble.com>
+Message-ID: <CAH65v735fqHX1cLDUKZ=WBKiZbtOLcAqDuvvcV7usFcRaWBqaQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140606/01ddd036/attachment.pl>
+
+From n.hamilton at student.unsw.edu.au  Fri Jun  6 15:59:17 2014
+From: n.hamilton at student.unsw.edu.au (Nicholas Hamilton)
+Date: Fri, 6 Jun 2014 14:59:17 +0100
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <8AEDFD07-D160-4AA2-9333-70C751AF6954@student.unsw.edu.au>
+References: <1402061994399-7578931.post@n2.nabble.com>
+	<8AEDFD07-D160-4AA2-9333-70C751AF6954@student.unsw.edu.au>
+Message-ID: <5981925D-3B66-4F98-AD93-574037D9D414@student.unsw.edu.au>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140606/f52dd7d7/attachment.pl>
+
+From bohara at senckenberg.de  Fri Jun  6 16:03:58 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Fri, 06 Jun 2014 16:03:58 +0200
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <1402061994399-7578931.post@n2.nabble.com>
+References: <1402061994399-7578931.post@n2.nabble.com>
+Message-ID: <5391CA4E.4060306@senckenberg.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140606/772ecccd/attachment.pl>
+
+From rodriguesmsb at gmail.com  Fri Jun  6 16:19:09 2014
+From: rodriguesmsb at gmail.com (Rodrigues)
+Date: Fri, 6 Jun 2014 07:19:09 -0700 (PDT)
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <5391CA4E.4060306@senckenberg.de>
+References: <1402061994399-7578931.post@n2.nabble.com>
+	<5391CA4E.4060306@senckenberg.de>
+Message-ID: <1402064349676-7578936.post@n2.nabble.com>
+
+Hi O'Hara
+
+Thank you for the help
+Your comand helped me a lot.
+Was exactly what I wanted. Sampled a subset of my data that must have
+casod==3
+
+By the way sorry for my english and for the question. I'm trying to learn
+how to create function in R
+
+Cheers,
+Moreno
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Help-with-a-function-tp7578931p7578936.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From gsargeant at usgs.gov  Fri Jun  6 21:48:27 2014
+From: gsargeant at usgs.gov (Sargeant, Glen)
+Date: Fri, 6 Jun 2014 14:48:27 -0500
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <1402061994399-7578931.post@n2.nabble.com>
+References: <1402061994399-7578931.post@n2.nabble.com>
+Message-ID: <CAATPAJb4safAzETVRAy4=J+wDAU8LV28cPvtY6UisS-XAxJ3kA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140606/b2b20f3e/attachment.pl>
+
+From ucfagls at gmail.com  Fri Jun  6 23:48:07 2014
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Fri, 6 Jun 2014 15:48:07 -0600
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <CAATPAJb4safAzETVRAy4=J+wDAU8LV28cPvtY6UisS-XAxJ3kA@mail.gmail.com>
+References: <1402061994399-7578931.post@n2.nabble.com>
+	<CAATPAJb4safAzETVRAy4=J+wDAU8LV28cPvtY6UisS-XAxJ3kA@mail.gmail.com>
+Message-ID: <CAAHES9ya_r1mat7WZZajgf5h92M+w1u67xUNoaASX0NUjEfj3Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140606/b354c590/attachment.pl>
+
+From rodriguesmsb at gmail.com  Sat Jun  7 00:48:47 2014
+From: rodriguesmsb at gmail.com (Rodrigues)
+Date: Fri, 6 Jun 2014 15:48:47 -0700 (PDT)
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <1402061994399-7578931.post@n2.nabble.com>
+References: <1402061994399-7578931.post@n2.nabble.com>
+Message-ID: <1402094927291-7578939.post@n2.nabble.com>
+
+Hello,
+
+I would like to thanks everyone for the help.
+I did this one:
+
+blinding=function(sampling){
+  sort1=sample(idf[casod==1],30,replace=F)
+  sort2=sample(idf[casod==3],30,replace=F)
+  var1=factor(c(rep(1,30),rep(2,30)),labels=c("Positivo","Negativo"))
+  var2=cbind(c(pos=sort1,neg=sort2))
+  var3=sample(1:60,replace=F)
+  df=data.frame(Status=var1,IDF=var2,TRP=var3) 
+  return(write.csv(df,file="Piloto.csv",row.names=F))
+
+It`s not exactly a function but works for me. 
+BTW I found this site:
+http://manuals.bioinformatics.ucr.edu/home/programming-in-r
+I`ll try to learn a little more about r functions
+
+
+Regards,
+Moreno
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Help-with-a-function-tp7578931p7578939.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From martin.weiser at natur.cuni.cz  Sun Jun  8 17:56:01 2014
+From: martin.weiser at natur.cuni.cz (Mgr. Martin Weiser)
+Date: Sun, 8 Jun 2014 17:56:01 +0200
+Subject: [R-sig-eco] mantel within mantel? multidimensional variance
+Message-ID: <CAE2iEkbSmHe-=dddjqviKSxV+4p3xHvLxR+-mfaPK2rhNbF1Zg@mail.gmail.com>
+
+Dear friends,
+
+I need to quantify variance within variance, and what is worse, say if
+it is non-random.
+This is the setup: in the experiment, there were 2 (partly correlated)
+treatments, each of six levels (but theoretically of infinite levels,
+so I treated them as continuous).
+Different species responded to them, and we measured various traits
+("endotraits").
+
+We used R2 from the per-species redundancy analyses (RDA) as a
+reaction norm: higher R2, more the species responds to the treatment
+(so traits were used as "species" in the community ecology jargon). We
+have twice as much RDAs as there were species (because of 2
+treatments).
+
+Next, we correlated these R2 (reaction norms) with some other traits
+per species ("exotraits"). As there were 2 correlated treatments (lets
+say irrigation and fertilisation), and we used the same reaction norms
+for correlation with different exotraits, the correlations were
+obviously non independent. To overcome this, we run Mantel test
+(matrix1= species x reaction norms to treatment, matrix2=species x
+exotraits).
+
+Next, we are interested in "endotraits" x "exotraits" correlation. For
+this, we used endotrait scores from the per-species RDAs on the
+treatment axis (constraining variable). Correlations are
+non-independent again, so we wanted an overall test. And here comes
+the problem: results of Mantel tests (matrix1=species x endotrait
+scores, matrix2=species x exotraits) are suprisingly weak. Some single
+correlations of endotrait scores x exotraits seem to be pretty afar
+from random, but the overall mantel...
+
+I think this is because single endotrait can not show better
+correlation than the overall reaction norm, which is based on them, so
+something like (pval of this mantel)*(1-pval of the correlation of
+reaction norm with exotraits) may be desirable for the overall test,
+but I simply do not know.
+
+Any advice?
+
+Best,
+Martin Weiser
+
+-- 
+
+------------------------------
+Pokud je tento e-mail sou??st? obchodn?ho jedn?n?, P??rodov?deck? fakulta 
+Univerzity Karlovy v Praze:
+a) si vyhrazuje pr?vo jedn?n? kdykoliv ukon?it a to i bez uveden? d?vodu,
+b) stanovuje, ?e smlouva mus? m?t p?semnou formu,
+c) vylu?uje p?ijet? nab?dky s dodatkem ?i odchylkou,
+d) stanovuje, ?e smlouva je uzav?ena teprve v?slovn?m dosa?en?m shody na 
+v?ech n?le?itostech smlouvy.
+
+
+From bohara at senckenberg.de  Sun Jun  8 18:45:40 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Sun, 08 Jun 2014 18:45:40 +0200
+Subject: [R-sig-eco] mantel within mantel? multidimensional variance
+In-Reply-To: <CAE2iEkbSmHe-=dddjqviKSxV+4p3xHvLxR+-mfaPK2rhNbF1Zg@mail.gmail.com>
+References: <CAE2iEkbSmHe-=dddjqviKSxV+4p3xHvLxR+-mfaPK2rhNbF1Zg@mail.gmail.com>
+Message-ID: <53949334.6040108@senckenberg.de>
+
+Do you need to run Mantel tests at all? I don't see that you have 
+measured any distances, as such, so I think you can do at leat as well 
+by using standard [genrealized] linear [mixed] models.
+
+I'm not sure I understand everything, but it sounds like you run an 
+experiment with 2 treatments, and N species, and you measure T traits. 
+So, for each trait you could have a model
+
+y_t ~ (Treat1 + Treat2)*Species
+(you could run this separately for each species, if that makes things 
+easier)
+
+and size of the Treat1:Species effect tells you how the species responds 
+to the treatment (if you want a measure over all traits, a PCA on the 
+coefficients should suffice).
+
+It sounds like you are then asking how these reactions, i.e. the 
+Treat1:Species effects are related to traits which are constant within a 
+species, i.e. a Treat1:Trait effect.
+
+So, for each y_t you could run a model
+
+y_t ~ (Treat1 + Treat2)*(Trait+Species)
+(or even make Species a random effect)
+
+So, now I think you just want the Treat1:Trait effects. if the Trait's 
+are discrete classes, then you can (again) run a PCA on the effects, to 
+visualise the effects.
+
+If you want to analyse all of the y_t's together, it gets a bit more 
+complicated, but in principle it's the same, except you have a 
+MANOVA-like structure. I think you could use a Seemingly Unrelated 
+Regression approach.
+
+Bob
+
+On 06/08/2014 05:56 PM, Mgr. Martin Weiser wrote:
+> Dear friends,
+>
+> I need to quantify variance within variance, and what is worse, say if
+> it is non-random.
+> This is the setup: in the experiment, there were 2 (partly correlated)
+> treatments, each of six levels (but theoretically of infinite levels,
+> so I treated them as continuous).
+> Different species responded to them, and we measured various traits
+> ("endotraits").
+>
+> We used R2 from the per-species redundancy analyses (RDA) as a
+> reaction norm: higher R2, more the species responds to the treatment
+> (so traits were used as "species" in the community ecology jargon). We
+> have twice as much RDAs as there were species (because of 2
+> treatments).
+>
+> Next, we correlated these R2 (reaction norms) with some other traits
+> per species ("exotraits"). As there were 2 correlated treatments (lets
+> say irrigation and fertilisation), and we sed the same reaction norms
+> for correlation with different exotraits, the correlations were
+> obviously non independent. To overcome this, we run Mantel test
+> (matrix1= species x reaction norms to treatment, matrix2=species x
+> exotraits).
+>
+> Next, we are interested in "endotraits" x "exotraits" correlation. For
+> this, we used endotrait scores from the per-species RDAs on the
+> treatment axis (constraining variable). Correlations are
+> non-independent again, so we wanted an overall test. And here comes
+> the problem: results of Mantel tests (matrix1=species x endotrait
+> scores, matrix2=species x exotraits) are suprisingly weak. Some single
+> correlations of endotrait scores x exotraits seem to be pretty afar
+> from random, but the overall mantel...
+>
+> I think this is because single endotrait can not show better
+> correlation than the overall reaction norm, which is based on them, so
+> something like (pval of this mantel)*(1-pval of the correlation of
+> reaction norm with exotraits) may be desirable for the overall test,
+> but I simply do not know.
+>
+> Any advice?
+>
+> Best,
+> Martin Weiser
+>
+
+
+-- 
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From gsargeant at usgs.gov  Mon Jun  9 18:25:43 2014
+From: gsargeant at usgs.gov (Sargeant, Glen)
+Date: Mon, 9 Jun 2014 11:25:43 -0500
+Subject: [R-sig-eco] Help with a function
+In-Reply-To: <1402094927291-7578939.post@n2.nabble.com>
+References: <1402061994399-7578931.post@n2.nabble.com>
+	<1402094927291-7578939.post@n2.nabble.com>
+Message-ID: <CAATPAJbsLae3OvMDq8-cFG+jkWQWRFc8S3hyQ3g1tLxmyXj1xw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140609/50f4e999/attachment.pl>
+
+From seth at forestadapt.org  Wed Jun 11 18:25:24 2014
+From: seth at forestadapt.org (seth at forestadapt.org)
+Date: Wed, 11 Jun 2014 11:25:24 -0500
+Subject: [R-sig-eco] run error in siplab / statstats
+Message-ID: <be5b90656d951040c8511f6c1dd7fb489e30c7b6@sitemail.hostway.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140611/c89afc71/attachment.pl>
+
+From luysgarcia at gmail.com  Sat Jun 14 03:05:28 2014
+From: luysgarcia at gmail.com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Fri, 13 Jun 2014 22:05:28 -0300
+Subject: [R-sig-eco] Question about GLM post hoc and chi square
+Message-ID: <CANxP2S55Lu+nBk0qxz26pRHO85mQw8bBJagsEU7sUf0kRpErYw@mail.gmail.com>
+
+Dear all,
+
+I am making an analysis using a GLM using three explanatory variables and a
+response variable. I need to obtain a table similar to this one,
+http://postimg.org/image/5sau79wlt/r
+
+ nevertheless, I have not been able to do it. I am having a hard time
+specially getting the chi square values. I would like to know how to obatin
+them.
+
+I also would like to know what function could help me to make ad hoc
+comparisons for single variables and interactions.
+
+If any of you knows how to do both estimations, I would really appreciate
+it.
+
+All the best!!!
+
+This is my script
+a=read.table("ricis3.txt",header=T)
+attach(a)
+model7=glm(Count~Sex+Time+Behaviour+Sex*Time+Sex*Behaviour+Time+Behaviour*Sex,family=poisson)
+summary(model7)
+-------------- next part --------------
+Sex	Time	Behaviour	Count
+Male	Night	Exploring	189
+Male	Night	Interacting	11
+Male	Night	Feeding	170
+Male	Night	Mating	13
+Male	Night	Resting	240
+Male	Day	Exploring	58
+Male	Day	Interacting	1
+Male	Day	Feeding	12
+Male	Day	Mating	3
+Male	Day	Resting	399
+Female	Night	Exploring	187
+Female	Night	Interacting	10
+Female	Night	Feeding	95
+Female	Night	Mating	8
+Female	Night	Resting	175
+Female	Day	Exploring	45
+Female	Day	Interacting	6
+Female	Day	Feeding	10
+Female	Day	Mating	4
+Female	Day	Resting	406
+Immature	Night	Exploring	186
+Immature	Night	Interacting	15
+Immature	Night	Feeding	175
+Immature	Night	Resting	200
+Immature	Day	Exploring	68
+Immature	Day	Interacting	8
+Immature	Day	Feeding	6
+
+From bohara at senckenberg.de  Sat Jun 14 09:45:15 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Sat, 14 Jun 2014 09:45:15 +0200
+Subject: [R-sig-eco] Question about GLM post hoc and chi square
+In-Reply-To: <CANxP2S55Lu+nBk0qxz26pRHO85mQw8bBJagsEU7sUf0kRpErYw@mail.gmail.com>
+References: <CANxP2S55Lu+nBk0qxz26pRHO85mQw8bBJagsEU7sUf0kRpErYw@mail.gmail.com>
+Message-ID: <539BFD8B.9020402@senckenberg.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140614/c6e9b0e6/attachment.pl>
+
+From alexander.angeloski at hotmail.com  Sun Jun 15 03:55:44 2014
+From: alexander.angeloski at hotmail.com (Angel)
+Date: Sat, 14 Jun 2014 18:55:44 -0700 (PDT)
+Subject: [R-sig-eco] Question about GLM post hoc and chi square
+In-Reply-To: <CANxP2S55Lu+nBk0qxz26pRHO85mQw8bBJagsEU7sUf0kRpErYw@mail.gmail.com>
+References: <CANxP2S55Lu+nBk0qxz26pRHO85mQw8bBJagsEU7sUf0kRpErYw@mail.gmail.com>
+Message-ID: <BLU174-W408EBBB0F91199F57E4D90F2170@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140614/5cfa1b0a/attachment.pl>
+
+From weiser2 at natur.cuni.cz  Sun Jun 15 12:21:25 2014
+From: weiser2 at natur.cuni.cz (Martin Weiser)
+Date: Sun, 15 Jun 2014 12:21:25 +0200
+Subject: [R-sig-eco] Question about GLM post hoc and chi square
+In-Reply-To: <539BFD8B.9020402@senckenberg.de>
+References: <CANxP2S55Lu+nBk0qxz26pRHO85mQw8bBJagsEU7sUf0kRpErYw@mail.gmail.com>
+	<539BFD8B.9020402@senckenberg.de>
+Message-ID: <1402827685.4212.72.camel@zouzel.natur.cuni.cz>
+
+Hi,
+just a minor comment below.
+Bob O'Hara p??e v So 14. 06. 2014 v 09:45 +0200:
+> On 06/14/2014 03:05 AM, Luis Fernando Garca wrote:
+> > Dear all,
+> >
+> > I am making an analysis using a GLM using three explanatory variables and a
+> > response variable. I need to obtain a table similar to this one,
+> > http://postimg.org/image/5sau79wlt/r
+> >
+> >   nevertheless, I have not been able to do it. I am having a hard time
+> > specially getting the chi square values. I would like to know how to obatin
+> > them.
+> Use anova(). The deviance follows a chi-squared distribution (usually - 
+> if you have overdispersion it gets a bit more complicated).
+> > I also would like to know what function could help me to make ad hoc
+> > comparisons for single variables and interactions.
+> These comparisons are called contrasts. There is a contrasts() function 
+> in R, and also a contrast package (which, I'm guessing will be of more 
+> use). Googling "R contrast" might help too - there seems to be plenty of 
+> material, so hopefully one or two results will be exactly what you want. 
+> Contrasts can get esoteric, so if you can find some a page with code 
+> that gives you the comparisons you want, that should help a lot.
+> 
+> Good luck!
+> 
+> Bob
+> 
+> > If any of you knows how to do both estimations, I would really appreciate
+> > it.
+> >
+> > All the best!!!
+> >
+> > This is my script
+> > a=read.table("ricis3.txt",header=T)
+> > attach(a)
+> > model7=glm(Count~Sex+Time+Behaviour+Sex*Time+Sex*Behaviour+Time+Behaviour*Sex,family=poisson)
+> > summary(model7)
+It seem so me that your model is misspecified: if expanded and
+reordered, your model would look like:
+Count~Sex+Sex+Sex+Sex+Time+Time+Time+Behaviour+Behaviour+Behaviour
++Sex:Time+Sex:Behaviour+Sex:Behaviour
+
+So: note the ":" and "*" difference, see help(formula)
+
+Some less related tip: step-by-step work with deviance (anova) tables
+and contrasts is done in Crawley: The R book.
+
+Even more distant things, ignore if familiar with glms:
+a,if residual deviance of your model >> degrees of freedom, you have
+overdispersion (see summary(your.model)). Try family=quasipoisson and
+testing with F distribution instead of Chi (test="F" in the anova
+command) then (or glm.nb from the MASS package).
+b, if numerical problems occur, try to standardise your predictors:
+subtract each predictor's mean from the actual values (so
+mean(new.predictor)==0 (not exactly, machine precision)), divide the
+rest by the standard deviation of the original predictor (so most of the
+values fall within -3,+3), see help(scale). Beware, you loose your
+original scale with this. 
+
+HTH.
+Best,
+Martin
+
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+-- 
+
+------------------------------
+Pokud je tento e-mail sou??st? obchodn?ho jedn?n?, P??rodov?deck? fakulta 
+Univerzity Karlovy v Praze:
+a) si vyhrazuje pr?vo jedn?n? kdykoliv ukon?it a to i bez uveden? d?vodu,
+b) stanovuje, ?e smlouva mus? m?t p?semnou formu,
+c) vylu?uje p?ijet? nab?dky s dodatkem ?i odchylkou,
+d) stanovuje, ?e smlouva je uzav?ena teprve v?slovn?m dosa?en?m shody na 
+v?ech n?le?itostech smlouvy.
+
+
+From Jens.Astrom at nina.no  Mon Jun 16 08:49:15 2014
+From: Jens.Astrom at nina.no (=?iso-8859-1?B?xXN0cvZtLCBKZW5z?=)
+Date: Mon, 16 Jun 2014 06:49:15 +0000
+Subject: [R-sig-eco] Question about GLM post hoc and chi square (Angel)
+Message-ID: <B874035C64A0ED45828D21F4D13209244FCE2D55@NINSRV05.nina.no>
+
+Hi,
+
+Adding to what's already been said:
+
+
+Just in case you're not aware of this, I think you have a typo in your model. Are you looking for glm(Count~Sex+Time+Behaviour+Sex*Time+Sex*Behaviour+Time*Behaviour,family=poisson)? By the way, I think this could also be written  glm(Count~Sex+Time+Behaviour+Sex:Time+Sex:Behaviour+Time:Behaviour,family=poisson) or simply glm(Count~+Sex*Time+Sex*Behaviour+Time*Behaviour,family=poisson). The "*" means both main effects and all possible interactions.
+
+Also, you should probably look into the issue of overdispersion. Overdispersion is very common in ecological count data and basically means that you have more variation in your data than the Poisson distribution assumes. This typically leads to anti-consevative p-values, i.e. too small p-values, and needs to be accounted for.
+
+Read more about it and potential solutions here: http://glmm.wikidot.com/faq
+
+Good luck,
+
+Jens 
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Sat, 14 Jun 2014 18:55:44 -0700 (PDT)
+From: Angel <alexander.angeloski at hotmail.com>
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Question about GLM post hoc and chi square
+Message-ID: <BLU174-W408EBBB0F91199F57E4D90F2170 at phx.gbl>
+Content-Type: text/plain
+
+You are able to obtain Chi squared values by using a wald chi square post hoc test. To do this you can use the aod package, function wald.test. This function is perfect for generalised linear models using poisson distribution. 
+
+
+Also, as long as you have got
+interaction terms in your results from GLM, you could get the wald chi square (and an associated p-value) for these terms, hence giving you the  table which you are after.
+
+If this response is not clear enough, I can post some example (I am not sure of the etiquette) 
+
+AA.
+
+Date: Fri, 13 Jun 2014 18:07:27 -0700
+From: ml-node+s471788n7578944h7 at n2.nabble.com
+To: alexander.angeloski at hotmail.com
+Subject: Question about GLM post hoc and chi square
+
+
+
+	Dear all,
+
+
+I am making an analysis using a GLM using three explanatory variables and a
+
+response variable. I need to obtain a table similar to this one,
+
+http://postimg.org/image/5sau79wlt/r
+
+ nevertheless, I have not been able to do it. I am having a hard time
+
+specially getting the chi square values. I would like to know how to obatin
+
+them.
+
+
+I also would like to know what function could help me to make ad hoc
+
+comparisons for single variables and interactions.
+
+
+If any of you knows how to do both estimations, I would really appreciate
+
+it.
+
+
+All the best!!!
+
+
+This is my script
+
+a=read.table("ricis3.txt",header=T)
+
+attach(a)
+
+model7=glm(Count~Sex+Time+Behaviour+Sex*Time+Sex*Behaviour+Time+Behaviour*Sex,family=poisson)
+
+summary(model7)
+
+
+From bohara at senckenberg.de  Mon Jun 16 09:51:44 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Mon, 16 Jun 2014 09:51:44 +0200
+Subject: [R-sig-eco] Question about GLM post hoc and chi square (Angel)
+In-Reply-To: <B874035C64A0ED45828D21F4D13209244FCE2D55@NINSRV05.nina.no>
+References: <B874035C64A0ED45828D21F4D13209244FCE2D55@NINSRV05.nina.no>
+Message-ID: <539EA210.3000102@senckenberg.de>
+
+On 16/06/14 08:49, ?str?m, Jens wrote:
+> Hi,
+>
+> Adding to what's already been said:
+>
+>
+> Just in case you're not aware of this, I think you have a typo in your model. Are you looking for glm(Count~Sex+Time+Behaviour+Sex*Time+Sex*Behaviour+Time*Behaviour,family=poisson)? By the way, I think this could also be written  glm(Count~Sex+Time+Behaviour+Sex:Time+Sex:Behaviour+Time:Behaviour,family=poisson) or simply glm(Count~+Sex*Time+Sex*Behaviour+Time*Behaviour,family=poisson). The "*" means both main effects and all possible interactions.
+FWIW, glm(Count~(Sex +Time+Behaviour)^2,family=poisson) will also work: 
+it expands to the main effects and first order interactions.
+
+(oh, and the advice I've seen is don't use Wald tests: they are 
+conservative because they assume the other parameters are fixed at their 
+MLEs, so ignore any uncertainty in them. Use likelihood ratio tests instead)
+
+Bob
+
+> Also, you should probably look into the issue of overdispersion. Overdispersion is very common in ecological count data and basically means that you have more variation in your data than the Poisson distribution assumes. This typically leads to anti-consevative p-values, i.e. too small p-values, and needs to be accounted for.
+>
+> Read more about it and potential solutions here: http://glmm.wikidot.com/faq
+>
+> Good luck,
+>
+> Jens
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Sat, 14 Jun 2014 18:55:44 -0700 (PDT)
+> From: Angel <alexander.angeloski at hotmail.com>
+> To: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] Question about GLM post hoc and chi square
+> Message-ID: <BLU174-W408EBBB0F91199F57E4D90F2170 at phx.gbl>
+> Content-Type: text/plain
+>
+> You are able to obtain Chi squared values by using a wald chi square post hoc test. To do this you can use the aod package, function wald.test. This function is perfect for generalised linear models using poisson distribution.
+>
+>
+> Also, as long as you have got
+> interaction terms in your results from GLM, you could get the wald chi square (and an associated p-value) for these terms, hence giving you the  table which you are after.
+>
+> If this response is not clear enough, I can post some example (I am not sure of the etiquette)
+>
+> AA.
+>
+> Date: Fri, 13 Jun 2014 18:07:27 -0700
+> From: ml-node+s471788n7578944h7 at n2.nabble.com
+> To: alexander.angeloski at hotmail.com
+> Subject: Question about GLM post hoc and chi square
+>
+>
+>
+> 	Dear all,
+>
+>
+> I am making an analysis using a GLM using three explanatory variables and a
+>
+> response variable. I need to obtain a table similar to this one,
+>
+> http://postimg.org/image/5sau79wlt/r
+>
+>   nevertheless, I have not been able to do it. I am having a hard time
+>
+> specially getting the chi square values. I would like to know how to obatin
+>
+> them.
+>
+>
+> I also would like to know what function could help me to make ad hoc
+>
+> comparisons for single variables and interactions.
+>
+>
+> If any of you knows how to do both estimations, I would really appreciate
+>
+> it.
+>
+>
+> All the best!!!
+>
+>
+> This is my script
+>
+> a=read.table("ricis3.txt",header=T)
+>
+> attach(a)
+>
+> model7=glm(Count~Sex+Time+Behaviour+Sex*Time+Sex*Behaviour+Time+Behaviour*Sex,family=poisson)
+>
+> summary(model7)
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From bjork.johannes at gmail.com  Mon Jun 16 13:57:59 2014
+From: bjork.johannes at gmail.com (=?iso-8859-1?Q?Johannes_Bj=F6rk?=)
+Date: Mon, 16 Jun 2014 13:57:59 +0200
+Subject: [R-sig-eco] probability distribution for zero-inflated,
+	right skewed data
+Message-ID: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>
+
+Dear all,
+
+Im looking into how to fit a GLM model (Im using rjags) with data that are heavily right skewed. In addition, some variables also zero-inflated. The data are species area distribution measured as "total area (km^2)" which is subsetted into "area in tropical zone" and "area in temperate zone". The last two variables contain zeros. 
+
+I have google zero-inflated models... and most that come up is "zero-inflated negative binomial" and zero-inflated negative poisson" for count data. I reckon I cannot use any of these distributions since my variables are not discrete. 
+
+Any pointer to which distribution(s) that might fit this kind of data would be much appreciated. 
+
+Attached: Histograms of the data
+
+From bohara at senckenberg.de  Mon Jun 16 14:29:50 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Mon, 16 Jun 2014 14:29:50 +0200
+Subject: [R-sig-eco] probability distribution for zero-inflated,
+ right skewed data
+In-Reply-To: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>
+References: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>
+Message-ID: <539EE33E.7020700@senckenberg.de>
+
+On 16/06/14 13:57, Johannes Bj?rk wrote:
+> Dear all,
+>
+> Im looking into how to fit a GLM model (Im using rjags) with data that are heavily right skewed. In addition, some variables also zero-inflated. The data are species area distribution measured as "total area (km^2)" which is subsetted into "area in tropical zone" and "area in temperate zone". The last two variables contain zeros.
+>
+> I have google zero-inflated models... and most that come up is "zero-inflated negative binomial" and zero-inflated negative poisson" for count data. I reckon I cannot use any of these distributions since my variables are not discrete.
+>
+> Any pointer to which distribution(s) that might fit this kind of data would be much appreciated.
+I think a Tweedie distribution is sometimes used, but that always makes 
+me think of escaping chickens. Recently this was published, which might 
+also be useful: 
+<http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12122/abstract>. 
+They used BUGS, so you could ask them if the code is available. Even if 
+it isn't, it shouldn't be too difficult to code up.
+
+Bob
+
+-- 
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From bjork.johannes at gmail.com  Mon Jun 16 15:37:46 2014
+From: bjork.johannes at gmail.com (=?iso-8859-1?Q?Johannes_Bj=F6rk?=)
+Date: Mon, 16 Jun 2014 15:37:46 +0200
+Subject: [R-sig-eco] probability distribution for zero-inflated,
+	right skewed data
+In-Reply-To: <539EE33E.7020700@senckenberg.de>
+References: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>
+	<539EE33E.7020700@senckenberg.de>
+Message-ID: <66E84D55-64B9-4C03-A35B-CE101304CC28@gmail.com>
+
+Definitely looks promising. Thanks Bob!
+
+On Jun 16, 2014, at 2:29 PM, Bob O'Hara wrote:
+
+> On 16/06/14 13:57, Johannes Bj?rk wrote:
+>> Dear all,
+>> 
+>> Im looking into how to fit a GLM model (Im using rjags) with data that are heavily right skewed. In addition, some variables also zero-inflated. The data are species area distribution measured as "total area (km^2)" which is subsetted into "area in tropical zone" and "area in temperate zone". The last two variables contain zeros.
+>> 
+>> I have google zero-inflated models... and most that come up is "zero-inflated negative binomial" and zero-inflated negative poisson" for count data. I reckon I cannot use any of these distributions since my variables are not discrete.
+>> 
+>> Any pointer to which distribution(s) that might fit this kind of data would be much appreciated.
+> I think a Tweedie distribution is sometimes used, but that always makes me think of escaping chickens. Recently this was published, which might also be useful: <http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12122/abstract>. They used BUGS, so you could ask them if the code is available. Even if it isn't, it shouldn't be too difficult to code up.
+> 
+> Bob
+> 
+> -- 
+> 
+> Bob O'Hara
+> 
+> Biodiversity and Climate Research Centre
+> Senckenberganlage 25
+> D-60325 Frankfurt am Main,
+> Germany
+> 
+> Tel: +49 69 7542 1863
+> Mobile: +49 1515 888 5440
+> WWW:   http://www.bik-f.de/root/index.php?page_id=219
+> Blog: http://blogs.nature.com/boboh
+> Journal of Negative Results - EEB: www.jnr-eeb.org
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From cadeb at usgs.gov  Mon Jun 16 16:57:53 2014
+From: cadeb at usgs.gov (Cade, Brian)
+Date: Mon, 16 Jun 2014 08:57:53 -0600
+Subject: [R-sig-eco] probability distribution for zero-inflated,
+ right skewed data
+In-Reply-To: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>
+References: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>
+Message-ID: <CAM5M9BQSv+XJhT4ePMv08+T20R_hi1s6dUOz3xuXJgTjOgF_hQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140616/5aea8a25/attachment.pl>
+
+From ben.augustine at uky.edu  Mon Jun 16 19:55:19 2014
+From: ben.augustine at uky.edu (Augustine, Benjamin C)
+Date: Mon, 16 Jun 2014 17:55:19 +0000
+Subject: [R-sig-eco] probability distribution for zero-inflated,
+ right skewed data
+In-Reply-To: <539EE33E.7020700@senckenberg.de>
+References: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>,
+	<539EE33E.7020700@senckenberg.de>
+Message-ID: <A364831D89E2D541A39FE91AEB9DE1441C52A8DE@ex10mb05.ad.uky.edu>
+
+I recently analyzed a heavily right-skewed distribution with 56% 0's using a zero adjusted inverse Gaussian distribution in the package GAMLSS.  You might try that, or I'm sure you can use that distribution in JAGS.  There is some literature on using this distribution to model insurance claims.
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] on behalf of Bob O'Hara [bohara at senckenberg.de]
+Sent: Monday, June 16, 2014 8:29 AM
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] probability distribution for zero-inflated, right skewed data
+
+On 16/06/14 13:57, Johannes Bj?rk wrote:
+> Dear all,
+>
+> Im looking into how to fit a GLM model (Im using rjags) with data that are heavily right skewed. In addition, some variables also zero-inflated. The data are species area distribution measured as "total area (km^2)" which is subsetted into "area in tropical zone" and "area in temperate zone". The last two variables contain zeros.
+>
+> I have google zero-inflated models... and most that come up is "zero-inflated negative binomial" and zero-inflated negative poisson" for count data. I reckon I cannot use any of these distributions since my variables are not discrete.
+>
+> Any pointer to which distribution(s) that might fit this kind of data would be much appreciated.
+I think a Tweedie distribution is sometimes used, but that always makes
+me think of escaping chickens. Recently this was published, which might
+also be useful:
+<http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12122/abstract>.
+They used BUGS, so you could ask them if the code is available. Even if
+it isn't, it shouldn't be too difficult to code up.
+
+Bob
+
+--
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From scott.foster at csiro.au  Mon Jun 16 23:38:46 2014
+From: scott.foster at csiro.au (Scott Foster)
+Date: Tue, 17 Jun 2014 07:38:46 +1000
+Subject: [R-sig-eco] probability distribution for zero-inflated,
+ right skewed data
+In-Reply-To: <539EE33E.7020700@senckenberg.de>
+References: <9BAC002D-E288-427B-90ED-01B1C69519A3@gmail.com>
+	<539EE33E.7020700@senckenberg.de>
+Message-ID: <539F63E6.3020407@csiro.au>
+
+Hi,
+
+Just a little note about computational methods for Tweedies and compound Poisson-gammas.  The package statMod has a Tweedie family that can be used in 
+glm(), the package Tweedie has functions for density calculations (and other things), the package fishMod (my own package) has methods to fit Tweedie 
+GLMs and compound Poisson-gamma, and lastly (but very far from leastly) mgcv has a Tweedie family too.  The mgcv fact seems to not be widely known.
+
+None of these methods are Bayesian however.  As Bob suggested coding up a sampler should be easy enough, either from the compound representation or 
+directly from the (marginal) Tweedie -- see ?rTweedie in the fishMod package or ?rtweedie in the tweedie package.
+
+At the risk of blatant self-promotion have a look at my paper on compound Poisson-gammas -- there is a review of some of the more common methods. 
+http://link.springer.com/article/10.1007/s10651-012-0233-0
+
+Good luck!
+
+Scott
+
+On 16/06/14 22:29, Bob O'Hara wrote:
+> On 16/06/14 13:57, Johannes Bj?rk wrote:
+>> Dear all,
+>>
+>> Im looking into how to fit a GLM model (Im using rjags) with data that are heavily right skewed. In addition, some variables also zero-inflated. 
+>> The data are species area distribution measured as "total area (km^2)" which is subsetted into "area in tropical zone" and "area in temperate 
+>> zone". The last two variables contain zeros.
+>>
+>> I have google zero-inflated models... and most that come up is "zero-inflated negative binomial" and zero-inflated negative poisson" for count 
+>> data. I reckon I cannot use any of these distributions since my variables are not discrete.
+>>
+>> Any pointer to which distribution(s) that might fit this kind of data would be much appreciated.
+> I think a Tweedie distribution is sometimes used, but that always makes me think of escaping chickens. Recently this was published, which might also 
+> be useful: <http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12122/abstract>. They used BUGS, so you could ask them if the code is available. 
+> Even if it isn't, it shouldn't be too difficult to code up.
+>
+> Bob
+>
+
+-- 
+Scott Foster
+Computational Informatics
+CSIRO
+E scott.foster at csiro.au T +61 3 6232 5178
+Postal address: CSIRO Computational Informatics, GPO Box 1538, Hobart TAS 7001
+Street Address: CSIRO Computational Informatics, Castray Esplanade, Hobart Tas 7001, Australia
+www.csiro.au
+
+
+From basille.web at ase-research.org  Wed Jun 18 19:54:03 2014
+From: basille.web at ase-research.org (Mathieu Basille)
+Date: Wed, 18 Jun 2014 13:54:03 -0400
+Subject: [R-sig-eco] =?utf-8?q?Re=C2=A0=3A__problem_with_kernel_UD_estimat?=
+ =?utf-8?q?ion_using_adehabitatHR?=
+In-Reply-To: <1401829426442-7578930.post@n2.nabble.com>
+References: <1401829426442-7578930.post@n2.nabble.com>
+Message-ID: <146b01d3ad7.-2310282486065618542.-4266387788355616117@ase-research.org>
+
+Hey Lindsey,
+
+Just a blind guess here, did you try using a SpatialPixels instead of the default number for the 'grid' parameter in 'kernelUD'? It might solve your problem, in addition to give you more flexibility on the format of the output.
+
+Mathieu.
+
+
+---- Le mar., 03 juin 2014 17:03:46 -0400 lnmessinger<lindsey.messinger at huskers.unl.edu> a ?crit ---- 
+
+ > I have data containing locations of 100+ pheasants during 3 seasons. I am 
+ > looking to estimate kernel home ranges for each of the seasons for each 
+ > individual. I run the kernelUD() function with no errors or warnings, but am 
+ > receiving an error message when I attempt to use the getverticeshr() and 
+ > kernel.area() functions to extract 95% polygons and area estimates from the 
+ > kernel UD's. 
+ >  
+ > Here is the structure of the input data set: 
+ >  
+ > Formal class 'SpatialPointsDataFrame' [package "sp"] with 5 slots 
+ >   ..@ data       :'data.frame':    2376 obs. of  1 variable: 
+ >   .. ..$ ID: Factor w/ 122 levels "150.002_2013_KOR",..: 1 1 1 1 1 1 2 2 2 2 
+ > ... 
+ >   ..@ coords.nrs : num(0)  
+ >   ..@ coords     : num [1:2376, 1:2] 347887 347862 347948 347964 348200 ... 
+ >   .. ..- attr(*, "dimnames")=List of 2 
+ >   .. .. ..$ : NULL 
+ >   .. .. ..$ : chr [1:2] "X_Estimate" "Y_Estimate" 
+ >   ..@ bbox       : num [1:2, 1:2] 315869 4442294 349590 4472129 
+ >   .. ..- attr(*, "dimnames")=List of 2 
+ >   .. .. ..$ : chr [1:2] "X_Estimate" "Y_Estimate" 
+ >   .. .. ..$ : chr [1:2] "min" "max" 
+ >   ..@ proj4string:Formal class 'CRS' [package "sp"] with 1 slots 
+ >   .. .. ..@ projargs: chr NA 
+ >  
+ > The following code works without errors or warnings for my "pre" season 
+ > data: 
+ >  
+ > kud.pre<-kernelUD(pre.hr.id[,1],h="href",extent=1) 
+ > pre.hr.poly<-getverticeshr(kud.pre, percent=95) 
+ > pre.kud.area<-kernel.area(kud.pre,percent=95) 
+ >  
+ > However, when I repeat my other 2 seasons, kernelUD() runs with no errors or 
+ > warnings: 
+ >  
+ > kud.early<-kernelUD(early.hr.id[,1],h="href",extent=1) 
+ >  
+ > but I get the following error when running the getverticeshr() function: 
+ >  
+ > early.hr.poly<-getverticeshr(kud.early, percent=95) 
+ >  
+ > Error in getverticeshr.estUD(x[[i]], percent, ida = names(x)[i], unin,  :  
+ >   The grid is too small to allow the estimation of home-range. 
+ > You should rerun kernelUD with a larger extent parameter 
+ >  
+ > I have adjusted the extent parameter as requested, using values of 
+ > 0.5,1,5,10,25,100 and all produce the same error. I am able to generate 
+ > mcp's using the same data without a problem and like I said, kernelUD() 
+ > works with no errors or warnings for all 3 seasons and I am able to see each 
+ > UD when I look at the image. 
+ >  
+ > What I find particularly strange is that I am able to run kernel.area() and 
+ > even with warnings that say: 
+ >  
+ > 1: In kernel.area(j, percent, unin, unout) : 
+ >   The grid is too small to allow the estimation of home-range 
+ > for the following value of percent: 95. You should rerun kernelUD with a 
+ > larger extent parameter 
+ >  
+ > I still get a data frame with area values for each individual. It seems as 
+ > if an area is estimated regardless of the error warning of small extent 
+ > size. 
+ >  
+ > Has anyone experienced a similar issue or have a suggestion as to how I 
+ > should proceed? 
+ >  
+ > Thanks, 
+ > Lindsey 
+ >  
+ >  
+ >  
+ >  
+ >  
+ >  
+ > -- 
+ > View this message in context: http://r-sig-ecology.471788.n2.nabble.com/problem-with-kernel-UD-estimation-using-adehabitatHR-tp7578930.html 
+ > Sent from the r-sig-ecology mailing list archive at Nabble.com. 
+ >  
+ > _______________________________________________ 
+ > R-sig-ecology mailing list 
+ > R-sig-ecology at r-project.org 
+ > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology 
+ > 
+
+
+--
+
+~$ whoami 
+Mathieu Basille, PhD 
+ 
+~$ locate --details 
+University of Florida \\ 
+Fort Lauderdale Research and Education Center 
+(+1) 954-577-6314 
+http://ase-research.org/basille 
+ 
+~$ fortune 
+? Le tout est de tout dire, et je manque de mots 
+Et je manque de temps, et je manque d'audace. ? 
+  -- Paul ?luard
+
+
+From laura.lee at ncdenr.gov  Wed Jun 18 21:18:18 2014
+From: laura.lee at ncdenr.gov (Lee, Laura)
+Date: Wed, 18 Jun 2014 19:18:18 +0000
+Subject: [R-sig-eco] Prediction intervals for hurdle model
+Message-ID: <2789D349964A854E9524A3CD0D759E0436F03465@NCWWDITMXMBX35.ad.ncmail>
+
+All-
+
+I'm fitting a hurdle model using the 'pscl' package and would like to calculate standard errors and confidence intervals for the predicted values. I tried to apply the code found in the following thread: https://stat.ethz.ch/pipermail/r-help/2008-December/182806.html and was unsuccessful.
+
+I would appreciate any help.
+
+Thanks,
+
+Laura
+
+
+From thomas.parr at maine.edu  Fri Jun 20 21:40:42 2014
+From: thomas.parr at maine.edu (Thomas Parr)
+Date: Fri, 20 Jun 2014 15:40:42 -0400
+Subject: [R-sig-eco] Bringing ordispider labels to the front of plot and
+	decluttering
+Message-ID: <005e01cf8cbf$86791c80$936b5580$@maine.edu>
+
+I have the following code that creates an ordispider plot (adapted from:
+http://r.789695.n4.nabble.com/Plotting-Ellipses-and-Points-of-Matching-Color
+s-in-an-Ordination-td3731968.html). However, due to the plotting order in
+the code the lines for HF fall atop the label for BF. How would I adjust
+this so the labels are added after all the lines are added? Also, let's
+assume the labels overlap.  Is there a simple way to declutter the labels?
+
+data(dune) 
+data(dune.env) 
+mod <- cca(dune ~ Management, dune.env) 
+attach(dune.env) 
+plot(mod, type="n") 
+points(mod, display="sites", pch=as.numeric(Management),
+col=as.numeric(Management)) 
+groupz <- sort(unique(Management)) 
+for(i in seq(groupz)) { 
+  ordispider(mod, Management,label=T, font=2, cex=1.5, col=i,
+show.groups=groupz[i])
+}
+
+
+Thanks,
+
+Thomas
+
+
+From bjork.johannes at gmail.com  Tue Jun 24 16:02:37 2014
+From: bjork.johannes at gmail.com (=?iso-8859-1?Q?Johannes_Bj=F6rk?=)
+Date: Tue, 24 Jun 2014 16:02:37 +0200
+Subject: [R-sig-eco] bayesian conjugate priors for the double exponential
+	distribution?
+Message-ID: <7A6BCE7B-A447-4A1E-8B3D-85CDB6B557EC@gmail.com>
+
+Dear all,
+
+I'm trying to fit a GML model (a ANCOVA using rjags) where the predicted/dependent variable y is a index ranging from 0-to-1 (hence continuous) and is negatively skewed (see histogram below).
+
+While googling, I came across the Gumbel Min distribution- aka log-Weibull / double exponential / Laplace distribution. 
+
+The double exponential is pre-defined in JAGS. Hence I could try out something like
+y[i] ~ ddexp (mu[i], tau) 
+where
+mu[i] <- a + b[ecotype[i]] * (lat[i]-mean(lat)) + b[ecotype[i]] * (lon[i]-mean(lon))
+
+...But is there any bayesian conjugate priors for the double exponential likelihood distribution? 
+
+And would it be correct to use the double exponential distribution in this case?
+
+Any pointer would be very much appreciated, thanks!
+
+Cheers,
+Johannes
+
+
+
+
+From bouamer at gmail.com  Fri Jun 27 10:54:06 2014
+From: bouamer at gmail.com (Salah Bouamer)
+Date: Fri, 27 Jun 2014 10:54:06 +0200
+Subject: [R-sig-eco] extracting the model averaging parameter estimates and
+ unconditional variance after glm.nb, hurdle-NB and zeroinf regressions
+Message-ID: <CAJrHDJk+1TGMw0k+tS_KgrULya_o7J1rWUG=WYbMKd-YTPV_4g@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140627/077cc90c/attachment.pl>
+
+From ribas.aca at gmail.com  Fri Jun 27 23:07:24 2014
+From: ribas.aca at gmail.com (Augusto Ribas)
+Date: Fri, 27 Jun 2014 17:07:24 -0400
+Subject: [R-sig-eco] Netcarto implementations in R?
+Message-ID: <CACMkfRxFo5mBoXM8kqDyKRrwZMdbTWqWQ34xzzYu9AsqSKcyZQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140627/f16896b9/attachment.pl>
+
+From jcbecker42 at gmail.com  Mon Jun 30 04:38:54 2014
+From: jcbecker42 at gmail.com (Jesse Becker)
+Date: Sun, 29 Jun 2014 22:38:54 -0400
+Subject: [R-sig-eco] AEM or PCNM packages
+Message-ID: <CAFJ1bGcmrEzTZRh65RYpCAFxS48a66Fm9BNCfGimtUHCrB602Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140629/699059b4/attachment.pl>
+
+From mariojosebr at yahoo.com.br  Mon Jun 30 07:57:54 2014
+From: mariojosebr at yahoo.com.br (=?ISO-8859-1?Q?Mario_Jos=E9_Marques?=)
+Date: Mon, 30 Jun 2014 02:57:54 -0300
+Subject: [R-sig-eco] AEM or PCNM packages
+In-Reply-To: <CAFJ1bGcmrEzTZRh65RYpCAFxS48a66Fm9BNCfGimtUHCrB602Q@mail.gmail.com>
+References: <CAFJ1bGcmrEzTZRh65RYpCAFxS48a66Fm9BNCfGimtUHCrB602Q@mail.gmail.com>
+Message-ID: <53B0FC62.7030809@yahoo.com.br>
+
+Hi Jesse,
+
+excuse me if you tried it yet, but try this:
+
+install.packages("AEM", repos = "http://R-Forge.R-project.org")
+install.packages("PCNM", repos = "http://R-Forge.R-project.org")
+
+or download binary from:
+http://r-forge.r-project.org/R/?group_id=195
+
+The packages was compiled to 3.0 version, but the developers were
+updating to 3.1.
+
+Best regards,
+
+Mario
+...................................................
+Doctoral student in Ecology
+Institute of Biology, Dept. Plant Biology
+State University of Campinas - UNICAMP
+Campinas, S?o Paulo, Brazil
+
+On 29-06-2014 23:38, Jesse Becker wrote:
+> I am not finding the AEM or PCNM packages in the repositories for R 3.0.3
+> or 3.1.  Have these not been updated recently (and if so which version of R
+> do I need to run to use them)?
+> 
+> install.packages says the R-Forge versions are not compatible with either
+> 3.0.3 or 3.1 on Mac or Windows.  Is there an alternative package to look
+> for?
+> 
+> I need to do an analysis of long term river community data, and AEM seems
+> like a logical choice to identify community cycles and regime shifts as it
+> is a time series (40 years of annual summer data), but I could be steered
+> in other directions.
+> 
+> Thanks
+> Jesse C. Becker, Ph.D.
+> jcbecker at bsu.edu
+> jcbecker42 at gmail.com
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From thomas.mockel at nateko.lu.se  Mon Jun 30 11:33:51 2014
+From: thomas.mockel at nateko.lu.se (=?ISO-8859-1?Q?Thomas_M=F6ckel?=)
+Date: Mon, 30 Jun 2014 11:33:51 +0200
+Subject: [R-sig-eco] Nested factors in GLMER
+Message-ID: <53B12EFF.40006@nateko.lu.se>
+
+Dear list members,
+
+I have species composition and abundance data of 17 plots sampled in two 
+different years. From the first year to the second a general decrease in 
+Ca-content and pH occurred in the area.
+For each plot and year I also have two explanatory variables (Ca-content 
+and pH).
+
+My response variable is species richness (count data). I want to test if 
+species richness is related to Ca-content and pH and if there is
+a difference between the two years.
+
+As I understand it should be a generalized linear mixed effect model 
+with Poisson error distribution.
+What I am not sure about is how to build the random term. Each plot is 
+sampled twice which means that plots are pseudo-replicates.
+Should the random term consist of plot within year or year within plot?
+
+glmer(species richness ~ Ca +(year|plot), family=poisson, data=data)
+
+or
+
+glmer(species richness ~ Ca +(plot|year), family=poisson, data=data)
+
+
+Also, if I include "year" in the random term,
+how can I see if there is a difference between years and test the 
+strength of that difference?
+
+Thank you very much for your help!
+
+
+-- 
+*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+Thomas M?ckel, PhD student
+
+Department of Earth and Ecosystem Science
+Lund University
+S?lvegatan 12
+SE-223 62 Lund
+Sweden
+
+Tel:+46 (0)46 - 222 4887
+E-mail: Thomas.Mockel at nateko.lu.se
+
+
+From batsncats at gmail.com  Mon Jun 30 12:42:02 2014
+From: batsncats at gmail.com (Bruce Miller)
+Date: Mon, 30 Jun 2014 06:42:02 -0400
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 75, Issue 15
+In-Reply-To: <mailman.1.1404122401.5966.r-sig-ecology@r-project.org>
+References: <mailman.1.1404122401.5966.r-sig-ecology@r-project.org>
+Message-ID: <53B13EFA.3050207@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140630/d033ebd3/attachment.pl>
+
+From pcp35 at cornell.edu  Mon Jun 30 14:24:14 2014
+From: pcp35 at cornell.edu (Phillips Perry)
+Date: Mon, 30 Jun 2014 08:24:14 -0400
+Subject: [R-sig-eco] Nested factors in GLMER
+In-Reply-To: <53B12EFF.40006@nateko.lu.se>
+References: <53B12EFF.40006@nateko.lu.se>
+Message-ID: <CAMrwhV9MPiCCpXxuEyejtHc6771BNztQtgPZ4o09ifwE5OOZkw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140630/1ba0dcad/attachment.pl>
+
+From jcbecker42 at gmail.com  Mon Jun 30 15:27:35 2014
+From: jcbecker42 at gmail.com (Jesse Becker)
+Date: Mon, 30 Jun 2014 09:27:35 -0400
+Subject: [R-sig-eco] AEM or PCNM packages
+In-Reply-To: <53B0FC62.7030809@yahoo.com.br>
+References: <CAFJ1bGcmrEzTZRh65RYpCAFxS48a66Fm9BNCfGimtUHCrB602Q@mail.gmail.com>
+	<53B0FC62.7030809@yahoo.com.br>
+Message-ID: <CAFJ1bGdfO+v7kQP3MvaPJsDVF9czTZzn3O8RSY=OLN+9-C-D8g@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140630/823454b1/attachment.pl>
+

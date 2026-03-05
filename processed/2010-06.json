@@ -1,0 +1,1096 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2010-06",
+  "messages": [
+    {
+      "id": "msg-e43955bee98d",
+      "message_id": "<1275382363.2468.25.camel@desktop.localdomain>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-06-01T09:52:43+01:00",
+      "subject": "[R-sig-eco] Multiple regression",
+      "subject_clean": "Multiple regression",
+      "in_reply_to": "<AANLkTilmQK6_1CxTLUPAkNP46LThJdUIZuvaH-yZG5tz@mail.gmail.com>",
+      "references": [
+        "<AANLkTilmQK6_1CxTLUPAkNP46LThJdUIZuvaH-yZG5tz@mail.gmail.com>"
+      ],
+      "body_plain": "On Mon, 2010-05-31 at 13:44 +1000, Zhongkui Luo wrote:\n> Dear all,\n> \n> # I have the following sub-datasets of soil carbon change at four sites.\n> There are four treatments at each site.\n> \n> DltC <- c(-19.237, -14.857, -14.818, -14.815, -11.014, 3.349, 4.332, 3.956,\n> -7.638, 9.469, 14.189, 13.037, -9.809, 5.459, 8.748, 11.511)\n\nWhat you are attempting makes very little sense, especially considering\nthe small size of your data set. You can't fit such a complex model\nbecause you don't have enough information to estimate all the\nparameters; Hence the NAs, and the statement:\n\nCoefficients: (9 not defined because of singularities)\n\nin the printed output.\n\nAs to why the different terms are NA between the two fits, this is\nexplained in ?model.matrix (linked to from ?lm) --- read the bit about\nvarying fastest.\n\nI'm not sure what you were hoping to achieve by throwing the kitchen\nsink of a model at your data, but in many (most?) cases this is not\nadvisable. I presume you'll want to simplify the model by dropping\n\"insignificant\" terms (for some definition of \"insignificant\"). You must\ntake great care not to get into data dredging. Alternatives to this\nmodel selection process are available (e.g. ridge regression, the lasso)\nand should be used if you aren't able to /a priori/ specify a reasonable\nmodel. This note in Ecology Letters makes reference to these techniques:\n\nhttp://www3.interscience.wiley.com/journal/123356334/abstract\n\nHowever, I doubt these will help in this particular case; your data set\nis likely much too small to evaluate all the terms and interactions you\nwant to evaluate. Collect some more data and rethink the\nprocesses/effects you are trying to capture with your statistical model,\nand then include only those terms.\n\nHTH\n\nG\n\n> \n> # Soil C fractions at the start of the experiment at the four sites are:\n> \n> f.BIOM <- c(0.0294, 0.0294, 0.0294, 0.0294, 0.0169, 0.0169, 0.0169,\n> 0.0169,0.0172, 0.0172, 0.0172, 0.0172, 0.0208, 0.0208, 0.0208, 0.0208) #\n> Four treatments have the same initial soil C fraction\n> f.FOM <- c(0.183, 0.183, 0.183, 0.183,0.0223, 0.0223, 0.0223, 0.0223,0.0168,\n> 0.0168, 0.0168, 0.0168, 0.00766, 0.00766, 0.00766, 0.00766)\n> f.Inert_C <- c(0.197, 0.197, 0.197, 0.197,0.466, 0.466, 0.466,\n> 0.4666,0.5336, 0.533, 0.533, 0.533,0.333, 0.333, 0.3333, 0.3333)\n> f.HUM <- c(0.589, 0.589, 0.589, 0.589,0.494, 0.494, 0.494, 0.494,0.432,\n> 0.432, 0.432, 0.432,0.638, 0.638, 0.638, 0.638)\n> \n> # Applying multiple regression model to the data:\n> \n> fit1 <- lm(DltC ~f.BIOM*f.FOM*f.Inert_C*f.HUM)\n> fit2 <- lm(DltC~f.Inert_C*f.HUM*f.BIOM*f.FOM)  # Just change the order of\n> the four variables\n> summary(fit1)\n> summary(fit2)\n> \n> \n> # Coefficients of fit1:\n> \n> Coefficients: (9 not defined because of singularities)\n>                              Estimate Std. Error t value Pr(>|t|)\n> (Intercept)                    206698      54914   3.764  0.00446 **\n> f.BIOM                       -4477270    1716046  -2.609  0.02831 *\n> f.FOM                        -2227245     794993  -2.802  0.02066 *\n> f.Inert_C                     -996522     280627  -3.551  0.00621 **\n> f.HUM                         -172647      56211  -3.071  0.01332 *\n> f.BIOM:f.FOM                       NA         NA      NA       NA\n> f.BIOM:f.Inert_C             46171278   12725547   3.628  0.00550 **\n> f.FOM:f.Inert_C              10074999    3442541   2.927  0.01685 *\n> f.BIOM:f.HUM                       NA         NA      NA       NA\n> f.FOM:f.HUM                        NA         NA      NA       NA\n> f.Inert_C:f.HUM                    NA         NA      NA       NA\n> f.BIOM:f.FOM:f.Inert_C             NA         NA      NA       NA\n> f.BIOM:f.FOM:f.HUM                 NA         NA      NA       NA\n> f.BIOM:f.Inert_C:f.HUM             NA         NA      NA       NA\n> f.FOM:f.Inert_C:f.HUM              NA         NA      NA       NA\n> f.BIOM:f.FOM:f.Inert_C:f.HUM       NA         NA      NA       NA\n> \n> # Coefficients of fit2:\n> Coefficients: (9 not defined because of singularities)\n>                               Estimate Std. Error t value Pr(>|t|)\n> (Intercept)                      21052      36457   0.577   0.5778\n> f.Inert_C                       -54158     112672  -0.481   0.6422\n> f.HUM                          -291540      96625  -3.017   0.0145 *\n> f.BIOM                         7364603    4214425   1.747   0.1145\n> f.FOM                          -242470     123836  -1.958   0.0819 .\n> f.Inert_C:f.HUM                 603519     206217   2.927   0.0168 *\n> f.Inert_C:f.BIOM             -13939751   10567698  -1.319   0.2197\n> f.HUM:f.BIOM                        NA         NA      NA       NA\n> f.Inert_C:f.FOM                     NA         NA      NA       NA\n> f.HUM:f.FOM                         NA         NA      NA       NA\n> f.BIOM:f.FOM                        NA         NA      NA       NA\n> f.Inert_C:f.HUM:f.BIOM              NA         NA      NA       NA\n> f.Inert_C:f.HUM:f.FOM               NA         NA      NA       NA\n> f.Inert_C:f.BIOM:f.FOM              NA         NA      NA       NA\n> f.HUM:f.BIOM:f.FOM                  NA         NA      NA       NA\n> f.Inert_C:f.HUM:f.BIOM:f.FOM        NA         NA      NA       NA\n> \n> \n> # Comparing with fit1, the coefficients in fit2 is quite another, e.g., the\n> effect of the interaction between f.Inert_C and f.HUM is significant in\n> fit2, but it is 'NA' in fit 1.\n> # Do someone have ideas about the difference between fit1 and fit2, and the\n> meaning of the NAs.\n> \n> Thanks very much for your time.\n> \n> Zachary\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Mon, 2010-05-31 at 13:44 +1000, Zhongkui Luo wrote:\n> Dear all,\n> \n> # I have the following sub-datasets of soil carbon change at four sites.\n> There are four treatments at each site.\n> \n> DltC <- ",
+      "thread_id": "thread-e43955bee98d",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-2ea75dbb4d8b",
+      "message_id": "<450548.32158.qm@web23703.mail.ird.yahoo.com>",
+      "from_name": "Carmen Burghelea",
+      "from_email_hash": "f3f3d50cab5d22a9548747ba23049d73e890cad7493f7f9264f9384fba19ad8f",
+      "date": "2010-06-01T10:41:13Z",
+      "subject": "[R-sig-eco] jackknife the coefficients of a linear regression in R",
+      "subject_clean": "jackknife the coefficients of a linear regression in R",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/86256814/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/86256814/attachment.pl>",
+      "thread_id": "thread-2ea75dbb4d8b",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-25e169aae4f3",
+      "message_id": "<1275394814621-5125719.post@n2.nabble.com>",
+      "from_name": "Kang Min",
+      "from_email_hash": "b354fb2456e7fdd8243c663081a2613a30f8e2b8bb815412745982810cc305fe",
+      "date": "2010-06-01T05:20:14-07:00",
+      "subject": "[R-sig-eco] Vegan fisher.alpha error",
+      "subject_clean": "Vegan fisher.alpha error",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi,\n\nI have an error with fisher.alpha from the vegan package.\n\n> fisher.alpha(data[[1]])\nError in nlm(Dev.logseries, n.r = n.r, p = p, N = N, hessian =\nTRUE, ...) :\n missing value in parameter\n\nI am trying to find fisher alpha for a list of 100 data frames, and I\ntried it on individual data frames in the list, which gave me the\nerror above.\nI have every data frame in the same format as the example data BCI,\nspecies as column names and quadrats as row names.\n\nCan anyone explain what the error is about? Thanks a lot.\n\nKang Min\n-- \nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/Vegan-fisher-alpha-error-tp5125719p5125719.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hi,\n\nI have an error with fisher.alpha from the vegan package.\n\n> fisher.alpha(data[[1]])\nError in nlm(Dev.logseries, n.r = n.r, p = p, N = N, hessian =\nTRUE, ...) :\n missing value in parameter\n\nI am ",
+      "thread_id": "thread-25e169aae4f3",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-bcce1af06891",
+      "message_id": "<F91AE52250392746870607DC9EF16C0438C6969F8B@exmbx1.ad.slu.se>",
+      "from_name": "Emma EG. Gothe",
+      "from_email_hash": "af7e663b7a82f2a3735483719fc682abbe456dccb23c3e279a8af14b4acf44ca",
+      "date": "2010-06-01T14:25:13+02:00",
+      "subject": "[R-sig-eco] Multivariate dispersion and SE",
+      "subject_clean": "Multivariate dispersion and SE",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/ebbdf63d/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/ebbdf63d/attachment.pl>",
+      "thread_id": "thread-bcce1af06891",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-c425776b24b3",
+      "message_id": "<C82AE784.EF9A%jari.oksanen@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2010-06-01T16:36:20+03:00",
+      "subject": "[R-sig-eco] Vegan fisher.alpha error",
+      "subject_clean": "Vegan fisher.alpha error",
+      "in_reply_to": "<1275394814621-5125719.post@n2.nabble.com>",
+      "references": [],
+      "body_plain": "On 1/06/10 15:20 PM, \"Kang Min\" <ngokangmin at gmail.com> wrote:\n\n> \n> Hi,\n> \n> I have an error with fisher.alpha from the vegan package.\n> \n>> fisher.alpha(data[[1]])\n> Error in nlm(Dev.logseries, n.r = n.r, p = p, N = N, hessian =\n> TRUE, ...) :\n>  missing value in parameter\n> \n> I am trying to find fisher alpha for a list of 100 data frames, and I\n> tried it on individual data frames in the list, which gave me the\n> error above.\n> I have every data frame in the same format as the example data BCI,\n> species as column names and quadrats as row names.\n> \n> Can anyone explain what the error is about? Thanks a lot.\n> \n\n\nDear Kang Min,\n\nDidn't you ask this same question in R News, and didn't Ben Bolker tell you\nhow to report such cases. The problem is that this not reproducible so we\nreally cannot know what is the problem. However, there is one hint: the\nerror message says that you have missing values. Do you?\n\nCheers, jari oksanen",
+      "body_snippet": "On 1/06/10 15:20 PM, \"Kang Min\" <ngokangmin at gmail.com> wrote:\n\n> \n> Hi,\n> \n> I have an error with fisher.alpha from the vegan package.\n> \n>> fisher.alpha(data[[1]])\n> Error in nlm(Dev.logseries, n.",
+      "thread_id": "thread-25e169aae4f3",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-7a57028a07de",
+      "message_id": "<AANLkTinw4rLsSSNY1v1UTUWktJVOy4xJlPzxPr13Ls2I@mail.gmail.com>",
+      "from_name": "Peter Solymos",
+      "from_email_hash": "3e4e5c37645041a11f505cbd9ee9456181aeea94ae29ebbc2f9032bc9b3633e1",
+      "date": "2010-06-01T07:36:34-06:00",
+      "subject": "[R-sig-eco] Vegan fisher.alpha error",
+      "subject_clean": "Vegan fisher.alpha error",
+      "in_reply_to": "<1275394814621-5125719.post@n2.nabble.com>",
+      "references": [
+        "<1275394814621-5125719.post@n2.nabble.com>"
+      ],
+      "body_plain": "Kang Min,\n\nThe error comes from the function 'fisherfit' that uses 'nlm' to\nminimize the negative log likelihood for the Fisher's log-series.\nNumerical optimization does not tolerate missing values. This code\nreproduces your error:\n\n> library(vegan)\n> data(BCI)\n> BCI[1,1] <- NA\n> fisher.alpha(BCI)\nError in nlm(Dev.logseries, n.r = n.r, p = p, N = N, hessian = TRUE, ...) :\n  missing value in parameter\n\nSo try to exclude problematic rows:\n\n> fisher.alpha(BCI[rowSums(is.na(BCI))==0,])\n\nCheers,\n\nPeter\n\nP?ter S?lymos\nAlberta Biodiversity Monitoring Institute\nand Boreal Avian Modelling project\nDepartment of Biological Sciences\nCW 405, Biological Sciences Bldg\nUniversity of Alberta\nEdmonton, Alberta, T6G 2E9, Canada\nPhone: 780.492.8534\nFax: 780.492.7635\nemail <- paste(\"solymos\", \"ualberta.ca\", sep = \"@\")\n\n\nOn Tue, Jun 1, 2010 at 6:20 AM, Kang Min <ngokangmin at gmail.com> wrote:\n>\n> Hi,\n>\n> I have an error with fisher.alpha from the vegan package.\n>\n>> fisher.alpha(data[[1]])\n> Error in nlm(Dev.logseries, n.r = n.r, p = p, N = N, hessian =\n> TRUE, ...) :\n> ?missing value in parameter\n>\n> I am trying to find fisher alpha for a list of 100 data frames, and I\n> tried it on individual data frames in the list, which gave me the\n> error above.\n> I have every data frame in the same format as the example data BCI,\n> species as column names and quadrats as row names.\n>\n> Can anyone explain what the error is about? Thanks a lot.\n>\n> Kang Min\n> --\n> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Vegan-fisher-alpha-error-tp5125719p5125719.html\n> Sent from the r-sig-ecology mailing list archive at Nabble.com.\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>",
+      "body_snippet": "Kang Min,\n\nThe error comes from the function 'fisherfit' that uses 'nlm' to\nminimize the negative log likelihood for the Fisher's log-series.\nNumerical optimization does not tolerate missing values. T",
+      "thread_id": "thread-25e169aae4f3",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-d3d0c29dbb34",
+      "message_id": "<1275401071177-5126119.post@n2.nabble.com>",
+      "from_name": "Kang Min",
+      "from_email_hash": "b354fb2456e7fdd8243c663081a2613a30f8e2b8bb815412745982810cc305fe",
+      "date": "2010-06-01T07:04:31-07:00",
+      "subject": "[R-sig-eco] Vegan fisher.alpha error",
+      "subject_clean": "Vegan fisher.alpha error",
+      "in_reply_to": "<C82AE784.EF9A%jari.oksanen@oulu.fi>",
+      "references": [
+        "<1275394814621-5125719.post@n2.nabble.com>",
+        "<C82AE784.EF9A%jari.oksanen@oulu.fi>"
+      ],
+      "body_plain": "Hi Jari,\n\nI'm sorry I didn't get the reply from Ben Bolker, I'll take note of that in\nfuture. \n\nDo missing values include NAs and blanks?\n\nThanks.\nKang Min\n-- \nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/Vegan-fisher-alpha-error-tp5125719p5126119.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hi Jari,\n\nI'm sorry I didn't get the reply from Ben Bolker, I'll take note of that in\nfuture. \n\nDo missing values include NAs and blanks?\n\nThanks.\nKang Min\n-- \nView this message in context: http://r-s",
+      "thread_id": "thread-25e169aae4f3",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-49e80f7d5ccc",
+      "message_id": "<1275401483701-5126151.post@n2.nabble.com>",
+      "from_name": "Kang Min",
+      "from_email_hash": "b354fb2456e7fdd8243c663081a2613a30f8e2b8bb815412745982810cc305fe",
+      "date": "2010-06-01T07:11:23-07:00",
+      "subject": "[R-sig-eco] Vegan fisher.alpha error",
+      "subject_clean": "Vegan fisher.alpha error",
+      "in_reply_to": "<AANLkTinw4rLsSSNY1v1UTUWktJVOy4xJlPzxPr13Ls2I@mail.gmail.com>",
+      "references": [
+        "<1275394814621-5125719.post@n2.nabble.com>",
+        "<AANLkTinw4rLsSSNY1v1UTUWktJVOy4xJlPzxPr13Ls2I@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Peter,\n\nThanks, I'll look into it.\n\nKang Min\n-- \nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/Vegan-fisher-alpha-error-tp5125719p5126151.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hi Peter,\n\nThanks, I'll look into it.\n\nKang Min\n-- \nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/Vegan-fisher-alpha-error-tp5125719p5126151.html\nSent from the r-sig-ecology ",
+      "thread_id": "thread-25e169aae4f3",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-59fd3e175b30",
+      "message_id": "<C82AF851.EFAA%jari.oksanen@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2010-06-01T17:48:01+03:00",
+      "subject": "[R-sig-eco] Vegan fisher.alpha error",
+      "subject_clean": "Vegan fisher.alpha error",
+      "in_reply_to": "<1275401071177-5126119.post@n2.nabble.com>",
+      "references": [],
+      "body_plain": "On 1/06/10 17:04 PM, \"Kang Min\" <ngokangmin at gmail.com> wrote:\n\n> \n> Hi Jari,\n> \n> I'm sorry I didn't get the reply from Ben Bolker, I'll take note of that in\n> future. \n> \n> Do missing values include NAs and blanks?\n\nDear Kang Min,\n\nThere are no blanks in R files. If your Excel(TM) file (or similar) had\nblanks, these probably were tranformed to NA (missing data), or\nalternatively, the reading of the data completely failed. If you want to\nchange all NA values to zeros in one data frame called 'x', you can say\n\nx[is.na(x)] <- 0\n\nProbably you must check your data before analysis.\n\nCheers, Jari Oksanen",
+      "body_snippet": "On 1/06/10 17:04 PM, \"Kang Min\" <ngokangmin at gmail.com> wrote:\n\n> \n> Hi Jari,\n> \n> I'm sorry I didn't get the reply from Ben Bolker, I'll take note of that in\n> future. \n> \n> Do missing values inclu",
+      "thread_id": "thread-25e169aae4f3",
+      "thread_depth": 3,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-e6f6f3a5f71a",
+      "message_id": "<AANLkTillfiZPwtwN0ZaIMUbzw-nHvSA0LKeHAX0QA-2Z@mail.gmail.com>",
+      "from_name": "Andy Rominger",
+      "from_email_hash": "2956a05bc8af7c3f7005f759bf897a20c402ab3f15246c6947d5261b4faa7e72",
+      "date": "2010-06-01T14:22:26-04:00",
+      "subject": "[R-sig-eco] jackknife the coefficients of a linear regression in R",
+      "subject_clean": "jackknife the coefficients of a linear regression in R",
+      "in_reply_to": "<450548.32158.qm@web23703.mail.ird.yahoo.com>",
+      "references": [
+        "<450548.32158.qm@web23703.mail.ird.yahoo.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/34f778de/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/34f778de/attachment.pl>",
+      "thread_id": "thread-2ea75dbb4d8b",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-505735fc4ad8",
+      "message_id": "<AANLkTinOHXBbenGhzmyfojmrOOVE3TpD7H6spZJRYXnn@mail.gmail.com>",
+      "from_name": "Andy Rominger",
+      "from_email_hash": "2956a05bc8af7c3f7005f759bf897a20c402ab3f15246c6947d5261b4faa7e72",
+      "date": "2010-06-01T14:35:20-04:00",
+      "subject": "[R-sig-eco] jackknife the coefficients of a linear regression in R",
+      "subject_clean": "jackknife the coefficients of a linear regression in R",
+      "in_reply_to": "<450548.32158.qm@web23703.mail.ird.yahoo.com>",
+      "references": [
+        "<450548.32158.qm@web23703.mail.ird.yahoo.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/c4d607ee/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100601/c4d607ee/attachment.pl>",
+      "thread_id": "thread-2ea75dbb4d8b",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-838df633cad2",
+      "message_id": "<1275420171.2189.245.camel@globetrotter>",
+      "from_name": "Etienne Laliberté",
+      "from_email_hash": "00e279a650bf2cb3cba9358398c4d14a2ff31fa3dafc8b5bb893f9bee376c52c",
+      "date": "2010-06-02T07:22:51+12:00",
+      "subject": "[R-sig-eco] Multivariate dispersion and SE",
+      "subject_clean": "Multivariate dispersion and SE",
+      "in_reply_to": "<F91AE52250392746870607DC9EF16C0438C6969F8B@exmbx1.ad.slu.se>",
+      "references": [
+        "<F91AE52250392746870607DC9EF16C0438C6969F8B@exmbx1.ad.slu.se>"
+      ],
+      "body_plain": "Emma,\n\nbetadisper returns a list, from which you can extract the individual\ndistances to group centroids. You can then compute whatever you want\nfrom them (means, variances, etc).\n\nExample:\n\ndata(varespec)\n\n## Bray-Curtis distances between samples\ndis <- vegdist(varespec)\n\n## First 16 sites grazed, remaining 8 sites ungrazed\ngroups <- factor(c(rep(1,16), rep(2,8)), labels =\nc(\"grazed\",\"ungrazed\"))\n\n## Calculate multivariate dispersions\nmod <- betadisper(dis, groups)\nmod\n\n## Compute mean distance to centroid per group\ntapply(mod$distances, groups, mean)\n\n## Same, but variance instead\ntapply(mod$distances, groups, var)\n\nCheers\n\nEtienne\n\nLe mardi 01 juin 2010 ? 14:25 +0200, Emma EG. Gothe a ?crit :\n> Dear All,\n> \n> I am trying to calculate values of SE from an analysis of multivariate homogeneity of groups dispersions (betadisper {vegan})?\n> \n> With function betadisper() I get values of the average distance to centroid/group and it is also possible to draw a boxplot with function boxplot() with variance information but I cant find a way to tell R to caclulate SE.\n> \n> I realise it is possible to calulate (by hand) from the formula for the distance from a point to its centroid:\n> \n> z[ij]^c = sqrt(Delta^2(u[ij]^+, c[i]^+) - Delta^2(u[ij]^-, c[i]^-))\n> \n> given in the R documentation, by using the scores of the different points and centroids that can be obtained by using function scores (). But before I go there I thought Id ask if there is an easier way to obtain the variance information (in my case SE).\n> \n> I am greatful for any help/advice I can get.\n> \n> /Emma\n> _______________________________________\n> \n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n-- \nEtienne Lalibert?\n================================\nSchool of Forestry\nUniversity of Canterbury\nPrivate Bag 4800\nChristchurch 8140, New Zealand\nPhone: +64 3 366 7001 ext. 8365\nFax: +64 3 364 2124\nwww.elaliberte.info",
+      "body_snippet": "Emma,\n\nbetadisper returns a list, from which you can extract the individual\ndistances to group centroids. You can then compute whatever you want\nfrom them (means, variances, etc).\n\nExample:\n\ndata(vare",
+      "thread_id": "thread-bcce1af06891",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-a8445fbba701",
+      "message_id": "<F91AE52250392746870607DC9EF16C0438C6969F93@exmbx1.ad.slu.se>",
+      "from_name": "Emma EG. Gothe",
+      "from_email_hash": "af7e663b7a82f2a3735483719fc682abbe456dccb23c3e279a8af14b4acf44ca",
+      "date": "2010-06-02T13:39:58+02:00",
+      "subject": "[R-sig-eco] Multivariate dispersion and SE",
+      "subject_clean": "Multivariate dispersion and SE",
+      "in_reply_to": "<1275420171.2189.245.camel@globetrotter>",
+      "references": [
+        "<F91AE52250392746870607DC9EF16C0438C6969F8B@exmbx1.ad.slu.se>",
+        "<1275420171.2189.245.camel@globetrotter>"
+      ],
+      "body_plain": "Etienne, \n\nThank you so much for your help.\nI have managed to get the values I wanted after your advice!\n\nBest \n/Emma\n_______________________________________\n\nEmma G?the, PhD-student\n\nDepartment of Aquatic Sciences and Assessment\nSwedish University of Agricultural Sciences\nBox 7050\n750 07 Uppsala\n\nTel: +46-(0)18-673138\nFax: +46-(0)18-673156\nE-mail: emma.gothe at vatten.slu.se\n________________________________________\nFr?n: Etienne Lalibert? [etiennelaliberte at gmail.com]\nSkickat: den 1 juni 2010 21:22\nTill: Emma EG. Gothe\nKopia: r-sig-ecology at r-project.org\n?mne: Re: [R-sig-eco] Multivariate dispersion and SE\n\nEmma,\n\nbetadisper returns a list, from which you can extract the individual\ndistances to group centroids. You can then compute whatever you want\nfrom them (means, variances, etc).\n\nExample:\n\ndata(varespec)\n\n## Bray-Curtis distances between samples\ndis <- vegdist(varespec)\n\n## First 16 sites grazed, remaining 8 sites ungrazed\ngroups <- factor(c(rep(1,16), rep(2,8)), labels =\nc(\"grazed\",\"ungrazed\"))\n\n## Calculate multivariate dispersions\nmod <- betadisper(dis, groups)\nmod\n\n## Compute mean distance to centroid per group\ntapply(mod$distances, groups, mean)\n\n## Same, but variance instead\ntapply(mod$distances, groups, var)\n\nCheers\n\nEtienne\n\nLe mardi 01 juin 2010 ? 14:25 +0200, Emma EG. Gothe a ?crit :\n> Dear All,\n>\n> I am trying to calculate values of SE from an analysis of multivariate homogeneity of groups dispersions (betadisper {vegan})?\n>\n> With function betadisper() I get values of the average distance to centroid/group and it is also possible to draw a boxplot with function boxplot() with variance information but I cant find a way to tell R to caclulate SE.\n>\n> I realise it is possible to calulate (by hand) from the formula for the distance from a point to its centroid:\n>\n> z[ij]^c = sqrt(Delta^2(u[ij]^+, c[i]^+) - Delta^2(u[ij]^-, c[i]^-))\n>\n> given in the R documentation, by using the scores of the different points and centroids that can be obtained by using function scores (). But before I go there I thought Id ask if there is an easier way to obtain the variance information (in my case SE).\n>\n> I am greatful for any help/advice I can get.\n>\n> /Emma\n> _______________________________________\n>\n>\n>       [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n--\nEtienne Lalibert?\n================================\nSchool of Forestry\nUniversity of Canterbury\nPrivate Bag 4800\nChristchurch 8140, New Zealand\nPhone: +64 3 366 7001 ext. 8365\nFax: +64 3 364 2124\nwww.elaliberte.info",
+      "body_snippet": "Etienne, \n\nThank you so much for your help.\nI have managed to get the values I wanted after your advice!\n\nBest \n/Emma\n_______________________________________\n\nEmma G?the, PhD-student\n\nDepartment of Aq",
+      "thread_id": "thread-bcce1af06891",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-5c0a89340128",
+      "message_id": "<97679C0A11332E48A01E0D463E8B3FF103ACAA6D6B@SI-MSEV02.US.SINET.SI.EDU>",
+      "from_name": "Abdi, Abdulhakim",
+      "from_email_hash": "5893fe05cf7515e37622fae58a04d2337b5992a79be41bc57247726c0dd319ef",
+      "date": "2010-06-03T10:18:14-04:00",
+      "subject": "[R-sig-eco] Adehabitat: creating MCPs every two weeks for 32 different animals",
+      "subject_clean": "Adehabitat: creating MCPs every two weeks for 32 different animals",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100603/73bd3ec9/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100603/73bd3ec9/attachment.pl>",
+      "thread_id": "thread-5c0a89340128",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-388214586eaa",
+      "message_id": "<4C08BE44.6090607@oncfs.gouv.fr>",
+      "from_name": "Clément Calenge",
+      "from_email_hash": "599c7bb21e58eb2d87faf33dae39c73009649e589b73716148359a67c1e08666",
+      "date": "2010-06-04T10:50:12+02:00",
+      "subject": "[R-sig-eco] Adehabitat: creating MCPs every two weeks for 32 different animals",
+      "subject_clean": "Adehabitat: creating MCPs every two weeks for 32 different animals",
+      "in_reply_to": "<97679C0A11332E48A01E0D463E8B3FF103ACAA6D6B@SI-MSEV02.US.SINET.SI.EDU>",
+      "references": [
+        "<97679C0A11332E48A01E0D463E8B3FF103ACAA6D6B@SI-MSEV02.US.SINET.SI.EDU>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100604/95ebb3ae/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100604/95ebb3ae/attachment.pl>",
+      "thread_id": "thread-5c0a89340128",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-d6a5b7a29182",
+      "message_id": "<97679C0A11332E48A01E0D463E8B3FF103ACAA6E19@SI-MSEV02.US.SINET.SI.EDU>",
+      "from_name": "Abdi, Abdulhakim",
+      "from_email_hash": "5893fe05cf7515e37622fae58a04d2337b5992a79be41bc57247726c0dd319ef",
+      "date": "2010-06-04T08:31:24-04:00",
+      "subject": "[R-sig-eco] Adehabitat: creating MCPs every two weeks for 32 different animals",
+      "subject_clean": "Adehabitat: creating MCPs every two weeks for 32 different animals",
+      "in_reply_to": "<4C08BE44.6090607@oncfs.gouv.fr>",
+      "references": [
+        "<97679C0A11332E48A01E0D463E8B3FF103ACAA6D6B@SI-MSEV02.US.SINET.SI.EDU>",
+        "<4C08BE44.6090607@oncfs.gouv.fr>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100604/c4ae1b01/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100604/c4ae1b01/attachment.pl>",
+      "thread_id": "thread-5c0a89340128",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-a205dd42a1d1",
+      "message_id": "<AANLkTilS7QUjjwcCID31iw6Y2s33sB7IoT7HxrMs3YmZ@mail.gmail.com>",
+      "from_name": "Gian Maria Niccolò Benucci",
+      "from_email_hash": "64af1cb222bc86d85940dc99a80ca8a50bd9799e2d5d1196b45701e6862356ea",
+      "date": "2010-06-08T10:57:24+02:00",
+      "subject": "[R-sig-eco] ANOSIM test",
+      "subject_clean": "ANOSIM test",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100608/3bcec77c/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100608/3bcec77c/attachment.pl>",
+      "thread_id": "thread-a205dd42a1d1",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-65b67bd6e1d9",
+      "message_id": "<371416.45748.qm@web112705.mail.gq1.yahoo.com>",
+      "from_name": "Claudia liliana Ballesteros Mejia",
+      "from_email_hash": "bac45f592b859c1c4565f460ec394ea6d9ffa080bb23d749805f4c8b54eca25f",
+      "date": "2010-06-08T06:27:40-07:00",
+      "subject": "[R-sig-eco] BIOMOD-question",
+      "subject_clean": "BIOMOD-question",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100608/3b5fdef4/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100608/3b5fdef4/attachment.pl>",
+      "thread_id": "thread-65b67bd6e1d9",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-ad67ccdb431e",
+      "message_id": "<C6620035-9FD3-4FDD-9750-5B9BF6E4994F@ujf-grenoble.fr>",
+      "from_name": "Wilfried Thuiller",
+      "from_email_hash": "20c9dc596aac35cf6a4a2f3a10858fcff6f7dea7832f9ab0e5183f3f9a3721be",
+      "date": "2010-06-08T15:51:34+02:00",
+      "subject": "[R-sig-eco] BIOMOD-question",
+      "subject_clean": "BIOMOD-question",
+      "in_reply_to": "<371416.45748.qm@web112705.mail.gq1.yahoo.com>",
+      "references": [
+        "<371416.45748.qm@web112705.mail.gq1.yahoo.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100608/535a0af8/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100608/535a0af8/attachment.pl>",
+      "thread_id": "thread-65b67bd6e1d9",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-d7f0caba87d3",
+      "message_id": "<AANLkTinULQiay2CSloCOcsNg_2t3YvW-dNfoByUARhz1@mail.gmail.com>",
+      "from_name": "Gian Maria Niccolò Benucci",
+      "from_email_hash": "64af1cb222bc86d85940dc99a80ca8a50bd9799e2d5d1196b45701e6862356ea",
+      "date": "2010-06-09T10:01:01+02:00",
+      "subject": "[R-sig-eco] ANOSIM test",
+      "subject_clean": "ANOSIM test",
+      "in_reply_to": "<2e76b862e770d9.2e770d92e76b86@noaa.gov>",
+      "references": [
+        "<2e76b862e770d9.2e770d92e76b86@noaa.gov>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/2310e803/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/2310e803/attachment.pl>",
+      "thread_id": "thread-d7f0caba87d3",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-59f5b5144a2e",
+      "message_id": "<4C0F5914.2010105@icman.csic.es>",
+      "from_name": "Maria Dulce Subida",
+      "from_email_hash": "a3d5f87d1886723139cb9e957ddce3ea5b65fd7917b81c61334f1ff0a78741ad",
+      "date": "2010-06-09T11:04:20+02:00",
+      "subject": "[R-sig-eco] ANOSIM test",
+      "subject_clean": "ANOSIM test",
+      "in_reply_to": "<AANLkTinULQiay2CSloCOcsNg_2t3YvW-dNfoByUARhz1@mail.gmail.com>",
+      "references": [
+        "<2e76b862e770d9.2e770d92e76b86@noaa.gov>",
+        "<AANLkTinULQiay2CSloCOcsNg_2t3YvW-dNfoByUARhz1@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/528c7eda/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/528c7eda/attachment.pl>",
+      "thread_id": "thread-d7f0caba87d3",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-411ddcd8d982",
+      "message_id": "<AANLkTilBM7Xbc9krPireeUjJ2SIWwvdnTPQdNddxKnXV@mail.gmail.com>",
+      "from_name": "Gian Maria Niccolò Benucci",
+      "from_email_hash": "64af1cb222bc86d85940dc99a80ca8a50bd9799e2d5d1196b45701e6862356ea",
+      "date": "2010-06-09T11:21:28+02:00",
+      "subject": "[R-sig-eco] How calculate Sørensen and Bray-Curtis coefficients? vegan package",
+      "subject_clean": "How calculate Sørensen and Bray-Curtis coefficients? vegan package",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/bc1938e1/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/bc1938e1/attachment.pl>",
+      "thread_id": "thread-411ddcd8d982",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-7d808e4cbbc5",
+      "message_id": "<AANLkTimY0TwKenEnyIZncyQ1AvLnDphmqJQaqdJT3r5K@mail.gmail.com>",
+      "from_name": "Gian Maria Niccolò Benucci",
+      "from_email_hash": "64af1cb222bc86d85940dc99a80ca8a50bd9799e2d5d1196b45701e6862356ea",
+      "date": "2010-06-09T11:36:41+02:00",
+      "subject": "[R-sig-eco] ANOSIM test",
+      "subject_clean": "ANOSIM test",
+      "in_reply_to": "<4C0F5914.2010105@icman.csic.es>",
+      "references": [
+        "<2e76b862e770d9.2e770d92e76b86@noaa.gov>",
+        "<AANLkTinULQiay2CSloCOcsNg_2t3YvW-dNfoByUARhz1@mail.gmail.com>",
+        "<4C0F5914.2010105@icman.csic.es>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/6164db4a/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/6164db4a/attachment.pl>",
+      "thread_id": "thread-d7f0caba87d3",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-0105bfd2326f",
+      "message_id": "<AANLkTim5bVp5CZyR2vItZZ_6nZbap5Z1TU_9dwXg68Q5@mail.gmail.com>",
+      "from_name": "Gian Maria Niccolò Benucci",
+      "from_email_hash": "64af1cb222bc86d85940dc99a80ca8a50bd9799e2d5d1196b45701e6862356ea",
+      "date": "2010-06-09T11:46:45+02:00",
+      "subject": "[R-sig-eco] How calculate Sørensen and Bray-Curtis coefficients? vegan package",
+      "subject_clean": "How calculate Sørensen and Bray-Curtis coefficients? vegan package",
+      "in_reply_to": "<AANLkTikVLCa-_7BO0hMPS5yXyY29HBHu5GbNb8L8YZ8o@mail.gmail.com>",
+      "references": [
+        "<AANLkTilBM7Xbc9krPireeUjJ2SIWwvdnTPQdNddxKnXV@mail.gmail.com>",
+        "<AANLkTikVLCa-_7BO0hMPS5yXyY29HBHu5GbNb8L8YZ8o@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/11faa20e/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/11faa20e/attachment.pl>",
+      "thread_id": "thread-0105bfd2326f",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-ed84d6201d3a",
+      "message_id": "<105698.37724.qm@web26102.mail.ukl.yahoo.com>",
+      "from_name": "Falk Hildebrand",
+      "from_email_hash": "06acfa5531ac325270ed9b0adcfdba81e1812543fe38c7f365f0697f2a6d91fa",
+      "date": "2010-06-09T13:19:58Z",
+      "subject": "[R-sig-eco] non-metric multidimensional scaling",
+      "subject_clean": "non-metric multidimensional scaling",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear list,\nI have been using the vegan package to do mds via the metaMDS function, but I have some questions regarding the output.\n1) First off about the rankindex function {vegan}: On my data I always get values that I would consider as low, e.g. something in the range of 0.0344 as best result (euclidean) and the mean being 0.028 over 7 other metrices. Do results as low as this have any relevance? Are there some guidelines as to what absolute (or relative) values one should at least obtain to make a distinction?\n2) Is there a way to estimate what percentage of the variation within the data can be explained by the mds?\n3) using envfit {vegan} I get significant p-values for 5 out of 14 env. variables/factors (which is of course very nice). However, if I do a CCA and a ANOVA (call: anova(cca,by=\"terms\",permu=200)) with the same environmental values, usually only one of these same variables/factors ends up being significant. I am aware that these are different techniques, but I always thought that CCA was supposed to \"force\" the ordination on the env. vars, so why then would I get much better p-values for the unconstrained nmds (I use 5 dimensions in the nmds)?\n\n4) how can I interpret the relation between species and the environmental fit in a nmds plot call? The same as sites and env. fit?\ne.g.\nef=envfit(nmds,environment)\nplot(ef); points(nmds, dis = \"species\");\n\nAny help or links to relevant literature would be greatly appreciated.\nbest,\nFalk",
+      "body_snippet": "Dear list,\nI have been using the vegan package to do mds via the metaMDS function, but I have some questions regarding the output.\n1) First off about the rankindex function {vegan}: On my data I alway",
+      "thread_id": "thread-ed84d6201d3a",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-da8f2f179fb1",
+      "message_id": "<AANLkTimZnItygt8xpJio7jsN12AEz9B95Y4S_gxrga8S@mail.gmail.com>",
+      "from_name": "Gian Maria Niccolò Benucci",
+      "from_email_hash": "64af1cb222bc86d85940dc99a80ca8a50bd9799e2d5d1196b45701e6862356ea",
+      "date": "2010-06-09T16:42:37+02:00",
+      "subject": "[R-sig-eco] Fwd:  ANOSIM test",
+      "subject_clean": "ANOSIM test",
+      "in_reply_to": "<AANLkTilXnCgXe0eBDbHhr7FxAPD70-W0vDKDghnd4cne@mail.gmail.com>",
+      "references": [
+        "<2e76b862e770d9.2e770d92e76b86@noaa.gov>",
+        "<AANLkTinULQiay2CSloCOcsNg_2t3YvW-dNfoByUARhz1@mail.gmail.com>",
+        "<4C0F5914.2010105@icman.csic.es>",
+        "<AANLkTimY0TwKenEnyIZncyQ1AvLnDphmqJQaqdJT3r5K@mail.gmail.com>",
+        "<4C0F69BC.90409@mpi-bremen.de>",
+        "<AANLkTikbFklUBd8m9GyDXGb2DXaj4q22VOJMXPGlIccs@mail.gmail.com>",
+        "<4C0F746C.5080402@mpi-bremen.de>",
+        "<AANLkTilXnCgXe0eBDbHhr7FxAPD70-W0vDKDghnd4cne@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/116d7545/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100609/116d7545/attachment.pl>",
+      "thread_id": "thread-da8f2f179fb1",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-0e5521bea8a0",
+      "message_id": "<AANLkTinO6cLbMRXYApYa50bf-Z5rdd8tpMl3yot2F_a9@mail.gmail.com>",
+      "from_name": "Tom Elliott",
+      "from_email_hash": "680578757b049a8286d7b141632f4fb9800af7f6e1106a4bc267ee69f8f348cd",
+      "date": "2010-06-12T17:56:06-07:00",
+      "subject": "[R-sig-eco] meaning of extreme outliers in bootstrapped statistic",
+      "subject_clean": "meaning of extreme outliers in bootstrapped statistic",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello all-\n\nI'm using the boot function (package boot) to generate bootstrapped\nregression coefficients, using rlm (MASS) as the regression model.\nI've run the same bootstrap (different seeds) several times, and for\nsome runs the Q-Q plots of the bootstrapped coefficients look\nreasonable except for 1 to 3 very extreme outliers, with values more\nthan twice as large as the mean. If I remove the outliers and replot,\nit looks fine. And for some runs, the outliers don't show up at all.\nThe coefficients, bias, and standard error are almost identical for\nall runs.\n\nI don't know how to interpret this behavior, and whether it means I\nshould regard the bootstrapped output as completely suspect or not.\nAny suggestions would be appreciated.\n\nI used weighted and strata to account for plots with different sample\nsizes and some spatial clustering.\n\n#the first few rows of the data, number of observations =45\n\n> sex.data2[1:5,]\np.male    ln.den av.est nu.tot Cluster\n0.4500000 -2.535779 20.269     25       1\n0.3846154 -3.423443 15.332     24       2\n0.8461538 -3.003764 40.628     20       3\n0.3571429 -2.440698 21.082     22       3\n0.7222222 -4.772406 61.931     18       4\n\n#And the code I used:\n\nboot.male<-function(data,indices,maxit=20){\n\tdata<-data[indices,]\n\tmod<-rlm(p.male~ln.den+av.est+ln.den:av.est,method=\"MM\",weights=nu.tot,data=data,maxit=maxit)\n\tcoefficients(mod)\n\t}\n\nmale.mod3<-boot(sex.data2,boot.male,9999,\nweights=nu.tot,strata=Cluster, maxit=100)\n> male.mod\n\nCall:\nboot(data = sex.data2, statistic = boot.male, R = 9999, strata = Cluster,\n    weights = nu.tot, maxit = 100)\n\nBootstrap Statistics :\n        original        bias    std. error     mean(t*)\nt1* -0.823268399 -1.002848e-02 0.249722760 -0.794159753\nt2* -0.376047283 -4.069051e-03 0.072401520 -0.370784139\nt3*  0.032714183  1.710077e-05 0.008641502  0.031744414\nt4*  0.008630942  4.208041e-05 0.002053623  0.008473436\n>\n# this run produced no outliers, but the following run did:\n\n> male.mod4<-boot(sex.data2,boot.male,9999, weights=nu.tot,strata=Cluster, maxit=100)\n\n> summary(male.mod4$t[,2])\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.\n-0.6597 -0.4172 -0.3694 -0.3708 -0.3237  1.2090\n\n> sort(male.mod4$t[,2],decreasing=T)[1:5]\n[1]  1.20924783  0.96981415  0.83783851 -0.08805377 -0.13783204\n\nThanks,\nTom",
+      "body_snippet": "Hello all-\n\nI'm using the boot function (package boot) to generate bootstrapped\nregression coefficients, using rlm (MASS) as the regression model.\nI've run the same bootstrap (different seeds) several",
+      "thread_id": "thread-0e5521bea8a0",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-d73292e57c17",
+      "message_id": "<1276491374.23381.1379938143@webmail.messagingengine.com>",
+      "from_name": "Nicholas Lewin-Koh",
+      "from_email_hash": "ce1a5dad09cdf256c2a72906ae1e563f0d7ec3457957c4a1a53c9b3862a71eac",
+      "date": "2010-06-13T21:56:14-07:00",
+      "subject": "[R-sig-eco] meaning of extreme outliers in bootstrapped statistic",
+      "subject_clean": "meaning of extreme outliers in bootstrapped statistic",
+      "in_reply_to": "<mailman.1.1276423201.18752.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1276423201.18752.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "Hi Tom,\nYou have 45 observations, and remember the bootstrap samples with\nreplacement.\nIf you have a few extreme data points it is entirely likely that some of\nyour parameters\nmay have some extreme cases that arise from rare bootstrap samples where\nthe extreme data \nappears more than once, especially since you have an interaction in your\nmodel.\nso the interaction coefficients are estimated from a smaller subset of\nthe data.\nI would worry if the bootstrap is indicating a skewed distribution of\nthe parameter,\nwhich may be moderated by transforming the predictor.\n\nNicholas\n> Date: Sat, 12 Jun 2010 17:56:06 -0700\n> From: Tom Elliott <tnelliott at gmail.com>\n> To: r-sig-ecology at r-project.org\n> Subject: [R-sig-eco] meaning of extreme outliers in bootstrapped\n> \tstatistic\n> Message-ID:\n> \t<AANLkTinO6cLbMRXYApYa50bf-Z5rdd8tpMl3yot2F_a9 at mail.gmail.com>\n> Content-Type: text/plain; charset=ISO-8859-1\n> \n> Hello all-\n> \n> I'm using the boot function (package boot) to generate bootstrapped\n> regression coefficients, using rlm (MASS) as the regression model.\n> I've run the same bootstrap (different seeds) several times, and for\n> some runs the Q-Q plots of the bootstrapped coefficients look\n> reasonable except for 1 to 3 very extreme outliers, with values more\n> than twice as large as the mean. If I remove the outliers and replot,\n> it looks fine. And for some runs, the outliers don't show up at all.\n> The coefficients, bias, and standard error are almost identical for\n> all runs.\n> \n> I don't know how to interpret this behavior, and whether it means I\n> should regard the bootstrapped output as completely suspect or not.\n> Any suggestions would be appreciated.\n> \n> I used weighted and strata to account for plots with different sample\n> sizes and some spatial clustering.\n> \n> #the first few rows of the data, number of observations =45\n> \n> > sex.data2[1:5,]\n> p.male    ln.den av.est nu.tot Cluster\n> 0.4500000 -2.535779 20.269     25       1\n> 0.3846154 -3.423443 15.332     24       2\n> 0.8461538 -3.003764 40.628     20       3\n> 0.3571429 -2.440698 21.082     22       3\n> 0.7222222 -4.772406 61.931     18       4\n> \n> #And the code I used:\n> \n> boot.male<-function(data,indices,maxit=20){\n> \tdata<-data[indices,]\n> \tmod<-rlm(p.male~ln.den+av.est+ln.den:av.est,method=\"MM\",weights=nu.tot,data=data,maxit=maxit)\n> \tcoefficients(mod)\n> \t}\n> \n> male.mod3<-boot(sex.data2,boot.male,9999,\n> weights=nu.tot,strata=Cluster, maxit=100)\n> > male.mod\n> \n> Call:\n> boot(data = sex.data2, statistic = boot.male, R = 9999, strata = Cluster,\n>     weights = nu.tot, maxit = 100)\n> \n> Bootstrap Statistics :\n>         original        bias    std. error     mean(t*)\n> t1* -0.823268399 -1.002848e-02 0.249722760 -0.794159753\n> t2* -0.376047283 -4.069051e-03 0.072401520 -0.370784139\n> t3*  0.032714183  1.710077e-05 0.008641502  0.031744414\n> t4*  0.008630942  4.208041e-05 0.002053623  0.008473436\n> >\n> # this run produced no outliers, but the following run did:\n> \n> > male.mod4<-boot(sex.data2,boot.male,9999, weights=nu.tot,strata=Cluster, maxit=100)\n> \n> > summary(male.mod4$t[,2])\n>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.\n> -0.6597 -0.4172 -0.3694 -0.3708 -0.3237  1.2090\n> \n> > sort(male.mod4$t[,2],decreasing=T)[1:5]\n> [1]  1.20924783  0.96981415  0.83783851 -0.08805377 -0.13783204\n> \n> Thanks,\n> Tom\n> \n> \n> \n> ------------------------------\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> \n> \n> End of R-sig-ecology Digest, Vol 27, Issue 9\n> ********************************************\n>",
+      "body_snippet": "Hi Tom,\nYou have 45 observations, and remember the bootstrap samples with\nreplacement.\nIf you have a few extreme data points it is entirely likely that some of\nyour parameters\nmay have some extreme ca",
+      "thread_id": "thread-d73292e57c17",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-627648284987",
+      "message_id": "<AANLkTimh_xgJiWHBUzNHHAwO1WSWI1mCeq9V24SRCQ0n@mail.gmail.com>",
+      "from_name": "Arnaldo Russo",
+      "from_email_hash": "57bc710a6dbf1d0bb0406ffd88e20364ba5473a15ab8353833e72728e759b951",
+      "date": "2010-06-15T08:34:31-03:00",
+      "subject": "[R-sig-eco] some MDS and R problems",
+      "subject_clean": "some MDS and R problems",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100615/43e7a3f2/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100615/43e7a3f2/attachment.pl>",
+      "thread_id": "thread-627648284987",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-b9e2a2d265e4",
+      "message_id": "<1276604131.12203.15.camel@localhost>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-06-15T13:15:31+01:00",
+      "subject": "[R-sig-eco] some MDS and R problems",
+      "subject_clean": "some MDS and R problems",
+      "in_reply_to": "<AANLkTimh_xgJiWHBUzNHHAwO1WSWI1mCeq9V24SRCQ0n@mail.gmail.com>",
+      "references": [
+        "<AANLkTimh_xgJiWHBUzNHHAwO1WSWI1mCeq9V24SRCQ0n@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Arnaldo,\n\nYou ask several disjointed question that I don't really follow (esp your\nlast point about unique), but in response to:\n\n> When I delete a sample I do not loose some weight?\n\nNo, nMDS only cares about trying to position points in a k dimensional\nspace such that the distance between points in this k dimensional space\nbest represents the rank ordering of the original dissimilarities. If\ntwo samples have 0 dissimilarity, they should occupy the same location\non the plot (in the k dimensional space); one does not influence the\nother. Hence simply deleting one of the pair of samples that have zero\ndistance to one another is appropriate.\n\nAs for the code I wrote in the email you cite:\n\nminDij <- min(Dij[Dij > 0]) / 2\nDij[Dij <= 0] <- minDij\n\nWe assume Dij is the object containing your distance matrix. In your\nexample code, it would be\n\nDij <- as.matrix(dissim1)\n\nfor example.\n\nThe first line of my code calculates half the smallest observed\ndissimilarity. If we break it down, the code in that first line does the\nfollowing [there was a missing `]` in the version you quote and probably\nin my original]:\n\nDij[Dij > 0] subsets Dij so that we only work with the dissimilarities\nthat are positive. This way of indexing the matrix Dij results in a\nvector of positive dissimilarities. We then apply the min( ) function to\nthis vector of positive dissimilarities to return the smallest positive\ndissimilarity observed. We then halve this minimum value and store it in\nthe object minDij.\n\nThe second line of my code uses this dissimilarity value (minDij) to\nreplace the observed dissimilarities in Dij that are less than or equal\nto 0.\n\nHope this is of use. If you still can't get this to work, post back and\nlet us know.\n\nAll the best,\n\nG\n\nOn Tue, 2010-06-15 at 08:34 -0300, Arnaldo Russo wrote:\n> Hi all,\n> \n> I'm executing some multivariate exploratory annalysis, with vegan and MASS\n> packages.\n> \n> Some problems are not solved for me at this moment. I have read all past\n> discussions over MDS problems.\n> \n> In my studies occurs a situation that some samples are equal each other, and\n> this results in zero dissimilarities.\n> \n> I tryed with no success, use the stepacross function. So, in this case I\n> changed one of these zero dissimilarities values for a minimum (1e-5). Some\n> of these modifications are different than \"stepacross\" or same isoMDS(x.dist\n> + 1e-5)  (proposed by Jari oksanen to 'lie' to isoMDS? When I delete a\n> sample I do not loose some weight?\n> \n> Changing one of those zero dissimilarities and using zerodist = \"add\" option\n> of metaMDS, it passed the current error (zero or negative distance between\n> objects).\n> \n> Someone could explain the function posted by Gavin Simpson (Jan 12, 2010;\n> 05:45pm Re: Non-metric multidimensional scaling (NMDS) help). I didn't get\n> some result.\n> \n> If there is a good reason, and you want to include all samples, then\n> >\n> you'll need to come up with a means for handling them. metaMDSdist allow\n> >\n> you to add a small value to the zero dissimilarities. The details are in\n> > the code, but effectively all zero distances are replaced by half the\n> > smallest non zero distance. You could do a similar replacement yourself\n> > if you feel this is warranted and/or justified.\n> >\n> > minDij <- min(Dij[Dij > 0) / 2\n> > Dij[Dij <= 0] <- minDij\n> >\n> > Will do this replacement if Dij is your matrix (replace Dij with\n> > whatever the name of your matrix is). Then supply the new matrix to\n> > metaMDS. \"\n> >\n> \n> \n> When I use unique function as #x.dist <- dist(unique(X))\n> this cutted some of my samples that I do not know. I can't see my variables\n> in the plot. Some help?\n> \n> Cheers, Arnaldo.\n> \n> \n> epi<- read.table(\"epi.txt\", h=TRUE,row.names=1)\n> \n> library('vegan')\n> library('MASS')\n> \n> epi.<- as.matrix(epi)\n> \n> dissim1<- vegdist(epi., method=\"jaccard\", binary=TRUE)\n> dissim1.mds<-metaMDS(dissim1,k=2)\n> \n> plot(dissim1.mds,type=\"n\")\n> text(dissim1.mds, labels=as.character(row.names(epi)))\n> \n> #epi\n> sample    sp1    sp2    sp3    sp4    sp5    sp6    sp7    sp8    sp9\n> sp10    sp11    sp12    sp13    sp14    sp15    sp16    sp17    sp18    sp19\n> 1E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 2E    0    0    1    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 3E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 4E    1    0    1    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 5E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 6E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 7M    1    0    1    0    0    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 8E    1    0    0    0    0    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 11E    1    0    0    0    1    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 12E    0    0    0    0    0    1    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 13E    0    0    0    0    0    0    1    0    0    0    1    1    0    0\n> 0    0    0    0    0\n> 14E    0    0    1    0    0    0    0    0    0    0    0    1    0    0\n> 0    0    0    0    0\n> 15E    1    0    0    0    0    0    1    0    0    0    0    0    1    0\n> 0    0    0    0    0\n> 17E    0    0    0    0    1    0    1    0    1    0    0    0    0    0\n> 0    0    0    0    0\n> 18E    0    0    0    0    0    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 20E    1    0    0    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 21E    1    0    0    0    0    0    0    0    0    0    0    0    0    1\n> 0    0    0    0    0\n> 22E    1    0    0    0    1    0    0    0    1    0    0    0    0    0\n> 0    0    0    0    0\n> 23E    1    0    1    1    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 27E    1    0    0    1    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 28E    1    0    0    0    1    0    1    1    0    0    1    0    0    0\n> 0    0    0    0    0\n> 30E    1    1    0    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 31E    0    0    0    0    0    0    0    0    0    0    0    0    0    0\n> 1    0    0    0    0\n> 32E    1    0    0    0    0    0    0    0    1    0    0    0    0    0\n> 0    0    0    0    0\n> 9E    0    0    0    0    0    1    1    1    1    1    0    0    0    0\n> 0    0    1    0    0\n> 10E    0    0    1    0    0    1    1    0    1    1    1    0    0    0\n> 0    1    0    1    1\n> \n> ------\n> Arnaldo D`Amaral Pereira Granja Russo\n> Instituto Ambiental Boto Flipper\n> www.institutobotoflipper.com.br\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "Hi Arnaldo,\n\nYou ask several disjointed question that I don't really follow (esp your\nlast point about unique), but in response to:\n\n> When I delete a sample I do not loose some weight?\n\nNo, nMDS only",
+      "thread_id": "thread-627648284987",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-2273f4fe03a2",
+      "message_id": "<C83D8C55.F662%jari.oksanen@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2010-06-15T20:00:21+03:00",
+      "subject": "[R-sig-eco] some MDS and R problems",
+      "subject_clean": "some MDS and R problems",
+      "in_reply_to": "<1276604131.12203.15.camel@localhost>",
+      "references": [],
+      "body_plain": "On 15/06/10 15:15 PM, \"Gavin Simpson\" <gavin.simpson at ucl.ac.uk> wrote:\n\n> Hi Arnaldo,\n> \n> You ask several disjointed question that I don't really follow (esp your\n> last point about unique), but in response to:\n> \n>> When I delete a sample I do not loose some weight?\n> \n> No, nMDS only cares about trying to position points in a k dimensional\n> space such that the distance between points in this k dimensional space\n> best represents the rank ordering of the original dissimilarities. If\n> two samples have 0 dissimilarity, they should occupy the same location\n> on the plot (in the k dimensional space); one does not influence the\n> other. Hence simply deleting one of the pair of samples that have zero\n> distance to one another is appropriate.\n> \nActually, you *do* lose weights. If two points are identical, all other\npoints have twice the same contribution to the stress with respect to this\nidentical pair. There is no way of handling this in isoMDS() which knows no\nweights and does not allow duplicate points . The 'zerodist' trick in vegan\nmetaMDS() is just a kluge to get around this.\n\nThe 'zerodist' argument is not used in metaMDS() if you supply your own\ndissimilarities. The 'zerodist' works within metaMDSdist() that calculates\ndissimilaritiesa and it is not called if you supply your own\ndissimilarities. This is not documented in vegan explicitly (I'll see how to\ndo this). If you have your own dissimilarity structure, you should handle\nzero distances by hand before calling metaMDS() or isoMDS().\n\ncheers, Jari Oksanen\n\n> As for the code I wrote in the email you cite:\n> \n> minDij <- min(Dij[Dij > 0]) / 2\n> Dij[Dij <= 0] <- minDij\n> \n> We assume Dij is the object containing your distance matrix. In your\n> example code, it would be\n> \n> Dij <- as.matrix(dissim1)\n> \n> for example.\n> \n> The first line of my code calculates half the smallest observed\n> dissimilarity. If we break it down, the code in that first line does the\n> following [there was a missing `]` in the version you quote and probably\n> in my original]:\n> \n> Dij[Dij > 0] subsets Dij so that we only work with the dissimilarities\n> that are positive. This way of indexing the matrix Dij results in a\n> vector of positive dissimilarities. We then apply the min( ) function to\n> this vector of positive dissimilarities to return the smallest positive\n> dissimilarity observed. We then halve this minimum value and store it in\n> the object minDij.\n> \n> The second line of my code uses this dissimilarity value (minDij) to\n> replace the observed dissimilarities in Dij that are less than or equal\n> to 0.\n> \n> Hope this is of use. If you still can't get this to work, post back and\n> let us know.\n> \n> All the best,\n> \n> G\n> \n> On Tue, 2010-06-15 at 08:34 -0300, Arnaldo Russo wrote:\n>> Hi all,\n>> \n>> I'm executing some multivariate exploratory annalysis, with vegan and MASS\n>> packages.\n>> \n>> Some problems are not solved for me at this moment. I have read all past\n>> discussions over MDS problems.\n>> \n>> In my studies occurs a situation that some samples are equal each other, and\n>> this results in zero dissimilarities.\n>> \n>> I tryed with no success, use the stepacross function. So, in this case I\n>> changed one of these zero dissimilarities values for a minimum (1e-5). Some\n>> of these modifications are different than \"stepacross\" or same isoMDS(x.dist\n>> + 1e-5)  (proposed by Jari oksanen to 'lie' to isoMDS? When I delete a\n>> sample I do not loose some weight?\n>> \n>> Changing one of those zero dissimilarities and using zerodist = \"add\" option\n>> of metaMDS, it passed the current error (zero or negative distance between\n>> objects).\n>> \n>> Someone could explain the function posted by Gavin Simpson (Jan 12, 2010;\n>> 05:45pm Re: Non-metric multidimensional scaling (NMDS) help). I didn't get\n>> some result.\n>> \n>> If there is a good reason, and you want to include all samples, then\n>>> \n>> you'll need to come up with a means for handling them. metaMDSdist allow\n>>> \n>> you to add a small value to the zero dissimilarities. The details are in\n>>> the code, but effectively all zero distances are replaced by half the\n>>> smallest non zero distance. You could do a similar replacement yourself\n>>> if you feel this is warranted and/or justified.\n>>> \n>>> minDij <- min(Dij[Dij > 0) / 2\n>>> Dij[Dij <= 0] <- minDij\n>>> \n>>> Will do this replacement if Dij is your matrix (replace Dij with\n>>> whatever the name of your matrix is). Then supply the new matrix to\n>>> metaMDS. \"\n>>> \n>> \n>> \n>> When I use unique function as #x.dist <- dist(unique(X))\n>> this cutted some of my samples that I do not know. I can't see my variables\n>> in the plot. Some help?\n>> \n>> Cheers, Arnaldo.\n>> \n>> \n>> epi<- read.table(\"epi.txt\", h=TRUE,row.names=1)\n>> \n>> library('vegan')\n>> library('MASS')\n>> \n>> epi.<- as.matrix(epi)\n>> \n>> dissim1<- vegdist(epi., method=\"jaccard\", binary=TRUE)\n>> dissim1.mds<-metaMDS(dissim1,k=2)\n>> \n>> plot(dissim1.mds,type=\"n\")\n>> text(dissim1.mds, labels=as.character(row.names(epi)))\n>> \n>> #epi\n>> sample    sp1    sp2    sp3    sp4    sp5    sp6    sp7    sp8    sp9\n>> sp10    sp11    sp12    sp13    sp14    sp15    sp16    sp17    sp18    sp19\n>> 1E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 2E    0    0    1    0    1    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 3E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 4E    1    0    1    0    1    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 5E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 6E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 7M    1    0    1    0    0    0    1    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 8E    1    0    0    0    0    0    1    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 11E    1    0    0    0    1    0    1    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 12E    0    0    0    0    0    1    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 13E    0    0    0    0    0    0    1    0    0    0    1    1    0    0\n>> 0    0    0    0    0\n>> 14E    0    0    1    0    0    0    0    0    0    0    0    1    0    0\n>> 0    0    0    0    0\n>> 15E    1    0    0    0    0    0    1    0    0    0    0    0    1    0\n>> 0    0    0    0    0\n>> 17E    0    0    0    0    1    0    1    0    1    0    0    0    0    0\n>> 0    0    0    0    0\n>> 18E    0    0    0    0    0    0    1    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 20E    1    0    0    0    1    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 21E    1    0    0    0    0    0    0    0    0    0    0    0    0    1\n>> 0    0    0    0    0\n>> 22E    1    0    0    0    1    0    0    0    1    0    0    0    0    0\n>> 0    0    0    0    0\n>> 23E    1    0    1    1    1    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 27E    1    0    0    1    1    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 28E    1    0    0    0    1    0    1    1    0    0    1    0    0    0\n>> 0    0    0    0    0\n>> 30E    1    1    0    0    1    0    0    0    0    0    0    0    0    0\n>> 0    0    0    0    0\n>> 31E    0    0    0    0    0    0    0    0    0    0    0    0    0    0\n>> 1    0    0    0    0\n>> 32E    1    0    0    0    0    0    0    0    1    0    0    0    0    0\n>> 0    0    0    0    0\n>> 9E    0    0    0    0    0    1    1    1    1    1    0    0    0    0\n>> 0    0    1    0    0\n>> 10E    0    0    1    0    0    1    1    0    1    1    1    0    0    0\n>> 0    1    0    1    1\n>> \n>> ------\n>> Arnaldo D`Amaral Pereira Granja Russo\n>> Instituto Ambiental Boto Flipper\n>> www.institutobotoflipper.com.br\n>> \n>> [[alternative HTML version deleted]]\n>> \n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "On 15/06/10 15:15 PM, \"Gavin Simpson\" <gavin.simpson at ucl.ac.uk> wrote:\n\n> Hi Arnaldo,\n> \n> You ask several disjointed question that I don't really follow (esp your\n> last point about unique), but i",
+      "thread_id": "thread-627648284987",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-567c87058780",
+      "message_id": "<1276622266.12203.97.camel@localhost>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-06-15T18:17:46+01:00",
+      "subject": "[R-sig-eco] some MDS and R problems",
+      "subject_clean": "some MDS and R problems",
+      "in_reply_to": "<C83D8C55.F662%jari.oksanen@oulu.fi>",
+      "references": [
+        "<C83D8C55.F662%jari.oksanen@oulu.fi>"
+      ],
+      "body_plain": "On Tue, 2010-06-15 at 20:00 +0300, Jari Oksanen wrote:\n> On 15/06/10 15:15 PM, \"Gavin Simpson\" <gavin.simpson at ucl.ac.uk> wrote:\n> \n> > Hi Arnaldo,\n> > \n> > You ask several disjointed question that I don't really follow (esp your\n> > last point about unique), but in response to:\n> > \n> >> When I delete a sample I do not loose some weight?\n> > \n> > No, nMDS only cares about trying to position points in a k dimensional\n> > space such that the distance between points in this k dimensional space\n> > best represents the rank ordering of the original dissimilarities. If\n> > two samples have 0 dissimilarity, they should occupy the same location\n> > on the plot (in the k dimensional space); one does not influence the\n> > other. Hence simply deleting one of the pair of samples that have zero\n> > distance to one another is appropriate.\n> > \n> Actually, you *do* lose weights. If two points are identical, all other\n> points have twice the same contribution to the stress with respect to this\n> identical pair. There is no way of handling this in isoMDS() which knows no\n> weights and does not allow duplicate points . The 'zerodist' trick in vegan\n> metaMDS() is just a kluge to get around this.\n\nAhh, yes. I wasn't thinking about things that way. Taking a step back,\nnMDS is about finding a mapping in some low dimensional space. If two\npoints are exactly similar they should be plotted in the the same\nlocation. In that sense, you don't loose anything by dropping one out,\nin the sense that the end result is the location for your two identical\npoints. That was what I was referring to.\n\nG\n\n> The 'zerodist' argument is not used in metaMDS() if you supply your own\n> dissimilarities. The 'zerodist' works within metaMDSdist() that calculates\n> dissimilaritiesa and it is not called if you supply your own\n> dissimilarities. This is not documented in vegan explicitly (I'll see how to\n> do this). If you have your own dissimilarity structure, you should handle\n> zero distances by hand before calling metaMDS() or isoMDS().\n> \n> cheers, Jari Oksanen\n> \n> > As for the code I wrote in the email you cite:\n> > \n> > minDij <- min(Dij[Dij > 0]) / 2\n> > Dij[Dij <= 0] <- minDij\n> > \n> > We assume Dij is the object containing your distance matrix. In your\n> > example code, it would be\n> > \n> > Dij <- as.matrix(dissim1)\n> > \n> > for example.\n> > \n> > The first line of my code calculates half the smallest observed\n> > dissimilarity. If we break it down, the code in that first line does the\n> > following [there was a missing `]` in the version you quote and probably\n> > in my original]:\n> > \n> > Dij[Dij > 0] subsets Dij so that we only work with the dissimilarities\n> > that are positive. This way of indexing the matrix Dij results in a\n> > vector of positive dissimilarities. We then apply the min( ) function to\n> > this vector of positive dissimilarities to return the smallest positive\n> > dissimilarity observed. We then halve this minimum value and store it in\n> > the object minDij.\n> > \n> > The second line of my code uses this dissimilarity value (minDij) to\n> > replace the observed dissimilarities in Dij that are less than or equal\n> > to 0.\n> > \n> > Hope this is of use. If you still can't get this to work, post back and\n> > let us know.\n> > \n> > All the best,\n> > \n> > G\n> > \n> > On Tue, 2010-06-15 at 08:34 -0300, Arnaldo Russo wrote:\n> >> Hi all,\n> >> \n> >> I'm executing some multivariate exploratory annalysis, with vegan and MASS\n> >> packages.\n> >> \n> >> Some problems are not solved for me at this moment. I have read all past\n> >> discussions over MDS problems.\n> >> \n> >> In my studies occurs a situation that some samples are equal each other, and\n> >> this results in zero dissimilarities.\n> >> \n> >> I tryed with no success, use the stepacross function. So, in this case I\n> >> changed one of these zero dissimilarities values for a minimum (1e-5). Some\n> >> of these modifications are different than \"stepacross\" or same isoMDS(x.dist\n> >> + 1e-5)  (proposed by Jari oksanen to 'lie' to isoMDS? When I delete a\n> >> sample I do not loose some weight?\n> >> \n> >> Changing one of those zero dissimilarities and using zerodist = \"add\" option\n> >> of metaMDS, it passed the current error (zero or negative distance between\n> >> objects).\n> >> \n> >> Someone could explain the function posted by Gavin Simpson (Jan 12, 2010;\n> >> 05:45pm Re: Non-metric multidimensional scaling (NMDS) help). I didn't get\n> >> some result.\n> >> \n> >> If there is a good reason, and you want to include all samples, then\n> >>> \n> >> you'll need to come up with a means for handling them. metaMDSdist allow\n> >>> \n> >> you to add a small value to the zero dissimilarities. The details are in\n> >>> the code, but effectively all zero distances are replaced by half the\n> >>> smallest non zero distance. You could do a similar replacement yourself\n> >>> if you feel this is warranted and/or justified.\n> >>> \n> >>> minDij <- min(Dij[Dij > 0) / 2\n> >>> Dij[Dij <= 0] <- minDij\n> >>> \n> >>> Will do this replacement if Dij is your matrix (replace Dij with\n> >>> whatever the name of your matrix is). Then supply the new matrix to\n> >>> metaMDS. \"\n> >>> \n> >> \n> >> \n> >> When I use unique function as #x.dist <- dist(unique(X))\n> >> this cutted some of my samples that I do not know. I can't see my variables\n> >> in the plot. Some help?\n> >> \n> >> Cheers, Arnaldo.\n> >> \n> >> \n> >> epi<- read.table(\"epi.txt\", h=TRUE,row.names=1)\n> >> \n> >> library('vegan')\n> >> library('MASS')\n> >> \n> >> epi.<- as.matrix(epi)\n> >> \n> >> dissim1<- vegdist(epi., method=\"jaccard\", binary=TRUE)\n> >> dissim1.mds<-metaMDS(dissim1,k=2)\n> >> \n> >> plot(dissim1.mds,type=\"n\")\n> >> text(dissim1.mds, labels=as.character(row.names(epi)))\n> >> \n> >> #epi\n> >> sample    sp1    sp2    sp3    sp4    sp5    sp6    sp7    sp8    sp9\n> >> sp10    sp11    sp12    sp13    sp14    sp15    sp16    sp17    sp18    sp19\n> >> 1E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 2E    0    0    1    0    1    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 3E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 4E    1    0    1    0    1    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 5E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 6E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 7M    1    0    1    0    0    0    1    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 8E    1    0    0    0    0    0    1    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 11E    1    0    0    0    1    0    1    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 12E    0    0    0    0    0    1    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 13E    0    0    0    0    0    0    1    0    0    0    1    1    0    0\n> >> 0    0    0    0    0\n> >> 14E    0    0    1    0    0    0    0    0    0    0    0    1    0    0\n> >> 0    0    0    0    0\n> >> 15E    1    0    0    0    0    0    1    0    0    0    0    0    1    0\n> >> 0    0    0    0    0\n> >> 17E    0    0    0    0    1    0    1    0    1    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 18E    0    0    0    0    0    0    1    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 20E    1    0    0    0    1    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 21E    1    0    0    0    0    0    0    0    0    0    0    0    0    1\n> >> 0    0    0    0    0\n> >> 22E    1    0    0    0    1    0    0    0    1    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 23E    1    0    1    1    1    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 27E    1    0    0    1    1    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 28E    1    0    0    0    1    0    1    1    0    0    1    0    0    0\n> >> 0    0    0    0    0\n> >> 30E    1    1    0    0    1    0    0    0    0    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 31E    0    0    0    0    0    0    0    0    0    0    0    0    0    0\n> >> 1    0    0    0    0\n> >> 32E    1    0    0    0    0    0    0    0    1    0    0    0    0    0\n> >> 0    0    0    0    0\n> >> 9E    0    0    0    0    0    1    1    1    1    1    0    0    0    0\n> >> 0    0    1    0    0\n> >> 10E    0    0    1    0    0    1    1    0    1    1    1    0    0    0\n> >> 0    1    0    1    1\n> >> \n> >> ------\n> >> Arnaldo D`Amaral Pereira Granja Russo\n> >> Instituto Ambiental Boto Flipper\n> >> www.institutobotoflipper.com.br\n> >> \n> >> [[alternative HTML version deleted]]\n> >> \n> >> _______________________________________________\n> >> R-sig-ecology mailing list\n> >> R-sig-ecology at r-project.org\n> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> \n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Tue, 2010-06-15 at 20:00 +0300, Jari Oksanen wrote:\n> On 15/06/10 15:15 PM, \"Gavin Simpson\" <gavin.simpson at ucl.ac.uk> wrote:\n> \n> > Hi Arnaldo,\n> > \n> > You ask several disjointed question that ",
+      "thread_id": "thread-627648284987",
+      "thread_depth": 3,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-4de0b5cf2ca1",
+      "message_id": "<4C1965F0.3070001@ecology.msu.montana.edu>",
+      "from_name": "Dave Roberts",
+      "from_email_hash": "3229d32e357888923e00c65f487e6e1cd3028403c9c7a37830ffec8cd93222ad",
+      "date": "2010-06-16T17:01:52-07:00",
+      "subject": "[R-sig-eco] some MDS and R problems",
+      "subject_clean": "some MDS and R problems",
+      "in_reply_to": "<AANLkTimh_xgJiWHBUzNHHAwO1WSWI1mCeq9V24SRCQ0n@mail.gmail.com>",
+      "references": [
+        "<AANLkTimh_xgJiWHBUzNHHAwO1WSWI1mCeq9V24SRCQ0n@mail.gmail.com>"
+      ],
+      "body_plain": "Arnaldo,\n\n     Given that NMDS operates essentially on rank distances, small \nvariations in dissimilarity generally have low impact.  I rarely have \npoints with zero dissimilarity on quantitative indices, but it sometimes \nhappens on presence/absence based indices.  If you have a dissimilarity \nobject named dis, I just do\n\n > dis[dis==0] <- 0.0001\n > res <- nmds(dis)\n\nFollowing Jari's argument about the other point's contribution to \nstress, I think fudging one dissimilarity is a better solution than \ndropping out a point\n\nDave Roberts\n\nArnaldo Russo wrote:\n> Hi all,\n> \n> I'm executing some multivariate exploratory annalysis, with vegan and MASS\n> packages.\n> \n> Some problems are not solved for me at this moment. I have read all past\n> discussions over MDS problems.\n> \n> In my studies occurs a situation that some samples are equal each other, and\n> this results in zero dissimilarities.\n> \n> I tryed with no success, use the stepacross function. So, in this case I\n> changed one of these zero dissimilarities values for a minimum (1e-5). Some\n> of these modifications are different than \"stepacross\" or same isoMDS(x.dist\n> + 1e-5)  (proposed by Jari oksanen to 'lie' to isoMDS? When I delete a\n> sample I do not loose some weight?\n> \n> Changing one of those zero dissimilarities and using zerodist = \"add\" option\n> of metaMDS, it passed the current error (zero or negative distance between\n> objects).\n> \n> Someone could explain the function posted by Gavin Simpson (Jan 12, 2010;\n> 05:45pm Re: Non-metric multidimensional scaling (NMDS) help). I didn't get\n> some result.\n> \n> If there is a good reason, and you want to include all samples, then\n> you'll need to come up with a means for handling them. metaMDSdist allow\n> you to add a small value to the zero dissimilarities. The details are in\n>> the code, but effectively all zero distances are replaced by half the\n>> smallest non zero distance. You could do a similar replacement yourself\n>> if you feel this is warranted and/or justified.\n>>\n>> minDij <- min(Dij[Dij > 0) / 2\n>> Dij[Dij <= 0] <- minDij\n>>\n>> Will do this replacement if Dij is your matrix (replace Dij with\n>> whatever the name of your matrix is). Then supply the new matrix to\n>> metaMDS. \"\n>>\n> \n> \n> When I use unique function as #x.dist <- dist(unique(X))\n> this cutted some of my samples that I do not know. I can't see my variables\n> in the plot. Some help?\n> \n> Cheers, Arnaldo.\n> \n> \n> epi<- read.table(\"epi.txt\", h=TRUE,row.names=1)\n> \n> library('vegan')\n> library('MASS')\n> \n> epi.<- as.matrix(epi)\n> \n> dissim1<- vegdist(epi., method=\"jaccard\", binary=TRUE)\n> dissim1.mds<-metaMDS(dissim1,k=2)\n> \n> plot(dissim1.mds,type=\"n\")\n> text(dissim1.mds, labels=as.character(row.names(epi)))\n> \n> #epi\n> sample    sp1    sp2    sp3    sp4    sp5    sp6    sp7    sp8    sp9\n> sp10    sp11    sp12    sp13    sp14    sp15    sp16    sp17    sp18    sp19\n> 1E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 2E    0    0    1    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 3E    1    0    1    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 4E    1    0    1    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 5E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 6E    1    0    0    0    0    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 7M    1    0    1    0    0    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 8E    1    0    0    0    0    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 11E    1    0    0    0    1    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 12E    0    0    0    0    0    1    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 13E    0    0    0    0    0    0    1    0    0    0    1    1    0    0\n> 0    0    0    0    0\n> 14E    0    0    1    0    0    0    0    0    0    0    0    1    0    0\n> 0    0    0    0    0\n> 15E    1    0    0    0    0    0    1    0    0    0    0    0    1    0\n> 0    0    0    0    0\n> 17E    0    0    0    0    1    0    1    0    1    0    0    0    0    0\n> 0    0    0    0    0\n> 18E    0    0    0    0    0    0    1    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 20E    1    0    0    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 21E    1    0    0    0    0    0    0    0    0    0    0    0    0    1\n> 0    0    0    0    0\n> 22E    1    0    0    0    1    0    0    0    1    0    0    0    0    0\n> 0    0    0    0    0\n> 23E    1    0    1    1    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 27E    1    0    0    1    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 28E    1    0    0    0    1    0    1    1    0    0    1    0    0    0\n> 0    0    0    0    0\n> 30E    1    1    0    0    1    0    0    0    0    0    0    0    0    0\n> 0    0    0    0    0\n> 31E    0    0    0    0    0    0    0    0    0    0    0    0    0    0\n> 1    0    0    0    0\n> 32E    1    0    0    0    0    0    0    0    1    0    0    0    0    0\n> 0    0    0    0    0\n> 9E    0    0    0    0    0    1    1    1    1    1    0    0    0    0\n> 0    0    1    0    0\n> 10E    0    0    1    0    0    1    1    0    1    1    1    0    0    0\n> 0    1    0    1    1\n> \n> ------\n> Arnaldo D`Amaral Pereira Granja Russo\n> Instituto Ambiental Boto Flipper\n> www.institutobotoflipper.com.br\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Arnaldo,\n\n     Given that NMDS operates essentially on rank distances, small \nvariations in dissimilarity generally have low impact.  I rarely have \npoints with zero dissimilarity on quantitative indi",
+      "thread_id": "thread-627648284987",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-e6b173afdc16",
+      "message_id": "<AANLkTiliwHit3ZV0AbnRTP7JBH2-lwfSyWFGRtQN-wT3@mail.gmail.com>",
+      "from_name": "Jorge Velasquez",
+      "from_email_hash": "a2d3712bcf5054e2ba56d029c1a0c31325d9d6f90c2525f1e43ba6db788d5c32",
+      "date": "2010-06-17T15:25:06-05:00",
+      "subject": "[R-sig-eco] memory issues using Tps (package fields)",
+      "subject_clean": "memory issues using Tps (package fields)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi there,\n\nI'm trying to run a interpolation of climate using the functionTps\n(Thin plated splines) from the package fields, but keep running into\nthe following error:\n\nError: cannot allocate vector of size 488 Kb\nIn addition: Warning messages:\n1: In names(y) <- make.unique(cols) :\n  Reached total allocation of 3583Mb: see help(memory.size)\n2: In names(y) <- make.unique(cols) :\n  Reached total allocation of 3583Mb: see help(memory.size)\n3: In names(y) <- make.unique(cols) :\n  Reached total allocation of 3583Mb: see help(memory.size)\n4: In names(y) <- make.unique(cols) :\n  Reached total allocation of 3583Mb: see help(memory.size)\nError in as.matrix(expand.grid(grid.list)) :\n  error in evaluating the argument 'x' in selecting a method for\nfunction 'as.matrix'\n\nThe code I'm running is:\n\npredGrid<-read.table(\"demaspoint_id8.csv\" ,sep=\",\" ,header=TRUE)\ndata<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\" ,header=TRUE)\nfit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],Z=data$dem)\nresult<-predict.surface(fit,grid.list=list(x=predGrid[,c(\"Longitude\",\"Latitude\")],Z=predGrid[,\"GRID_CODE\"]))\n\nThe file predGrid has ~65000 rows. The error is persistent even using\na machine with 8GB Ram, double xeon processor, and the 64bit version\nof R, although the error pasted above is for the 32 bit version.\n\nIs there any solution to this? Am I missing something?\n\nThanks,\n\nJorge\n-- \n---\nJorge Velasquez\nDepartment of Ecology and Evolution\nStony Brook University\nStony Brook, NY 11974\nPhone:(631) 632-1445\nhttp://life.bio.sunysb.edu/~jorge/",
+      "body_snippet": "Hi there,\n\nI'm trying to run a interpolation of climate using the functionTps\n(Thin plated splines) from the package fields, but keep running into\nthe following error:\n\nError: cannot allocate vector o",
+      "thread_id": "thread-e6b173afdc16",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-28538503c1f1",
+      "message_id": "<AANLkTikdGeGck5n2RdovY32zZNJyIL91ZX28z9M4fqpR@mail.gmail.com>",
+      "from_name": "Robert J. Hijmans",
+      "from_email_hash": "70faee4a4bb00a9a42b7eb40463e8688ad54c69883a6137dae52bd7d9c748ee2",
+      "date": "2010-06-17T13:49:44-07:00",
+      "subject": "[R-sig-eco] memory issues using Tps (package fields)",
+      "subject_clean": "memory issues using Tps (package fields)",
+      "in_reply_to": "<AANLkTiliwHit3ZV0AbnRTP7JBH2-lwfSyWFGRtQN-wT3@mail.gmail.com>",
+      "references": [
+        "<AANLkTiliwHit3ZV0AbnRTP7JBH2-lwfSyWFGRtQN-wT3@mail.gmail.com>"
+      ],
+      "body_plain": "Jorge,\nYou could use the function 'interpolate' in 'raster'. It makes\npredictions for smaller chunks of data and puts these back together.\nThere is an example for Tps. You would need to provide elevation data\n(as a RasterLayer) as the first argument.\nRobert\n\nOn Thu, Jun 17, 2010 at 1:25 PM, Jorge Velasquez\n<jorge at life.bio.sunysb.edu> wrote:\n> Hi there,\n>\n> I'm trying to run a interpolation of climate using the functionTps\n> (Thin plated splines) from the package fields, but keep running into\n> the following error:\n>\n> Error: cannot allocate vector of size 488 Kb\n> In addition: Warning messages:\n> 1: In names(y) <- make.unique(cols) :\n> ?Reached total allocation of 3583Mb: see help(memory.size)\n> 2: In names(y) <- make.unique(cols) :\n> ?Reached total allocation of 3583Mb: see help(memory.size)\n> 3: In names(y) <- make.unique(cols) :\n> ?Reached total allocation of 3583Mb: see help(memory.size)\n> 4: In names(y) <- make.unique(cols) :\n> ?Reached total allocation of 3583Mb: see help(memory.size)\n> Error in as.matrix(expand.grid(grid.list)) :\n> ?error in evaluating the argument 'x' in selecting a method for\n> function 'as.matrix'\n>\n> The code I'm running is:\n>\n> predGrid<-read.table(\"demaspoint_id8.csv\" ,sep=\",\" ,header=TRUE)\n> data<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\" ,header=TRUE)\n> fit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],Z=data$dem)\n> result<-predict.surface(fit,grid.list=list(x=predGrid[,c(\"Longitude\",\"Latitude\")],Z=predGrid[,\"GRID_CODE\"]))\n>\n> The file predGrid has ~65000 rows. The error is persistent even using\n> a machine with 8GB Ram, double xeon processor, and the 64bit version\n> of R, although the error pasted above is for the 32 bit version.\n>\n> Is there any solution to this? Am I missing something?\n>\n> Thanks,\n>\n> Jorge\n> --\n> ---\n> Jorge Velasquez\n> Department of Ecology and Evolution\n> Stony Brook University\n> Stony Brook, NY 11974\n> Phone:(631) 632-1445\n> http://life.bio.sunysb.edu/~jorge/\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>",
+      "body_snippet": "Jorge,\nYou could use the function 'interpolate' in 'raster'. It makes\npredictions for smaller chunks of data and puts these back together.\nThere is an example for Tps. You would need to provide elevat",
+      "thread_id": "thread-e6b173afdc16",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-c917ca055116",
+      "message_id": "<AANLkTikx-jesk5zO4qrjQJozjxEcXDQEgNRd-beAORC0@mail.gmail.com>",
+      "from_name": "Jorge Velasquez",
+      "from_email_hash": "a2d3712bcf5054e2ba56d029c1a0c31325d9d6f90c2525f1e43ba6db788d5c32",
+      "date": "2010-06-17T22:33:41-05:00",
+      "subject": "[R-sig-eco] memory issues using Tps (package fields)",
+      "subject_clean": "memory issues using Tps (package fields)",
+      "in_reply_to": "<AANLkTikdGeGck5n2RdovY32zZNJyIL91ZX28z9M4fqpR@mail.gmail.com>",
+      "references": [
+        "<AANLkTiliwHit3ZV0AbnRTP7JBH2-lwfSyWFGRtQN-wT3@mail.gmail.com>",
+        "<AANLkTikdGeGck5n2RdovY32zZNJyIL91ZX28z9M4fqpR@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Robert,\n\nI tried the solution you suggested but get the following error:\n\nError in predict.Krig(model, blockvals, ...) :\n  Need to specifify drop.Z as TRUE or pass Z values\n\nThis is the code I used:\n\ndata<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\",header=TRUE)\nfit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],z=data$dem)\nelev=raster(\"dem_col.asc\")\nresult<-interpolate(elev,fit)\n\nMany thanks indeed for your reply,\n\nJorge\n\nOn Thu, Jun 17, 2010 at 3:49 PM, Robert J. Hijmans <r.hijmans at gmail.com> wrote:\n> Jorge,\n> You could use the function 'interpolate' in 'raster'. It makes\n> predictions for smaller chunks of data and puts these back together.\n> There is an example for Tps. You would need to provide elevation data\n> (as a RasterLayer) as the first argument.\n> Robert\n>\n> On Thu, Jun 17, 2010 at 1:25 PM, Jorge Velasquez\n> <jorge at life.bio.sunysb.edu> wrote:\n>> Hi there,\n>>\n>> I'm trying to run a interpolation of climate using the functionTps\n>> (Thin plated splines) from the package fields, but keep running into\n>> the following error:\n>>\n>> Error: cannot allocate vector of size 488 Kb\n>> In addition: Warning messages:\n>> 1: In names(y) <- make.unique(cols) :\n>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>> 2: In names(y) <- make.unique(cols) :\n>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>> 3: In names(y) <- make.unique(cols) :\n>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>> 4: In names(y) <- make.unique(cols) :\n>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>> Error in as.matrix(expand.grid(grid.list)) :\n>> ?error in evaluating the argument 'x' in selecting a method for\n>> function 'as.matrix'\n>>\n>> The code I'm running is:\n>>\n>> predGrid<-read.table(\"demaspoint_id8.csv\" ,sep=\",\" ,header=TRUE)\n>> data<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\" ,header=TRUE)\n>> fit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],Z=data$dem)\n>> result<-predict.surface(fit,grid.list=list(x=predGrid[,c(\"Longitude\",\"Latitude\")],Z=predGrid[,\"GRID_CODE\"]))\n>>\n>> The file predGrid has ~65000 rows. The error is persistent even using\n>> a machine with 8GB Ram, double xeon processor, and the 64bit version\n>> of R, although the error pasted above is for the 32 bit version.\n>>\n>> Is there any solution to this? Am I missing something?\n>>\n>> Thanks,\n>>\n>> Jorge\n>> --\n>> ---\n>> Jorge Velasquez\n>> Department of Ecology and Evolution\n>> Stony Brook University\n>> Stony Brook, NY 11974\n>> Phone:(631) 632-1445\n>> http://life.bio.sunysb.edu/~jorge/\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>\n>\n\n\n\n-- \n---\nJorge Velasquez\nDepartment of Ecology and Evolution\nStony Brook University\nStony Brook, NY 11974\nPhone:(631) 632-1445\nhttp://life.bio.sunysb.edu/~jorge/",
+      "body_snippet": "Hi Robert,\n\nI tried the solution you suggested but get the following error:\n\nError in predict.Krig(model, blockvals, ...) :\n  Need to specifify drop.Z as TRUE or pass Z values\n\nThis is the code I used",
+      "thread_id": "thread-e6b173afdc16",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-3a5e81ba3bb6",
+      "message_id": "<C840DE55.F7AF%jari.oksanen@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2010-06-18T08:27:01+03:00",
+      "subject": "[R-sig-eco] non-metric multidimensional scaling",
+      "subject_clean": "non-metric multidimensional scaling",
+      "in_reply_to": "<105698.37724.qm@web26102.mail.ukl.yahoo.com>",
+      "references": [],
+      "body_plain": "Falk,\n\nOn 9/06/10 16:19 PM, \"Falk Hildebrand\" <hagen804 at yahoo.de> wrote:\n\n> Dear list,\n> I have been using the vegan package to do mds via the metaMDS function, but I\n> have some questions regarding the output.\n> 1) First off about the rankindex function {vegan}: On my data I always get\n> values that I would consider as low, e.g. something in the range of 0.0344 as\n> best result (euclidean) and the mean being 0.028 over 7 other metrices. Do\n> results as low as this have any relevance? Are there some guidelines as to\n> what absolute (or relative) values one should at least obtain to make a\n> distinction?\nThe rankindex() only ranks (or orders). It does not pretend to do any\ntesting. However, value of 0.0344 is low. Typically, there are two\nalternative explanations: your environmental variables are weak, or you have\ntoo many of them in one analysis. If you sum up many environmental\nvariables, noise will dominate over signal. If you only use some of the\nimportant variables, your signal will be stronger and correlations are\nhigher. See bioenv() function in vegan for further details. Another\nalternative is to have a standardized PCA of your environmental variables,\nand base the rankindex() on some of the first axes.\n\n> 2) Is there a way to estimate what percentage of the variation within the data\n> can be explained by the mds?\n\nThis does not make sense, because NMDS does not try to explain the\nvariation. Moreover, it is a non-linear method and a good (= clearly\nnon-linear) NMDS will always \"explain less of the variation\" than\ncorresponding linear analysis. However, you can use function stressplot() to\nsee the normal statistics. This is documented in the metaMDS help page and\nin the vegan FAQ that you can read in an R session using command\nvegandocs(\"FAQ\"). \n\n> 3) using envfit {vegan} I get significant p-values for 5 out of 14 env.\n> variables/factors (which is of course very nice). However, if I do a CCA and a\n> ANOVA (call: anova(cca,by=\"terms\",permu=200)) with the same environmental\n> values, usually only one of these same variables/factors ends up being\n> significant. I am aware that these are different techniques, but I always\n> thought that CCA was supposed to \"force\" the ordination on the env. vars, so\n> why then would I get much better p-values for the unconstrained nmds (I use 5\n> dimensions in the nmds)?\n>\nThe analyses are different. In constrained ordination you predict species\nabundances from environmental variables with multiple regression. In\nenvfit() you predict each environmental variable separately form your\nordination scores. In particular, when you environmental variables are\ncorrelated, only one or some few of the will be important in constrained\nordination, but all separately will be nearly equally important in envfit().\n \n> 4) how can I interpret the relation between species and the environmental fit\n> in a nmds plot call? The same as sites and env. fit?\n> e.g.\n> ef=envfit(nmds,environment)\n> plot(ef); points(nmds, dis = \"species\");\n>\nThe species scores are weighted averages. So they have similar\ninterpretation as species scores in *CA. This is documented in metaMDS help.\n \nCheers, Jari Oksanen",
+      "body_snippet": "Falk,\n\nOn 9/06/10 16:19 PM, \"Falk Hildebrand\" <hagen804 at yahoo.de> wrote:\n\n> Dear list,\n> I have been using the vegan package to do mds via the metaMDS function, but I\n> have some questions regardin",
+      "thread_id": "thread-ed84d6201d3a",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-607ce6348c3b",
+      "message_id": "<AANLkTiniDJG8pBRt5NGyLQ1WC0g3Wu6iXS39ZzQmEH9H@mail.gmail.com>",
+      "from_name": "Robert J. Hijmans",
+      "from_email_hash": "70faee4a4bb00a9a42b7eb40463e8688ad54c69883a6137dae52bd7d9c748ee2",
+      "date": "2010-06-17T22:30:50-07:00",
+      "subject": "[R-sig-eco] memory issues using Tps (package fields)",
+      "subject_clean": "memory issues using Tps (package fields)",
+      "in_reply_to": "<AANLkTikx-jesk5zO4qrjQJozjxEcXDQEgNRd-beAORC0@mail.gmail.com>",
+      "references": [
+        "<AANLkTiliwHit3ZV0AbnRTP7JBH2-lwfSyWFGRtQN-wT3@mail.gmail.com>",
+        "<AANLkTikdGeGck5n2RdovY32zZNJyIL91ZX28z9M4fqpR@mail.gmail.com>",
+        "<AANLkTikx-jesk5zO4qrjQJozjxEcXDQEgNRd-beAORC0@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Jorge,\n\nI might work if you specify \"dem\" as an independent variable rather\nthan as a co-variable (z). (If you really want it to be a co-variable\nit would take a bit of tweaking of the interpolate function). You also\nneed to add \"xyOnly = F\" to predict (not obvious from docs).\n\ndata<-read.table(\"precp00-09ContSampleDem.csv\", sep=\",\" , header=TRUE)\nfit<-Tps( data[ , c(\"x\",\"y\", \"dem\") ],  data[,\"Ene\"] )\nelev=raster(\"dem_col.asc\")\nresult<-interpolate(elev, fit, xyOnly=FALSE)\n\n(I cannot test this as I do not have (a sample of) your data)\n\nRobert\n\nOn Thu, Jun 17, 2010 at 8:33 PM, Jorge Velasquez\n<jorge at life.bio.sunysb.edu> wrote:\n> Hi Robert,\n>\n> I tried the solution you suggested but get the following error:\n>\n> Error in predict.Krig(model, blockvals, ...) :\n> ?Need to specifify drop.Z as TRUE or pass Z values\n>\n> This is the code I used:\n>\n> data<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\",header=TRUE)\n> fit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],z=data$dem)\n> elev=raster(\"dem_col.asc\")\n> result<-interpolate(elev,fit)\n>\n> Many thanks indeed for your reply,\n>\n> Jorge\n>\n> On Thu, Jun 17, 2010 at 3:49 PM, Robert J. Hijmans <r.hijmans at gmail.com> wrote:\n>> Jorge,\n>> You could use the function 'interpolate' in 'raster'. It makes\n>> predictions for smaller chunks of data and puts these back together.\n>> There is an example for Tps. You would need to provide elevation data\n>> (as a RasterLayer) as the first argument.\n>> Robert\n>>\n>> On Thu, Jun 17, 2010 at 1:25 PM, Jorge Velasquez\n>> <jorge at life.bio.sunysb.edu> wrote:\n>>> Hi there,\n>>>\n>>> I'm trying to run a interpolation of climate using the functionTps\n>>> (Thin plated splines) from the package fields, but keep running into\n>>> the following error:\n>>>\n>>> Error: cannot allocate vector of size 488 Kb\n>>> In addition: Warning messages:\n>>> 1: In names(y) <- make.unique(cols) :\n>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>> 2: In names(y) <- make.unique(cols) :\n>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>> 3: In names(y) <- make.unique(cols) :\n>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>> 4: In names(y) <- make.unique(cols) :\n>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>> Error in as.matrix(expand.grid(grid.list)) :\n>>> ?error in evaluating the argument 'x' in selecting a method for\n>>> function 'as.matrix'\n>>>\n>>> The code I'm running is:\n>>>\n>>> predGrid<-read.table(\"demaspoint_id8.csv\" ,sep=\",\" ,header=TRUE)\n>>> data<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\" ,header=TRUE)\n>>> fit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],Z=data$dem)\n>>> result<-predict.surface(fit,grid.list=list(x=predGrid[,c(\"Longitude\",\"Latitude\")],Z=predGrid[,\"GRID_CODE\"]))\n>>>\n>>> The file predGrid has ~65000 rows. The error is persistent even using\n>>> a machine with 8GB Ram, double xeon processor, and the 64bit version\n>>> of R, although the error pasted above is for the 32 bit version.\n>>>\n>>> Is there any solution to this? Am I missing something?\n>>>\n>>> Thanks,\n>>>\n>>> Jorge\n>>> --\n>>> ---\n>>> Jorge Velasquez\n>>> Department of Ecology and Evolution\n>>> Stony Brook University\n>>> Stony Brook, NY 11974\n>>> Phone:(631) 632-1445\n>>> http://life.bio.sunysb.edu/~jorge/\n>>>\n>>> _______________________________________________\n>>> R-sig-ecology mailing list\n>>> R-sig-ecology at r-project.org\n>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>\n>>\n>>\n>\n>\n>\n> --\n> ---\n> Jorge Velasquez\n> Department of Ecology and Evolution\n> Stony Brook University\n> Stony Brook, NY 11974\n> Phone:(631) 632-1445\n> http://life.bio.sunysb.edu/~jorge/\n>",
+      "body_snippet": "Hi Jorge,\n\nI might work if you specify \"dem\" as an independent variable rather\nthan as a co-variable (z). (If you really want it to be a co-variable\nit would take a bit of tweaking of the interpolate ",
+      "thread_id": "thread-e6b173afdc16",
+      "thread_depth": 3,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-b68203e05e14",
+      "message_id": "<AANLkTinqpU4lrP7yzZt-FSbZAxyqaFeYCDYFzWbHjvNZ@mail.gmail.com>",
+      "from_name": "Jorge Velasquez",
+      "from_email_hash": "a2d3712bcf5054e2ba56d029c1a0c31325d9d6f90c2525f1e43ba6db788d5c32",
+      "date": "2010-06-18T17:38:32-05:00",
+      "subject": "[R-sig-eco] memory issues using Tps (package fields)",
+      "subject_clean": "memory issues using Tps (package fields)",
+      "in_reply_to": "<AANLkTiniDJG8pBRt5NGyLQ1WC0g3Wu6iXS39ZzQmEH9H@mail.gmail.com>",
+      "references": [
+        "<AANLkTiliwHit3ZV0AbnRTP7JBH2-lwfSyWFGRtQN-wT3@mail.gmail.com>",
+        "<AANLkTikdGeGck5n2RdovY32zZNJyIL91ZX28z9M4fqpR@mail.gmail.com>",
+        "<AANLkTikx-jesk5zO4qrjQJozjxEcXDQEgNRd-beAORC0@mail.gmail.com>",
+        "<AANLkTiniDJG8pBRt5NGyLQ1WC0g3Wu6iXS39ZzQmEH9H@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Robert,\n\nThanks a lot for your help...it worked! It's very impressive that the\ninterpolate funcion can process almost 2 million cells in less than 10\nminutes.\n\nJorge\n\nOn Fri, Jun 18, 2010 at 12:30 AM, Robert J. Hijmans <r.hijmans at gmail.com> wrote:\n> Hi Jorge,\n>\n> I might work if you specify \"dem\" as an independent variable rather\n> than as a co-variable (z). (If you really want it to be a co-variable\n> it would take a bit of tweaking of the interpolate function). You also\n> need to add \"xyOnly = F\" to predict (not obvious from docs).\n>\n> data<-read.table(\"precp00-09ContSampleDem.csv\", sep=\",\" , header=TRUE)\n> fit<-Tps( data[ , c(\"x\",\"y\", \"dem\") ], ?data[,\"Ene\"] )\n> elev=raster(\"dem_col.asc\")\n> result<-interpolate(elev, fit, xyOnly=FALSE)\n>\n> (I cannot test this as I do not have (a sample of) your data)\n>\n> Robert\n>\n> On Thu, Jun 17, 2010 at 8:33 PM, Jorge Velasquez\n> <jorge at life.bio.sunysb.edu> wrote:\n>> Hi Robert,\n>>\n>> I tried the solution you suggested but get the following error:\n>>\n>> Error in predict.Krig(model, blockvals, ...) :\n>> ?Need to specifify drop.Z as TRUE or pass Z values\n>>\n>> This is the code I used:\n>>\n>> data<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\",header=TRUE)\n>> fit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],z=data$dem)\n>> elev=raster(\"dem_col.asc\")\n>> result<-interpolate(elev,fit)\n>>\n>> Many thanks indeed for your reply,\n>>\n>> Jorge\n>>\n>> On Thu, Jun 17, 2010 at 3:49 PM, Robert J. Hijmans <r.hijmans at gmail.com> wrote:\n>>> Jorge,\n>>> You could use the function 'interpolate' in 'raster'. It makes\n>>> predictions for smaller chunks of data and puts these back together.\n>>> There is an example for Tps. You would need to provide elevation data\n>>> (as a RasterLayer) as the first argument.\n>>> Robert\n>>>\n>>> On Thu, Jun 17, 2010 at 1:25 PM, Jorge Velasquez\n>>> <jorge at life.bio.sunysb.edu> wrote:\n>>>> Hi there,\n>>>>\n>>>> I'm trying to run a interpolation of climate using the functionTps\n>>>> (Thin plated splines) from the package fields, but keep running into\n>>>> the following error:\n>>>>\n>>>> Error: cannot allocate vector of size 488 Kb\n>>>> In addition: Warning messages:\n>>>> 1: In names(y) <- make.unique(cols) :\n>>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>>> 2: In names(y) <- make.unique(cols) :\n>>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>>> 3: In names(y) <- make.unique(cols) :\n>>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>>> 4: In names(y) <- make.unique(cols) :\n>>>> ?Reached total allocation of 3583Mb: see help(memory.size)\n>>>> Error in as.matrix(expand.grid(grid.list)) :\n>>>> ?error in evaluating the argument 'x' in selecting a method for\n>>>> function 'as.matrix'\n>>>>\n>>>> The code I'm running is:\n>>>>\n>>>> predGrid<-read.table(\"demaspoint_id8.csv\" ,sep=\",\" ,header=TRUE)\n>>>> data<-read.table(\"precp00-09ContSampleDem.csv\",sep=\",\" ,header=TRUE)\n>>>> fit<-Tps(data[,c(\"x\",\"y\")],data[,\"Ene\"],Z=data$dem)\n>>>> result<-predict.surface(fit,grid.list=list(x=predGrid[,c(\"Longitude\",\"Latitude\")],Z=predGrid[,\"GRID_CODE\"]))\n>>>>\n>>>> The file predGrid has ~65000 rows. The error is persistent even using\n>>>> a machine with 8GB Ram, double xeon processor, and the 64bit version\n>>>> of R, although the error pasted above is for the 32 bit version.\n>>>>\n>>>> Is there any solution to this? Am I missing something?\n>>>>\n>>>> Thanks,\n>>>>\n>>>> Jorge\n>>>> --\n>>>> ---\n>>>> Jorge Velasquez\n>>>> Department of Ecology and Evolution\n>>>> Stony Brook University\n>>>> Stony Brook, NY 11974\n>>>> Phone:(631) 632-1445\n>>>> http://life.bio.sunysb.edu/~jorge/\n>>>>\n>>>> _______________________________________________\n>>>> R-sig-ecology mailing list\n>>>> R-sig-ecology at r-project.org\n>>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>>\n>>>\n>>>\n>>\n>>\n>>\n>> --\n>> ---\n>> Jorge Velasquez\n>> Department of Ecology and Evolution\n>> Stony Brook University\n>> Stony Brook, NY 11974\n>> Phone:(631) 632-1445\n>> http://life.bio.sunysb.edu/~jorge/\n>>\n>\n>\n\n\n\n-- \n---\nJorge Velasquez\nDepartment of Ecology and Evolution\nStony Brook University\nStony Brook, NY 11974\nPhone:(631) 632-1445\nhttp://life.bio.sunysb.edu/~jorge/",
+      "body_snippet": "Dear Robert,\n\nThanks a lot for your help...it worked! It's very impressive that the\ninterpolate funcion can process almost 2 million cells in less than 10\nminutes.\n\nJorge\n\nOn Fri, Jun 18, 2010 at 12:3",
+      "thread_id": "thread-e6b173afdc16",
+      "thread_depth": 4,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-0e11fc84cf54",
+      "message_id": "<6B96E946C447150465025278@bio-mammal012.bio.bris.ac.uk>",
+      "from_name": "Emma Stone",
+      "from_email_hash": "3de36c6c5023daf27ac337866224c9be4a203fd7a65891de6461fcab6e7f30f5",
+      "date": "2010-06-21T15:45:23+01:00",
+      "subject": "[R-sig-eco] using Adonis for zero data",
+      "subject_clean": "using Adonis for zero data",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear All,\n\nI am running a multivariate ANOVA based on dissimilarities using the adonis \nfunction in the VEGAN package in R. I have trying to assess the number and \ntypes of bat mitigation used at sites as a function of three predictors. \nThe predictors are : number of bats (nobats= continuous), impact (factor \nwith 3 categories) and roost type(rtype = factor with 5 categories). There \nare three responses which are count data: number of boxes, number of barns \nand number of lofts.\nThe problem is that I have a lot of zeros in the data and they are not all \nintegers.\n\nI have been running the following code using euclidean distances but I am \nnot sure that it is ok to use Euclidean distances for count data with \nzeros.\n\nadonis(resp~Impact+nobats+rtype,data=pred,method=euclidean,permutation=500)\n\nI have read that you can transform the distances with the following code\ndis <- vegdist(decostand(resp, \"norm\"), \"euclid\")\n\nso have done this and I do get a very difference result, but again I am not \nsure that this is suitable.\n\nI have tried running the model with different distance measures but it will \nonly run with the euclidean distance method.\n\nAny help would be most appreciated.\n\nThanks\n\nEmma\n\n\n----------------------\nEmma Stone\nPostgraduate Researcher\nBat Ecology and Bioacoustics Lab\n& Mammal Research Unit\nSchool of Biological Sciences,\nUniversity of Bristol, Woodland Road,\nBristol, BS8 1UG\nEmail: emma.stone at bristol.ac.uk",
+      "body_snippet": "Dear All,\n\nI am running a multivariate ANOVA based on dissimilarities using the adonis \nfunction in the VEGAN package in R. I have trying to assess the number and \ntypes of bat mitigation used at site",
+      "thread_id": "thread-0e11fc84cf54",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-a9946182f68b",
+      "message_id": "<1277153568703-5206190.post@n2.nabble.com>",
+      "from_name": "amelie_can",
+      "from_email_hash": "43c6ea9b400fecc926fbb3aa4b35fd3eaabcd06b6c5ace4660aefd616eec0ce6",
+      "date": "2010-06-21T13:52:48-07:00",
+      "subject": "[R-sig-eco] RDA with only dummy variable in environmental matrix",
+      "subject_clean": "RDA with only dummy variable in environmental matrix",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello all, \n\nI want to do a redundancy analysis (rda). My response matrix is filled with\nspecies abundances (68 sites x 15 species). My environmental matrix (68\nsitex x 3 classes) is only filled with a dummy variable with three classes\n(NAT, NR, REST). Since dummy variables are linearly dependant, the variable\nREST is automatically removed but this does not result in any information\nloss as if a sites is not associated with NAT nor NR, it necessarily will be\nassociated to REST. But I have three problems :  \n\n1)\tFor the moment, R only gives me a plot where NAT and NR are showed. I\nneed to be able to show REST as well. \n2)\tMy dummy variables are showed as arrows that are pointing to their\ncentroid but I would like to only have the centroid (showed as any kind of\nshape). \n3)\tHow can I add the species names (currently they are only represented by\nred cross). I tried the text function, but I could only add my sites names\nand not my species names. \n\nFollowing is an R example of my problem that you can easily run : \n\nlibrary(vegan)\nmat.sp = matrix(c(40, 20, 37, 49, 52, 34, 35, 87, 90, 45, 49, 52, 34, 35,\n87,5,39,99,8,45),nrow = 4, ncol=5, dimnames = list(c(\"sites1\", \"sites2\",\n\"sites3\",\"sites4\"),c(\"sp1\", \"sp2\", \"sp3\", \"sp4\", \"sp5\")))\nmat.env = matrix(c(1,1,0,0,0,0,1,0,0,0,0,1),4,3, dimnames = list(c(\"sites1\",\n\"sites2\", \"sites3\",\"sites4\"),c(\"NAT\", \"NR\", \"REST\")))\n\nrda = rda (mat.sp,mat.env)\nsummary(rda)\nplot(rda, scaling=1, type=\"points\")\n\n\nThank you for any kind of assistance! \n\n-- \nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/RDA-with-only-dummy-variable-in-environmental-matrix-tp5206190p5206190.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hello all, \n\nI want to do a redundancy analysis (rda). My response matrix is filled with\nspecies abundances (68 sites x 15 species). My environmental matrix (68\nsitex x 3 classes) is only filled with ",
+      "thread_id": "thread-a9946182f68b",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-0e2ab0301e51",
+      "message_id": "<4C205DB6.4060002@botanika.hu>",
+      "from_name": "Zoltan Botta-Dukat",
+      "from_email_hash": "8a0ebf76534725e7f892de01038be7be35c9481259361ccc704c871e2204f5ae",
+      "date": "2010-06-22T08:52:38+02:00",
+      "subject": "[R-sig-eco] RDA with only dummy variable in environmental matrix",
+      "subject_clean": "RDA with only dummy variable in environmental matrix",
+      "in_reply_to": "<1277153568703-5206190.post@n2.nabble.com>",
+      "references": [
+        "<1277153568703-5206190.post@n2.nabble.com>"
+      ],
+      "body_plain": "Dear Amelie,\n\nYour three dummy variables should be changed to a factor with three \nlevels (NAT, NR, REST). Function rda correctly handles the factor type \nenvironmental variables.\n\nFor plotting species names use this code:\n\nrda.results = rda (mat.sp,mat.env)\nsummary(rda.results)\nplot(rda.results, scaling=1, type=\"points\")\ntext(rda.results,\"species\")\n\nor simply\n\nplot(rda.results)\n\n\nBest wishes\n\nZoltan\n\n\n2010.06.21. 22:52 keltez?ssel, amelie_can ?rta:\n> Hello all,\n>\n> I want to do a redundancy analysis (rda). My response matrix is filled with\n> species abundances (68 sites x 15 species). My environmental matrix (68\n> sitex x 3 classes) is only filled with a dummy variable with three classes\n> (NAT, NR, REST). Since dummy variables are linearly dependant, the variable\n> REST is automatically removed but this does not result in any information\n> loss as if a sites is not associated with NAT nor NR, it necessarily will be\n> associated to REST. But I have three problems :\n>\n> 1)\tFor the moment, R only gives me a plot where NAT and NR are showed. I\n> need to be able to show REST as well.\n> 2)\tMy dummy variables are showed as arrows that are pointing to their\n> centroid but I would like to only have the centroid (showed as any kind of\n> shape).\n> 3)\tHow can I add the species names (currently they are only represented by\n> red cross). I tried the text function, but I could only add my sites names\n> and not my species names.\n>\n> Following is an R example of my problem that you can easily run :\n>\n> library(vegan)\n> mat.sp = matrix(c(40, 20, 37, 49, 52, 34, 35, 87, 90, 45, 49, 52, 34, 35,\n> 87,5,39,99,8,45),nrow = 4, ncol=5, dimnames = list(c(\"sites1\", \"sites2\",\n> \"sites3\",\"sites4\"),c(\"sp1\", \"sp2\", \"sp3\", \"sp4\", \"sp5\")))\n> mat.env = matrix(c(1,1,0,0,0,0,1,0,0,0,0,1),4,3, dimnames = list(c(\"sites1\",\n> \"sites2\", \"sites3\",\"sites4\"),c(\"NAT\", \"NR\", \"REST\")))\n>\n> rda = rda (mat.sp,mat.env)\n> summary(rda)\n> plot(rda, scaling=1, type=\"points\")\n>\n>\n> Thank you for any kind of assistance!\n>\n>",
+      "body_snippet": "Dear Amelie,\n\nYour three dummy variables should be changed to a factor with three \nlevels (NAT, NR, REST). Function rda correctly handles the factor type \nenvironmental variables.\n\nFor plotting specie",
+      "thread_id": "thread-a9946182f68b",
+      "thread_depth": 1,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-1bd76406caca",
+      "message_id": "<1277216146968-5208969.post@n2.nabble.com>",
+      "from_name": "amelie_can",
+      "from_email_hash": "43c6ea9b400fecc926fbb3aa4b35fd3eaabcd06b6c5ace4660aefd616eec0ce6",
+      "date": "2010-06-22T07:15:46-07:00",
+      "subject": "[R-sig-eco] RDA with only dummy variable in environmental matrix",
+      "subject_clean": "RDA with only dummy variable in environmental matrix",
+      "in_reply_to": "<4C205DB6.4060002@botanika.hu>",
+      "references": [
+        "<1277153568703-5206190.post@n2.nabble.com>",
+        "<4C205DB6.4060002@botanika.hu>"
+      ],
+      "body_plain": "Hello Zoltan, \n\nthank you for your reply. When I tried what you suggested, the rda\ncalculation did not proceed and I received this error message: \"Error in\ncolMeans(x, na.rm = TRUE) : 'x' must be numeric\". \n\nThis is the same example I used yesterday, but with the changes you\nproposed: \nmat.sp = matrix(c(40, 20, 37, 49, 52, 34, 35, 87, 90, 45, 49, 52, 34, 35,\n87,5,39,99,8,45),nrow = 4, ncol=5, dimnames = list(c(\"sites1\", \"sites2\",\n\"sites3\",\"sites4\"),c(\"sp1\", \"sp2\", \"sp3\", \"sp4\", \"sp5\")))\nmat.env = matrix(c(\"NAT\",\"NAT\",\"NR\",\"REST\"),4,1, dimnames = list(c(\"sites1\",\n\"sites2\", \"sites3\",\"sites4\"),c(\"TYPE\")))\nas.factor(mat.env[,1])\nsummary(mat.env)\n\nrda = rda (mat.sp,mat.env)\nsummary(rda)\nplot(rda, scaling=1, type=\"points\")\n\nDo you know what is the problem? \n-- \nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/RDA-with-only-dummy-variable-in-environmental-matrix-tp5206190p5208969.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hello Zoltan, \n\nthank you for your reply. When I tried what you suggested, the rda\ncalculation did not proceed and I received this error message: \"Error in\ncolMeans(x, na.rm = TRUE) : 'x' must be nume",
+      "thread_id": "thread-a9946182f68b",
+      "thread_depth": 2,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-2c2f03f0270e",
+      "message_id": "<4C210595.5000501@botanika.hu>",
+      "from_name": "Zoltan Botta-Dukat",
+      "from_email_hash": "8a0ebf76534725e7f892de01038be7be35c9481259361ccc704c871e2204f5ae",
+      "date": "2010-06-22T20:48:53+02:00",
+      "subject": "[R-sig-eco] RDA with only dummy variable in environmental matrix",
+      "subject_clean": "RDA with only dummy variable in environmental matrix",
+      "in_reply_to": "<1277216146968-5208969.post@n2.nabble.com>",
+      "references": [
+        "<1277153568703-5206190.post@n2.nabble.com>",
+        "<4C205DB6.4060002@botanika.hu>",
+        "<1277216146968-5208969.post@n2.nabble.com>"
+      ],
+      "body_plain": "Dear Amelie,\n\nas.factor(mat.env[,1])\n\nIt does not change your environmental matrix into factor, just print its \nvalues as factor.\n\n\nYou should use data.frame instead of factor for environmental data. Like \nthis:\n\nmat.env = data.frame(TYPE=c(\"NAT\",\"NAT\",\"NR\",\"REST\"), row.names = \nc(\"sites1\",\"sites2\", \"sites3\",\"sites4\"))\nrda(mat.sp~TYPE,data=mat.env)\n\nZoltan\n\n2010.06.22. 16:15 keltez?ssel, amelie_can ?rta:\n> Hello Zoltan,\n>\n> thank you for your reply. When I tried what you suggested, the rda\n> calculation did not proceed and I received this error message: \"Error in\n> colMeans(x, na.rm = TRUE) : 'x' must be numeric\".\n>\n> This is the same example I used yesterday, but with the changes you\n> proposed:\n> mat.sp = matrix(c(40, 20, 37, 49, 52, 34, 35, 87, 90, 45, 49, 52, 34, 35,\n> 87,5,39,99,8,45),nrow = 4, ncol=5, dimnames = list(c(\"sites1\", \"sites2\",\n> \"sites3\",\"sites4\"),c(\"sp1\", \"sp2\", \"sp3\", \"sp4\", \"sp5\")))\n> mat.env = matrix(c(\"NAT\",\"NAT\",\"NR\",\"REST\"),4,1, dimnames = list(c(\"sites1\",\n> \"sites2\", \"sites3\",\"sites4\"),c(\"TYPE\")))\n> as.factor(mat.env[,1])\n> summary(mat.env)\n>\n> rda = rda (mat.sp,mat.env)\n> summary(rda)\n> plot(rda, scaling=1, type=\"points\")\n>\n> Do you know what is the problem?\n>",
+      "body_snippet": "Dear Amelie,\n\nas.factor(mat.env[,1])\n\nIt does not change your environmental matrix into factor, just print its \nvalues as factor.\n\n\nYou should use data.frame instead of factor for environmental data. ",
+      "thread_id": "thread-a9946182f68b",
+      "thread_depth": 3,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-2c92e303c199",
+      "message_id": "<1277233057.2080.3.camel@localhost>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-06-22T19:57:37+01:00",
+      "subject": "[R-sig-eco] RDA with only dummy variable in environmental matrix",
+      "subject_clean": "RDA with only dummy variable in environmental matrix",
+      "in_reply_to": "<1277216146968-5208969.post@n2.nabble.com>",
+      "references": [
+        "<1277153568703-5206190.post@n2.nabble.com>",
+        "<4C205DB6.4060002@botanika.hu>",
+        "<1277216146968-5208969.post@n2.nabble.com>"
+      ],
+      "body_plain": "On Tue, 2010-06-22 at 07:15 -0700, amelie_can wrote:\n> Hello Zoltan, \n> \n> thank you for your reply. When I tried what you suggested, the rda\n> calculation did not proceed and I received this error message: \"Error in\n> colMeans(x, na.rm = TRUE) : 'x' must be numeric\". \n> \n> This is the same example I used yesterday, but with the changes you\n> proposed: \n> mat.sp = matrix(c(40, 20, 37, 49, 52, 34, 35, 87, 90, 45, 49, 52, 34, 35,\n> 87,5,39,99,8,45),nrow = 4, ncol=5, dimnames = list(c(\"sites1\", \"sites2\",\n> \"sites3\",\"sites4\"),c(\"sp1\", \"sp2\", \"sp3\", \"sp4\", \"sp5\")))\n> mat.env = matrix(c(\"NAT\",\"NAT\",\"NR\",\"REST\"),4,1, dimnames = list(c(\"sites1\",\n> \"sites2\", \"sites3\",\"sites4\"),c(\"TYPE\")))\n> as.factor(mat.env[,1])\n^^^^^^^^^^^^^^^^^^^^^^^^\nThat doesn't do anything as you don't assign it.\n\nTo use the automagical expansion of factors to appropriate model matrix\nvariables, you need to use the formula interface, as per most R\nmodelling function I know.\n\n> env <- data.frame(Type = factor(c(\"NAT\",\"NAT\",\"NR\",\"REST\")))\n> rda(mat.sp ~ Type, data = env)\n\nBy the way, you can't store your factor in a matrix - only numerics or\ncharacters are allowed and a matrix must contain elements of all the\nsame type. Store things in data frames and convert them to matrices\n(using data.matrix() ) if you need a matrix; generally you won't and the\ndata.frame will suffice.\n\nHTH\n\nG\n\n\n> summary(mat.env)\n> \n> rda = rda (mat.sp,mat.env)\n> summary(rda)\n> plot(rda, scaling=1, type=\"points\")\n> \n> Do you know what is the problem? \n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Tue, 2010-06-22 at 07:15 -0700, amelie_can wrote:\n> Hello Zoltan, \n> \n> thank you for your reply. When I tried what you suggested, the rda\n> calculation did not proceed and I received this error me",
+      "thread_id": "thread-a9946182f68b",
+      "thread_depth": 3,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-fd7dc6186162",
+      "message_id": "<1239887203.3769981277345786621.JavaMail.root@jaguar8.sfu.ca>",
+      "from_name": "kgorman",
+      "from_email_hash": "bfd75c16988398aef1019a66ac2acb4693f2c351df43adaf44880ab667944f6c",
+      "date": "2010-06-23T19:16:26-07:00",
+      "subject": "[R-sig-eco] Using R to solve for X in cubic polynomial equations",
+      "subject_clean": "Using R to solve for X in cubic polynomial equations",
+      "in_reply_to": "<1589231050.3768441277345341504.JavaMail.root@jaguar8.sfu.ca>",
+      "references": [],
+      "body_plain": "Dear All, \nThanks in advance for any guidance. I have been using the Excel Solver function to solve for unknown concentrations of hormone based on a standard curve described by a cubic polynomial question, I am trying to learn how to replicate this exercise using R.\n\nBasically, in our hormone assay we develop a standard curve of X: known hormone standards vs Y: %B/Bo which is a value calculated based on output from a gamma counter for radioimmunoassay. The relationship between X and Y is then described as a cubic polynomial equation (for example %B/Bo=91.598+11.777*X-35.074*X^2+7.208*X^3).\n\nWhen I want to solve for unknown concentrations of hormone, I take the data obtained which is %B/Bo, or Y, and solve for X based on the standard curve equation (cubic polynomial where X occurs 3-times). I have been able to do this using Excel Solver, and have been able to constrain the solution to within 2 values which fall at the extremes of my standard curve (important as there are multiple solutions).\n\nThe problem with Excel Solver is that I have to do this exercise for each unknown individually, which is very time consuming. I am sure it would be simple to write code for a loop procedure to solve for a series of unknowns.\n\nIn summary, I would like to figure out how to (1) solve for X, where Y is known, in a cubic polynomial equation when X occurs 3-times, (2) constrain the X solution to within 2 extreme values, and (3) write a loop function to solve for 78 unknown values.\n\nI have M.J. Crawley's R Book available to me, if anyone knows of a section in there that would be helpful.\n\nKind regards, \nKristen Gorman\n\n\nKristen B. Gorman\nGraduate Student, PhD program\n\nDepartment of Biological Sciences\nSimon Fraser University\n8888 University Drive\nBurnaby, BC, V5A 1S6\n\nOffice: 778.782.7398\nLab:    778.782.3986\nFax:    778.782.3496\nWeb:    http://www.sfu.ca/~kgorman",
+      "body_snippet": "Dear All, \nThanks in advance for any guidance. I have been using the Excel Solver function to solve for unknown concentrations of hormone based on a standard curve described by a cubic polynomial ques",
+      "thread_id": "thread-fd7dc6186162",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-331de189bc80",
+      "message_id": "<4C2354F4.3080406@mail.iastate.edu>",
+      "from_name": "Philip Dixon",
+      "from_email_hash": "c7ab0e39ed36f833aa9dbccaa8e2d706ae3dd58a49cc15e168113bb3aec43195",
+      "date": "2010-06-24T07:52:04-05:00",
+      "subject": "[R-sig-eco] Using R to solve for X",
+      "subject_clean": "Using R to solve for X",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Kristin,\n\nR includes the uniroot() function that numerical finds a root of any \nfunction.  It finds x such that g(x) = 0, where you provide g(x).\nHere's how to use it for your standard curve problem:\n\nfs <- function(x,y) { 91.598+11.777*x-35.074*x^2+7.208*x^3 - y }\n# this is the function whose root is to be found\n#  the variable to be solved for is first; any others have to specified \nwhen fs() is called.\n#  including y as an argument avoids writing separate functions for each y\n\n# here's how to solve for one x\n\nuniroot(fs,y=80,lower=0.2,upper=3)\n\n$root\n[1] 0.8713045\n\n$f.root\n[1] 4.49572e-05\n\n$iter\n[1] 7\n\n$estim.prec\n[1] 6.103516e-05\n\n# lower and upper are the interval in which to search\n# $root is the answer.  The rest is information about the quality of the \nnumerical solution\n\n# here's how to find 87 roots.  You need a loop, since uniroot() is not \n(to my knowledge) vectorizable\n\ny <- read.csv('whatever.csv')\n#  read a column of Y's from a spread sheet, or use any other way to get \na column of values into R\n\nx <- rep(0, length(y))\n\nfor (i in 1:length(x)) {\n   x[i] <-  uniroot(fs,y=y[i],lower=0.2,upper=3)$root\n   }\n\nBest wishes,\nPhilip Dixon",
+      "body_snippet": "Kristin,\n\nR includes the uniroot() function that numerical finds a root of any \nfunction.  It finds x such that g(x) = 0, where you provide g(x).\nHere's how to use it for your standard curve problem:\n",
+      "thread_id": "thread-331de189bc80",
+      "thread_depth": 0,
+      "month": "2010-06"
+    },
+    {
+      "id": "msg-b042350b7220",
+      "message_id": "<1277898103.16677.35.camel@localhost>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-06-30T12:41:43+01:00",
+      "subject": "[R-sig-eco] using Adonis for zero data",
+      "subject_clean": "using Adonis for zero data",
+      "in_reply_to": "<6B96E946C447150465025278@bio-mammal012.bio.bris.ac.uk>",
+      "references": [
+        "<6B96E946C447150465025278@bio-mammal012.bio.bris.ac.uk>"
+      ],
+      "body_plain": "On Mon, 2010-06-21 at 15:45 +0100, Emma Stone wrote:\n> Dear All,\n> \n> I am running a multivariate ANOVA based on dissimilarities using the adonis \n> function in the VEGAN package in R. I have trying to assess the number and \n> types of bat mitigation used at sites as a function of three predictors. \n> The predictors are : number of bats (nobats= continuous), impact (factor \n> with 3 categories) and roost type(rtype = factor with 5 categories). There \n> are three responses which are count data: number of boxes, number of barns \n> and number of lofts.\n> The problem is that I have a lot of zeros in the data and they are not all \n> integers.\n> \n> I have been running the following code using euclidean distances but I am \n> not sure that it is ok to use Euclidean distances for count data with \n> zeros.\n\nAre you interested in the magnitude - should abundant species dominate\nthe dissimilarity? - differences? Euclidean could be OK if you were\nmagnitude focussed but there are often better dissimilarities for\necological data where absolute difference rather than squared\ndifferences are used.\n\n> adonis(resp~Impact+nobats+rtype,data=pred,method=euclidean,permutation=500)\n\nIs that exactly how you ran this in R? If so it is incorrect; argument\n'method' is supposed to be passed a character which is the name of the\ndissimilarity coefficient you want to use, one provided by vegdist().\nSee ?vegdist for the available options.\n\n> I have read that you can transform the distances with the following code\n> dis <- vegdist(decostand(resp, \"norm\"), \"euclid\")\n\nI doubt it, if you are interested in normalising the species as MARGIN =\n1 be default for that method and that refers to rows. But it depends on\nwhat you hope to achieve by transforming the sites/samples. If you want\nthe species to all have the same mean and variance, then\n\ndis <- vegdist(scale(resp), \"euclidean\")\n\nshould do it but then the analysis will be focussed on the relative\nabundance to some extent.\n\n> so have done this and I do get a very difference result, but again I am not \n> sure that this is suitable.\n> \n> I have tried running the model with different distance measures but it will \n> only run with the euclidean distance method.\n\nGiven that the default for 'method' is \"bray\" and vegan passes R CMD\ncheck on a large number of systems, that comment is patently *not* true.\n\n> Any help would be most appreciated.\n\nIf this doesn't sort your problem out, can you past back exactly the\ncommands you used and the output from R so we can diagnose what is going\non?\n\nHTH\n\nG\n\n> Thanks\n> \n> Emma\n> \n> \n> ----------------------\n> Emma Stone\n> Postgraduate Researcher\n> Bat Ecology and Bioacoustics Lab\n> & Mammal Research Unit\n> School of Biological Sciences,\n> University of Bristol, Woodland Road,\n> Bristol, BS8 1UG\n> Email: emma.stone at bristol.ac.uk\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Mon, 2010-06-21 at 15:45 +0100, Emma Stone wrote:\n> Dear All,\n> \n> I am running a multivariate ANOVA based on dissimilarities using the adonis \n> function in the VEGAN package in R. I have trying t",
+      "thread_id": "thread-0e11fc84cf54",
+      "thread_depth": 1,
+      "month": "2010-06"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-25e169aae4f3",
+      "subject": "Vegan fisher.alpha error",
+      "message_count": 6,
+      "participants": [
+        "Jari Oksanen",
+        "Kang Min",
+        "Peter Solymos"
+      ],
+      "started": "2010-06-01T05:20:14-07:00",
+      "last_reply": "2010-06-01T17:48:01+03:00",
+      "root_message_id": "msg-25e169aae4f3"
+    },
+    {
+      "id": "thread-e43955bee98d",
+      "subject": "Multiple regression",
+      "message_count": 1,
+      "participants": [
+        "Gavin Simpson"
+      ],
+      "started": "2010-06-01T09:52:43+01:00",
+      "last_reply": "2010-06-01T09:52:43+01:00",
+      "root_message_id": "msg-e43955bee98d"
+    },
+    {
+      "id": "thread-2ea75dbb4d8b",
+      "subject": "jackknife the coefficients of a linear regression in R",
+      "message_count": 3,
+      "participants": [
+        "Andy Rominger",
+        "Carmen Burghelea"
+      ],
+      "started": "2010-06-01T10:41:13+00:00",
+      "last_reply": "2010-06-01T14:35:20-04:00",
+      "root_message_id": "msg-2ea75dbb4d8b"
+    },
+    {
+      "id": "thread-bcce1af06891",
+      "subject": "Multivariate dispersion and SE",
+      "message_count": 3,
+      "participants": [
+        "Emma EG. Gothe",
+        "Etienne Laliberté"
+      ],
+      "started": "2010-06-01T14:25:13+02:00",
+      "last_reply": "2010-06-02T13:39:58+02:00",
+      "root_message_id": "msg-bcce1af06891"
+    },
+    {
+      "id": "thread-5c0a89340128",
+      "subject": "Adehabitat: creating MCPs every two weeks for 32 different animals",
+      "message_count": 3,
+      "participants": [
+        "Abdi, Abdulhakim",
+        "Clément Calenge"
+      ],
+      "started": "2010-06-03T10:18:14-04:00",
+      "last_reply": "2010-06-04T08:31:24-04:00",
+      "root_message_id": "msg-5c0a89340128"
+    },
+    {
+      "id": "thread-65b67bd6e1d9",
+      "subject": "BIOMOD-question",
+      "message_count": 2,
+      "participants": [
+        "Claudia liliana Ballesteros Mejia",
+        "Wilfried Thuiller"
+      ],
+      "started": "2010-06-08T06:27:40-07:00",
+      "last_reply": "2010-06-08T15:51:34+02:00",
+      "root_message_id": "msg-65b67bd6e1d9"
+    },
+    {
+      "id": "thread-a205dd42a1d1",
+      "subject": "ANOSIM test",
+      "message_count": 1,
+      "participants": [
+        "Gian Maria Niccolò Benucci"
+      ],
+      "started": "2010-06-08T10:57:24+02:00",
+      "last_reply": "2010-06-08T10:57:24+02:00",
+      "root_message_id": "msg-a205dd42a1d1"
+    },
+    {
+      "id": "thread-d7f0caba87d3",
+      "subject": "ANOSIM test",
+      "message_count": 3,
+      "participants": [
+        "Gian Maria Niccolò Benucci",
+        "Maria Dulce Subida"
+      ],
+      "started": "2010-06-09T10:01:01+02:00",
+      "last_reply": "2010-06-09T11:36:41+02:00",
+      "root_message_id": "msg-d7f0caba87d3"
+    },
+    {
+      "id": "thread-411ddcd8d982",
+      "subject": "How calculate Sørensen and Bray-Curtis coefficients? vegan package",
+      "message_count": 1,
+      "participants": [
+        "Gian Maria Niccolò Benucci"
+      ],
+      "started": "2010-06-09T11:21:28+02:00",
+      "last_reply": "2010-06-09T11:21:28+02:00",
+      "root_message_id": "msg-411ddcd8d982"
+    },
+    {
+      "id": "thread-0105bfd2326f",
+      "subject": "How calculate Sørensen and Bray-Curtis coefficients? vegan package",
+      "message_count": 1,
+      "participants": [
+        "Gian Maria Niccolò Benucci"
+      ],
+      "started": "2010-06-09T11:46:45+02:00",
+      "last_reply": "2010-06-09T11:46:45+02:00",
+      "root_message_id": "msg-0105bfd2326f"
+    },
+    {
+      "id": "thread-ed84d6201d3a",
+      "subject": "non-metric multidimensional scaling",
+      "message_count": 2,
+      "participants": [
+        "Falk Hildebrand",
+        "Jari Oksanen"
+      ],
+      "started": "2010-06-09T13:19:58+00:00",
+      "last_reply": "2010-06-18T08:27:01+03:00",
+      "root_message_id": "msg-ed84d6201d3a"
+    },
+    {
+      "id": "thread-da8f2f179fb1",
+      "subject": "ANOSIM test",
+      "message_count": 1,
+      "participants": [
+        "Gian Maria Niccolò Benucci"
+      ],
+      "started": "2010-06-09T16:42:37+02:00",
+      "last_reply": "2010-06-09T16:42:37+02:00",
+      "root_message_id": "msg-da8f2f179fb1"
+    },
+    {
+      "id": "thread-0e5521bea8a0",
+      "subject": "meaning of extreme outliers in bootstrapped statistic",
+      "message_count": 1,
+      "participants": [
+        "Tom Elliott"
+      ],
+      "started": "2010-06-12T17:56:06-07:00",
+      "last_reply": "2010-06-12T17:56:06-07:00",
+      "root_message_id": "msg-0e5521bea8a0"
+    },
+    {
+      "id": "thread-d73292e57c17",
+      "subject": "meaning of extreme outliers in bootstrapped statistic",
+      "message_count": 1,
+      "participants": [
+        "Nicholas Lewin-Koh"
+      ],
+      "started": "2010-06-13T21:56:14-07:00",
+      "last_reply": "2010-06-13T21:56:14-07:00",
+      "root_message_id": "msg-d73292e57c17"
+    },
+    {
+      "id": "thread-627648284987",
+      "subject": "some MDS and R problems",
+      "message_count": 5,
+      "participants": [
+        "Arnaldo Russo",
+        "Dave Roberts",
+        "Gavin Simpson",
+        "Jari Oksanen"
+      ],
+      "started": "2010-06-15T08:34:31-03:00",
+      "last_reply": "2010-06-16T17:01:52-07:00",
+      "root_message_id": "msg-627648284987"
+    },
+    {
+      "id": "thread-e6b173afdc16",
+      "subject": "memory issues using Tps (package fields)",
+      "message_count": 5,
+      "participants": [
+        "Jorge Velasquez",
+        "Robert J. Hijmans"
+      ],
+      "started": "2010-06-17T15:25:06-05:00",
+      "last_reply": "2010-06-18T17:38:32-05:00",
+      "root_message_id": "msg-e6b173afdc16"
+    },
+    {
+      "id": "thread-a9946182f68b",
+      "subject": "RDA with only dummy variable in environmental matrix",
+      "message_count": 5,
+      "participants": [
+        "Gavin Simpson",
+        "Zoltan Botta-Dukat",
+        "amelie_can"
+      ],
+      "started": "2010-06-21T13:52:48-07:00",
+      "last_reply": "2010-06-22T19:57:37+01:00",
+      "root_message_id": "msg-a9946182f68b"
+    },
+    {
+      "id": "thread-0e11fc84cf54",
+      "subject": "using Adonis for zero data",
+      "message_count": 2,
+      "participants": [
+        "Emma Stone",
+        "Gavin Simpson"
+      ],
+      "started": "2010-06-21T15:45:23+01:00",
+      "last_reply": "2010-06-30T12:41:43+01:00",
+      "root_message_id": "msg-0e11fc84cf54"
+    },
+    {
+      "id": "thread-fd7dc6186162",
+      "subject": "Using R to solve for X in cubic polynomial equations",
+      "message_count": 1,
+      "participants": [
+        "kgorman"
+      ],
+      "started": "2010-06-23T19:16:26-07:00",
+      "last_reply": "2010-06-23T19:16:26-07:00",
+      "root_message_id": "msg-fd7dc6186162"
+    },
+    {
+      "id": "thread-331de189bc80",
+      "subject": "Using R to solve for X",
+      "message_count": 1,
+      "participants": [
+        "Philip Dixon"
+      ],
+      "started": "2010-06-24T07:52:04-05:00",
+      "last_reply": "2010-06-24T07:52:04-05:00",
+      "root_message_id": "msg-331de189bc80"
+    }
+  ]
+}

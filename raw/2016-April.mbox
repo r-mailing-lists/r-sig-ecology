@@ -1,0 +1,1792 @@
+From aislinn.pearson at rothamsted.ac.uk  Wed Apr  6 20:12:45 2016
+From: aislinn.pearson at rothamsted.ac.uk (Aislinn Pearson)
+Date: Wed, 6 Apr 2016 18:12:45 +0000
+Subject: [R-sig-eco] LMER: applying a random term to only one level of a
+	factor
+Message-ID: <HE1PR01MB146651B6E10E09C6C0B07597C99F0@HE1PR01MB1466.eurprd01.prod.exchangelabs.com>
+
+Hi,
+
+I've tried googling this but haven't been very successful. Essentially, I'd like to know what is the most statistically valid way of dealing with a random term which doesn't apply to every level of fixed-effect factor.
+
+I have a mixed effect model that looks like this
+
+Disease level <- weight + Flown +(1|DateFlown)
+
+Either I flew my insects on a flight mill (which can be thought of as a 'treadmill' for flying insects) or I didn't, hence flown is a two level factor (Yes or No) and I want to understand how this affects the amount of disease in my insect. To get as many replicates as I could on a single day, I had two different banks of flight mills (A & B), each bank containing 16 individual insect treadmills. The insects were randomly assigned to one of the two sets of 16 flight mills. Previous studies tell me there are differences between these two sets of flight mills, so I would like to account for them as a random term in my model.
+
+However, I can't run this in LMER. When I tried I got the error;
+
+Error in `contrasts<-`(`*tmp*`, value = contr.funs[1 + isOF[nn]]) :
+  contrasts can be applied only to factors with 2 or more levels
+
+Which I imagine means that one of my factors (i.e. Flown) doesn't include any levels for the random term mill set (i.e. for all unflown insects the value in the mill set column is NA)
+
+Is it possible to include this form of experimental design in LMER (the package I know best) or, alternatively, nlme (which I am a lot less accustomed to using)?
+
+I would be really grateful if anyone has any insight.
+
+Many thanks
+
+Rothamsted Research is a company limited by guarantee, registered in England at Harpenden, Hertfordshire, AL5 2JQ under the registration number 2393175 and a not for profit charity number 802038.
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From pdaleo at mdp.edu.ar  Wed Apr  6 21:05:19 2016
+From: pdaleo at mdp.edu.ar (Pedro Daleo)
+Date: Wed, 6 Apr 2016 16:05:19 -0300
+Subject: [R-sig-eco]  model II regression with random effects
+Message-ID: <CAE_yG=uoupq3ZCDLh0bNk+HmSMbpcjT0yzFq7s8snXz+LNiXEA@mail.gmail.com>
+
+Hi all,
+
+Do any of you know if there is any package to perform model II regressions
+with random effects?
+
+Thanks,
+Pedro
+
+
+-- 
+Pedro Daleo
+Laboratorio de Ecologia
+IIMyC (CONICET-UNMdP)
+Mar del Plata
+*ARGENTINA*
+
+	[[alternative HTML version deleted]]
+
+
+From bohara at senckenberg.de  Thu Apr  7 09:29:25 2016
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Thu, 7 Apr 2016 09:29:25 +0200
+Subject: [R-sig-eco] LMER: applying a random term to only one level of a
+ factor
+In-Reply-To: <HE1PR01MB146651B6E10E09C6C0B07597C99F0@HE1PR01MB1466.eurprd01.prod.exchangelabs.com>
+References: <HE1PR01MB146651B6E10E09C6C0B07597C99F0@HE1PR01MB1466.eurprd01.prod.exchangelabs.com>
+Message-ID: <57060C55.1090101@senckenberg.de>
+
+On 06/04/16 20:12, Aislinn Pearson wrote:
+> Hi,
+>
+> I've tried googling this but haven't been very successful. Essentially, I'd like to know what is the most statistically valid way of dealing with a random term which doesn't apply to every level of fixed-effect factor.
+>
+> I have a mixed effect model that looks like this
+>
+> Disease level <- weight + Flown +(1|DateFlown)
+>
+> Either I flew my insects on a flight mill (which can be thought of as a 'treadmill' for flying insects) or I didn't, hence flown is a two level factor (Yes or No) and I want to understand how this affects the amount of disease in my insect. To get as many replicates as I could on a single day, I had two different banks of flight mills (A & B), each bank containing 16 individual insect treadmills. The insects were randomly assigned to one of the two sets of 16 flight mills. Previous studies tell me there are differences between these two sets of flight mills, so I would like to account for them as a random term in my model.
+As a practical matter, it's not worth setting a level with two levels as 
+random: you don't gain anything in the analysis and the variance 
+component is really poorly estimated. In practice, this might actually 
+make things cleaner, as you will have to look a bit more at the flight 
+mill effects, so you should get a better feel for what's happening.
+
+> However, I can't run this in LMER. When I tried I got the error;
+>
+> Error in `contrasts<-`(`*tmp*`, value = contr.funs[1 + isOF[nn]]) :
+>    contrasts can be applied only to factors with 2 or more levels
+>
+> Which I imagine means that one of my factors (i.e. Flown) doesn't include any levels for the random term mill set (i.e. for all unflown insects the value in the mill set column is NA)
+>
+> Is it possible to include this form of experimental design in LMER (the package I know best) or, alternatively, nlme (which I am a lot less accustomed to using)?
+I can think of two ways of doing this: either set up a factor with three 
+levels (Flight mill A, Flight mill B, Not Flown) or set the Not Flown to 
+one of the flight mill levels. The first way feels less confusing, but 
+you might have to set up some contrasts to estimate the differences. But 
+hopefully your insects will cooperate nicely and make the difference 
+between the flight ills will be much smaller than between flight mills 
+and not flown.
+
+HTH
+
+Bob
+
+> I would be really grateful if anyone has any insight.
+>
+> Many thanks
+>
+> Rothamsted Research is a company limited by guarantee, registered in England at Harpenden, Hertfordshire, AL5 2JQ under the registration number 2393175 and a not for profit charity number 802038.
+>
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From frankberninger at gmail.com  Thu Apr  7 09:41:13 2016
+From: frankberninger at gmail.com (Frank Berninger)
+Date: Thu, 7 Apr 2016 10:41:13 +0300
+Subject: [R-sig-eco] model II regression with random effects
+In-Reply-To: <CAE_yG=uoupq3ZCDLh0bNk+HmSMbpcjT0yzFq7s8snXz+LNiXEA@mail.gmail.com>
+References: <CAE_yG=uoupq3ZCDLh0bNk+HmSMbpcjT0yzFq7s8snXz+LNiXEA@mail.gmail.com>
+Message-ID: <57060F19.9080606@gmail.com>
+
+I think one way of making correct inferences from similar problems would
+be to make a Bayesian regression with error in variables and grouped
+errors.
+
+Using Laplaces demon in R (the package is not anymore in CRAN but seems
+still to run and can be downloaded from the maintainer (an enterprise
+called Bayesian inference) it should be quite straightforward to set the
+analysis up.
+
+
+Frank
+On 04/06/2016 10:05 PM, Pedro Daleo wrote:
+> Hi all,
+> 
+> Do any of you know if there is any package to perform model II regressions
+> with random effects?
+> 
+> Thanks,
+> Pedro
+> 
+>
+
+
+From jean-yves.barnagaud at cefe.cnrs.fr  Thu Apr  7 14:13:22 2016
+From: jean-yves.barnagaud at cefe.cnrs.fr (Jean-Yves BARNAGAUD)
+Date: Thu, 7 Apr 2016 14:13:22 +0200
+Subject: [R-sig-eco] temporal autocorrelation with lme
+Message-ID: <57064EE2.3060806@cefe.cnrs.fr>
+
+Dear all,
+
+I'm trying to fit lme models on spatial-temporal data with strong 
+inter-annual autocorrelation.
+The response variable is a bird diversity measure sampled on several 
+plots during 10 to 40 years, which I want to relate to environmental 
+covariates. To give an idea of the sample size, there are appr. 800 plots.
+
+Here is the temporal autocorrelation of the response variable (averaged 
+over years, x axis=years)
+
+
+Based on AIC, the best model I tried is a model with a corAR1 structure, 
+as compared with ARMA models with different p and q lags.
+
+x1=corAR1(form=~year | plot)
+m2=lme(y~cov1+cov2+cov3,random=list(plot=~1),correlation=x1,data=d1)
+
+Below are residual plots. The first plot is a plot of residuals over 
+years, the 2nd and third are plots of mean residuals per year vs years. 
+The third plot is from the acf function. Looks like the AR structure 
+does not correct temporal autocorrelation, and the ARMA models don't do 
+better. I've tried other things, including adding a "year" covariate to 
+remove the apparent linear trend, without making it with a better 
+correction.
+
+
+Any advice or alternative solution?
+
+Many thanks,
+
+Best
+
+JYB
+
+
+
+
+-- 
+Jean-Yves Barnagaud
+Vertebrate Biogeography & Ecology group
+EPHE - CEFE - Montpellier, Fr.
++0033(0)467613326
+http://sites.google.com/site/jybarnagaud
+
+
+
+From thierry.onkelinx at inbo.be  Thu Apr  7 14:43:03 2016
+From: thierry.onkelinx at inbo.be (Thierry Onkelinx)
+Date: Thu, 7 Apr 2016 14:43:03 +0200
+Subject: [R-sig-eco] temporal autocorrelation with lme
+In-Reply-To: <57064EE2.3060806@cefe.cnrs.fr>
+References: <57064EE2.3060806@cefe.cnrs.fr>
+Message-ID: <CAJuCY5xqVrqBgBYwQLcqkZdU0agL-wsn_e4Z=JWoHOEPJAcBFA@mail.gmail.com>
+
+Dear Jean-Yves,
+
+The mailing strips HTML and most of the attachment. Hence we can't see the
+plots.
+
+Note that you need the normalised residuals to see the effect of the
+correlation structure. resid(type = "normalized").
+
+Best regards,
+
+ir. Thierry Onkelinx
+Instituut voor natuur- en bosonderzoek / Research Institute for Nature and
+Forest
+team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+Kliniekstraat 25
+1070 Anderlecht
+Belgium
+
+To call in the statistician after the experiment is done may be no more
+than asking him to perform a post-mortem examination: he may be able to say
+what the experiment died of. ~ Sir Ronald Aylmer Fisher
+The plural of anecdote is not data. ~ Roger Brinner
+The combination of some data and an aching desire for an answer does not
+ensure that a reasonable answer can be extracted from a given body of data.
+~ John Tukey
+
+2016-04-07 14:13 GMT+02:00 Jean-Yves BARNAGAUD <
+jean-yves.barnagaud at cefe.cnrs.fr>:
+
+> Dear all,
+>
+> I'm trying to fit lme models on spatial-temporal data with strong
+> inter-annual autocorrelation.
+> The response variable is a bird diversity measure sampled on several plots
+> during 10 to 40 years, which I want to relate to environmental covariates.
+> To give an idea of the sample size, there are appr. 800 plots.
+>
+> Here is the temporal autocorrelation of the response variable (averaged
+> over years, x axis=years)
+>
+>
+> Based on AIC, the best model I tried is a model with a corAR1 structure,
+> as compared with ARMA models with different p and q lags.
+>
+> x1=corAR1(form=~year | plot)
+> m2=lme(y~cov1+cov2+cov3,random=list(plot=~1),correlation=x1,data=d1)
+>
+> Below are residual plots. The first plot is a plot of residuals over
+> years, the 2nd and third are plots of mean residuals per year vs years. The
+> third plot is from the acf function. Looks like the AR structure does not
+> correct temporal autocorrelation, and the ARMA models don't do better. I've
+> tried other things, including adding a "year" covariate to remove the
+> apparent linear trend, without making it with a better correction.
+>
+>
+> Any advice or alternative solution?
+>
+> Many thanks,
+>
+> Best
+>
+> JYB
+>
+>
+>
+>
+> --
+> Jean-Yves Barnagaud
+> Vertebrate Biogeography & Ecology group
+> EPHE - CEFE - Montpellier, Fr.
+> +0033(0)467613326
+> http://sites.google.com/site/jybarnagaud
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From aislinn.pearson at rothamsted.ac.uk  Thu Apr  7 16:47:20 2016
+From: aislinn.pearson at rothamsted.ac.uk (Aislinn Pearson)
+Date: Thu, 7 Apr 2016 14:47:20 +0000
+Subject: [R-sig-eco] LMER: applying a random term to only one level of a
+	factor
+Message-ID: <HE1PR01MB146624746E19573D03CFC50FC9900@HE1PR01MB1466.eurprd01.prod.exchangelabs.com>
+
+Thank you very much for your help Bob. I think that's a great idea.
+
+-----Original Message-----
+From: R-sig-ecology [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of r-sig-ecology-request at r-project.org
+Sent: 07 April 2016 11:00
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 97, Issue 1
+
+Send R-sig-ecology mailing list submissions to
+        r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+        https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+        r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+        r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. LMER: applying a random term to only one level of a       factor
+      (Aislinn Pearson)
+   2.  model II regression with random effects (Pedro Daleo)
+   3. Re: LMER: applying a random term to only one level of a
+      factor (Bob O'Hara)
+   4. Re: model II regression with random effects (Frank Berninger)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Wed, 6 Apr 2016 18:12:45 +0000
+From: Aislinn Pearson <aislinn.pearson at rothamsted.ac.uk>
+To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Subject: [R-sig-eco] LMER: applying a random term to only one level of
+        a       factor
+Message-ID:
+        <HE1PR01MB146651B6E10E09C6C0B07597C99F0 at HE1PR01MB1466.eurprd01.prod.exchangelabs.com>
+
+Content-Type: text/plain; charset="UTF-8"
+
+Hi,
+
+I've tried googling this but haven't been very successful. Essentially, I'd like to know what is the most statistically valid way of dealing with a random term which doesn't apply to every level of fixed-effect factor.
+
+I have a mixed effect model that looks like this
+
+Disease level <- weight + Flown +(1|DateFlown)
+
+Either I flew my insects on a flight mill (which can be thought of as a 'treadmill' for flying insects) or I didn't, hence flown is a two level factor (Yes or No) and I want to understand how this affects the amount of disease in my insect. To get as many replicates as I could on a single day, I had two different banks of flight mills (A & B), each bank containing 16 individual insect treadmills. The insects were randomly assigned to one of the two sets of 16 flight mills. Previous studies tell me there are differences between these two sets of flight mills, so I would like to account for them as a random term in my model.
+
+However, I can't run this in LMER. When I tried I got the error;
+
+Error in `contrasts<-`(`*tmp*`, value = contr.funs[1 + isOF[nn]]) :
+  contrasts can be applied only to factors with 2 or more levels
+
+Which I imagine means that one of my factors (i.e. Flown) doesn't include any levels for the random term mill set (i.e. for all unflown insects the value in the mill set column is NA)
+
+Is it possible to include this form of experimental design in LMER (the package I know best) or, alternatively, nlme (which I am a lot less accustomed to using)?
+
+I would be really grateful if anyone has any insight.
+
+Many thanks
+
+Rothamsted Research is a company limited by guarantee, registered in England at Harpenden, Hertfordshire, AL5 2JQ under the registration number 2393175 and a not for profit charity number 802038.
+
+
+
+        [[alternative HTML version deleted]]
+
+
+
+------------------------------
+
+Message: 2
+Date: Wed, 6 Apr 2016 16:05:19 -0300
+From: Pedro Daleo <pdaleo at mdp.edu.ar>
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco]  model II regression with random effects
+Message-ID:
+        <CAE_yG=uoupq3ZCDLh0bNk+HmSMbpcjT0yzFq7s8snXz+LNiXEA at mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+
+Hi all,
+
+Do any of you know if there is any package to perform model II regressions with random effects?
+
+Thanks,
+Pedro
+
+
+--
+Pedro Daleo
+Laboratorio de Ecologia
+IIMyC (CONICET-UNMdP)
+Mar del Plata
+*ARGENTINA*
+
+        [[alternative HTML version deleted]]
+
+
+
+------------------------------
+
+Message: 3
+Date: Thu, 7 Apr 2016 09:29:25 +0200
+From: "Bob O'Hara" <bohara at senckenberg.de>
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] LMER: applying a random term to only one
+        level of a factor
+Message-ID: <57060C55.1090101 at senckenberg.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+
+On 06/04/16 20:12, Aislinn Pearson wrote:
+> Hi,
+>
+> I've tried googling this but haven't been very successful. Essentially, I'd like to know what is the most statistically valid way of dealing with a random term which doesn't apply to every level of fixed-effect factor.
+>
+> I have a mixed effect model that looks like this
+>
+> Disease level <- weight + Flown +(1|DateFlown)
+>
+> Either I flew my insects on a flight mill (which can be thought of as a 'treadmill' for flying insects) or I didn't, hence flown is a two level factor (Yes or No) and I want to understand how this affects the amount of disease in my insect. To get as many replicates as I could on a single day, I had two different banks of flight mills (A & B), each bank containing 16 individual insect treadmills. The insects were randomly assigned to one of the two sets of 16 flight mills. Previous studies tell me there are differences between these two sets of flight mills, so I would like to account for them as a random term in my model.
+As a practical matter, it's not worth setting a level with two levels as
+random: you don't gain anything in the analysis and the variance component is really poorly estimated. In practice, this might actually make things cleaner, as you will have to look a bit more at the flight mill effects, so you should get a better feel for what's happening.
+
+> However, I can't run this in LMER. When I tried I got the error;
+>
+> Error in `contrasts<-`(`*tmp*`, value = contr.funs[1 + isOF[nn]]) :
+>    contrasts can be applied only to factors with 2 or more levels
+>
+> Which I imagine means that one of my factors (i.e. Flown) doesn't
+> include any levels for the random term mill set (i.e. for all unflown
+> insects the value in the mill set column is NA)
+>
+> Is it possible to include this form of experimental design in LMER (the package I know best) or, alternatively, nlme (which I am a lot less accustomed to using)?
+I can think of two ways of doing this: either set up a factor with three levels (Flight mill A, Flight mill B, Not Flown) or set the Not Flown to one of the flight mill levels. The first way feels less confusing, but you might have to set up some contrasts to estimate the differences. But hopefully your insects will cooperate nicely and make the difference between the flight ills will be much smaller than between flight mills and not flown.
+
+HTH
+
+Bob
+
+> I would be really grateful if anyone has any insight.
+>
+> Many thanks
+>
+> Rothamsted Research is a company limited by guarantee, registered in England at Harpenden, Hertfordshire, AL5 2JQ under the registration number 2393175 and a not for profit charity number 802038.
+>
+>
+>
+>       [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+--
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+
+------------------------------
+
+Message: 4
+Date: Thu, 7 Apr 2016 10:41:13 +0300
+From: Frank Berninger <frankberninger at gmail.com>
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] model II regression with random effects
+Message-ID: <57060F19.9080606 at gmail.com>
+Content-Type: text/plain; charset=windows-1252
+
+I think one way of making correct inferences from similar problems would be to make a Bayesian regression with error in variables and grouped errors.
+
+Using Laplaces demon in R (the package is not anymore in CRAN but seems still to run and can be downloaded from the maintainer (an enterprise called Bayesian inference) it should be quite straightforward to set the analysis up.
+
+
+Frank
+On 04/06/2016 10:05 PM, Pedro Daleo wrote:
+> Hi all,
+>
+> Do any of you know if there is any package to perform model II
+> regressions with random effects?
+>
+> Thanks,
+> Pedro
+>
+>
+
+
+
+------------------------------
+
+Subject: Digest Footer
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+------------------------------
+
+End of R-sig-ecology Digest, Vol 97, Issue 1
+********************************************
+
+
+
+Rothamsted Research is a company limited by guarantee, registered in England at Harpenden, Hertfordshire, AL5 2JQ under the registration number 2393175 and a not for profit charity number 802038.
+
+
+From pdaleo at mdp.edu.ar  Fri Apr  8 16:07:07 2016
+From: pdaleo at mdp.edu.ar (Pedro Daleo)
+Date: Fri, 8 Apr 2016 11:07:07 -0300
+Subject: [R-sig-eco] model II regression with random effects
+In-Reply-To: <57060F19.9080606@gmail.com>
+References: <CAE_yG=uoupq3ZCDLh0bNk+HmSMbpcjT0yzFq7s8snXz+LNiXEA@mail.gmail.com>
+	<57060F19.9080606@gmail.com>
+Message-ID: <CAE_yG=t2gJ6quno4-CE=Y_dOVNjPYdNmJsD8EH2=05E6jTS-0w@mail.gmail.com>
+
+Thanks for your answer Frank, I will explore the package.
+Best,
+
+Pedro
+
+2016-04-07 4:41 GMT-03:00 Frank Berninger <frankberninger at gmail.com>:
+
+> I think one way of making correct inferences from similar problems would
+> be to make a Bayesian regression with error in variables and grouped
+> errors.
+>
+> Using Laplaces demon in R (the package is not anymore in CRAN but seems
+> still to run and can be downloaded from the maintainer (an enterprise
+> called Bayesian inference) it should be quite straightforward to set the
+> analysis up.
+>
+>
+> Frank
+> On 04/06/2016 10:05 PM, Pedro Daleo wrote:
+> > Hi all,
+> >
+> > Do any of you know if there is any package to perform model II
+> regressions
+> > with random effects?
+> >
+> > Thanks,
+> > Pedro
+> >
+> >
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Pedro Daleo
+Laboratorio de Ecologia
+IIMyC (CONICET-UNMdP)
+Mar del Plata
+*ARGENTINA*
+
+	[[alternative HTML version deleted]]
+
+
+From highstat at highstat.com  Tue Apr 12 00:44:18 2016
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Mon, 11 Apr 2016 23:44:18 +0100
+Subject: [R-sig-eco] Intro GAM and GAMM course: Singapore
+Message-ID: <570C28C2.4050707@highstat.com>
+
+
+
+There are 4 remaining seats on the following statistics course:
+
+Course: Introduction to GAM and GAMM with R
+When: 30 May-3 June 2016
+Where: Tropical Marine Science Institute, National University of 
+Singapore, Singapore
+Course website: http://highstat.com/statscourse.htm
+Course flyer: http://highstat.com/Courses/Flyers/Flyer2016_05Singapore.pdf
+
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From cmassa at ege.fcen.uba.ar  Thu Apr 14 12:17:59 2016
+From: cmassa at ege.fcen.uba.ar (Carolina Massa)
+Date: Thu, 14 Apr 2016 07:17:59 -0300 (ART)
+Subject: [R-sig-eco] adehabitatLT
+Message-ID: <7fd424c7000dbc4898936127e341cd08.squirrel@webmail.ege.fcen.uba.ar>
+
+Hello,
+Someone know how can I plot two ltraj (2 different animals) in the same
+graph?
+thanks
+
+Caro
+
+
+From constanze_keye at hotmail.com  Tue Apr 19 02:17:43 2016
+From: constanze_keye at hotmail.com (Conny)
+Date: Tue, 19 Apr 2016 12:17:43 +1200
+Subject: [R-sig-eco] sDelta+ index
+Message-ID: <DUB128-DS18E40ADEC7728A7C3E0EA9F76C0@phx.gbl>
+
+Dear list,
+
+ 
+
+I encountered a wee problem with the taxondive function (vegan).
+
+ 
+
+It's help page states that the sDelta+ index was developed by Clarke &
+Warwick (2001), but I can't find anything in this paper about it, nor in any
+other paper (?)
+
+It might be just a case of acute blindness.
+
+ 
+
+Any help is very much appreciated,
+
+Conny
+
+ 
+
+Clarke, K.R. & Warwick, R.M. (2001) A further biodiversity index applicable
+to species lists: variation in taxonomic distinctness. Marine Ecology
+Progress Series 216, 265-278.
+
+
+	[[alternative HTML version deleted]]
+
+
+From basille.web at ase-research.org  Tue Apr 19 21:36:04 2016
+From: basille.web at ase-research.org (Mathieu Basille)
+Date: Tue, 19 Apr 2016 15:36:04 -0400
+Subject: [R-sig-eco] adehabitatLT
+In-Reply-To: <7fd424c7000dbc4898936127e341cd08.squirrel@webmail.ege.fcen.uba.ar>
+References: <7fd424c7000dbc4898936127e341cd08.squirrel@webmail.ege.fcen.uba.ar>
+Message-ID: <571688A4.6060803@ase-research.org>
+
+[I'm resending my answer since it didn't make it to the list]
+
+Hi Carolina,
+
+Please check my package 'hab' [1]. I refined 'plot.ltraj' there to allow
+for better control for the user. I believe it can be used to do what you
+want. See for instance the following example:
+
+library(hab)
+data(puechcirc)
+plot(puechcirc, by = "none")
+plot(puechcirc, by = "none", ppar = list(col = c(CH930824 = "blue",
+    CH930827 = "blue", JE930827 = "red"), pch = 20), lpar = list(col =
+    c(CH930824 = "blue", CH930827 = "blue", JE930827 = "red")))
+
+You will find other useful examples in the help page of the function.
+
+Hope this helps!
+Mathieu.
+
+
+[1] https://github.com/basille/hab
+
+
+Le 14/04/2016 06:17, Carolina Massa a ?crit :
+> Hello,
+> Someone know how can I plot two ltraj (2 different animals) in the same
+> graph?
+> thanks
+> 
+> Caro
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+
+Mathieu Basille
+
+basille at ufl.edu | http://ase-research.org/basille
++1 954-577-6314 | University of Florida FLREC
+
+  ? Le tout est de tout dire, et je manque de mots
+  Et je manque de temps, et je manque d'audace. ?
+  ? Paul ?luard
+
+
+From luysgarcia at gmail.com  Mon Apr 25 13:35:56 2016
+From: luysgarcia at gmail.com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Mon, 25 Apr 2016 08:35:56 -0300
+Subject: [R-sig-eco] Compare two indexes by bootstrap
+Message-ID: <CANxP2S4VTn1fiP5WWb9V6Dj31xB78PY1oH3Qqohi3S_oeUUudw@mail.gmail.com>
+
+Dear R users,
+
+I am trying to compare two trophic indexes not available in R by using
+boostrap. Although I have used R I am not very familiar by making this
+procedure and have not used suitable examples as many of them compare
+similar (diversity) indexes by using the functions included in vegan
+package.
+
+So I wanted to know if any of you knows a nice webiste which shows how to
+do this "by hand"
+
+Many thanks!
+
+	[[alternative HTML version deleted]]
+
+
+From rmp.iit.kgp at gmail.com  Tue Apr 26 08:21:44 2016
+From: rmp.iit.kgp at gmail.com (Rajendra Mohan Panda)
+Date: Tue, 26 Apr 2016 11:51:44 +0530
+Subject: [R-sig-eco] (no subject)
+Message-ID: <CAGTzHJtgdnS_-MsoTqMrPyfnmRGYae7jmyfY6w-=HU+MVHwSnQ@mail.gmail.com>
+
+Dear viewers
+
+I get following error while I import "caret " package into RStudio. I have
+imported all required packages beforehand I try this. I have tried the
+following two options also, but failed to import the "caret" package:
+
+install.packages("caret", repos=c("http://rstudio.org/_packages", "
+http://cran.rstudio.com"))
+install.packages("caret", repos="http://R-Forge.R-project.org",
+type="source")
+
+
+Error in loadNamespace(j <- i[[1L]], c(lib.loc, .libPaths()), versionCheck
+= vI[[j]]) :
+  namespace ?Matrix? 1.2-2 is already loaded, but >= 1.2.3 is required
+In addition: Warning message:
+package ?caret? was built under R version 3.2.5
+Error: package or namespace load failed for ?caret?
+
+
+Your kind advice is highly appreciated.
+
+Best Regards
+Rajendra M Panda
+School of Water Resources
+Indian Institute of Technology Kharagpur
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker at prstatistics.com  Tue Apr 26 12:18:21 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Tue, 26 Apr 2016 11:18:21 +0100
+Subject: [R-sig-eco] 'STATS COURSE - TIME SERIES MODELS USING R'
+Message-ID: <a4aea90f251b351979c8542721f35713@prstatistics.com>
+
+"Time Series Models for Ecologists and Climatologists"
+
+Delivered by Dr. Andrew Parnell and Dr. Doug McNeall
+
+http://prstatistics.com/course/time-series-models-for-ecologists-and-climatologist/
+
+This course will run from 10th ? 13th May 2016 at SCENE Field Station, 
+Loch Lomond national park, Scotland
+
+This course will cover model-based time series analysis with a 
+particular focus on applications in ecology and climatology. All methods 
+will be illustrated using the free, open-source software package R. Time 
+Series data are ubiquitous in the physical sciences, and models for 
+their behaviour enable scientists to understand temporal dynamics and 
+predict future values.
+
+Participants will be taught a wide range of suitable time series models 
+for both discrete and continuous time systems. The course takes a 
+foundational Bayesian approach, which will enable participants to have a 
+deeper understanding of the models being fitted, and to estimate all 
+unknown quantities with uncertainty. Participants are encouraged to 
+bring their own data sets for discussion with the course tutors.
+
+Course content is as follows
+
+Day 1 Basic concepts
+o	Class 1: Introduction; some example time series datasets; prediction 
+vs explanation
+o	Class 2: An introduction to Bayesian Statistics.
+o	Class 3: The AR(1) model
+o	Practical: revision on using R to load data, create plots and fit 
+statistical models
+o	Round table discussion: understanding the output from a Bayesian model
+
+Day 2 Arima modelling
+o	Class 1: ARMA models for real data
+o	Class 2: ARIMA and sARIMA modelling
+o	Practical: An introduction to the Bayesian modelling language JAGS
+o	Round table discussion: understanding and running a
+o	JAGS model
+
+Day 3 Continuous Time Series Modelling
+o	Class 1: Brownian Motion and its application to real data sets
+o	Class 2: An introduction to Stochastic Volatility Modelling
+o	Practical: Fitting continuous time models in JAGS
+o	Round table discussion: Issues of continuous vs discrete time
+
+Day 4 Advanced Times Series Models
+o	Class 1: Multivariate models
+o	Class 2: Fractional differencing and models using differential 
+equations
+o	Practical: Running advanced models in JAGS
+o	Round table discussion: Bring your own data set
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+
+Upcoming courses - email for details oliverhooker at prstatistics.com
+ADVACNING IN STATISTICAL MODELLING USING R (May)
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (May)
+ADVANCES IN DNA TAXONOMY USING R (August)
+GENETIC DATA ANALYSIS USING R (August)
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING (August)
+MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R (October)
+LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R (October)
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (October)
+PHYLOGENETIC DATA ANALYSIS USING R (November)
+SPATIAL ANALYSIS OF ECOLOGIC AL DATA USING R (November)
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR USING R
+INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS
+
+Oliver Hooker
+PR Statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+-- 
+Oliver Hooker
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From oliverhooker at prstatistics.com  Tue Apr 26 12:18:47 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Tue, 26 Apr 2016 11:18:47 +0100
+Subject: [R-sig-eco] 'STATS COURSE - PIERRE LEGENDRE - Spatial Analysis of
+ Multivariate Ecological Data Using R'
+Message-ID: <5d0023c670c69a80e3ef91786b25cd9f@prstatistics.com>
+
+?Advances in Spatial Analysis of Multivariate Ecological Data: Theory 
+and Practice?
+
+http://prstatistics.com/course/advances-in-spatial-analysis-of-multivariate-ecological-data-theory-and-practice/
+
+This course is being delivered by Prof. Pierre Legendre who is a leading 
+expert in numerical ecology and author of the book titled ?Numerical 
+ecology?
+
+This course will run from 11th ? 15th July 2016 at SCENE Field 
+Station, Loch Lomond National Park, Scotland
+
+The course will describe recent methods (concepts and R tools) that can 
+be used to analyse spatial patterns in community ecology. The umbrella 
+concept of the course is beta diversity, which is the spatial variation 
+of communities. These methods are applicable to all types of communities 
+(bacteria, plants, animals) sampled along transects, regular grids or 
+irregularly distributed sites. The new methods, collectively referred to 
+as spatial eigen-function analysis, are grounded into techniques 
+commonly used by community ecologists, which will be described first: 
+simple ordination (PCA, CA, PCoA), multivariate regression and canonical 
+analysis, permutation tests. The choice of dissimilarities that are 
+appropriate for community composition data will also be discussed. The 
+focal question is to determine how much of the community variation (beta 
+diversity) is due to environmental sorting and to community-based 
+processes, including neutral processes. Recently developed methods to 
+partition beta diversity in different ways will be presented. Extensions 
+will be made to temporal and space-time data.
+
+Course content is as follows
+Day 1
+? Introduction to data analysis.
+? Ordination in reduced space: principal component analysis (PCA), 
+correspondence analysis (CA), principal coordinate analysis (PCoA).
+? Transformation of species abundance data tables prior to linear 
+analyses.
+
+Day 2
+? Measures of similarity and distance, especially for community 
+composition data.
+? Multiple linear regression. R-square, adjusted R-square, AIC, tests 
+of significance.
+? Polynomial regression.
+? Partial regression and variation partitioning.
+
+Day 3
+? Statistical testing by permutation.
+? Canonical redundancy analysis (RDA) and canonical correspondence 
+analysis (CCA). Multivariate analysis of variance by canonical analysis.
+? Forward selection of environmental variables in RDA.
+
+Day 4
+? Origin of spatial structures.
+? Beta diversity partitioning and LCBD indices
+? Replacement and richness difference components of beta diversity.
+
+Day 5
+? Spatial modelling: Multi-scale modelling of the spatial structure of 
+ecological communities: dbMEM, generalized MEM, and AEM methods.
+? Community surveys through space and time: testing the space-time 
+interaction in repeated surveys.
+? Additional module depending on time ? Is the Mantel test useful 
+for spatial analysis in ecology and genetics?
+
+Please email any inquiries to oliverhooker at prstatistics.com
+
+or visit our website www.prstatistics.com
+
+or to book online 
+http://prstatistics.com/course/advances-in-spatial-analysis-of-multivariate-ecological-data-theory-and-practice/
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+
+Upcoming courses - email for details oliverhooker at prstatistics.com
+ADVACNING IN STATISTICAL MODELLING USING R (May)
+TIMES SERIES DATA ANALYSIS FOR ECOLOGISTS AND CLIMATOLOGISTS (May)
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (May)
+ADVANCES IN DNA TAXONOMY USING R (August)
+GENETIC DATA ANALYSIS USING R (August)
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING (August)
+MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R (October)
+LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R (October)
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (October)
+PHYLOGENETIC DATA ANALYSIS USING R (November)
+SPATIAL ANALYSIS OF ECOLOGIC AL DATA USING R (November)
+
+
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR USING R
+INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS
+
+Oliver Hooker
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From rmp.iit.kgp at gmail.com  Tue Apr 26 14:47:38 2016
+From: rmp.iit.kgp at gmail.com (Rajendra Mohan Panda)
+Date: Tue, 26 Apr 2016 18:17:38 +0530
+Subject: [R-sig-eco] (no subject)
+In-Reply-To: <f9085a32-3848-882b-38b0-b904ec9c6152@omics2view.consulting>
+References: <CAGTzHJtgdnS_-MsoTqMrPyfnmRGYae7jmyfY6w-=HU+MVHwSnQ@mail.gmail.com>
+	<f9085a32-3848-882b-38b0-b904ec9c6152@omics2view.consulting>
+Message-ID: <CAGTzHJshrfwFgszPvdOV4P--A5hRV3jNt7wUm7J2Qi+RQ1+qVg@mail.gmail.com>
+
+Dear Viewers
+
+I find following error after updating R and reloading caret
+
+Error : Function found when exporting methods from the namespace ?Matrix?
+which is not S4 generic: ?as.vector?
+In addition: Warning message:
+package ?caret? was built under R version 3.3.0
+Error: package or namespace load failed for ?caret?
+
+Kindly advise
+
+Thanking you
+
+
+
+
+Best Regards
+Rajendra M Panda
+School of Water Resources
+Indian Institute of Technology Kharagpur
+
+On 26 April 2016 at 15:23, Sven Neulinger <s.neulinger at omics2view.consulting
+> wrote:
+
+> Dear Jajendra,
+>
+> Your error message looks to me like R is complaining about an out-dated
+> version of the "Matrix" package. I think the safest way would be for you to
+> update to the latest R version (3.2.5) and then update all your installed
+> packages, including "Matrix" with update.packages().
+>
+> Please let me know whether this works for you.
+>
+>
+> Kind regards from Kiel,
+> Sven
+>
+>
+>
+>
+> On 26.04.2016 08:21, Rajendra Mohan Panda wrote:
+>
+>> Dear viewers
+>>
+>> I get following error while I import "caret " package into RStudio. I have
+>> imported all required packages beforehand I try this. I have tried the
+>> following two options also, but failed to import the "caret" package:
+>>
+>> install.packages("caret", repos=c("http://rstudio.org/_packages", "
+>> http://cran.rstudio.com"))
+>> install.packages("caret", repos="http://R-Forge.R-project.org",
+>> type="source")
+>>
+>>
+>> Error in loadNamespace(j <- i[[1L]], c(lib.loc, .libPaths()), versionCheck
+>> = vI[[j]]) :
+>>   namespace ?Matrix? 1.2-2 is already loaded, but >= 1.2.3 is required
+>> In addition: Warning message:
+>> package ?caret? was built under R version 3.2.5
+>> Error: package or namespace load failed for ?caret?
+>>
+>>
+>> Your kind advice is highly appreciated.
+>>
+>> Best Regards
+>> Rajendra M Panda
+>> School of Water Resources
+>> Indian Institute of Technology Kharagpur
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+> --
+> Dr. rer. nat. Sven Neulinger
+> Microbiomics, bioinformatics & biostatistics
+>
+> omics2view.consulting GbR
+> Postillionweg 31
+> 24113 Kiel
+> GERMANY
+>
+> T   +49 431 9799135
+> F   +49 431 97991867
+> E   s.neulinger at omics2view.consulting
+> W   www.omics2view.consulting
+> _______________________________________
+>
+>
+> Finding life in data...
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From rmp.iit.kgp at gmail.com  Tue Apr 26 14:59:11 2016
+From: rmp.iit.kgp at gmail.com (Rajendra Mohan Panda)
+Date: Tue, 26 Apr 2016 18:29:11 +0530
+Subject: [R-sig-eco] (no subject)
+In-Reply-To: <CAGTzHJshrfwFgszPvdOV4P--A5hRV3jNt7wUm7J2Qi+RQ1+qVg@mail.gmail.com>
+References: <CAGTzHJtgdnS_-MsoTqMrPyfnmRGYae7jmyfY6w-=HU+MVHwSnQ@mail.gmail.com>
+	<f9085a32-3848-882b-38b0-b904ec9c6152@omics2view.consulting>
+	<CAGTzHJshrfwFgszPvdOV4P--A5hRV3jNt7wUm7J2Qi+RQ1+qVg@mail.gmail.com>
+Message-ID: <CAGTzHJt70O_jcJZ-+azMw2Z9qQpkDt6bsP7XMjdBvJR2vGTMEQ@mail.gmail.com>
+
+Thanks a lot to forum members
+
+Please find the error with Matrix package
+
+Installed Matrix package could not be imported to R even after R update and
+caret package reloading. I get following error:
+
+Warning in install.packages :
+cannot open compressed file 'Matrix_1.2-5 (3)/DESCRIPTION', probable reason
+'No such file or directory'
+Error in install.packages : cannot open the connection
+
+If the above error can be sorted out? Please reply.
+
+
+Best Regards
+Rajendra M Panda
+School of Water Resources
+Indian Institute of Technology Kharagpur
+
+On 26 April 2016 at 18:17, Rajendra Mohan Panda <rmp.iit.kgp at gmail.com>
+wrote:
+
+> Dear Viewers
+>
+> I find following error after updating R and reloading caret
+>
+> Error : Function found when exporting methods from the namespace ?Matrix?
+> which is not S4 generic: ?as.vector?
+> In addition: Warning message:
+> package ?caret? was built under R version 3.3.0
+> Error: package or namespace load failed for ?caret?
+>
+> Kindly advise
+>
+> Thanking you
+>
+>
+>
+>
+> Best Regards
+> Rajendra M Panda
+> School of Water Resources
+> Indian Institute of Technology Kharagpur
+>
+> On 26 April 2016 at 15:23, Sven Neulinger <
+> s.neulinger at omics2view.consulting> wrote:
+>
+>> Dear Jajendra,
+>>
+>> Your error message looks to me like R is complaining about an out-dated
+>> version of the "Matrix" package. I think the safest way would be for you to
+>> update to the latest R version (3.2.5) and then update all your installed
+>> packages, including "Matrix" with update.packages().
+>>
+>> Please let me know whether this works for you.
+>>
+>>
+>> Kind regards from Kiel,
+>> Sven
+>>
+>>
+>>
+>>
+>> On 26.04.2016 08:21, Rajendra Mohan Panda wrote:
+>>
+>>> Dear viewers
+>>>
+>>> I get following error while I import "caret " package into RStudio. I
+>>> have
+>>> imported all required packages beforehand I try this. I have tried the
+>>> following two options also, but failed to import the "caret" package:
+>>>
+>>> install.packages("caret", repos=c("http://rstudio.org/_packages", "
+>>> http://cran.rstudio.com"))
+>>> install.packages("caret", repos="http://R-Forge.R-project.org",
+>>> type="source")
+>>>
+>>>
+>>> Error in loadNamespace(j <- i[[1L]], c(lib.loc, .libPaths()),
+>>> versionCheck
+>>> = vI[[j]]) :
+>>>   namespace ?Matrix? 1.2-2 is already loaded, but >= 1.2.3 is required
+>>> In addition: Warning message:
+>>> package ?caret? was built under R version 3.2.5
+>>> Error: package or namespace load failed for ?caret?
+>>>
+>>>
+>>> Your kind advice is highly appreciated.
+>>>
+>>> Best Regards
+>>> Rajendra M Panda
+>>> School of Water Resources
+>>> Indian Institute of Technology Kharagpur
+>>>
+>>>         [[alternative HTML version deleted]]
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>>
+>> --
+>> Dr. rer. nat. Sven Neulinger
+>> Microbiomics, bioinformatics & biostatistics
+>>
+>> omics2view.consulting GbR
+>> Postillionweg 31
+>> 24113 Kiel
+>> GERMANY
+>>
+>> T   +49 431 9799135
+>> F   +49 431 97991867
+>> E   s.neulinger at omics2view.consulting
+>> W   www.omics2view.consulting
+>> _______________________________________
+>>
+>>
+>> Finding life in data...
+>>
+>>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker at prstatistics.com  Thu Apr 28 19:38:21 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Thu, 28 Apr 2016 18:38:21 +0100
+Subject: [R-sig-eco] 'STATS COURSE - DNA taxonomy using R'
+Message-ID: <c96ed1b5aa93017fd000fcc8301afec8@prstatistics.com>
+
+"Advances in DNA taxonomy"
+
+Instructors -  Prof. Ziheng Yang and Dr. Diego Fontaneto
+
+This course will run from 8th ? 11th August 2016 at SCENE Field 
+Station, Loch Lomond national park, Scotland
+
+http://prstatistics.com/course/advances-in-dna-taxonomy-dntx/
+
+Course content is as follows
+
+Day 1
+? Introduction to DNA taxonomy
+? The applied ecological approach and the theoretical evolutionary 
+approach.
+? What is needed to perform DNA taxonomy.
+? How to get data.
+? Phylogenetic reconstruction using distance-based and parsimony 
+methods.
+? Introduction on NJ, UPGMA, parsimony; when and why they can be used 
+for DNA taxonomy.
+? Computer practical.
+
+Day 2
+? Phylogenetic reconstructions
+? Using Maximum Likelihood with computer practical on Maximum 
+Likelihood.
+? Using Bayesian Inference with computer practical on Bayesian 
+Inference.
+
+Day 3
+? Single-locus DNA taxonomy.
+? Most commonly used methods Rationale and use for fixed threshold, 
+ABGD, K/theta, PTP, GMYC with computer practicals.
+? Other methods, Haplowebs, bGMYC, etc. with computer practicals
+
+Day 4
+? Multi-locus DNA taxonomy with computer practicals
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+
+Upcoming courses - email for details oliverhooker at prstatistics.com
+ADVACNING IN STATISTICAL MODELLING USING R (May)
+TIME SERIES MODELS FOR ECOLOGISTS AND CLIMATOLOGISTS USING R (May)
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (May)
+GENETIC DATA ANALYSIS USING R (August)
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING (August)
+MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R (October)
+LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R (October)
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (October)
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR USING R
+INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+
+
+Oliver Hooker
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From oliverhooker at prstatistics.com  Thu Apr 28 19:40:58 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Thu, 28 Apr 2016 18:40:58 +0100
+Subject: [R-sig-eco] 'STATS COURSE - Genetic data analysis/exploration using
+	R'
+Message-ID: <6f345cc809c02055fc40bf97ffd9af2d@prstatistics.com>
+
+"Genetic data analysis/exploration using R"
+
+Delivered by Dr. Thibaut Jombart
+
+http://prstatistics.com/course/genetic-data-analysis-using-r-gdar/
+
+This course will run from 16th ? 20th August, Millport Field Station, 
+Ilse of Cumbrae, Scotland
+
+This course will provide an extensive overview of exploratory methods 
+for the analysis of genetic data using the R software and aim to equip 
+participants with powerful resources for tackling increasingly common 
+challenges in genetic data analysis. It is aimed at PhD students, 
+research postgraduates, and practicing academics as well as persons in 
+industry working with genetic data in fields such as molecular ecology, 
+evolutionary biology, and phylogenetics. This course will provide a 
+comprehensive introduction to various statistical approaches for the 
+analysis of genetic data.
+
+Course content is as follows
+
+Day 1 Introduction to phylogenetic reconstruction
+? Lecture 1a: Reconstructing phylogenies from genetic sequence data. 
+Three main approaches covered: distance-based phylogenies; maximum 
+parsimony; and likelihood-based approaches.
+? Lecture 1b: Short R refresher.
+? Practical 1: Phylogenetic reconstruction using R. Three main 
+approaches plus rooting a tree; assessing/testing for a molecular clock; 
+and bootstrapping.
+Main packages: ape, phangorn.
+
+Day 2 Introduction to multivariate analysis of genetic data
+? Lecture 2: Key concepts in multivariate analysis. Focus on using 
+factorial methods for genetic data analysis.
+? Practical 2: Basics of multivariate analysis of genetic data in R. 
+Topics include: data handling, population genetic tests of population 
+structure (PCA, PCoA).
+Main packages: adegenet, ade4, ape.
+
+Day 3 Exploring group diversity
+? Lecture 3: Approaches to identifying and describing genetic 
+clusters. Topics include:   hierarchical clustering, K-means, 
+population-level multivariate analysis (between-group-PCA, DA, DAPC).
+? Practical 3: Applying the approaches covered in morning lecture and 
+emphasising their strengths and weaknesses.
+Main packages: adegenet, ade4.
+
+Day 4 Spatial genetic structure
+? Lecture 4: Discussing the origin and significance of spatial genetic 
+patterns, and how to test or them.
+? Practical 4: Visualising and analysing spatial genetic data. Topics: 
+spatial density estimates, Moran/Mantel tests, mapping principal 
+components in PCA, spatial PCA.
+? Main packages: adegenet, glmnet.
+Main packages: adegenet, glmnet.
+
+Day 5 Using R for reproducible science
+? Lecture 5: Using R for reproducible science.
+? Practical 5: Practical session based on morning lecture
+? Main packages: knitr, Sweave, rmarkdown
+? Option to discuss own data (time permitting)
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+
+Upcoming courses - email for details oliverhooker at prstatistics.com
+ADVANCING IN STATISTICAL MODELLING USING R (May)
+TIMES SERIES DATA ANALYSIS FOR ECOLOGISTS AND CLIMATOLOGISTS (May)
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (May)
+ADVANCES IN SPATIAL ANALYSIS OF MULTIVARIATE ECOLOGICAL DATA (July)
+ADVANCES IN DNA TAXONOMY USING R (August)
+INTRODUCTION TO BIOINFORMAITCS USING LINUX (August)
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING (August)
+MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R (October)
+LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R (October)
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (October)
+PHYLOGENETIC DATA ANALYSIS USING R (November)
+SPATIAL ANALYSIS OF ECOLOGIC AL DATA USING R (November)
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR USING R
+INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS
+
+
+Oliver Hooker
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From highstat at highstat.com  Thu Apr 28 20:09:43 2016
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Thu, 28 Apr 2016 19:09:43 +0100
+Subject: [R-sig-eco] New book: Beginner's Guide to Zero-Inflated Models with
+	R
+Message-ID: <572251E7.2070004@highstat.com>
+
+We are pleased to announce the following book:
+
+Title: Beginner's Guide to Zero-Inflated Models with R
+Authors: Zuur, Ieno
+
+
+Book website: http://www.highstat.com/BGZIM.htm
+Paperback or EBook can be order (exclusively) from:
+http://www.highstat.com/bookorder.htm
+TOC: http://www.highstat.com/BGS/ZIM/pdfs/TOCOnly.pdf
+
+Keywords: 430 pages. Zero inflated count data. Zero inflated continuous 
+data. Zero inflated proportional data. Frequentist and Bayesian 
+approaches. Random effects. Introduction to Bayesian statistics and 
+MCMC. JAGS. Bayesian model selection. Multivariate GLMM.
+R code and data sets available.
+
+
+-----------------------------------------------------
+Outline
+The minimum prerequisite for Beginner's Guide to Zero-Inflated Models 
+with R is knowledge of multiple linear regression, and in Chapter 2 we 
+start with brief explanations of the Poisson, negative binomial, 
+Bernoulli, binomial and gamma distributions. The motivation for doing 
+this is that zero-inflated models consist of two distributions ?glued? 
+together, one of which is the Bernoulli distribution. We begin Chapter 3 
+with a brief revision of the Poisson generalised linear model (GLM) and 
+the Bernoulli GLM, followed by a gentle introduction to zero-inflated 
+Poisson (ZIP) models. Chapters 4 and 5 contain detailed case studies 
+using count data of orange-crowned warblers and sharks. Just like all 
+other chapters, these case studies are based on real datasets used in 
+scientific papers.
+
+In Chapter 6 we use zero-altered Poisson (ZAP) models to deal with the 
+excessive number of zeros in count data. In Chapter 7 we analyse 
+continuous data with a large number of zeros. Biomass of Chinese tallow 
+trees is analysed with zero-altered gamma (ZAG) models.
+
+In Chapter 8, which begins the second part of the book, we explain how 
+to deal with dependency. Mixed models are introduced, using beaver and 
+monkey datasets. In Chapter 9 we encounter a rather complicated dataset 
+in terms of dependency. Reproductive indices are sampled from plants. 
+But the seeds come from the same source and are planted in the same bed 
+in the same garden. We apply models that take care of the excessive 
+number of zeros in count data, crossed random effects and nested random 
+effects.
+
+Up to this point we have done everything in a frequentist setting, but 
+at this stage of the book you will see that we are reaching the limit of 
+what we can achieve with the frequentist software. For this reason we 
+switch to Bayesian techniques in the third part of the book. Chapter 10 
+contains an excellent beginner?s guide to Bayesian statistics and Markov 
+Chain Monte Carlo (MCMC) techniques. The chapter also contains exercises 
+and a video solution file for one of the exercises. This means that you 
+can see our screen and listen to our voices (just in case you have 
+trouble falling asleep at night). A large number of students reviewed 
+this chapter and we incorporated their suggestions for improvement, so 
+Chapter 10 should be very easy to understand.
+
+In Chapter 11 we show how to implement the Poisson, negative binomial 
+and ZIP models in MCMC. We do the same for mixed models in Chapter 12. 
+In Chapter 13 we discuss a method, called the ?zero trick?, that allows 
+you to fit nearly every distribution in JAGS.
+
+A major stumbling block in Bayesian analysis is model selection. Chapter 
+14 provides an easy-to-understand overview of various Bayesian model 
+selection tools. Chapter 15 contains an example of Bayesian model 
+selection using butterfly data.
+
+In Chapter 16 we discuss methods for the analysis of proportional data 
+(seagrass coverage time series) with a large number of zeros. We use a 
+zero-altered beta model with nested random effects. Finally, in Chapters 
+17 and 18 we discuss various topics, including multivariate GLMMs and 
+generalised Poisson models (these can be used for underdispersion). We 
+also discuss zero-inflated binomial models.
+-----------------------------------------------------
+
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From highstat at highstat.com  Thu Apr 28 20:10:26 2016
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Thu, 28 Apr 2016 19:10:26 +0100
+Subject: [R-sig-eco] New book: Beginner's Guide to Zero-Inflated Models with
+	R
+Message-ID: <57225212.3020208@highstat.com>
+
+We are pleased to announce the following book:
+
+Title: Beginner's Guide to Zero-Inflated Models with R
+Authors: Zuur, Ieno
+
+
+Book website: http://www.highstat.com/BGZIM.htm
+Paperback or EBook can be order (exclusively) from:
+http://www.highstat.com/bookorder.htm
+TOC: http://www.highstat.com/BGS/ZIM/pdfs/TOCOnly.pdf
+
+Keywords: 430 pages. Zero inflated count data. Zero inflated continuous 
+data. Zero inflated proportional data. Frequentist and Bayesian 
+approaches. Random effects. Introduction to Bayesian statistics and 
+MCMC. JAGS. Bayesian model selection. Multivariate GLMM.
+R code and data sets available.
+
+
+-----------------------------------------------------
+Outline
+The minimum prerequisite for Beginner's Guide to Zero-Inflated Models 
+with R is knowledge of multiple linear regression, and in Chapter 2 we 
+start with brief explanations of the Poisson, negative binomial, 
+Bernoulli, binomial and gamma distributions. The motivation for doing 
+this is that zero-inflated models consist of two distributions ?glued? 
+together, one of which is the Bernoulli distribution. We begin Chapter 3 
+with a brief revision of the Poisson generalised linear model (GLM) and 
+the Bernoulli GLM, followed by a gentle introduction to zero-inflated 
+Poisson (ZIP) models. Chapters 4 and 5 contain detailed case studies 
+using count data of orange-crowned warblers and sharks. Just like all 
+other chapters, these case studies are based on real datasets used in 
+scientific papers.
+
+In Chapter 6 we use zero-altered Poisson (ZAP) models to deal with the 
+excessive number of zeros in count data. In Chapter 7 we analyse 
+continuous data with a large number of zeros. Biomass of Chinese tallow 
+trees is analysed with zero-altered gamma (ZAG) models.
+
+In Chapter 8, which begins the second part of the book, we explain how 
+to deal with dependency. Mixed models are introduced, using beaver and 
+monkey datasets. In Chapter 9 we encounter a rather complicated dataset 
+in terms of dependency. Reproductive indices are sampled from plants. 
+But the seeds come from the same source and are planted in the same bed 
+in the same garden. We apply models that take care of the excessive 
+number of zeros in count data, crossed random effects and nested random 
+effects.
+
+Up to this point we have done everything in a frequentist setting, but 
+at this stage of the book you will see that we are reaching the limit of 
+what we can achieve with the frequentist software. For this reason we 
+switch to Bayesian techniques in the third part of the book. Chapter 10 
+contains an excellent beginner?s guide to Bayesian statistics and Markov 
+Chain Monte Carlo (MCMC) techniques. The chapter also contains exercises 
+and a video solution file for one of the exercises. This means that you 
+can see our screen and listen to our voices (just in case you have 
+trouble falling asleep at night). A large number of students reviewed 
+this chapter and we incorporated their suggestions for improvement, so 
+Chapter 10 should be very easy to understand.
+
+In Chapter 11 we show how to implement the Poisson, negative binomial 
+and ZIP models in MCMC. We do the same for mixed models in Chapter 12. 
+In Chapter 13 we discuss a method, called the ?zero trick?, that allows 
+you to fit nearly every distribution in JAGS.
+
+A major stumbling block in Bayesian analysis is model selection. Chapter 
+14 provides an easy-to-understand overview of various Bayesian model 
+selection tools. Chapter 15 contains an example of Bayesian model 
+selection using butterfly data.
+
+In Chapter 16 we discuss methods for the analysis of proportional data 
+(seagrass coverage time series) with a large number of zeros. We use a 
+zero-altered beta model with nested random effects. Finally, in Chapters 
+17 and 18 we discuss various topics, including multivariate GLMMs and 
+generalised Poisson models (these can be used for underdispersion). We 
+also discuss zero-inflated binomial models.
+-----------------------------------------------------
+
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From Sybille.Haeussler at unbc.ca  Sat Apr 30 19:54:18 2016
+From: Sybille.Haeussler at unbc.ca (Sybille Haeussler)
+Date: Sat, 30 Apr 2016 17:54:18 +0000
+Subject: [R-sig-eco] partial RDA as MANOVA: appropriate permutations for a
+ complex multi-level experimental design
+Message-ID: <1462038866347.41463@unbc.ca>
+
+Hello everyone:
+
+
+I am using partial RDA to carry out a MANOVA of community data (plants, mycorrhizal fungi, beetles) in vegan for a 22-yr old forestry experiment (part of the North American Long Term Soil Productivity Study) with a multi-level randomized block design with 1 random factor (BLOCK = R) and 3 fixed factors ( A, B and C).  Combinations of factors A & B (with three levels each) are completely randomized on 9 plots within each block.  Factor C (with two levels) are randomized on one half of each of the 9 plots per block.  This is a split plot design.   I am analysing just 1 set of observations on each split plot.  The experiment is fully balanced and there are no missing data.  Thus 54 total observations.  Note that the split-plot observations could be analysed in the same way as a time series with 2 observations per plot.
+
+
+Here is the M/ANOVA table:
+
+Source of Variation     df or q SS=variance     MS =SS/df       F or F# df for F
+Total   (N ? 1) = 53    SSTot   MSTot
+Block   (r ? 1) = 2     SSR     MSR
+Factor A        (a ? 1) = 2     SSA     MSA     MSA/MSEAB       2,16
+Factor B        (b ? 1) = 2     SSB     MSB     MSB/MSEAB       2,16
+A x B interaction       (a-1)(b-1) = 4  SSAB    MSAB    MSAB/MSEAB      4,16
+Plot-level Error AB     (ab-1)(r-1) = 16        SSEAB   MSEAB
+
+Factor C        (c-1) = 1       SSC     MSC     MSC/ MSEABC     1,18
+OM x SP interaction     (a-1)(c-1) = 2  SSAC    MSAC    MSAC/ MSEABC    2, 18
+C x SP interaction      (b-1)(c-1 )= 2  SSAB    MSAB    MSAB/ MSEABC    2, 18
+OMxCxSP interaction     (a-1)(b-1)(c-1) = 4     SSABC   MSABC   MSABC/ MSEABC   4, 18
+Split-Plot  Error ABC   ab(c-1)(r-1) = 18       SSEABC  MSEABC
+
+
+
+Tests of split-plot level factors and their interactions (anything including Factor C) should have a Residual (denominator term) with 18 degrees of freedom.  Tests of plot level factors and their interactions (A, B, AxB) should have a Residual with 16 degrees of freedom.  I use this as a guide to see whether the permutation test is using the correct F statistic.
+
+
+Following the methods for partial RDA as MANOVA developed by Pierre Legendre, Marti Anderson & colleagues and using Borcard et al. (2011) as a guide for the R code,  I set up a matrix of orthogonal dummy vectors that sum to zero (Helmert contrasts).  The number of vectors for each factor & interaction term matches the df listed above.
+
+
+To test each interaction and main effect I will put the vectors for the factor to be tested in the explanatory (X) matrix, and put all of the other vectors into the covariance matrix (W).  The response matrix (Y) is the Hellinger-transformed species abundance values.  I first tested for the homogeneity of variance-covariance matrices using betadisper().
+
+
+I have read Anderson (2001) and concluded that I need to permute the residuals rather than the exchangeable units for 3 reasons: (1) an exact test is not possible for interaction terms, (2) there are too few possible permutations at the split-plot level , (3) permuting residuals gives higher power than an exact test for factorial experiments.  On reviewing vegan supporting information I came to understand that vegan automatically permutes residuals with partial RDA.
+
+
+I also have carefully read Simpson?s guide to the permutation tests and following his guidelines concluded that the proper design for my permutation tests should be as follows.  The data are entered in a single column as split-plots (1 or 2) within plots (1-9) within blocks (1-3).
+
+
+For plot-level permutations:  I want to average the data from the two ?samples? per plot and freely permute the 9 plots within each of the 3 blocks).  With 9 plots the set of all permutations should be very large:
+
+R> anova (FACTORA.rda, permutations= how(nperm=999, within=Within(type="none"), plots = Plots(strata = env$PLOT), blocks = env$BLOCK))
+
+
+
+I received the following error message:
+
+'nperm' > set of all permutations; Resetting 'nperm'.
+
+Set of permutations < 'minperm'. Generating entire set.
+
+Error in doAllPerms(spl[[i]], strataP, typeW, typeP, mirrorW, mirrorP,  :
+
+  object 'res' not found
+
+
+
+For split-plot permutations:
+
+R> anova (FACTORC.rda, permutations= how(within=Within(type="series"), plots = Plots(strata = env$PLOT), blocks = env$BLOCK))
+
+I expected to get an error message saying that the number of permutation was too small, given only two samples within the ?series? to permute.  Instead I got a result but the F# was incorrect because the denominator had df=34 rather than df=18.  Using type="free" generates the same F# but different p-value.
+
+
+QUESTIONS:
+
+1.  With partial RDA, assuming that vegan permutes residuals after all of the effects of all of the conditioning variables in W have been removed, can I just freely permute the residuals, permutations  =how(nperm = 999), and not worry about the complicated multi-level hierarchy of my experimental design?  Is it redundant to use the coding of Simpson for partial RDA?  If so, do the degrees of freedom matter? Borcard et al. (2011, p. 187) use restricted permutations for their simpler example of partial RDA as MANOVA for a 2-factor CRD experiment.
+
+
+2.  If (1) is incorrect, how should I set up my how() statements to get the correct degrees of freedom and sufficient permutations ?  I have tried many possibilities other than those shown, but clearly don't understand it.
+
+
+3. If there are not sufficient exchangeable units to permute at the split-plot level, what is the best work-around?  I am able to generate correct df at the plot level by using a 27-line dataset that pools the data from the two split-plots.
+
+
+References:
+
+Anderson, M.J. 2001. Permutation tests for univariate or multivariate analysis of variance and regression.  Can. J. Fish. Aquat. Sci. 58: 626-639.
+
+
+Borcard, D., F. Gillet and P. Legendre. 2011. Numerical Ecology with R. Springer, NY.  (pages 185-188).
+
+
+Simpson, G.L. (undated). Restricted permutations: using the permute package. https://cran.r-project.org/web/packages/permute/vignettes/permutations.pdf
+
+
+Thanks for any help you can provide.
+
+Sybille ?
+
+
+
+Sybille Haeussler PhD RPF
+2041 Monckton Rd.
+Smithers, BC V0J 2N4
+phone: 250 847-6082
+
+

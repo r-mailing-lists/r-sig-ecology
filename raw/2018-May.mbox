@@ -1,0 +1,1413 @@
+From i.adamo90 at gmail.com  Tue May  1 15:50:09 2018
+From: i.adamo90 at gmail.com (Irene Adamo)
+Date: Tue, 1 May 2018 15:50:09 +0200
+Subject: [R-sig-eco] envfit function: is it possible to display correlation
+ coefficient?
+Message-ID: <CAKJjPx7Hu8OkHCF0Nih4Smk1P0MZrbJNDF-=YgoL3h08XOJswQ@mail.gmail.com>
+
+ Dear all,
+I have already looked at similar questions about this topic but I still
+have few doubts.
+when I run:
+data(varespec, varechem)
+library(MASS)
+ord <- metaMDS(varespec)
+(fit <- envfit(ord, varechem, perm = 999))
+
+I get this output:
+***VECTORS
+
+            NMDS1    NMDS2     r2 Pr(>r)
+N        -0.05738 -0.99835 0.2536  0.041 *
+P         0.61980  0.78476 0.1938  0.105
+K         0.76650  0.64225 0.1810  0.098 .
+Ca        0.68524  0.72832 0.4119  0.001 ***
+
+are the numbers under NMDS1-2  the direction of the arrow or they show
+to which axis is the variable correlated? if I look at N can I conclude
+that N is negatively correlated to NMDS2, while K is positively correlated
+to NMDS1? is it possible to get the correlation coefficient of a variable
+with the axes? here we have r2 but I don?t understand if it refers to both
+of the axis or just one.
+
+thanks a lot for any help!
+
+	[[alternative HTML version deleted]]
+
+
+From botta-dukat.zoltan at okologia.mta.hu  Wed May  2 07:27:09 2018
+From: botta-dukat.zoltan at okologia.mta.hu (=?UTF-8?Q?Botta-Duk=c3=a1t_Zolt=c3=a1n?=)
+Date: Wed, 2 May 2018 07:27:09 +0200
+Subject: [R-sig-eco] 
+ envfit function: is it possible to display correlation coefficient?
+In-Reply-To: <CAKJjPx7Hu8OkHCF0Nih4Smk1P0MZrbJNDF-=YgoL3h08XOJswQ@mail.gmail.com>
+References: <CAKJjPx7Hu8OkHCF0Nih4Smk1P0MZrbJNDF-=YgoL3h08XOJswQ@mail.gmail.com>
+Message-ID: <7ed2335a-c072-6ea0-22aa-b24dc9e0d87b@okologia.mta.hu>
+
+Dear Irene,
+
+NMDS does not calculate coordinates along each axis separately (as do 
+metric ordinations, e.g. cmdscale function), but it optimize the whole 
+2-dimensional configuration of points. Any rotation does not change the 
+configuration, but it changes coordinates along both axes. So 
+coordinates along axes should not be interpreted, and correlation with 
+first NMDS axis has no meaning.
+
+Best regards,
+
+Zoltan
+
+
+
+2018. 05. 01. 15:50 keltez?ssel, Irene Adamo ?rta:
+>   Dear all,
+> I have already looked at similar questions about this topic but I still
+> have few doubts.
+> when I run:
+> data(varespec, varechem)
+> library(MASS)
+> ord <- metaMDS(varespec)
+> (fit <- envfit(ord, varechem, perm = 999))
+>
+> I get this output:
+> ***VECTORS
+>
+>              NMDS1    NMDS2     r2 Pr(>r)
+> N        -0.05738 -0.99835 0.2536  0.041 *
+> P         0.61980  0.78476 0.1938  0.105
+> K         0.76650  0.64225 0.1810  0.098 .
+> Ca        0.68524  0.72832 0.4119  0.001 ***
+>
+> are the numbers under NMDS1-2  the direction of the arrow or they show
+> to which axis is the variable correlated? if I look at N can I conclude
+> that N is negatively correlated to NMDS2, while K is positively correlated
+> to NMDS1? is it possible to get the correlation coefficient of a variable
+> with the axes? here we have r2 but I don?t understand if it refers to both
+> of the axis or just one.
+>
+> thanks a lot for any help!
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+---
+Ezt az e-mailt az Avast v?ruskeres? szoftver ?tvizsg?lta.
+https://www.avast.com/antivirus
+
+
+From syrovat at sci.muni.cz  Wed May  2 16:35:33 2018
+From: syrovat at sci.muni.cz (syrovat)
+Date: Wed, 02 May 2018 16:35:33 +0200
+Subject: [R-sig-eco] 
+ envfit function: is it possible to display correlation coefficient?
+In-Reply-To: <7ed2335a-c072-6ea0-22aa-b24dc9e0d87b@okologia.mta.hu>
+References: <CAKJjPx7Hu8OkHCF0Nih4Smk1P0MZrbJNDF-=YgoL3h08XOJswQ@mail.gmail.com>
+ <7ed2335a-c072-6ea0-22aa-b24dc9e0d87b@okologia.mta.hu>
+Message-ID: <548d47e0a3caed2d70715abe009dedcd@sci.muni.cz>
+
+Dear all,
+Just to expand the reply by Zoltan.
+
+NMDS1 and NMDS2 in the envfit() output are the positions of heads of 
+arrows of unit length.
+They show the direction of the "best" linear fit into the n-dimensional 
+solution of the ordination.
+The r2 then says how good the fit is. I.e. it refers to both axes at 
+once (or even more axes, if choices= argument is used).
+I says how much variance in the variable (e.g. N) is explained by the 
+position of objects in the n-dimensional ordination
+(by the linear combination of the object scores)?
+Or, how consistent is the linear change in the values of the variable 
+within the ordination result in that direction?
+
+Imagine you model the variables (e.g. N) as a linear function of NMDS1 + 
+NMDS2. The r2 of the model is the envfit() r2:
+
+summary(lm(varechem$N ~ scores(ord)[,"NMDS1"] + 
+scores(ord)[,"NMDS2"]))$r.squared
+[1] 0.2536379
+
+As Zoltan replied, correlation does not make much sense, the fit is more 
+informative.
+Arrow-head positions show the direction, r2 the proportion of variance 
+explained by that direction
+and p (Pr(>r)) the probability that such a result would be achieved by 
+chance.
+
+All the best,
+Vit
+
+
+Dne 2018-05-02 07:27, Botta-Duk?t Zolt?n napsal:
+> Dear Irene,
+> 
+> NMDS does not calculate coordinates along each axis separately (as do
+> metric ordinations, e.g. cmdscale function), but it optimize the whole
+> 2-dimensional configuration of points. Any rotation does not change
+> the configuration, but it changes coordinates along both axes. So
+> coordinates along axes should not be interpreted, and correlation with
+> first NMDS axis has no meaning.
+> 
+> Best regards,
+> 
+> Zoltan
+> 
+> 
+> 
+> 2018. 05. 01. 15:50 keltez?ssel, Irene Adamo ?rta:
+>>   Dear all,
+>> I have already looked at similar questions about this topic but I 
+>> still
+>> have few doubts.
+>> when I run:
+>> data(varespec, varechem)
+>> library(MASS)
+>> ord <- metaMDS(varespec)
+>> (fit <- envfit(ord, varechem, perm = 999))
+>> 
+>> I get this output:
+>> ***VECTORS
+>> 
+>>              NMDS1    NMDS2     r2 Pr(>r)
+>> N        -0.05738 -0.99835 0.2536  0.041 *
+>> P         0.61980  0.78476 0.1938  0.105
+>> K         0.76650  0.64225 0.1810  0.098 .
+>> Ca        0.68524  0.72832 0.4119  0.001 ***
+>> 
+>> are the numbers under NMDS1-2  the direction of the arrow or they show
+>> to which axis is the variable correlated? if I look at N can I 
+>> conclude
+>> that N is negatively correlated to NMDS2, while K is positively 
+>> correlated
+>> to NMDS1? is it possible to get the correlation coefficient of a 
+>> variable
+>> with the axes? here we have r2 but I don?t understand if it refers to 
+>> both
+>> of the axis or just one.
+>> 
+>> thanks a lot for any help!
+>> 
+>> 	[[alternative HTML version deleted]]
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> ---
+> Ezt az e-mailt az Avast v?ruskeres? szoftver ?tvizsg?lta.
+> https://www.avast.com/antivirus
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From twited@niel @ending from gm@il@com  Sat May  5 12:44:57 2018
+From: twited@niel @ending from gm@il@com (Twite Daniel)
+Date: Sat, 5 May 2018 13:44:57 +0300
+Subject: [R-sig-eco] Calibration of SWAT using R
+Message-ID: <CAC7OLjSwDYRu1JL+V1Ac25hfx7RRpWXjpgEt3FDRV-uW1T66+Q@mail.gmail.com>
+
+Dear SWAT and R users,
+
+Is there any one who has some knowledge on how to use the R package
+SWATmodel to calibrate SWAT hydrology model. I tried to read the procedure
+in the article " SWATMODEL: A MULTI-OPERATING SYSTEM, MULTI-PLATFORM
+SWAT MODEL PACKAGE IN R" but here it seems the package was specifically
+designed for reading only USGS flow data sets from CFSR and to
+automatically build its own model.
+I want to be able to utilize the optimization tool in the R package
+(SWATmodel)
+to calibrate the model which I have already built using SWAT.
+
+Another alternative is also ok apart from the package.
+
+Regards
+Twite Daniel, Msc. student
+
+	[[alternative HTML version deleted]]
+
+
+From m@uricio@z@mbr@no @ending from ufronter@@cl  Sat May  5 17:44:51 2018
+From: m@uricio@z@mbr@no @ending from ufronter@@cl (Mauricio Zambrano Bigiarini)
+Date: Sat, 5 May 2018 12:44:51 -0300
+Subject: [R-sig-eco] Calibration of SWAT using R
+In-Reply-To: <CAC7OLjSwDYRu1JL+V1Ac25hfx7RRpWXjpgEt3FDRV-uW1T66+Q@mail.gmail.com>
+References: <CAC7OLjSwDYRu1JL+V1Ac25hfx7RRpWXjpgEt3FDRV-uW1T66+Q@mail.gmail.com>
+Message-ID: <CAP6VarsmtdjQmRBgqvEN4xo8DN8M6Orb7-O292ZKZpN6mKto1Q@mail.gmail.com>
+
+Dear Twite,
+
+I do not have experience with the 'SWATmodel' R package.
+
+However, you might try the hydroPSO R package
+(https://cran.r-project.org/web/packages/hydroPSO/), which is a
+multi-platform global optimisation package developed to calibrate any
+environmental/hydological model, either if the model is implemented as
+an R function OR if it is a specific model that needs to be executed
+from the system console.
+
+You can read the details in this article:
+https://www.sciencedirect.com/science/article/pii/S1364815213000133
+
+Finally, the vignette
+http://www.rforge.net/hydroPSO/files/hydroPSO_vignette.pdf describes
+hot to implement hydroPSO to optimise SWAT-2005 (and MODFLOW 2005).
+However, with minor modifications I've used hydroPSO to optimise
+SWAT-2012 as well.
+
+Kind regards,
+
+Mauricio
+
+
+Mauricio Zambrano-Bigiarini, PhD
+
+=====================================
+Department of Civil Engineering
+Faculty of Engineering and Sciences
+Universidad de La Frontera, Temuco, Chile
+http://hzambran.github.io/
+=====================================
+mailto : mauricio.zambrano at ufrontera.cl
+work-phone : +56 45 259 2812
+=====================================
+"If you want to go fast, go alone. If you want
+to go far, go together" (African proverb)
+=====================================
+Linux user #454569 -- Linux Mint user
+
+
+On 5 May 2018 at 07:44, Twite Daniel <twitedaniel at gmail.com> wrote:
+> Dear SWAT and R users,
+>
+> Is there any one who has some knowledge on how to use the R package
+> SWATmodel to calibrate SWAT hydrology model. I tried to read the procedure
+> in the article " SWATMODEL: A MULTI-OPERATING SYSTEM, MULTI-PLATFORM
+> SWAT MODEL PACKAGE IN R" but here it seems the package was specifically
+> designed for reading only USGS flow data sets from CFSR and to
+> automatically build its own model.
+> I want to be able to utilize the optimization tool in the R package
+> (SWATmodel)
+> to calibrate the model which I have already built using SWAT.
+>
+> Another alternative is also ok apart from the package.
+>
+> Regards
+> Twite Daniel, Msc. student
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+La informaci?n contenida en este correo electr?nico y cualquier anexo o 
+respuesta relacionada, puede contener datos e informaci?n confidencial y no 
+puede ser usada o difundida por personas distintas a su(s) destinatario(s). 
+Si usted no es el destinatario de esta comunicaci?n, le informamos que 
+cualquier divulgaci?n, distribuci?n o copia de esta informaci?n constituye 
+un delito conforme a la ley chilena. Si lo ha recibido por error, por favor 
+borre el mensaje y todos sus anexos y notifique al remitente.
+
+
+From twited@niel @ending from gm@il@com  Sat May  5 18:37:13 2018
+From: twited@niel @ending from gm@il@com (Twite Daniel)
+Date: Sat, 5 May 2018 19:37:13 +0300
+Subject: [R-sig-eco] Calibration of SWAT using R
+In-Reply-To: <CAP6VarsmtdjQmRBgqvEN4xo8DN8M6Orb7-O292ZKZpN6mKto1Q@mail.gmail.com>
+References: <CAC7OLjSwDYRu1JL+V1Ac25hfx7RRpWXjpgEt3FDRV-uW1T66+Q@mail.gmail.com>
+ <CAP6VarsmtdjQmRBgqvEN4xo8DN8M6Orb7-O292ZKZpN6mKto1Q@mail.gmail.com>
+Message-ID: <CAC7OLjSCQrYdOYRtjzJ8w3Ebx1aJA6xx_5jTYgmvjLAq2TJxiQ@mail.gmail.com>
+
+Thank you for the information.
+
+On May 5, 2018 18:45, "Mauricio Zambrano Bigiarini" <
+mauricio.zambrano at ufrontera.cl> wrote:
+
+> Dear Twite,
+>
+> I do not have experience with the 'SWATmodel' R package.
+>
+> However, you might try the hydroPSO R package
+> (https://cran.r-project.org/web/packages/hydroPSO/), which is a
+> multi-platform global optimisation package developed to calibrate any
+> environmental/hydological model, either if the model is implemented as
+> an R function OR if it is a specific model that needs to be executed
+> from the system console.
+>
+> You can read the details in this article:
+> https://www.sciencedirect.com/science/article/pii/S1364815213000133
+>
+> Finally, the vignette
+> http://www.rforge.net/hydroPSO/files/hydroPSO_vignette.pdf describes
+> hot to implement hydroPSO to optimise SWAT-2005 (and MODFLOW 2005).
+> However, with minor modifications I've used hydroPSO to optimise
+> SWAT-2012 as well.
+>
+> Kind regards,
+>
+> Mauricio
+>
+>
+> Mauricio Zambrano-Bigiarini, PhD
+>
+> =====================================
+> Department of Civil Engineering
+> Faculty of Engineering and Sciences
+> Universidad de La Frontera, Temuco, Chile
+> http://hzambran.github.io/
+> =====================================
+> mailto : mauricio.zambrano at ufrontera.cl
+> work-phone : +56 45 259 2812
+> =====================================
+> "If you want to go fast, go alone. If you want
+> to go far, go together" (African proverb)
+> =====================================
+> Linux user #454569 -- Linux Mint user
+>
+>
+> On 5 May 2018 at 07:44, Twite Daniel <twitedaniel at gmail.com> wrote:
+> > Dear SWAT and R users,
+> >
+> > Is there any one who has some knowledge on how to use the R package
+> > SWATmodel to calibrate SWAT hydrology model. I tried to read the
+> procedure
+> > in the article " SWATMODEL: A MULTI-OPERATING SYSTEM, MULTI-PLATFORM
+> > SWAT MODEL PACKAGE IN R" but here it seems the package was specifically
+> > designed for reading only USGS flow data sets from CFSR and to
+> > automatically build its own model.
+> > I want to be able to utilize the optimization tool in the R package
+> > (SWATmodel)
+> > to calibrate the model which I have already built using SWAT.
+> >
+> > Another alternative is also ok apart from the package.
+> >
+> > Regards
+> > Twite Daniel, Msc. student
+> >
+> >         [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> --
+> La informaci?n contenida en este correo electr?nico y cualquier anexo o
+> respuesta relacionada, puede contener datos e informaci?n confidencial y
+> no
+> puede ser usada o difundida por personas distintas a su(s)
+> destinatario(s).
+> Si usted no es el destinatario de esta comunicaci?n, le informamos que
+> cualquier divulgaci?n, distribuci?n o copia de esta informaci?n constituye
+> un delito conforme a la ley chilena. Si lo ha recibido por error, por
+> favor
+> borre el mensaje y todos sus anexos y notifique al remitente.
+>
+
+	[[alternative HTML version deleted]]
+
+
+From high@t@t @ending from high@t@t@com  Mon May  7 21:28:34 2018
+From: high@t@t @ending from high@t@t@com (Highland Statistics Ltd)
+Date: Mon, 7 May 2018 21:28:34 +0200
+Subject: [R-sig-eco] Stats course in St John's, Canada
+Message-ID: <ca33cf43-6cf3-c442-d09c-044d8fc70c1a@highstat.com>
+
+Apologies for cross-posting
+
+We would like to announce the following statistics course St John's, 
+Canada.
+
+
+Course: Data exploration, regression, GLM & GAM with introduction to R
+Where:? Northwest Atlantic Fisheries Centre, St John?s, Canada.
+When:?? 20-24 August 2018
+
+Course website: http://highstat.com/index.php/courses-upcoming
+Course flyer: 
+http://highstat.com/Courses/Flyers/2018/Flyer2018_08StJohns_RGG.pdf
+
+
+Kind regards,
+
+Alain Zuur
+
+
+
+Other open courses in 2018
+
+Data exploration, regression, GLM & GAM with introduction to R.
+University of C?diz, C?diz, Spain. 3-7 September 2018
+
+Linear Mixed Effects Models and GLMM with R. Frequentist and Bayesian 
+approaches.
+NIOZ, Texel, The Netherlands. 1-5 October 2018
+
+Introduction to regression models with spatial and temporal correlation 
+using R-INLA.
+Helmholtz Centre for Environmental Research - UFZ, Leipzig, Germany. 
+26-29 November 2018
+
+
+
+
+-- 
+
+Dr. Alain F. Zuur
+
+
+
+Author of:
+1. Beginner's Guide to Spatial, Temporal and Spatial-Temporal Ecological 
+Data Analysis with R-INLA. (2017).
+2. Beginner's Guide to Zero-Inflated Models with R (2016).
+3. Beginner's Guide to Data Exploration and Visualisation with R (2015).
+4. Beginner's Guide to GAMM with R (2014).
+5. Beginner's Guide to GLM and GLMM with R (2013).
+6. Beginner's Guide to GAM with R (2012).
+7. Zero Inflated Models and GLMM with R (2012).
+8. A Beginner's Guide to R (2009).
+9. Mixed effects models and extensions in ecology with R (2009).
+10. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:?? 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Wed May  9 22:43:42 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Wed, 09 May 2018 21:43:42 +0100
+Subject: [R-sig-eco] Course on Species distribution/occupancy modelling
+ using PRESENCE and R
+Message-ID: <c91044376430f3f07a0355ea8bec55e7@prstatistics.com>
+
+Species distribution/occupancy modelling using PRESENCE and R (OCCU01)
+
+https://www.prstatistics.com/course/species-distributionoccupancy-modelling-using-r-occu01/
+
+This course will be delivered by Dr Darryl McKenzie from 25th - 29th 
+June 2018 in Glasgow City Centre.
+
+Course Overview:
+The presence or absence of a species across a set of landscape units is 
+a fundamental concept widely used in ecology (e.g., species range or 
+distribution, epidemiology, habitat modeling, resource selection 
+probability functions, as a monitoring metric, metapopulation studies, 
+biodiversity and species co-occurrence). An important sampling issue, 
+however, is that a species may not always be detected when present at a 
+landscape unit. This will result in ?false absences? causing parameter 
+estimates to be biased if unaccounted for, possibly leading to 
+misleading results and conclusions, even with moderate levels of 
+imperfect detection.
+
+This workshop will cover many of the latest methods for modeling 
+patterns and dynamics of species occurrence in a landscape while 
+accounting for the imperfect detection of the species.
+Including:
+? estimating level of occurrence at single point in time
+? identifying factors that influence species occurrence
+? creating species distribution maps
+? modelling changes in distribution over time
+? study design
+
+Participants will be introduced to available software through worked 
+examples, and there will be special emphasis on aspects of study design. 
+While primarily aimed at the beginner and intermediate level, more 
+experienced researchers will also benefit from attending.
+
+The first four days will comprise of formal lectures and exercises, and 
+the final morning will be an informal discussion/consulting session 
+where participants can work on their own data, talk one-on-one with the 
+instructor, etc.
+
+Email oliverhooker at prstatistics.com if you have any questions.
+
+Check out our sister sites,
+www.PRstatistics.com (Ecology and Life Sciences)
+www.PRinformatics.com (Bioinformatics and data science)
+www.PSstatsistics.com (Behaviour and cognition)
+
+
+1.	May 7th ? 11th 2018 ADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL 
+ECOLOGICAL DATA USING R (MVSP02)
+Canada (QUEBEC), Prof. Pierre Legendre, Dr. Guillaume Blanchet
+www.prstatistics.com/course/advances-in-spatial-analysis-of-multivariate-ecological-data-theory-and-practice-mvsp03/
+
+2.	May 14th - 18th 2018
+INTRODUCTION TO MIXED (HIERARCHICAL) MODELS FOR BIOLOGISTS (IMBR01)
+Canada (QUEBEC), Prof. Subhash Lele
+www.prstatistics.com/course/introduction-to-mixed-hierarchical-models-for-biologists-using-r-imbr01/
+
+3.	May 21st - 25th 2018
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB05)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb05/
+
+4.	May 21st - 25th 2018
+INTRODUCTION TO REMOTE SENISNG AND GIS FOR ECOLOGICAL APPLICATIONS 
+(IRMS01)
+Glasgow, Scotland, Prof. Duccio Rocchini, Dr. Luca Delucchi
+www.prinformatics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+5.	May 28th ? 31st 2018
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Canada (QUEBEC) Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+6.	May 28th ? June 1st 2018
+ADVANCED PYTHON FOR BIOLOGISTS (APYB02)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb02/
+
+7.	June 12th - 15th 2018
+SPECIES DISTRIBUTION MODELLING (DBMR01)
+Myuna Bay sport and recreation, Australia, Prof. Jane Elith, Dr. 
+Gurutzeta Guillera
+www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/
+
+8.	June 25th ? 29th 2018
+SPECIES DISTRIBUTION/OCCUPANCY MODELLING USING R (OCCU01)
+Glasgow, Scotland, Dr. Darryl McKenzie (PROTEUS)
+www.prstatistics.com/course/species-distributionoccupancy-modelling-using-r-occu01/
+
+9.	July 2nd - 5th 2018
+SOCIAL NETWORK ANALYSIS FOR BEHAVIOURAL SCIENTISTS USING R (SNAR01)
+Glasgow, Scotland, Prof. James Curley
+http://www.psstatistics.com/course/social-network-analysis-for-behavioral-scientists-snar01/
+
+10.	July 8th ? 12th 2018
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV02)
+Glasgow, Scotland, Prof. David Warton
+www.prstatistics.com/course/model-base-multivariate-analysis-of-abundance-data-using-r-mbmv02/
+
+11.	July 23rd ? 27th 2018
+EUKARYOTIC METABARCODING (EUKB01)
+Glasgow, Scotland, Dr. Owen Wangensteen
+http://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/
+
+12.	October 1st ? 5th
+Introduction to Linux workflows for biologists (IBUL03)
+Glasgow, Scotland, Dr. Martin Jones
+https://www.prinformatics.com/course/introduction-to-linux-workflows-for-biologists-ibul03/
+
+13.	October 8th ? 12th 2018
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISAE01)
+Glasgow, Scotland, Prof. Subhash Lele
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-isae01/
+
+14.	October 8th ? 12th 2018
+INDIVIDUAL BASED MODELS USING NETLOGO AND R
+Glasgow, Scotland, Dr. Andrew Jackson
+Link to follow
+
+15.	October 15th ? 19th 2018
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (ABME
+Glasgow, Scotland, Dr. Matt Denwood, Emma Howard
+http://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme04/
+
+16.	October 15th ? 19th 2018
+ANALYSING TIME TO EVENT DATA (SURVIVAL ANALYSIS)
+Glasgow, Scotland, Dr. Wil Hoppitt
+Link to follow
+
+17.	October 29th ? November 2nd 2018
+INTRODCUTION TO R AND STATISTICS FOR BIOLOGISTS (IRFB02)
+Glasgow, Scotland, Dr. Olivier Gauthier
+Link to follow ? see previous
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-biologists-irfb/
+
+18.	October 29th ? November 2nd 2018
+PRECISION MEDICINE BIOINFORMATICS: FROM RAW GENOME AND TRANSCRIPTOME 
+DATA TO CLINICAL INTERPRETATION (PMBI01)
+Glasgow, Scotland, Dr Malachi Griffith, Dr. Obi Griffith
+www.prinformatics.com/course/precision-medicine-bioinformatics-from-raw-genome-and-transcriptome-data-to-clinical-interpretation-pmbi01/
+
+19.	November 5th ? 8th  2018
+PHYLOGENETIC COMPARATIVE METHODS FOR STUDYING DIVERSIFICATION AND 
+PHENOTYPIC EVOLUTION (PCME01)
+Glasgow, Scotland, Dr. Antigoni Kaliontzopoulou
+https://www.prstatistics.com/course/phylogenetic-comparative-methods-for-studying-diversification-and-phenotypic-evolution-pcme01/
+
+20.	November 19th ? 23rd  2018
+STRUCTUAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY BIOLOGISTS 
+(SEMR02)
+Glasgow, Scotland, Dr. Jonathan Lefcheck
+Link to follow ? see previous
+https://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/
+
+21.	November 26th ? 30th 2018
+FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND COMPUTATION 
+(FEER
+Glasgow, Scotland, Dr. Francesco de Bello, Dr. Lars G?tzenberger, Dr. 
+Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+22.	February 2018 TBC
+MOVEMENT ECOLOGY (MOVE02)
+Venue TBC, Dr. Luca Borger, Prof. Ronny Wilson, Dr Jonathan Potts
+Link to follow ? see previous
+www.prstatistics.com/course/movement-ecology-move01/
+
+23.	February 2018 TBC
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+Link to follow
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine 
+brown trout, Salmo trutta. Biological Journal of the Linnean Society. 
+DOI 10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
+
++44 (0) 7966500340
+
+
+From felipe@c@llej@@pe@tegui @ending from ucr@@c@cr  Fri May 11 08:42:22 2018
+From: felipe@c@llej@@pe@tegui @ending from ucr@@c@cr (Felipe Calleja UCR)
+Date: Fri, 11 May 2018 08:42:22 +0200
+Subject: [R-sig-eco] Two way Splitplot non-parametric ANOVA type test
+Message-ID: <CANyLYwkptVZSj5VO4ZLgA-XnQ8zwiwXkgqQkZySW7x_1FDo-og@mail.gmail.com>
+
+Hello,
+
+I'm looking for some help establishing a mixed model non-parametric ANOVA
+using R, for a split plot design I've made for an experiment of saltmarsh
+germination. I'll explain as clear as possible the experimental design and
+afterwards what I've done and my doubts. Hope you can help me.
+
+The experiment consists in meassuring the germination percentage and length
+of one species in variable conditions of salinity, immersion time and
+presence of other species. I sow seeds in soil core's, that are inside
+plastic boxes that are filled periodically with saline water. There are
+three factors: salinity (3 levels: 0, 5 and 18), immersion time (3 levels:
+0, 20, 40%), species treatment (2 levels: Baccharis (or Juncus), Baccharis
++ Juncus). Inside each box there are 6 cores that combine in a complete
+random design the factors of immersion and species treatment. The box is
+filled with water at one of the levels of salinity. Thus, I'm using a split
+plot design with salinity as the whole plot factor, and immersion and
+species treatment as the subplot factors. All factors are considered fixed.
+Each box is repeated 10 times.
+
+To simplify the array, I'm interest in making bivariate tests using only
+the whole plot factor Salinity, and the sub-plot factor Immersion, using
+only the cores that had one species sown (removing the competition
+element).
+
+
+
+For one of the dependent variables I measured, the conditions of normality
+and homoestacity are not fulfilled, so I'm thinking about using a
+non-parametric test to analyze the data. But after Reading a lot of papers,
+books and forum entries, I can?t clear my head on how to address the
+analysis.
+
+
+
+I?m basically interested in the main and interactions effects of a model
+that I think should look like this: y ~wholeplotFactor*subplotFactor  +
+(1|Subject:Wholeplotfactor). The interaction effect I think I did manage to
+calculated adequately with the npIntFactRep package (
+https://cran.r-project.org/web/packages/npIntFactRep/index.html), but as it
+says in the documentation, it only yields results for the interaction in
+the mixed design. Not the main effects.
+
+
+
+I've used the nparLD (
+https://cran.r-project.org/web/packages/nparLD/nparLD.pdf), and for one
+species it yields what I think are good results, but for the other one it
+rises the warning that the covariance matrix is singular, so I?m looking
+for a different approach for the analysis. Does having the covariance
+matrix singular invalidates the whole analysis? Or just the interaction
+results? I mean, could I use this function for the main effects and the
+npIntFactRep for the interactions separately?
+
+
+Finally I?ve tried with the rlme package
+(https://www.rdocumentation.org/packages/rlme/versions/0.5/topics/rlme),
+
+but can?t make it work because it does not recognizes the nested
+element of the model (refering to (1|Subject:WholeplotFactor) ).
+
+It rises the error  ? Error: Column `1 | Repetition:Salinity_num` not found?.
+
+
+Besides the questions regarding the nparLD package, I don?t really have a
+specific question for you, just the request for some guidance about options
+for analyzing this data. I?m kind of lost in the really wide nonparametric
+splitplot ANOVA world and would appreciate very much some guide.
+
+
+
+If there?s anyone interested in the case, I can send the data in another
+mail so you can see more details.
+
+
+
+Thanks a lot in advance, any tip is very well appreciated.
+
+
+
+
+
+*Felipe Calleja Ap?stegui*
+
+*Predoctoral researcher*
+
+
+
+*Instituto de Hidr?ulica Ambiental "IH Cantabria"*
+
+*C/ Isabel Torres, N? 15*
+
+*Parque Cient?fico y Tecnol?gico de Cantabria*
+
+*39011 Santander (Espa?a)*
+
+*www.ihcantabria.es <http://www.ihcantabria.es/>*
+
+*Tel:  +34 942 20 16 16 Ext. 1153*
+
+*Fax: +34 942 26 63 61*
+
+	[[alternative HTML version deleted]]
+
+
+From mi@l@m@e@@t @ending from gm@il@com  Fri May 11 09:25:03 2018
+From: mi@l@m@e@@t @ending from gm@il@com (Muneer ul Islam)
+Date: Fri, 11 May 2018 12:55:03 +0530
+Subject: [R-sig-eco] Error in ProjMat() in package Primer
+Message-ID: <CAGZmJ0-1hEi_gZSY2++j7dC3w0723gKNNtUOS3M70vZbzBBt-A@mail.gmail.com>
+
+Hello everyone,
+
+I am into some demographic analysis for which I use Primer package. The
+problem is that the main function ProjMat() throws following error every
+time I supply required data to it:
+
+> ProjMat(stages, fruits, seeds)
+Error in split.default(X, group) : first argument must be a vector
+
+I would like to add that when I analyse the above data files separately,
+everything works fine.
+
+How do I fix that?
+
+All suggestions are highly welcome.
+
+Thank you in advance
+
+Muneer
+
+	[[alternative HTML version deleted]]
+
+
+From mdevoto @ending from @gro@ub@@@r  Tue May 15 17:26:14 2018
+From: mdevoto @ending from @gro@ub@@@r (Mariano Devoto)
+Date: Tue, 15 May 2018 12:26:14 -0300
+Subject: [R-sig-eco] sunflower pollination analysis
+Message-ID: <CAJRWjBbe68hbWhANv+v6HWkEm-CEzJD7XH49Li4=5R48oSXJtw@mail.gmail.com>
+
+Hi. I am trying to model the visits of pollinators to sunflower heads in a
+field experiment. My response variable is the number of insect visits in
+15' periods looking at a variable number of flower heads at a time. The
+experiment includes three sunflower hybrids. Samples were taken at three
+distances from the field margin (2, 20 and 100m). There are two complete
+blocks in the experiment. I added the number of flower heads as an offset
+variable as they varied among samples.
+
+Here is a workable code:
+
+require(RCurl) #need this to download data from Google Drive
+my.file <- getURL("
+https://docs.google.com/spreadsheets/d/e/2PACX-1vQq-Clbksm1S3Qq2_V9FBuEfUVno11Dytk0v9eJ2j7e7FpXHYqigaqJlcTyt5u2ipfVUjrKbAFL294e/pub?output=csv
+")
+sunflower_data <- read.csv(textConnection(my.file), head=T)
+str(sunflower_data)
+model1 <- glm(visits ~ offset(cap) + block + hybrid + distance,
+family=poisson, data=sunflower_data)
+summary(model1)
+plot(model1)
+#First diagnostic plot suggests residuals have a trend
+#Other diagnostic plots suggest observation #35 is too influential, so...
+
+model2 <- glm(visits ~ offset(cap) + block + hybrid + distance,
+family=poisson, data=sunflower_data[-35,])
+summary(model2)
+plot(model2)
+#things look a bit better, but residuals in diagnostic plot #1 still show a
+trend. What should I try next?
+
+Any advice is much appreciated.
+
+Mariano
+
+*Dr. Mariano Devoto*
+
+Profesor Adjunto - C?tedra de Bot?nica General, Facultad de Agronom?a de la
+UBA
+Investigador Adjunto del CONICET
+
+Av. San Mart?n 4453 - C1417DSE - C. A. de Buenos Aires - Argentina
++5411 4524-8069
+*https://www.researchgate.net/profile/Mariano_Devoto
+<https://www.researchgate.net/profile/Mariano_Devoto>*
+
+<http://www.avg.com/email-signature?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+Libre
+de virus. www.avg.com
+<http://www.avg.com/email-signature?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+<#DAB4FAD8-2DD7-40BB-A1B8-4E2AA1F9FDF2>
+
+	[[alternative HTML version deleted]]
+
+
+From mollieebrook@ @ending from gm@il@com  Tue May 15 17:55:09 2018
+From: mollieebrook@ @ending from gm@il@com (Mollie Brooks)
+Date: Tue, 15 May 2018 17:55:09 +0200
+Subject: [R-sig-eco] sunflower pollination analysis
+In-Reply-To: <CAJRWjBbe68hbWhANv+v6HWkEm-CEzJD7XH49Li4=5R48oSXJtw@mail.gmail.com>
+References: <CAJRWjBbe68hbWhANv+v6HWkEm-CEzJD7XH49Li4=5R48oSXJtw@mail.gmail.com>
+Message-ID: <FEBD908F-A22C-41DD-96CC-5A3A751A3190@gmail.com>
+
+Hi Mariano, (Sorry for resending. I accidentally didn?t reply-all.)
+
+Because Poisson GLMs use a log link, your offset should be log(cap).
+
+model2 <- glm(visits ~ offset(log(cap)) + block + hybrid + distance, family=poisson, data=sunflower_data)
+
+Then, using the DHARMa package, I can see the data are overdispersed relative to the Poisson distribution.
+
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = model2, n = 1000)
+testDispersion(simulationOutput = simulationOutput, alternative ="greater")
+
+So you should use the negative binomial distribution instead. 
+
+library(MASS)
+model3 <- glm.nb(visits ~ offset(log(cap)) + block + hybrid + distance, data=sunflower_data)
+
+You can also check residuals using DHARMa (https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html <https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html>)
+
+simulationOutput <- simulateResiduals(fittedModel = model3, n = 1000)
+plotSimulatedResiduals(simulationOutput = simulationOutput)
+
+cheers,
+Mollie
+
+???????????
+Mollie E. Brooks, Ph.D.
+Research Scientist
+National Institute of Aquatic Resources
+Technical University of Denmark
+
+> On 15May 2018, at 17:26, Mariano Devoto <mdevoto at agro.uba.ar> wrote:
+> 
+> Hi. I am trying to model the visits of pollinators to sunflower heads in a
+> field experiment. My response variable is the number of insect visits in
+> 15' periods looking at a variable number of flower heads at a time. The
+> experiment includes three sunflower hybrids. Samples were taken at three
+> distances from the field margin (2, 20 and 100m). There are two complete
+> blocks in the experiment. I added the number of flower heads as an offset
+> variable as they varied among samples.
+> 
+> Here is a workable code:
+> 
+> require(RCurl) #need this to download data from Google Drive
+> my.file <- getURL("
+> https://docs.google.com/spreadsheets/d/e/2PACX-1vQq-Clbksm1S3Qq2_V9FBuEfUVno11Dytk0v9eJ2j7e7FpXHYqigaqJlcTyt5u2ipfVUjrKbAFL294e/pub?output=csv
+> ")
+> sunflower_data <- read.csv(textConnection(my.file), head=T)
+> str(sunflower_data)
+> model1 <- glm(visits ~ offset(cap) + block + hybrid + distance,
+> family=poisson, data=sunflower_data)
+> summary(model1)
+> plot(model1)
+> #First diagnostic plot suggests residuals have a trend
+> #Other diagnostic plots suggest observation #35 is too influential, so...
+> 
+> model2 <- glm(visits ~ offset(cap) + block + hybrid + distance,
+> family=poisson, data=sunflower_data[-35,])
+> summary(model2)
+> plot(model2)
+> #things look a bit better, but residuals in diagnostic plot #1 still show a
+> trend. What should I try next?
+> 
+> Any advice is much appreciated.
+> 
+> Mariano
+> 
+> *Dr. Mariano Devoto*
+> 
+> Profesor Adjunto - C?tedra de Bot?nica General, Facultad de Agronom?a de la
+> UBA
+> Investigador Adjunto del CONICET
+> 
+> Av. San Mart?n 4453 - C1417DSE - C. A. de Buenos Aires - Argentina
+> +5411 4524-8069
+> *https://www.researchgate.net/profile/Mariano_Devoto
+> <https://www.researchgate.net/profile/Mariano_Devoto>*
+> 
+> <http://www.avg.com/email-signature?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+> Libre
+> de virus. www.avg.com
+> <http://www.avg.com/email-signature?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+> <#DAB4FAD8-2DD7-40BB-A1B8-4E2AA1F9FDF2>
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From @lex@ndre@@nto@br @ending from y@hoo@com@br  Wed May 23 23:46:24 2018
+From: @lex@ndre@@nto@br @ending from y@hoo@com@br (ASANTOS)
+Date: Wed, 23 May 2018 17:46:24 -0400
+Subject: [R-sig-eco] Question about adonis() function
+Message-ID: <81153ae8-767f-efda-7dc1-80249b3c760d@yahoo.com.br>
+
+Dear R Ecology Members,
+
+I need a help in theoretical question, I've like to know what is the 
+basic inference if I use vegdist or daisy in adonis () function? I found 
+completely results and lots of warnings if I choose one or another.
+
+Thanks in advanced,
+
+Alexandre
+
+-- 
+======================================================================
+Alexandre dos Santos
+Prote??o Florestal
+IFMT - Instituto Federal de Educa??o, Ci?ncia e Tecnologia de Mato Grosso
+Campus C?ceres
+Caixa Postal 244
+Avenida dos Ramires, s/n
+Bairro: Distrito Industrial
+C?ceres - MT                      CEP: 78.200-000
+Fone: (+55) 65 99686-6970 (VIVO) (+55) 65 3221-2674 (FIXO)
+
+         alexandre.santos at cas.ifmt.edu.br
+Lattes: http://lattes.cnpq.br/1360403201088680
+OrcID: orcid.org/0000-0001-8232-6722
+Researchgate: www.researchgate.net/profile/Alexandre_Santos10
+LinkedIn: br.linkedin.com/in/alexandre-dos-santos-87961635
+Mendeley:www.mendeley.com/profiles/alexandre-dos-santos6/
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Mon May 28 13:45:42 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Mon, 28 May 2018 12:45:42 +0100
+Subject: [R-sig-eco] Occupancy modelling registration deadline 15th June
+Message-ID: <87de8ec36756213175dca78a2144a67b@prstatistics.com>
+
+We still have a few places left on the course "Species 
+distribution/occupancy modelling using PRESENCE and R (OCCU01)" with the 
+registration deadline soon approaching (15.06.18)
+
+https://www.prstatistics.com/course/species-distributionoccupancy-modelling-using-r-occu01/
+
+This course will be held in Glasgow from the 25th - 29th June 2018
+
+This course is being provided through a collaboration of PR statistics 
+and Proteus and will be delivered by Dr. Darryl MacKenzie
+
+Course Overview:
+The presence or absence of a species across a set of landscape units is 
+a fundamental concept widely used in ecology (e.g., species range or 
+distribution, epidemiology, habitat modeling, resource selection 
+probability functions, as a monitoring metric, metapopulation studies, 
+biodiversity and species co-occurrence). An important sampling issue, 
+however, is that a species may not always be detected when present at a 
+landscape unit. This will result in ?false absences? causing parameter 
+estimates to be biased if unaccounted for, possibly leading to 
+misleading results and conclusions, even with moderate levels of 
+imperfect detection.
+
+This workshop will cover many of the latest methods for modeling 
+patterns and dynamics of species occurrence in a landscape while 
+accounting for the imperfect detection of the species.
+Including:
+? estimating level of occurrence at single point in time
+? identifying factors that influence species occurrence
+? creating species distribution maps
+? modelling changes in distribution over time
+? study design
+Participants will be introduced to available software through worked 
+examples, and there will be special emphasis on aspects of study design. 
+While primarily aimed at the beginner and intermediate level, more 
+experienced researchers will also benefit from attending.
+The first four days will comprise of formal lectures and exercises, and 
+the final morning will be an informal discussion/consulting session 
+where participants can work on their own data, talk one-on-one with the 
+instructor, etc.
+
+1.	May 21st - 25th 2018
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB05)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb05/
+
+2.	May 21st - 25th 2018
+INTRODUCTION TO REMOTE SENISNG AND GIS FOR ECOLOGICAL APPLICATIONS 
+(IRMS01)
+Glasgow, Scotland, Prof. Duccio Rocchini, Dr. Luca Delucchi
+www.prinformatics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+3.	May 28th ? 31st 2018
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Canada (QUEBEC) Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+4.	May 28th ? June 1st 2018
+ADVANCED PYTHON FOR BIOLOGISTS (APYB02)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb02/
+
+5.	June 12th - 15th 2018
+SPECIES DISTRIBUTION MODELLING (DBMR01)
+Myuna Bay sport and recreation, Australia, Prof. Jane Elith, Dr. 
+Gurutzeta Guillera
+www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/
+
+6.	June 25th ? 29th 2018
+SPECIES DISTRIBUTION/OCCUPANCY MODELLING USING R (OCCU01)
+Glasgow, Scotland, Dr. Darryl McKenzie (PROTEUS)
+www.prstatistics.com/course/species-distributionoccupancy-modelling-using-r-occu01/
+
+7.	July 2nd - 5th 2018
+SOCIAL NETWORK ANALYSIS FOR BEHAVIOURAL SCIENTISTS USING R (SNAR01)
+Glasgow, Scotland, Prof. James Curley
+http://www.psstatistics.com/course/social-network-analysis-for-behavioral-scientists-snar01/
+
+8.	July 8th ? 12th 2018
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV02)
+Glasgow, Scotland, Prof. David Warton
+www.prstatistics.com/course/model-base-multivariate-analysis-of-abundance-data-using-r-mbmv02/
+
+9.	July 23rd ? 27th 2018
+EUKARYOTIC METABARCODING (EUKB01)
+Glasgow, Scotland, Dr. Owen Wangensteen
+http://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/
+
+10.	September 24th ? 28th
+INTRODUCTION TO MIXED (HIERARCHICAL) MODELS FOR LIFE SCIENCES USING R 
+(IMLS01)
+Glasgow, Scotland, Prof. Subhash Lele
+https://www.psstatistics.com/course/introduction-to-mixed-hierarchical-models-for-life-sciences-using-r-imls01/
+
+11.	October 1st ? 5th
+INTRODUCTION TO LINUX WORKFLOWS FOR BIOLOGISTS (IBUL03)
+Glasgow, Scotland, Dr. Martin Jones
+https://www.prinformatics.com/course/introduction-to-linux-workflows-for-biologists-ibul03/
+
+12.	October 8th ? 12th 2018
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISAE01)
+Glasgow, Scotland, Prof. Subhash Lele
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-isae01/
+
+13.	October 8th ? 12th 2018
+INDIVIDUAL BASED MODELS USING NETLOGO AND R
+Glasgow, Scotland, Dr. Andrew Jackson
+Link to follow
+
+14.	October 15th ? 19th 2018
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (ABME
+Glasgow, Scotland, Dr. Matt Denwood, Emma Howard
+http://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme04/
+
+15.	October 15th ? 19th 2018
+ANALYSING TIME TO EVENT DATA (SURVIVAL ANALYSIS)
+Glasgow, Scotland, Dr. Wil Hoppitt
+Link to follow
+
+16.	October 29th ? November 2nd 2018
+INTRODCUTION TO R AND STATISTICS FOR BIOLOGISTS (IRFB02)
+Glasgow, Scotland, Dr. Olivier Gauthier
+Link to follow ? see previous
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-biologists-irfb/
+
+17.	October 29th ? November 2nd 2018
+INTRODUCTION TO BIOINFORMATICS FOR DNA AND RNA SEQUENCE ANALYSIS 
+(IBDR01)
+Glasgow, Scotland, Dr Malachi Griffith, Dr. Obi Griffith
+www.prinformatics.com/course/precision-medicine-bioinformatics-from-raw-genome-and-transcriptome-data-to-clinical-interpretation-pmbi01/
+
+18.	November 5th ? 8th  2018
+PHYLOGENETIC COMPARATIVE METHODS FOR STUDYING DIVERSIFICATION AND 
+PHENOTYPIC EVOLUTION (PCME01)
+Glasgow, Scotland, Dr. Antigoni Kaliontzopoulou
+https://www.prstatistics.com/course/phylogenetic-comparative-methods-for-studying-diversification-and-phenotypic-evolution-pcme01/
+
+19.	November 19th ? 23rd  2018
+STRUCTUAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY BIOLOGISTS 
+(SEMR02)
+Glasgow, Scotland, Dr. Jonathan Lefcheck
+Link to follow ? see previous
+https://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/
+
+20.	November 26th ? 30th 2018
+FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND COMPUTATION 
+(FEER
+Glasgow, Scotland, Dr. Francesco de Bello, Dr. Lars G?tzenberger, Dr. 
+Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+21.	January 21st ? 25th 2019
+STATISTICAL MODELLING OF TIME-TO-EVENT DATA USING SURVIVAL ANALYSIS: AN 
+INTRODUCTION FOR ANIMAL BEHAVIOURISTS, ECOLOGISTS AND EVOLUTIONARY 
+BIOLOGISTS (TTED01)
+Glasgow, Scotland, Dr. Will Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+22.	February 2018 TBC
+MOVEMENT ECOLOGY (MOVE02)
+Venue TBC, Dr. Luca Borger, Prof. Ronny Wilson, Dr Jonathan Potts
+Link to follow ? see previous
+www.prstatistics.com/course/movement-ecology-move01/
+
+23.	February 2018 TBC
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+Link to follow
+
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine 
+brown trout, Salmo trutta. Biological Journal of the Linnean Society. 
+DOI 10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
+
++44 (0) 7966500340
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Mon May 28 14:00:46 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Mon, 28 May 2018 13:00:46 +0100
+Subject: [R-sig-eco] Model base multivariate analysis of abundance data
+ using R registration deadline 28th June
+Message-ID: <62837745512c5ade6e7c1d3a18a9c103@prstatistics.com>
+
+We still have a few places left on the course "Model base multivariate 
+analysis of abundance data using R (MBMV02)" and the registration 
+deadline is 28.06.18
+
+https://www.prstatistics.com/course/model-base-multivariate-analysis-of-abundance-data-using-r-mbmv02/
+
+This course will take place in Glasgow from the 8th - 12th July 2018.
+
+Course Overview:
+This course will provide an introduction to modern multivariate 
+techniques, with a special focus on the analysis of abundance or 
+presence/absence data. Multivariate analysis in ecology has been 
+changing rapidly in recent years, with a focus now on formulating a 
+statistical model to capture key properties of the observed data, rather 
+than transformation of data using a dissimilarity-based framework. In 
+recent years, model-based techniques have been developed for hypothesis 
+testing, identifying indicator species, ordination, clustering, 
+predictive modelling, and use of species traits as predictors to explain 
+interspecific variation in environmental response.  These techniques are 
+more interpretable than alternatives, have better statistical 
+properties, and can be used to address new problems, such as the 
+prediction of a species? spatial distribution from its traits alone.
+
+1.	May 21st - 25th 2018
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB05)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb05/
+
+2.	May 21st - 25th 2018
+INTRODUCTION TO REMOTE SENISNG AND GIS FOR ECOLOGICAL APPLICATIONS 
+(IRMS01)
+Glasgow, Scotland, Prof. Duccio Rocchini, Dr. Luca Delucchi
+www.prinformatics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+3.	May 28th ? 31st 2018
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Canada (QUEBEC) Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+4.	May 28th ? June 1st 2018
+ADVANCED PYTHON FOR BIOLOGISTS (APYB02)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb02/
+
+5.	June 12th - 15th 2018
+SPECIES DISTRIBUTION MODELLING (DBMR01)
+Myuna Bay sport and recreation, Australia, Prof. Jane Elith, Dr. 
+Gurutzeta Guillera
+www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/
+
+6.	June 25th ? 29th 2018
+SPECIES DISTRIBUTION/OCCUPANCY MODELLING USING R (OCCU01)
+Glasgow, Scotland, Dr. Darryl McKenzie (PROTEUS)
+www.prstatistics.com/course/species-distributionoccupancy-modelling-using-r-occu01/
+
+7.	July 2nd - 5th 2018
+SOCIAL NETWORK ANALYSIS FOR BEHAVIOURAL SCIENTISTS USING R (SNAR01)
+Glasgow, Scotland, Prof. James Curley
+http://www.psstatistics.com/course/social-network-analysis-for-behavioral-scientists-snar01/
+
+8.	July 8th ? 12th 2018
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV02)
+Glasgow, Scotland, Prof. David Warton
+www.prstatistics.com/course/model-base-multivariate-analysis-of-abundance-data-using-r-mbmv02/
+
+9.	July 23rd ? 27th 2018
+EUKARYOTIC METABARCODING (EUKB01)
+Glasgow, Scotland, Dr. Owen Wangensteen
+http://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/
+
+10.	September 24th ? 28th
+INTRODUCTION TO MIXED (HIERARCHICAL) MODELS FOR LIFE SCIENCES USING R 
+(IMLS01)
+Glasgow, Scotland, Prof. Subhash Lele
+https://www.psstatistics.com/course/introduction-to-mixed-hierarchical-models-for-life-sciences-using-r-imls01/
+
+11.	October 1st ? 5th
+INTRODUCTION TO LINUX WORKFLOWS FOR BIOLOGISTS (IBUL03)
+Glasgow, Scotland, Dr. Martin Jones
+https://www.prinformatics.com/course/introduction-to-linux-workflows-for-biologists-ibul03/
+
+12.	October 8th ? 12th 2018
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISAE01)
+Glasgow, Scotland, Prof. Subhash Lele
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-isae01/
+
+13.	October 8th ? 12th 2018
+INDIVIDUAL BASED MODELS USING NETLOGO AND R
+Glasgow, Scotland, Dr. Andrew Jackson
+Link to follow
+
+14.	October 15th ? 19th 2018
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (ABME
+Glasgow, Scotland, Dr. Matt Denwood, Emma Howard
+http://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme04/
+
+15.	October 15th ? 19th 2018
+ANALYSING TIME TO EVENT DATA (SURVIVAL ANALYSIS)
+Glasgow, Scotland, Dr. Wil Hoppitt
+Link to follow
+
+16.	October 29th ? November 2nd 2018
+INTRODCUTION TO R AND STATISTICS FOR BIOLOGISTS (IRFB02)
+Glasgow, Scotland, Dr. Olivier Gauthier
+Link to follow ? see previous
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-biologists-irfb/
+
+17.	October 29th ? November 2nd 2018
+INTRODUCTION TO BIOINFORMATICS FOR DNA AND RNA SEQUENCE ANALYSIS 
+(IBDR01)
+Glasgow, Scotland, Dr Malachi Griffith, Dr. Obi Griffith
+www.prinformatics.com/course/precision-medicine-bioinformatics-from-raw-genome-and-transcriptome-data-to-clinical-interpretation-pmbi01/
+
+18.	November 5th ? 8th  2018
+PHYLOGENETIC COMPARATIVE METHODS FOR STUDYING DIVERSIFICATION AND 
+PHENOTYPIC EVOLUTION (PCME01)
+Glasgow, Scotland, Dr. Antigoni Kaliontzopoulou
+https://www.prstatistics.com/course/phylogenetic-comparative-methods-for-studying-diversification-and-phenotypic-evolution-pcme01/
+
+19.	November 19th ? 23rd  2018
+STRUCTUAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY BIOLOGISTS 
+(SEMR02)
+Glasgow, Scotland, Dr. Jonathan Lefcheck
+Link to follow ? see previous
+https://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/
+
+20.	November 26th ? 30th 2018
+FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND COMPUTATION 
+(FEER
+Glasgow, Scotland, Dr. Francesco de Bello, Dr. Lars G?tzenberger, Dr. 
+Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+21.	January 21st ? 25th 2019
+STATISTICAL MODELLING OF TIME-TO-EVENT DATA USING SURVIVAL ANALYSIS: AN 
+INTRODUCTION FOR ANIMAL BEHAVIOURISTS, ECOLOGISTS AND EVOLUTIONARY 
+BIOLOGISTS (TTED01)
+Glasgow, Scotland, Dr. Will Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+22.	February 2018 TBC
+MOVEMENT ECOLOGY (MOVE02)
+Venue TBC, Dr. Luca Borger, Prof. Ronny Wilson, Dr Jonathan Potts
+Link to follow ? see previous
+www.prstatistics.com/course/movement-ecology-move01/
+
+23.	February 2018 TBC
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+Link to follow
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine 
+brown trout, Salmo trutta. Biological Journal of the Linnean Society. 
+DOI 10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
+
++44 (0) 7966500340
+
+

@@ -1,0 +1,396 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2016-02",
+  "messages": [
+    {
+      "id": "msg-49639dc80fef",
+      "message_id": "<46F4A38CECCEAE4DA7198531A76D2000B04DB1@057-SN2MPN1-003.057d.mgd.msft.net>",
+      "from_name": "Plumb, Reid@Wildlife",
+      "from_email_hash": "2d0283b47dbf42ebac703183b15c06425501fff31b70b93745356b5d56572c10",
+      "date": "2016-02-01T20:31:08Z",
+      "subject": "[R-sig-eco] issues with getvolumeUD adehabitat",
+      "subject_clean": "issues with getvolumeUD adehabitat",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi,\n\nI am having trouble with the getvolumeUD function in adehabitat.  I have a GPS dataset with many individuals that have thousands of locations for each individual.  The main problem I am having is that when I iterate based on the individual unique ID, the getvolumeUD function throws an error saying that the kud.out object is not a \"estUD or estUDm\".  This is false as I have used class() of the object and environment window in R-studio to make sure that it is in the proper format.  I had a similar problem with the kernelUD function not recognizing that the kud.tmp1 object (SpatialPointsDataFrame) had more than 5 locations even though it had 50 in the object.  I got around this by changing the SPDF to an object of SpatialPoints.  It then seemed to recognize the locations.  I don't think I have a way around this problem and have hit a road block.  Do some packages not function properly as newer version of R are produced?  My code is below and sample dataset attached.  Any help/suggestions/ideas and much appreciated.\n\nlibrary(adehabitatHR)\nlibrary(KernSmooth)\nlibrary(maptools)\nlibrary(raster)\nlibrary(rgdal)\nlibrary(maptools)\nlibrary(shapefiles)\n\nsetwd(\"G:/MA_research/Analysis/RUF/RUF_results/Output_data/2013/NW/BS_2013_p5/BBMM_UD/BBMM_ascii\")\nkuddata = read.csv(file.choose(),header=T,sep=\",\") #setting data souce and using associated headers.\ncoordinates(kuddata) = c(\"X\",\"Y\") #tells R that the X,Y colums are the coordinates.  In order for the next proj4string line to work the BBMMdata needs to be transformed into a formal SpatialPointsDataFrame like this code does.\nproj4string(kuddata) = CRS(\"+init=epsg:32614\") #32614 is the espg code for WGS84 UTM14N.  You have to tell R what projection the point data is in.\nkud_h = matrix(NA,length(unique(kuddata$Unique_ID)),2) #creating a list that holds the variances given by each UD calculation\nfor(i in 1:length(unique(kuddata$Unique_ID))){\n  kud.tmp=kuddata[which(kuddata$Unique_ID==unique(kuddata$Unique_ID)[i]),] #subsetting data by each Unique_ID and for each year\n  kud.tmp1=kud.tmp[sample(1:nrow(kud.tmp), 50, replace = FALSE),] # Taking a random sample of 50 relocations of the subset data\n  writePointsShape(kud.tmp1, paste(kud.tmp1$Unique_ID[1],\"_\", \"pts\",sep=\"\")) # writing the pt shape file for the random sample\n  dpikdata = cbind(kud.tmp1$X, kud.tmp1$Y) #creating a list with X, Y data from the random sample\n  dpiklocs = unlist(dpikdata) #unlisting the data so that it is a matrix\n  dpik_h = dpik(dpiklocs, gridsize = 30) # estimating the data driven direct Plug-In Bandwidth\n  ext = extent(min(kud.tmp1$X)-3000, max(kud.tmp1$X)+3000, min(kud.tmp1$Y)-3000, max(kud.tmp1$Y)+3000) # making a raster extent\n  ras=raster(ext, resolution = 30) # creating the raster\n  SPDF = as(ras, \"SpatialPixelsDataFrame\") # turns the raster to a spatial pixel dataframe for kud\n  kud_h[i,1]=as.character(kud.tmp1$Unique_ID[1])\n  kud_h[i,2]=dpik_h[1]\n  kud.tmp2 = SpatialPoints(kud.tmp1)\n  kud.out <- kernelUD(kud.tmp2, h = dpik_h, grid = SPDF) # building the kernel\n  chickenud<-getvolumeUD(kud.out[[1]])\n  chickenras <- raster(as(chickenud, \"SpatialPixelsDataFrame\"))\n  contour = rasterToContour(chickenras, levels = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99))\n  contour2 = SpatialLines2PolySet(contour) # making a Polyset object from SpatialLines format\n  iso_shape = PolySet2SpatialPolygons(contour2, close_polys=TRUE) # making polygons at each UD level\n  isoIDs <- sapply(slot(iso_shape, \"polygons\"), function(x) slot(x, \"ID\")) #extracting polygon IDs\n  isodf <- data.frame(rep(0, length(isoIDs)), row.names=isoIDs) #create dataframe with correct rownames\n  iso_shape2 <- SpatialPolygonsDataFrame(iso_shape, isodf) #coerse dataframe to SPDF\n  writePolyShape(iso_shape2, paste(kud.tmp$Unique_ID[1],\"_\",bbmm.tmp$Year[1],\"_iso\", sep=\"\")) # write iso polygons\n  chicken1<-as.data.frame(chickenud)\n  names(chicken1)<-c(\"UD\",\"X\",\"Y\")\n  chicken1$include1[chicken1$UD < 99.00001] <- 1\n  IND1<-na.omit(chicken1)\n  IND1$UD2<-100-IND1$UD\n  coordinates(IND1) = c(\"X\",\"Y\")\n  proj4string(IND1) = CRS(\"+init=epsg:32614\")\n  writePointsShape(IND1, paste(kud.tmp$Unique_ID[1],\"_\", bbmm.tmp$Year[1], \"_rufpts\",sep=\"\"))\n}\nh = as.data.frame(kud_h)\nwrite.csv(h ,file = \"kernel_h.csv\") # write a csv of all bandwidths\n\nThanks,\nReid",
+      "body_snippet": "Hi,\n\nI am having trouble with the getvolumeUD function in adehabitat.  I have a GPS dataset with many individuals that have thousands of locations for each individual.  The main problem I am having is",
+      "thread_id": "thread-49639dc80fef",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-25c1a8c95293",
+      "message_id": "<CAD6vDHAfg+e99VAuFBUKE1oF7m5vAGo5ojkCm+AQ8er_ZuEPBg@mail.gmail.com>",
+      "from_name": "Buddhi Dayananda",
+      "from_email_hash": "5ea782a46792e4439d834866ca0bfea3c72a854faa9f1ce1fb5555ef1c895f95",
+      "date": "2016-02-03T19:16:06+11:00",
+      "subject": "[R-sig-eco] Create a grid and extract species and climate data",
+      "subject_clean": "Create a grid and extract species and climate data",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear friends,\n\nI am looking for R support to arrange my dataset which I tried and failed\nin Arc GIS.\n\nI have 6 bioclimatic variables and 14 species. I want to create a 10kmX10Km\ngrid to Australia (like a fishnet in Arc GIS) and extract presence/absence\n( 1/0) of species in each grid and mean/ or values for each variable ( like\na matrix).\n\nEg\n\n Grid number or centroid coordinates Sp1 Sp2 Sp3 Sp4 Bio1    Bio2\n\n1                                    1  1   0   1    25      15\n\n2                                    0  0   1   0    19      20\n\n3                                    1  0   0   0    25      30\n\n4                                    0  0   1   1    18      25\n\n\nAny assistance would help.\n\nBuddhi\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear friends,\n\nI am looking for R support to arrange my dataset which I tried and failed\nin Arc GIS.\n\nI have 6 bioclimatic variables and 14 species. I want to create a 10kmX10Km\ngrid to Australia (lik",
+      "thread_id": "thread-25c1a8c95293",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-5e269d61b3df",
+      "message_id": "<CAL+ycWmoV4KWpNWQn+Nn=pbAod_47qANsYXQ30ChJZS7_uwQ0Q@mail.gmail.com>",
+      "from_name": "Frederico V. Faleiro",
+      "from_email_hash": "aed94e86c09afa9099f1ea1b6ddffc2f181b0acfe02d60489498d6bd7a36f5f5",
+      "date": "2016-02-03T03:32:29-07:00",
+      "subject": "[R-sig-eco] Create a grid and extract species and climate data",
+      "subject_clean": "Create a grid and extract species and climate data",
+      "in_reply_to": "<CAD6vDHAfg+e99VAuFBUKE1oF7m5vAGo5ojkCm+AQ8er_ZuEPBg@mail.gmail.com>",
+      "references": [
+        "<CAD6vDHAfg+e99VAuFBUKE1oF7m5vAGo5ojkCm+AQ8er_ZuEPBg@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Buddhi,\n\nYou can do it easily with the package letsR (\nhttp://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12401/abstract).\n\nCheers,\n\nFrederico\n\nOn Wed, Feb 3, 2016 at 6:16 AM, Buddhi Dayananda [via r-sig-ecology] <\nml-node+s471788n7579687h53 at n2.nabble.com> wrote:\n\n> Dear friends,\n>\n> I am looking for R support to arrange my dataset which I tried and failed\n> in Arc GIS.\n>\n> I have 6 bioclimatic variables and 14 species. I want to create a\n> 10kmX10Km\n> grid to Australia (like a fishnet in Arc GIS) and extract presence/absence\n> ( 1/0) of species in each grid and mean/ or values for each variable (\n> like\n> a matrix).\n>\n> Eg\n>\n>  Grid number or centroid coordinates Sp1 Sp2 Sp3 Sp4 Bio1    Bio2\n>\n> 1                                    1  1   0   1    25      15\n>\n> 2                                    0  0   1   0    19      20\n>\n> 3                                    1  0   0   0    25      30\n>\n> 4                                    0  0   1   1    18      25\n>\n>\n> Any assistance would help.\n>\n> Buddhi\n>\n>         [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> [hidden email] <http:///user/SendEmail.jtp?type=node&node=7579687&i=0>\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n> ------------------------------\n> If you reply to this email, your message will be added to the discussion\n> below:\n>\n> http://r-sig-ecology.471788.n2.nabble.com/Create-a-grid-and-extract-species-and-climate-data-tp7579687.html\n> To unsubscribe from r-sig-ecology, click here\n> <http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=unsubscribe_by_code&node=471788&code=ZnZmYWxlaXJvQGdtYWlsLmNvbXw0NzE3ODh8LTE1Nzc2NjMyMjM=>\n> .\n> NAML\n> <http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=macro_viewer&id=instant_html%21nabble%3Aemail.naml&base=nabble.naml.namespaces.BasicNamespace-nabble.view.web.template.NabbleNamespace-nabble.view.web.template.NodeNamespace&breadcrumbs=notify_subscribers%21nabble%3Aemail.naml-instant_emails%21nabble%3Aemail.naml-send_instant_email%21nabble%3Aemail.naml>\n>\n\n\n\n\n--\nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/Create-a-grid-and-extract-species-and-climate-data-tp7579687p7579688.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Buddhi,\n\nYou can do it easily with the package letsR (\nhttp://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12401/abstract).\n\nCheers,\n\nFrederico\n\nOn Wed, Feb 3, 2016 at 6:16 AM, Buddhi Dayananda [v",
+      "thread_id": "thread-25c1a8c95293",
+      "thread_depth": 1,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-6b24c7c67d2e",
+      "message_id": "<56B265A2.8060304@berkeley.edu>",
+      "from_name": "Adam Zeilinger",
+      "from_email_hash": "7f93c70bc52e17d14ab4f7f9ef9adf7f360560e7582f2826a3c531ae615bc7d7",
+      "date": "2016-02-03T12:40:02-08:00",
+      "subject": "[R-sig-eco] Create a grid and extract species and climate data",
+      "subject_clean": "Create a grid and extract species and climate data",
+      "in_reply_to": "<CAL+ycWmoV4KWpNWQn+Nn=pbAod_47qANsYXQ30ChJZS7_uwQ0Q@mail.gmail.com>",
+      "references": [
+        "<CAD6vDHAfg+e99VAuFBUKE1oF7m5vAGo5ojkCm+AQ8er_ZuEPBg@mail.gmail.com>",
+        "<CAL+ycWmoV4KWpNWQn+Nn=pbAod_47qANsYXQ30ChJZS7_uwQ0Q@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Buddhi,\n\nAssuming your climate data are represented as a series of rasters and \nyour species occurrences have latitude and longitude coordinates, you \ncan accomplish both of these things with the raster package.  Using one \nof the climate rasters as a reference raster, you can use the function \ncellFromXY() to determine species presence/absence in your cells. And \nthe extract() function in raster can be used to get the climate values \nfrom climate data rasters.\n\nHope this helps.\nAdam\n\n\nOn 2/3/2016 2:32 AM, Frederico V. Faleiro wrote:\n> Hi Buddhi,\n>\n> You can do it easily with the package letsR (\n> http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12401/abstract).\n>\n> Cheers,\n>\n> Frederico\n>\n> On Wed, Feb 3, 2016 at 6:16 AM, Buddhi Dayananda [via r-sig-ecology] <\n> ml-node+s471788n7579687h53 at n2.nabble.com> wrote:\n>\n>> Dear friends,\n>>\n>> I am looking for R support to arrange my dataset which I tried and failed\n>> in Arc GIS.\n>>\n>> I have 6 bioclimatic variables and 14 species. I want to create a\n>> 10kmX10Km\n>> grid to Australia (like a fishnet in Arc GIS) and extract presence/absence\n>> ( 1/0) of species in each grid and mean/ or values for each variable (\n>> like\n>> a matrix).\n>>\n>> Eg\n>>\n>>   Grid number or centroid coordinates Sp1 Sp2 Sp3 Sp4 Bio1    Bio2\n>>\n>> 1                                    1  1   0   1    25      15\n>>\n>> 2                                    0  0   1   0    19      20\n>>\n>> 3                                    1  0   0   0    25      30\n>>\n>> 4                                    0  0   1   1    18      25\n>>\n>>\n>> Any assistance would help.\n>>\n>> Buddhi\n>>\n>>          [[alternative HTML version deleted]]\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> [hidden email] <http:///user/SendEmail.jtp?type=node&node=7579687&i=0>\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>>\n>> ------------------------------\n>> If you reply to this email, your message will be added to the discussion\n>> below:\n>>\n>> http://r-sig-ecology.471788.n2.nabble.com/Create-a-grid-and-extract-species-and-climate-data-tp7579687.html\n>> To unsubscribe from r-sig-ecology, click here\n>> <http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=unsubscribe_by_code&node=471788&code=ZnZmYWxlaXJvQGdtYWlsLmNvbXw0NzE3ODh8LTE1Nzc2NjMyMjM=>\n>> .\n>> NAML\n>> <http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=macro_viewer&id=instant_html%21nabble%3Aemail.naml&base=nabble.naml.namespaces.BasicNamespace-nabble.view.web.template.NabbleNamespace-nabble.view.web.template.NodeNamespace&breadcrumbs=notify_subscribers%21nabble%3Aemail.naml-instant_emails%21nabble%3Aemail.naml-send_instant_email%21nabble%3Aemail.naml>\n>>\n>\n>\n>\n> --\n> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Create-a-grid-and-extract-species-and-climate-data-tp7579687p7579688.html\n> Sent from the r-sig-ecology mailing list archive at Nabble.com.\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \nAdam Zeilinger\nPostdoctoral scholar\nBerkeley Initiative for Global Change Biology\nUniversity of California Berkeley\nhttp://adamzeilinger.weebly.com/",
+      "body_snippet": "Hi Buddhi,\n\nAssuming your climate data are represented as a series of rasters and \nyour species occurrences have latitude and longitude coordinates, you \ncan accomplish both of these things with the r",
+      "thread_id": "thread-25c1a8c95293",
+      "thread_depth": 2,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-764842562dd0",
+      "message_id": "<BLU179-W834B8038FC84D9F7C55333B9D60@phx.gbl>",
+      "from_name": "Caio Souza",
+      "from_email_hash": "38619ac76f8ca56edf0b4dcd86cc3385d611c5188b1541130304fcd841bd1806",
+      "date": "2016-02-09T16:02:56-02:00",
+      "subject": "[R-sig-eco] Species accumulation curve: individuals instead of sites‏",
+      "subject_clean": "Species accumulation curve: individuals instead of sites‏",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello everybody, I?m looking forward to plot a species accumulation curve (method = ?collector?).But instead of using sites on the x-axis, I?d like to use individuals. Is there a way to make it work? P.s.: I know about the rarefaction method, but I don?t want to use rarefaction. I believe that a simple species accumulation curve would fit my objectives.\r\n\r\n\r\n Thank you for your patience,Caio Souza. \t\t \t   \t\t  \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hello everybody, I?m looking forward to plot a species accumulation curve (method = ?collector?).But instead of using sites on the x-axis, I?d like to use individuals. Is there a way to make it work? ",
+      "thread_id": "thread-764842562dd0",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-698e684f3391",
+      "message_id": "<56BC9408.2080404@yahoo.com.br>",
+      "from_name": "ASANTOS",
+      "from_email_hash": "ed2fa4bff8ac181d21d2da266a2665def23fe61afd10028a4e68648408f1c171",
+      "date": "2016-02-11T11:00:40-03:00",
+      "subject": "[R-sig-eco] PERMANOVA contrasts by combination of levels",
+      "subject_clean": "PERMANOVA contrasts by combination of levels",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear Members,\n\nI started to creat a script for a PERMANOVA contrasts by combination of \nlevels using adonis function, but doesn't seem to be working a \ncombination of levels matrix with adonis object created, my code was:\n#Packages\n\nrequire(vegan)\nrequire(doBy)\nrequire(wzRfun)\nrequire(multcomp)\n\n#Data set\n\ndata(mite)\nA = c(rep(c(0), 30), rep(c(1), 30))\nB = rep(c(rep(c(0), 15), rep(c(1), 15)), 2)\n\n#Create data frame\n\nA <- as.factor(A)\nB <- as.factor(B)\nspecies <- mite[1:60,]\n\n#PERMANOVA with Jaccard index\n\nman.com<-adonis(species ~ A * B, method = \"jaccard\",permutations=999)\nman.com\n\n#Two-Way PERMANOVA Contrasts\n#Interaction\n\nA_B<- interaction(A, B)\nlevels(A_B)\ndo.call(rbind, strsplit(levels(A_B), \"\\\\.\"))\n\n\ng0 <- adonis(species ~ A * B, method = \"jaccard\",permutations=999)\ng1 <- adonis(species ~ A_B, method = \"jaccard\",permutations=999)\n\nM <- LSmatrix(g0, effect=c(\"A\",\"B\"))\n\n#Mean estimation\n\ndata.frame(g0=M%*%coef(g0), g1=coef(g1))\n\n#Combination of levels\n\nstr(M)\ngrid <- attr(M, \"grid\")\n\n#Matrix of contrasts between levels of treatement\n\nB <- \"b\"\nA <- \"a\"\nspl <- interaction(grid[,2])\ni <- 1:nrow(grid)\nl <- split(i, f=spl)\ncontr <- lapply(l,\n                 function(row){\n                     ## Contrast matrix parwise\n                     a <- apc(M[row,], lev=levels(d[,2]))\n                     rownames(a) <- paste(spl[row[1]],\n                                          rownames(a), sep=\"/\")\n                     return(a)\n                 })\ncontr <- do.call(rbind, contr)\ncontr\n\n#Constrasts\n\nsummary(glht(g0, linfct=contr),\n         test=adjusted(type=\"fdr\"))\n\n#\n\nSomeone could you please help me,\n\nThanks,\n\n-- \n======================================================================\nAlexandre dos Santos\nProte??o Florestal\nIFMT - Instituto Federal de Educa??o, Ci?ncia e Tecnologia de Mato Grosso\nCampus C?ceres\nCaixa Postal 244\nAvenida dos Ramires, s/n\nBairro: Distrito Industrial\nC?ceres - MT                      CEP: 78.200-000\nFone: (+55) 65 8132-8112 (TIM)   (+55) 65 9686-6970 (VIVO)\n\n         alexandre.santos at cas.ifmt.edu.br\nLattes: http://lattes.cnpq.br/1360403201088680\nOrcID: orcid.org/0000-0001-8232-6722\nResearchgate: https://www.researchgate.net/profile/Alexandre_Santos10\nLinkedIn: https://br.linkedin.com/in/alexandre-dos-santos-87961635",
+      "body_snippet": "Dear Members,\n\nI started to creat a script for a PERMANOVA contrasts by combination of \nlevels using adonis function, but doesn't seem to be working a \ncombination of levels matrix with adonis object ",
+      "thread_id": "thread-698e684f3391",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-8502371dc8e6",
+      "message_id": "<CAJRWjBYqg_OSgxfVXpLSjjqPtBw8SQNRDfQL7e5VH0GZD+O_BQ@mail.gmail.com>",
+      "from_name": "Mariano Devoto",
+      "from_email_hash": "9ad9d1b7645c02133f1b1b36cf2f440e4dee2f2fd58fb39298006088011c39bd",
+      "date": "2016-02-11T14:56:31-03:00",
+      "subject": "[R-sig-eco] plotting effects in original units",
+      "subject_clean": "plotting effects in original units",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi folks. I am using 'glmer' function in lme4 package to run a glmm with\nrescaled explanatory variables (i.e. I used 'scale' function to center and\nstandardize each variable). I am now trying to use the output of the\n'allEffects' function in the 'effects' package to calculate and plot the\neffects. For each explanatory variable I want to extract the fitted values\n(and the confidence interval) and plot them in the original units. I don't\nwant to use the default plot function because I am trying to make\nfigures prettier. Is there a way around having to use the inverse of the\nlink function and then the inverse of the scaling to get the values I am\nlooking for? I'd appreciate any tips.\n\nBest,\n\nMariano\n\n\n-- \n*Dr. Mariano Devoto*\n\nC?tedra de Bot?nica General, Facultad de Agronom?a de la U.B.A\nInvestigador Adjunto del CONICET\nAv. San Mart?n 4453 - C1417DSE - C. A. de Buenos Aires - Argentina\n\nhttp://www.agro.uba.ar/users/mdevoto/\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi folks. I am using 'glmer' function in lme4 package to run a glmm with\nrescaled explanatory variables (i.e. I used 'scale' function to center and\nstandardize each variable). I am now trying to use t",
+      "thread_id": "thread-8502371dc8e6",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-37d59d7c783e",
+      "message_id": "<641ee175831a439bbc19c79a6a0f4a39@Exch2-3.slu.se>",
+      "from_name": "Laura Riggi",
+      "from_email_hash": "175dedda5862b536549b9ebdedc5b5e37f5191a6de0091112b48fd4923a63b71",
+      "date": "2016-02-14T15:02:48Z",
+      "subject": "[R-sig-eco] MuMIn package, Inquiry on summary output _ Conditional or Full average models?",
+      "subject_clean": "MuMIn package, Inquiry on summary output _ Conditional or Full average models?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear all,\n\nI have a question regarding the output for model averaging in R with MuMin package. In the summary for model averaging two models of coefficient calculations come out: the \"full average\" and the \"conditional (or subset) average\" model (example of output below).\n\nAs explained on the MuMin package pdf:\n\"The 'subset' (or 'conditional') average only averages over the models where the parameter appears. An alternative, the 'full' average assumes that a variable is included in every model, but in some models the corresponding coefficient (and its respective variance) is set to zero. Unlike the 'subset average', it does not have a tendency of biasing the value away from zero. The 'full' average is a type of shrinkage estimator and for variables with a weak relationship to the response they are smaller than 'subset' estimators.\"\n\nHowever, I cannot find information online concerning the theory behind these different outputs. I am not sure what is the point of having a \"conditional\" model as it seems to go against the idea of doing a model averaging analysis.\nDo you know of articles / books that discuss this? When should we use one or the other?\nAny advice would be appreciated.\n\n> summary(model.avg(dd, subset = delta < 2))\n\nCall:\nmodel.avg.model.selection(object = dd, subset = delta < 2)\n\nComponent model call:\nlme.formula(fixed = log(Parasitoi_S1.S2 + 1) ~ <8 unique rhs>, data = data, random = ~1 | Field.x/Site.x, method\n     = ML, na.action = na.fail)\n\nComponent models:\n      df  logLik   AICc delta weight\n1345   8 -161.74 340.52  0.00   0.22\n345    7 -162.97 340.74  0.22   0.19\n12345  9 -161.26 341.82  1.31   0.11\n13456  9 -161.36 342.03  1.51   0.10\n2345   8 -162.53 342.10  1.58   0.10\n3456   8 -162.54 342.11  1.60   0.10\n35     6 -164.76 342.12  1.60   0.10\n145    7 -163.84 342.47  1.96   0.08\n\nTerm codes:\n                   L         OSR2012_X500         OSR2013_X500           Weed.cover            Wood_X500 Weed.cover:Wood_X500\n                   1                    2                    3                    4                    5                    6\n\nModel-averaged coefficients:\n(full average)\n                       Estimate Std. Error Adjusted SE z value Pr(>|z|)\n(Intercept)           2.5693356  0.5295081   0.5337822   4.813  1.5e-06 ***\nL                    -0.0005893  0.0007720   0.0007756   0.760    0.447\nOSR2013_X500         -3.7932641  2.1558940   2.3307509   1.627    0.104\nWeed.cover            0.1331237  0.0915813   0.0922877   1.442    0.149\nWood_X500            -5.5516524  3.2502461   3.5300659   1.573    0.116\nOSR2012_X500          0.4326628  1.3007077   1.3966718   0.310    0.757\nWeed.cover:Wood_X500  0.1922066  0.6215019   0.6255589   0.307    0.759\n\n(conditional average)\n                       Estimate Std. Error Adjusted SE z value Pr(>|z|)\n(Intercept)           2.5693356  0.5295081   0.5337822   4.813  1.5e-06 ***\nL                    -0.0011489  0.0007205   0.0007279   1.578   0.1145\nOSR2013_X500         -4.1301091  1.9155698   2.1268744   1.942   0.0522 .\nWeed.cover            0.1474601  0.0847131   0.0855581   1.724   0.0848 .\nWood_X500            -5.5516524  3.2502461   3.5300659   1.573   0.1158\nOSR2012_X500          2.0508163  2.1681256   2.4346913   0.842   0.3996\nWeed.cover:Wood_X500  0.9639767  1.0923693   1.1039224   0.873   0.3825\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nRelative variable importance:\n                     Wood_X500 OSR2013_X500 Weed.cover L    OSR2012_X500 Weed.cover:Wood_X500\nImportance:          1.00      0.92         0.90       0.51 0.21         0.20\nN containing models:    8         7            7          4    2            2\n\nThank you for your help.\nKind Regards,\nLaura\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\n\nI have a question regarding the output for model averaging in R with MuMin package. In the summary for model averaging two models of coefficient calculations come out: the \"full average\" an",
+      "thread_id": "thread-37d59d7c783e",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-407cde63e86f",
+      "message_id": "<56C0A634.6080207@umd.edu>",
+      "from_name": "Daniel Gruner",
+      "from_email_hash": "c24aa539fff5d74d421cc40439a6f55494155ee856e22631186462ce8a8c4b07",
+      "date": "2016-02-14T11:07:16-05:00",
+      "subject": "[R-sig-eco] MuMIn package, Inquiry on summary output _ Conditional or Full average models?",
+      "subject_clean": "MuMIn package, Inquiry on summary output _ Conditional or Full average models?",
+      "in_reply_to": "<641ee175831a439bbc19c79a6a0f4a39@Exch2-3.slu.se>",
+      "references": [
+        "<641ee175831a439bbc19c79a6a0f4a39@Exch2-3.slu.se>"
+      ],
+      "body_plain": "Dear Laura,\n\nGrueber et al. (2011) discusses the distinctions and the rationale for \nmaking this choice (p 705-706), citing Burnham & Anderson (2002) and \nNakagawa and Freckleton (2011).\n\n\nBurnham KP, and DR Anderson (2002). Model Selection and Multimodel \nInference: a Practical Information-Theoretic Approach. 2nd edition. \nSpringer, New York.\n\nGrueber CE, S Nakagawa, RJ Laws, and IG Jamieson (2011). Multimodel \ninference in ecology and evolution: challenges and solutions. Journal of \nEvolutionary Biology 24:699-711.\n\nNakagawa S, and RP Freckleton (2011). Model averaging, missing data and \nmultiple imputation: a case study for behavioural ecology. Behavioral \nEcology and Sociobiology 65:103-116.\n\n\n\n\n\nOn 2/14/2016 10:02 AM, Laura Riggi wrote:\n> Dear all,\n>\n> I have a question regarding the output for model averaging in R with MuMin package. In the summary for model averaging two models of coefficient calculations come out: the \"full average\" and the \"conditional (or subset) average\" model (example of output below).\n>\n> As explained on the MuMin package pdf:\n> \"The 'subset' (or 'conditional') average only averages over the models where the parameter appears. An alternative, the 'full' average assumes that a variable is included in every model, but in some models the corresponding coefficient (and its respective variance) is set to zero. Unlike the 'subset average', it does not have a tendency of biasing the value away from zero. The 'full' average is a type of shrinkage estimator and for variables with a weak relationship to the response they are smaller than 'subset' estimators.\"\n>\n> However, I cannot find information online concerning the theory behind these different outputs. I am not sure what is the point of having a \"conditional\" model as it seems to go against the idea of doing a model averaging analysis.\n> Do you know of articles / books that discuss this? When should we use one or the other?\n> Any advice would be appreciated.\n>\n>> summary(model.avg(dd, subset = delta < 2))\n> Call:\n> model.avg.model.selection(object = dd, subset = delta < 2)\n>\n> Component model call:\n> lme.formula(fixed = log(Parasitoi_S1.S2 + 1) ~ <8 unique rhs>, data = data, random = ~1 | Field.x/Site.x, method\n>       = ML, na.action = na.fail)\n>\n> Component models:\n>        df  logLik   AICc delta weight\n> 1345   8 -161.74 340.52  0.00   0.22\n> 345    7 -162.97 340.74  0.22   0.19\n> 12345  9 -161.26 341.82  1.31   0.11\n> 13456  9 -161.36 342.03  1.51   0.10\n> 2345   8 -162.53 342.10  1.58   0.10\n> 3456   8 -162.54 342.11  1.60   0.10\n> 35     6 -164.76 342.12  1.60   0.10\n> 145    7 -163.84 342.47  1.96   0.08\n>\n> Term codes:\n>                     L         OSR2012_X500         OSR2013_X500           Weed.cover            Wood_X500 Weed.cover:Wood_X500\n>                     1                    2                    3                    4                    5                    6\n>\n> Model-averaged coefficients:\n> (full average)\n>                         Estimate Std. Error Adjusted SE z value Pr(>|z|)\n> (Intercept)           2.5693356  0.5295081   0.5337822   4.813  1.5e-06 ***\n> L                    -0.0005893  0.0007720   0.0007756   0.760    0.447\n> OSR2013_X500         -3.7932641  2.1558940   2.3307509   1.627    0.104\n> Weed.cover            0.1331237  0.0915813   0.0922877   1.442    0.149\n> Wood_X500            -5.5516524  3.2502461   3.5300659   1.573    0.116\n> OSR2012_X500          0.4326628  1.3007077   1.3966718   0.310    0.757\n> Weed.cover:Wood_X500  0.1922066  0.6215019   0.6255589   0.307    0.759\n>\n> (conditional average)\n>                         Estimate Std. Error Adjusted SE z value Pr(>|z|)\n> (Intercept)           2.5693356  0.5295081   0.5337822   4.813  1.5e-06 ***\n> L                    -0.0011489  0.0007205   0.0007279   1.578   0.1145\n> OSR2013_X500         -4.1301091  1.9155698   2.1268744   1.942   0.0522 .\n> Weed.cover            0.1474601  0.0847131   0.0855581   1.724   0.0848 .\n> Wood_X500            -5.5516524  3.2502461   3.5300659   1.573   0.1158\n> OSR2012_X500          2.0508163  2.1681256   2.4346913   0.842   0.3996\n> Weed.cover:Wood_X500  0.9639767  1.0923693   1.1039224   0.873   0.3825\n> ---\n> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n>\n> Relative variable importance:\n>                       Wood_X500 OSR2013_X500 Weed.cover L    OSR2012_X500 Weed.cover:Wood_X500\n> Importance:          1.00      0.92         0.90       0.51 0.21         0.20\n> N containing models:    8         7            7          4    2            2\n>\n> Thank you for your help.\n> Kind Regards,\n> Laura\n>\n>\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> .\n>\n\n-- \n\nDaniel S. Gruner, Associate Professor\nDepartment of Entomology\n4112 Plant Sciences Bldg\nUniversity of Maryland\nCollege Park, MD 20742 U.S.A.\n(o) 301-405-3957  (f) 301-314-9290\ndsgruner at umd.edu\n\nhttp://grunerlab.umd.edu\nhttps://twitter.com/GrunerDaniel",
+      "body_snippet": "Dear Laura,\n\nGrueber et al. (2011) discusses the distinctions and the rationale for \nmaking this choice (p 705-706), citing Burnham & Anderson (2002) and \nNakagawa and Freckleton (2011).\n\n\nBurnham KP,",
+      "thread_id": "thread-37d59d7c783e",
+      "thread_depth": 1,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-6197acbe8b11",
+      "message_id": "<CAM5M9BQb7RccYosW5LjVeJ4cOGio5sf039nB9+gxZ1PrckXQ_Q@mail.gmail.com>",
+      "from_name": "Cade, Brian",
+      "from_email_hash": "c448768e91fa25d8cdce680fa21640cc298ec26320949483c2a1c8a474f6817b",
+      "date": "2016-02-16T08:41:45-07:00",
+      "subject": "[R-sig-eco] MuMIn package, Inquiry on summary output _ Conditional or Full average models?",
+      "subject_clean": "MuMIn package, Inquiry on summary output _ Conditional or Full average models?",
+      "in_reply_to": "<56C0A634.6080207@umd.edu>",
+      "references": [
+        "<641ee175831a439bbc19c79a6a0f4a39@Exch2-3.slu.se>",
+        "<56C0A634.6080207@umd.edu>"
+      ],
+      "body_plain": "You might want to reconsider whether it make any sense to model average the\nindividual regression coefficients.  See Cade (2015.  Model averaging and\nmuddled multimodel inferences.  Ecology 96: 2370-2382).\n\nBrian\n\nBrian S. Cade, PhD\n\nU. S. Geological Survey\nFort Collins Science Center\n2150 Centre Ave., Bldg. C\nFort Collins, CO  80526-8818\n\nemail:  cadeb at usgs.gov <brian_cade at usgs.gov>\ntel:  970 226-9326\n\n\nOn Sun, Feb 14, 2016 at 9:07 AM, Daniel Gruner <dsgruner at umd.edu> wrote:\n\n> Dear Laura,\n>\n> Grueber et al. (2011) discusses the distinctions and the rationale for\n> making this choice (p 705-706), citing Burnham & Anderson (2002) and\n> Nakagawa and Freckleton (2011).\n>\n>\n> Burnham KP, and DR Anderson (2002). Model Selection and Multimodel\n> Inference: a Practical Information-Theoretic Approach. 2nd edition.\n> Springer, New York.\n>\n> Grueber CE, S Nakagawa, RJ Laws, and IG Jamieson (2011). Multimodel\n> inference in ecology and evolution: challenges and solutions. Journal of\n> Evolutionary Biology 24:699-711.\n>\n> Nakagawa S, and RP Freckleton (2011). Model averaging, missing data and\n> multiple imputation: a case study for behavioural ecology. Behavioral\n> Ecology and Sociobiology 65:103-116.\n>\n>\n>\n>\n>\n> On 2/14/2016 10:02 AM, Laura Riggi wrote:\n>\n>> Dear all,\n>>\n>> I have a question regarding the output for model averaging in R with\n>> MuMin package. In the summary for model averaging two models of coefficient\n>> calculations come out: the \"full average\" and the \"conditional (or subset)\n>> average\" model (example of output below).\n>>\n>> As explained on the MuMin package pdf:\n>> \"The 'subset' (or 'conditional') average only averages over the models\n>> where the parameter appears. An alternative, the 'full' average assumes\n>> that a variable is included in every model, but in some models the\n>> corresponding coefficient (and its respective variance) is set to zero.\n>> Unlike the 'subset average', it does not have a tendency of biasing the\n>> value away from zero. The 'full' average is a type of shrinkage estimator\n>> and for variables with a weak relationship to the response they are smaller\n>> than 'subset' estimators.\"\n>>\n>> However, I cannot find information online concerning the theory behind\n>> these different outputs. I am not sure what is the point of having a\n>> \"conditional\" model as it seems to go against the idea of doing a model\n>> averaging analysis.\n>> Do you know of articles / books that discuss this? When should we use one\n>> or the other?\n>> Any advice would be appreciated.\n>>\n>> summary(model.avg(dd, subset = delta < 2))\n>>>\n>> Call:\n>> model.avg.model.selection(object = dd, subset = delta < 2)\n>>\n>> Component model call:\n>> lme.formula(fixed = log(Parasitoi_S1.S2 + 1) ~ <8 unique rhs>, data =\n>> data, random = ~1 | Field.x/Site.x, method\n>>       = ML, na.action = na.fail)\n>>\n>> Component models:\n>>        df  logLik   AICc delta weight\n>> 1345   8 -161.74 340.52  0.00   0.22\n>> 345    7 -162.97 340.74  0.22   0.19\n>> 12345  9 -161.26 341.82  1.31   0.11\n>> 13456  9 -161.36 342.03  1.51   0.10\n>> 2345   8 -162.53 342.10  1.58   0.10\n>> 3456   8 -162.54 342.11  1.60   0.10\n>> 35     6 -164.76 342.12  1.60   0.10\n>> 145    7 -163.84 342.47  1.96   0.08\n>>\n>> Term codes:\n>>                     L         OSR2012_X500         OSR2013_X500\n>>  Weed.cover            Wood_X500 Weed.cover:Wood_X500\n>>                     1                    2                    3\n>>           4                    5                    6\n>>\n>> Model-averaged coefficients:\n>> (full average)\n>>                         Estimate Std. Error Adjusted SE z value Pr(>|z|)\n>> (Intercept)           2.5693356  0.5295081   0.5337822   4.813  1.5e-06\n>> ***\n>> L                    -0.0005893  0.0007720   0.0007756   0.760    0.447\n>> OSR2013_X500         -3.7932641  2.1558940   2.3307509   1.627    0.104\n>> Weed.cover            0.1331237  0.0915813   0.0922877   1.442    0.149\n>> Wood_X500            -5.5516524  3.2502461   3.5300659   1.573    0.116\n>> OSR2012_X500          0.4326628  1.3007077   1.3966718   0.310    0.757\n>> Weed.cover:Wood_X500  0.1922066  0.6215019   0.6255589   0.307    0.759\n>>\n>> (conditional average)\n>>                         Estimate Std. Error Adjusted SE z value Pr(>|z|)\n>> (Intercept)           2.5693356  0.5295081   0.5337822   4.813  1.5e-06\n>> ***\n>> L                    -0.0011489  0.0007205   0.0007279   1.578   0.1145\n>> OSR2013_X500         -4.1301091  1.9155698   2.1268744   1.942   0.0522 .\n>> Weed.cover            0.1474601  0.0847131   0.0855581   1.724   0.0848 .\n>> Wood_X500            -5.5516524  3.2502461   3.5300659   1.573   0.1158\n>> OSR2012_X500          2.0508163  2.1681256   2.4346913   0.842   0.3996\n>> Weed.cover:Wood_X500  0.9639767  1.0923693   1.1039224   0.873   0.3825\n>> ---\n>> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n>>\n>> Relative variable importance:\n>>                       Wood_X500 OSR2013_X500 Weed.cover L    OSR2012_X500\n>> Weed.cover:Wood_X500\n>> Importance:          1.00      0.92         0.90       0.51 0.21\n>>  0.20\n>> N containing models:    8         7            7          4    2\n>>   2\n>>\n>> Thank you for your help.\n>> Kind Regards,\n>> Laura\n>>\n>>\n>>         [[alternative HTML version deleted]]\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>> .\n>>\n>>\n> --\n>\n> Daniel S. Gruner, Associate Professor\n> Department of Entomology\n> 4112 Plant Sciences Bldg\n> University of Maryland\n> College Park, MD 20742 U.S.A.\n> (o) 301-405-3957  (f) 301-314-9290\n> dsgruner at umd.edu\n>\n> http://grunerlab.umd.edu\n> https://twitter.com/GrunerDaniel\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "You might want to reconsider whether it make any sense to model average the\nindividual regression coefficients.  See Cade (2015.  Model averaging and\nmuddled multimodel inferences.  Ecology 96: 2370-2",
+      "thread_id": "thread-37d59d7c783e",
+      "thread_depth": 2,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-cead49a6a584",
+      "message_id": "<16A7245736C3324D9B7BC3C3A0A6452D047A5FC5@UiWexMBX07.ad.nottingham.ac.uk>",
+      "from_name": "Simon Tarr",
+      "from_email_hash": "23ab2b0c2337d423a8c60be49930a7a6ec06330d45c8191e5605b4a74a20e8e6",
+      "date": "2016-02-19T10:14:48Z",
+      "subject": "[R-sig-eco] Discrepancy between MaxEnt Dismo and MaxEnt GUI",
+      "subject_clean": "Discrepancy between MaxEnt Dismo and MaxEnt GUI",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello R-Sig-Eco Mailing List,\n\nI have been familiarising myself with the MaxEnt GUI (v3.3.3k) and have been successful in producing a range of models for species of interest to me. For better reproducibility and a quicker workflow I have decided to use the Dismo package and run MaxEnt through R. I hope this is the right mailing list for me to contact.\n\nI have noticed something strange when comparing the outputs of the two methods. Using exactly the same environmental layers and occurrence records (n=81) I end up with two wildly different predicted distributions when using anything but the default application values (as per v3.3.3k).\n\nFor my first test I opened the MaxEnt GUI and, leaving all settings at default, ran the model for my species. I then ran the exact same model with the following code using Dismo and, when plotted, I got the same distribution (as expected). x=expl is my rasterStack of environmental variables.\n\n    xx<-maxent(x=expl,p=spp.coords$garmani)\n\nHowever, if I change settings to anything except default, the maps look totally different. For example, if I set regularization=0.5 and prevalence=0.80 in the GUI and run the model (keeping all other settings exactly as default) and then do the same in R with the following code then the output is different.\n\nxx<-maxent(x=expl,p=spp.coords$garmani, args=c(\n\n  'betamultiplier=0.5',\n\n  'defaultprevalence=0.80'\n\n\n\n))\n\nThis is the code that I used to generate my maps within Dismo. As mentioned previously, this code generates identical maps when using the default applications settings but not when I specify my own arguments in Dismo.\n\nmap<- predict(object=xx,x=expl,na.rm=TRUE,format='ascii',filename= \"C:\\\\Users\\\\Simon\\\\Desktop\\\\nondefaultdismomap\",overwrite=TRUE,progress='text',args=c('outputformat=logistic'),prj=TRUE,keepres=TRUE)\n\nThe AUCs and variable contributions for both models look nearly identical. I would have assumed therefore that the maps wouldn't look so wildly different. I have uploaded the maps to the following location so you can see for yourself the discrepancy. Maps discrepancy<http://i.stack.imgur.com/zrSqJ.png>.\n\nWhen analysing the two HTML outputs generated from the models I have only noticed the one difference. When using the GUI with 81 presence records and 10,000 background points I am told that \"10020 points used to determine the Maxent distribution (background points and presence points)\". However, when using Dismo I am told \"10081 points used to determine the Maxent distribution (background points and presence points)\". As I mentioned previously, all other settings were kept the same (except the arguments as specified above), so occurrence records haven't been used in cross-validating, for example.\n\nA final point to mention that has me confused concerns adjusting the default number of background points to sample. If I set an argument in Dismo to limit background points (e.g. 'maximumbackground=2500') the HTML output in the model gives me conflicting information. Under the 'Raw data outputs and control parameters' section at the bottom of the page I am informed that \"10081 points used to determine the Maxent distribution (background points and presence points)\" but a little further down the page it says \"maximumbackground:2500\". Does anyone know why two different numbers have been quoted here? Is there a way for me to determine for certain whether 2500 points were used or 10,081? I can confirm that my raster has may more non-NA cells than 10,000.\n\nI was wondering if anyone else had come across these 'issues' before. Am I doing something fundamentally wrong within R for the two distributions to be so different, for example using the wrong syntax? I have received no errors when running any models so I thought this possibility may be unlikely. I thought that maybe I would have to specify all the arguments in Dismo (even if I wish to keep them at default) but after some research I'm led to believe that Dismo will just pull the GUI application defaults if you have not defined an argument to say otherwise.\n\nFinally, I can confirm that I am running the latest versions of R, Dismo, Java and MaxEnt. My R and Java environments are x64.\n\nAny help would be very much appreciated. Thanks for your time.\n\nSimon\n\n\n\n\n\nThis message and any attachment are intended solely for the addressee\nand may contain confidential information. If you have received this\nmessage in error, please send it back to me, and immediately delete it. \n\nPlease do not use, copy or disclose the information contained in this\nmessage or in any attachment.  Any views or opinions expressed by the\nauthor of this email do not necessarily reflect the views of the\nUniversity of Nottingham.\n\nThis message has been checked for viruses but the contents of an\nattachment may still contain software viruses which could damage your\ncomputer system, you are advised to perform your own checks. Email\ncommunications with the University of Nottingham may be monitored as\npermitted by UK legislation.\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hello R-Sig-Eco Mailing List,\n\nI have been familiarising myself with the MaxEnt GUI (v3.3.3k) and have been successful in producing a range of models for species of interest to me. For better reproduc",
+      "thread_id": "thread-cead49a6a584",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-b7cb96ad602e",
+      "message_id": "<56CAC643.4020206@highstat.com>",
+      "from_name": "Highland Statistics Ltd",
+      "from_email_hash": "d43054e1bf20a3b5b133a436acf0fb618425fad892ef36118bc175ac01f3183d",
+      "date": "2016-02-22T08:26:43Z",
+      "subject": "[R-sig-eco] Genoa course: Introduction to Zero Inflated Models",
+      "subject_clean": "Genoa course: Introduction to Zero Inflated Models",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "We would like to announce the following statistics course:\n\nCourse: Introduction to Zero Inflated Models\nWhere:  Italian National Antarctic Museum, Genoa, Italy\nWhen:   9-13 May 2016\n\nCourse website: http://www.highstat.com/statscourse.htm\nCourse flyer: http://highstat.com/Courses/Flyers/Flyer2016_5Genoa.pdf\n\n\n\nKind regards,\n\nAlain Zuur\n\n-- \nDr. Alain F. Zuur\n\nFirst author of:\n1. Beginner's Guide to GAMM with R (2014).\n2. Beginner's Guide to GLM and GLMM with R (2013).\n3. Beginner's Guide to GAM with R (2012).\n4. Zero Inflated Models and GLMM with R (2012).\n5. A Beginner's Guide to R (2009).\n6. Mixed effects models and extensions in ecology with R (2009).\n7. Analysing Ecological Data (2007).\n\nHighland Statistics Ltd.\n9 St Clair Wynd\nUK - AB41 6DZ Newburgh\nTel:   0044 1358 788177\nEmail: highstat at highstat.com\nURL: www.highstat.com",
+      "body_snippet": "We would like to announce the following statistics course:\n\nCourse: Introduction to Zero Inflated Models\nWhere:  Italian National Antarctic Museum, Genoa, Italy\nWhen:   9-13 May 2016\n\nCourse website: ",
+      "thread_id": "thread-b7cb96ad602e",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-2cf120d2e24c",
+      "message_id": "<005201d16eed$2f7cd630$b0e660c3@NikolinaKo1>",
+      "from_name": "Philipova",
+      "from_email_hash": "0bcda6d61b50eec4a8bc36122862fd59224521bdd8cb909ffc3a003090703038",
+      "date": "2016-02-24T12:21:55+02:00",
+      "subject": "[R-sig-eco] Request for help",
+      "subject_clean": "Request for help",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear Mr/Madam\nI am interested in Spatial Point Data Analysis. I read spatstat and gstat for this purpose.\nI am reading gstat user' manual and workshop on Spatial Statistic (Baddeley, 2008) and some scientific publications on gstat.\nThere are two different approaches of performing interpolation ( inverse distance interpolation, ordinary kriging etc. )  The one is using mask file and the other is using grid variable. I have a problem with creating grid variable. Many authors use meuse data as an example for geostatistics in gstat. No one describes how to create grid variable  for our data which to replace meuse.grid variable.\nI hope you could help me with these problems.\nThank you so much in advance!\nKind Regards\nNina Philipova\n\n---\n???? ????? ? ???????? ?? ?????? ?? Avast.\nhttps://www.avast.com/antivirus\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear Mr/Madam\nI am interested in Spatial Point Data Analysis. I read spatstat and gstat for this purpose.\nI am reading gstat user' manual and workshop on Spatial Statistic (Baddeley, 2008) and some sc",
+      "thread_id": "thread-2cf120d2e24c",
+      "thread_depth": 0,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-c6baec390646",
+      "message_id": "<56CD8DF5.2060202@upm.es>",
+      "from_name": "Marcelino de la Cruz",
+      "from_email_hash": "f2f0d38d5ba83ada9808ded312f97417ac4b3affff47651eee7d90629396044b",
+      "date": "2016-02-24T12:03:17+01:00",
+      "subject": "[R-sig-eco] Request for help",
+      "subject_clean": "Request for help",
+      "in_reply_to": "<005201d16eed$2f7cd630$b0e660c3@NikolinaKo1>",
+      "references": [
+        "<005201d16eed$2f7cd630$b0e660c3@NikolinaKo1>"
+      ],
+      "body_plain": "Hi Philipova,\n\nmeuse.grid is just a data.frame with the coordinates x and y of the \npoints where you want to interpolate your variables.\n\nYou can easily create one grid for your data with expand.grid. For example:\n\nmy.grid<- expand.grid( x= seq(minx, maxx, by=mystepx), y = seq(miny, \nmaxy, by=mystepy))\n\n\nwhere \"minx\", \"maxx\", \"miny\" and \"maxy\" are the minimum and maximum \nvalues for the coordinates  (i.e. the range) of your study area, and \n\"mystepx\" and \"mystepy\" are the distance among neighbour points in the x \nand y axis in the grid.\n\nHope this helps,\n\n\nMarcelino\n\n\nEl 24/02/2016 a las 11:21, Philipova escribi?:\n>\n> Dear Mr/Madam\n> I am interested in Spatial Point Data Analysis. I read spatstat and gstat for this purpose.\n> I am reading gstat user' manual and workshop on Spatial Statistic (Baddeley, 2008) and some scientific publications on gstat.\n> There are two different approaches of performing interpolation ( inverse distance interpolation, ordinary kriging etc. )  The one is using mask file and the other is using grid variable. I have a problem with creating grid variable. Many authors use meuse data as an example for geostatistics in gstat. No one describes how to create grid variable  for our data which to replace meuse.grid variable.\n> I hope you could help me with these problems.\n> Thank you so much in advance!\n> Kind Regards\n> Nina Philipova\n>\n> ---\n> ???? ????? ? ???????? ?? ?????? ?? Avast.\n> https://www.avast.com/antivirus\n>\n> \t[[alternative HTML version deleted]]\n>\n>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>",
+      "body_snippet": "Hi Philipova,\n\nmeuse.grid is just a data.frame with the coordinates x and y of the \npoints where you want to interpolate your variables.\n\nYou can easily create one grid for your data with expand.grid.",
+      "thread_id": "thread-2cf120d2e24c",
+      "thread_depth": 1,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-969f1a091d2e",
+      "message_id": "<56CDC8B6.1060303@gmail.com>",
+      "from_name": "Bede-Fazekas Ákos",
+      "from_email_hash": "e3ebd50efac1278ec1fe3fd8d1127aa8c4388bb07f6bead5f4628c5377508fdf",
+      "date": "2016-02-24T16:13:58+01:00",
+      "subject": "[R-sig-eco] Request for help",
+      "subject_clean": "Request for help",
+      "in_reply_to": "<56CD8DF5.2060202@upm.es>",
+      "references": [
+        "<005201d16eed$2f7cd630$b0e660c3@NikolinaKo1>",
+        "<56CD8DF5.2060202@upm.es>"
+      ],
+      "body_plain": "Dear Philipova,\nI think, R Special Interest Group on using Geographical data and Mapping \n(r-sig-geo at r-project.org) is the place where you might get the best \nanswers for your question.\nIn case your data is in a table format (xlsx, csv etc.) with two columns \nof the coordinates, you can easily load it to the R workspace by \nread.table(), read.csv() or xlsx::read.xlsx(), and your data is now \nsimilar to meuse.grid.\nIn case your data is stored as a spatial file, eg. ESRI shapefile or \nraster file, you might want to use packages rgdal, sp and raster. \nClasses of sp package called SpatialPointsDataFrame and \nSpatialGridDataFrame can be converted to such a data.frame you need for \ngstat::krige().\nHTH,\n?kos Bede-Fazekas\nHungarian Academy of Sciences\n\n\n2016.02.24. 12:03 keltez?ssel, Marcelino de la Cruz ?rta:\n> Hi Philipova,\n>\n> meuse.grid is just a data.frame with the coordinates x and y of the \n> points where you want to interpolate your variables.\n>\n> You can easily create one grid for your data with expand.grid. For \n> example:\n>\n> my.grid<- expand.grid( x= seq(minx, maxx, by=mystepx), y = seq(miny, \n> maxy, by=mystepy))\n>\n>\n> where \"minx\", \"maxx\", \"miny\" and \"maxy\" are the minimum and maximum \n> values for the coordinates  (i.e. the range) of your study area, and \n> \"mystepx\" and \"mystepy\" are the distance among neighbour points in the \n> x and y axis in the grid.\n>\n> Hope this helps,\n>\n>\n> Marcelino\n>\n>\n> El 24/02/2016 a las 11:21, Philipova escribi?:\n>>\n>> Dear Mr/Madam\n>> I am interested in Spatial Point Data Analysis. I read spatstat and \n>> gstat for this purpose.\n>> I am reading gstat user' manual and workshop on Spatial Statistic \n>> (Baddeley, 2008) and some scientific publications on gstat.\n>> There are two different approaches of performing interpolation ( \n>> inverse distance interpolation, ordinary kriging etc. )  The one is \n>> using mask file and the other is using grid variable. I have a \n>> problem with creating grid variable. Many authors use meuse data as \n>> an example for geostatistics in gstat. No one describes how to create \n>> grid variable  for our data which to replace meuse.grid variable.\n>> I hope you could help me with these problems.\n>> Thank you so much in advance!\n>> Kind Regards\n>> Nina Philipova\n>>\n>> ---\n>> ???? ????? ? ???????? ?? ?????? ?? Avast.\n>> https://www.avast.com/antivirus\n>>\n>>     [[alternative HTML version deleted]]\n>>\n>>\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Dear Philipova,\nI think, R Special Interest Group on using Geographical data and Mapping \n(r-sig-geo at r-project.org) is the place where you might get the best \nanswers for your question.\nIn case you",
+      "thread_id": "thread-2cf120d2e24c",
+      "thread_depth": 2,
+      "month": "2016-02"
+    },
+    {
+      "id": "msg-859647816f9f",
+      "message_id": "<20160227125408.252a5877@alcor.na.ceste>",
+      "from_name": "Martin Weiser",
+      "from_email_hash": "222c67c46344feed8fe25f2e5d573299f079e1d4b0bd4738f8bf19dae2f600e3",
+      "date": "2016-02-27T12:54:08+01:00",
+      "subject": "[R-sig-eco] asymetric matrix  - pairwise experiments",
+      "subject_clean": "asymetric matrix  - pairwise experiments",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear list participants,\n\nI would like to know your opinion on data analysis techniques\navailable for the experiment we performed.\n\nWe conducted an experiment with pairs of individuals, comming from 15\nspecies. All species were combined, including same-species pairs,\nall combinations in several (10) replicates (asymmetric matrix with ten\nreplicates per field). We want to link the outcome of the experiment\n(response of each of the individuals) with (three) species traits.\n(e.g. bigger species are more supressed by the smaller neighbours than\nby the bigger ones) \n\nWhat we did (one of the variants): We took the response of each species\nin each combination, and for the particular species, we sorted the\ntreatments (neighbour species) according to the response the treatment\nelicited in the target species (e.g. level of supression). Then, we\ncorrelated order of the treatments (neighbour species) with the order\naccording to the trait (e.g. size).\nSo we get 15 corr. coefs (one for each species) as a response norm, and\ncorrelated these corr. coefs. with the species traits (e.g. size of\nthe species).\n\nWell, I hope the approach is not plainly wrong, but at least it seems to\nbe not a very elegant one.\n\nI would appreciate your suggestions.\n\nWith the best regards,\nMartin Weiser  \n\n\n\n\n-- \n\n------------------------------\nPokud je tento e-mail sou??st? obchodn?ho jedn?n?, P??rodov?deck? fakulta \nUniverzity Karlovy v Praze:\na) si vyhrazuje pr?vo jedn?n? kdykoliv ukon?it a to i bez uveden? d?vodu,\nb) stanovuje, ?e smlouva mus? m?t p?semnou formu,\nc) vylu?uje p?ijet? nab?dky s dodatkem ?i odchylkou,\nd) stanovuje, ?e smlouva je uzav?ena teprve v?slovn?m dosa?en?m shody na \nv?ech n?le?itostech smlouvy.",
+      "body_snippet": "Dear list participants,\n\nI would like to know your opinion on data analysis techniques\navailable for the experiment we performed.\n\nWe conducted an experiment with pairs of individuals, comming from 15",
+      "thread_id": "thread-859647816f9f",
+      "thread_depth": 0,
+      "month": "2016-02"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-49639dc80fef",
+      "subject": "issues with getvolumeUD adehabitat",
+      "message_count": 1,
+      "participants": [
+        "Plumb, Reid@Wildlife"
+      ],
+      "started": "2016-02-01T20:31:08+00:00",
+      "last_reply": "2016-02-01T20:31:08+00:00",
+      "root_message_id": "msg-49639dc80fef"
+    },
+    {
+      "id": "thread-25c1a8c95293",
+      "subject": "Create a grid and extract species and climate data",
+      "message_count": 3,
+      "participants": [
+        "Adam Zeilinger",
+        "Buddhi Dayananda",
+        "Frederico V. Faleiro"
+      ],
+      "started": "2016-02-03T19:16:06+11:00",
+      "last_reply": "2016-02-03T12:40:02-08:00",
+      "root_message_id": "msg-25c1a8c95293"
+    },
+    {
+      "id": "thread-764842562dd0",
+      "subject": "Species accumulation curve: individuals instead of sites‏",
+      "message_count": 1,
+      "participants": [
+        "Caio Souza"
+      ],
+      "started": "2016-02-09T16:02:56-02:00",
+      "last_reply": "2016-02-09T16:02:56-02:00",
+      "root_message_id": "msg-764842562dd0"
+    },
+    {
+      "id": "thread-698e684f3391",
+      "subject": "PERMANOVA contrasts by combination of levels",
+      "message_count": 1,
+      "participants": [
+        "ASANTOS"
+      ],
+      "started": "2016-02-11T11:00:40-03:00",
+      "last_reply": "2016-02-11T11:00:40-03:00",
+      "root_message_id": "msg-698e684f3391"
+    },
+    {
+      "id": "thread-8502371dc8e6",
+      "subject": "plotting effects in original units",
+      "message_count": 1,
+      "participants": [
+        "Mariano Devoto"
+      ],
+      "started": "2016-02-11T14:56:31-03:00",
+      "last_reply": "2016-02-11T14:56:31-03:00",
+      "root_message_id": "msg-8502371dc8e6"
+    },
+    {
+      "id": "thread-37d59d7c783e",
+      "subject": "MuMIn package, Inquiry on summary output _ Conditional or Full average models?",
+      "message_count": 3,
+      "participants": [
+        "Cade, Brian",
+        "Daniel Gruner",
+        "Laura Riggi"
+      ],
+      "started": "2016-02-14T15:02:48+00:00",
+      "last_reply": "2016-02-16T08:41:45-07:00",
+      "root_message_id": "msg-37d59d7c783e"
+    },
+    {
+      "id": "thread-cead49a6a584",
+      "subject": "Discrepancy between MaxEnt Dismo and MaxEnt GUI",
+      "message_count": 1,
+      "participants": [
+        "Simon Tarr"
+      ],
+      "started": "2016-02-19T10:14:48+00:00",
+      "last_reply": "2016-02-19T10:14:48+00:00",
+      "root_message_id": "msg-cead49a6a584"
+    },
+    {
+      "id": "thread-b7cb96ad602e",
+      "subject": "Genoa course: Introduction to Zero Inflated Models",
+      "message_count": 1,
+      "participants": [
+        "Highland Statistics Ltd"
+      ],
+      "started": "2016-02-22T08:26:43+00:00",
+      "last_reply": "2016-02-22T08:26:43+00:00",
+      "root_message_id": "msg-b7cb96ad602e"
+    },
+    {
+      "id": "thread-2cf120d2e24c",
+      "subject": "Request for help",
+      "message_count": 3,
+      "participants": [
+        "Bede-Fazekas Ákos",
+        "Marcelino de la Cruz",
+        "Philipova"
+      ],
+      "started": "2016-02-24T12:21:55+02:00",
+      "last_reply": "2016-02-24T16:13:58+01:00",
+      "root_message_id": "msg-2cf120d2e24c"
+    },
+    {
+      "id": "thread-859647816f9f",
+      "subject": "asymetric matrix  - pairwise experiments",
+      "message_count": 1,
+      "participants": [
+        "Martin Weiser"
+      ],
+      "started": "2016-02-27T12:54:08+01:00",
+      "last_reply": "2016-02-27T12:54:08+01:00",
+      "root_message_id": "msg-859647816f9f"
+    }
+  ]
+}

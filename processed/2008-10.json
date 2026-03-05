@@ -1,0 +1,1302 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2008-10",
+  "messages": [
+    {
+      "id": "msg-b000e47de4ff",
+      "message_id": "<79a13c220810012043j1fd0f0e7o42cd42877deafcc9@mail.gmail.com>",
+      "from_name": "Tim Sippel",
+      "from_email_hash": "f2715767cff350849f0ce9189201d10df5387a9d2dcbd26d12cd84b4ed200d1e",
+      "date": "2008-10-02T16:43:11+13:00",
+      "subject": "[R-sig-eco] simm.levy in adehabitat",
+      "subject_clean": "simm.levy in adehabitat",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081002/6127ca66/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081002/6127ca66/attachment.pl>",
+      "thread_id": "thread-b000e47de4ff",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-6acf04beaa79",
+      "message_id": "<48E48CE0.2000806@oncfs.gouv.fr>",
+      "from_name": "Clément Calenge",
+      "from_email_hash": "599c7bb21e58eb2d87faf33dae39c73009649e589b73716148359a67c1e08666",
+      "date": "2008-10-02T10:57:04+02:00",
+      "subject": "[R-sig-eco] simm.levy in adehabitat",
+      "subject_clean": "simm.levy in adehabitat",
+      "in_reply_to": "<79a13c220810012043j1fd0f0e7o42cd42877deafcc9@mail.gmail.com>",
+      "references": [
+        "<79a13c220810012043j1fd0f0e7o42cd42877deafcc9@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Tim,\n\n>> p.sett\n>>     \n> *********** List of class ltraj ***********\n> Type of the traject: Type II (time recorded)\n> Regular traject. Time lag between two locs: 900 seconds\n> Characteristics of the bursts:\n>        id      burst nb.reloc  NAs          date.begin            date.end\n> 1   p1801 1988038937        6    1 2006-08-09 09:00:00 2006-08-09 10:15:00\n> 2   p1801 1988038938        3    0 2006-08-10 02:00:00 2006-08-10 02:30:00\n> 3   p1801 1988038939        9    1 2006-08-11 03:00:00 2006-08-11 05:00:00\n> 4   p1801 1988038940       17    5 2006-08-12 02:00:00 2006-08-12 06:00:00\n> 5   p1801 1988038941       23   10 2006-08-13 02:00:00 2006-08-13 07:30:00\n> ...\n> 237 p1801 1988039304      126  110 2007-08-10 01:15:00 2007-08-11 08:30:00\n> 238 p1801 1988039305        1    0 2007-08-11 02:45:00 2007-08-11 02:45:00\n>\n> Ideally what I'd like to do is define the simulation using the\n> characteristics of a given 'burst' from my ltraj object. I'd appreciate some\n> pointers on the syntax of calling the simulation using the the\n> characteristics of each row in p.sett. Sample code follows:\n>\n>   \n>> sim.levy<-simm.levy(date=1:126, id=p.sett$id==\"1801\",\n>>     \n> burst=p.sett$burst==\"1988039304\", x0=c(174.48255,-36.819058), typeII=T)\n> Error in as.ltraj(data.frame(co, si), date, id, burst, typeII = typeII) :\n>   id should be of the same length as xy, or of length 1\n>\n> How do I define the arguments of the function using the elements of a given\n> burst?\n>   \n\n\nFirst note that the \"burst\" and \"id\" are stored as attributes of each \nelement of the list of class ltraj, and not as elements of the list \nthemselves. It means that p.sett$burst and p.sett$id do not exist. To \nget the burst or the id of the trajectories of the list, you can simply type\n\nburst(p.sett)\nid(p.sett)\n\nSee the help page of as.ltraj() for trajectory management with \nadehabitat. Now, it seems that you want to simulate a levy walk at the \nsame times as your actual trajectory, beginning at the same point. In \nthis case, you should use the following code:\n\nres <- lapply(1:length(p.sett), function(i) {   \n           simm.levy(date = p.sett[[i]]$date, id = id(p.sett)[i],\n                            x0 = c(p.sett[[i]]$x[1], p.sett[[i]]$y[1]),\n                            burst = burst(p.sett)[i], typeII = T, mu=2)\n})\nresult <- do.call(\"c\", res)\nplot(result)\n\nBut note that you may have to change the parameter mu, depending on what \nyou want to do. See the help page of simm.levy.\nBTW, there is a bug in the function concerning the parameter x0. If you \nwant to use parameter x0 (required only if you want to match the \ntrajectory with maps), you should use the following fixed function, \nwhich will be included in the next version of adehabitat:\n\nsimm.levy <- function (date = 1:500, mu = 2, l0 = 1, x0 = c(0, 0), id = \n\"A1\",\n    burst = id, typeII = TRUE)\n{\n    if (typeII)\n        class(date) <- c(\"POSIX\", \"POSIXct\")\n    n <- length(date)\n    dt <- c(diff(unclass(date)))\n    if (all(dt - dt[1] > 1e-07))\n        stop(\"the time lag between relocations should be constant\")\n    ang <- runif(n - 2, -pi, pi)\n    v = dt * (l0 * (runif(n - 1)^(1/(1 - mu))))\n    ang = cumsum(c(runif(1, 0, 2 * pi), ang))\n    si = c(x0[2], x0[2]+cumsum(v * sin(ang)))\n    co = c(x0[1], x0[1]+cumsum(v * cos(ang)))\n    res <- as.ltraj(data.frame(co, si), date, id, burst, typeII = typeII)\n    return(res)\n}\n\n\nHope this helps,\n\n\nCl?ment.\n\n-- \nCl?ment CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_snippet": "Hi Tim,\n\n>> p.sett\n>>     \n> *********** List of class ltraj ***********\n> Type of the traject: Type II (time recorded)\n> Regular traject. Time lag between two locs: 900 seconds\n> Characteristics of t",
+      "thread_id": "thread-b000e47de4ff",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-5b5b90a4c76e",
+      "message_id": "<b55bda770810021527q4c62a75emb37b236c83b09499@mail.gmail.com>",
+      "from_name": "Lisa Mandle",
+      "from_email_hash": "8ff63a2e5daea7802fc748aa7a37b01bea0a5bec1d89615b7235cdf567b77be7",
+      "date": "2008-10-02T12:27:00-10:00",
+      "subject": "[R-sig-eco] Bias adjusted confidence intervals with popbio",
+      "subject_clean": "Bias adjusted confidence intervals with popbio",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081002/dbc5258d/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081002/dbc5258d/attachment.pl>",
+      "thread_id": "thread-5b5b90a4c76e",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-ba4c297cee13",
+      "message_id": "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+      "from_name": "ONKELINX, Thierry",
+      "from_email_hash": "c1cd3b6aa1e1e5864422a45708c7cf78ba94a2d34ddbc8add17227ed5b0432d5",
+      "date": "2008-10-07T12:12:28+02:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear all,\n\nWe have a problem with a large dataset that we want to cluster. The\ndataset is in a long format: 1154024 rows with presence data. Each row\nhas the name of the species and the location. We have 1381 species and\n6354 locations.\nThe main problem is that we need the data in wide format (one row for\neach location, one column for each species) for the clustering\nalgorithms. But the 6354 x 1381 dataframe is too big to fit into the\nmemory. At least when we use cast from the reshape package to convert\nthe dataframe from a long to a wide format.\n\nAre there any clustering tools available that can work with the data in\na long format or with sparse matrices (only 13% of the matrix is\nnon-zero)? If the work with sparse matrices: how to convert our dataset\nto a sparse matrix? Other suggestions are welcome.\n\nWe are working with R 2.7.2 on WinXP with 2 GB RAM. --max-mem-size is\nset to 2047M.\n\nThanks,\n\nThierry\n\n\n------------------------------------------------------------------------\n----\nir. Thierry Onkelinx\nInstituut voor natuur- en bosonderzoek / Research Institute for Nature\nand Forest\nCel biometrie, methodologie en kwaliteitszorg / Section biometrics,\nmethodology and quality assurance\nGaverstraat 4\n9500 Geraardsbergen\nBelgium \ntel. + 32 54/436 185\nThierry.Onkelinx at inbo.be \nwww.inbo.be \n\nTo call in the statistician after the experiment is done may be no more\nthan asking him to perform a post-mortem examination: he may be able to\nsay what the experiment died of.\n~ Sir Ronald Aylmer Fisher\n\nThe plural of anecdote is not data.\n~ Roger Brinner\n\nThe combination of some data and an aching desire for an answer does not\nensure that a reasonable answer can be extracted from a given body of\ndata.\n~ John Tukey\n\nDit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer \nen binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\ndoor een geldig ondertekend document. The views expressed in  this message \nand any annex are purely those of the writer and may not be regarded as stating \nan official position of INBO, as long as the message is not confirmed by a duly \nsigned document.",
+      "body_snippet": "Dear all,\n\nWe have a problem with a large dataset that we want to cluster. The\ndataset is in a long format: 1154024 rows with presence data. Each row\nhas the name of the species and the location. We h",
+      "thread_id": "thread-ba4c297cee13",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-0081695cbe0c",
+      "message_id": "<87zllg7fc4.fsf@blackbart.sedgenet>",
+      "from_name": "tyler",
+      "from_email_hash": "5175000895736522a94b46846e1b695cdc12921b61083ab626f75efaaf595f24",
+      "date": "2008-10-07T09:35:39-03:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": null,
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>"
+      ],
+      "body_plain": "\"ONKELINX, Thierry\" <Thierry.ONKELINX at inbo.be>\nwrites:\n\n> Dear all,\n>\n> We have a problem with a large dataset that we want to cluster. The\n> dataset is in a long format: 1154024 rows with presence data. Each row\n> has the name of the species and the location. We have 1381 species and\n> 6354 locations.\n> The main problem is that we need the data in wide format (one row for\n> each location, one column for each species) for the clustering\n> algorithms. But the 6354 x 1381 dataframe is too big to fit into the\n> memory. At least when we use cast from the reshape package to convert\n> the dataframe from a long to a wide format.\n>\n> Are there any clustering tools available that can work with the data in\n> a long format or with sparse matrices (only 13% of the matrix is\n> non-zero)? If the work with sparse matrices: how to convert our dataset\n> to a sparse matrix? Other suggestions are welcome.\n>\n\n6354 x 1381 should be well within your memory limit, so I assume it's\nthe intermediate steps that are fouling you up. Maybe you can do it in\npieces: \n\n1. subset the original two-column matrix to include only the first 100 sites\n2. convert this subset to wide form\n3. repeat 63 times for different subsets\n4. rbind the resulting matrices\n\nGood luck,\n\nTyler\n\n-- \nWatching a recorded television broadcast more than once will be illegal\nunder Bill C-61. \n\nhttp://www.michaelgeist.ca/content/view/3046/125/",
+      "body_snippet": "\"ONKELINX, Thierry\" <Thierry.ONKELINX at inbo.be>\nwrites:\n\n> Dear all,\n>\n> We have a problem with a large dataset that we want to cluster. The\n> dataset is in a long format: 1154024 rows with presence",
+      "thread_id": "thread-ba4c297cee13",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-59fcbb3593dd",
+      "message_id": "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+      "from_name": "Peter Solymos",
+      "from_email_hash": "825914ef1137a1ef6e513f5231412ca201acd05d17f96b3b515f653af9f72dea",
+      "date": "2008-10-07T07:50:57-06:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Thierry,\n\nthe 'mefa' package should do this, and I am also interested in the\ntesting of the package for such a large number of species. I have used\nit before with 75K records, but only with ~160 species and 1052 sites.\nSo please let me know if it worked!\n\nYou can do the clustering like this (SAMPLES and SPECIES are the two\ncolumn in the long format, have to be the same length):\n\nx <- mefa(stcs(data.frame(SAMPLES,SPECIES)))\ncl <- hclust(dist(x$xtab))\n\nHope this works,\n\nPeter\n\nPeter Solymos, PhD\nDepartment of Mathematical and Statistical Sciences\nUniversity of Alberta\nEdmonton, Alberta, T6G 2G1\nCANADA\n\n\n\nOn Tue, Oct 7, 2008 at 4:12 AM, ONKELINX, Thierry\n<Thierry.ONKELINX at inbo.be> wrote:\n> Dear all,\n>\n> We have a problem with a large dataset that we want to cluster. The\n> dataset is in a long format: 1154024 rows with presence data. Each row\n> has the name of the species and the location. We have 1381 species and\n> 6354 locations.\n> The main problem is that we need the data in wide format (one row for\n> each location, one column for each species) for the clustering\n> algorithms. But the 6354 x 1381 dataframe is too big to fit into the\n> memory. At least when we use cast from the reshape package to convert\n> the dataframe from a long to a wide format.\n>\n> Are there any clustering tools available that can work with the data in\n> a long format or with sparse matrices (only 13% of the matrix is\n> non-zero)? If the work with sparse matrices: how to convert our dataset\n> to a sparse matrix? Other suggestions are welcome.\n>\n> We are working with R 2.7.2 on WinXP with 2 GB RAM. --max-mem-size is\n> set to 2047M.\n>\n> Thanks,\n>\n> Thierry\n>\n>\n> ------------------------------------------------------------------------\n> ----\n> ir. Thierry Onkelinx\n> Instituut voor natuur- en bosonderzoek / Research Institute for Nature\n> and Forest\n> Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n> methodology and quality assurance\n> Gaverstraat 4\n> 9500 Geraardsbergen\n> Belgium\n> tel. + 32 54/436 185\n> Thierry.Onkelinx at inbo.be\n> www.inbo.be\n>\n> To call in the statistician after the experiment is done may be no more\n> than asking him to perform a post-mortem examination: he may be able to\n> say what the experiment died of.\n> ~ Sir Ronald Aylmer Fisher\n>\n> The plural of anecdote is not data.\n> ~ Roger Brinner\n>\n> The combination of some data and an aching desire for an answer does not\n> ensure that a reasonable answer can be extracted from a given body of\n> data.\n> ~ John Tukey\n>\n> Dit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer\n> en binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\n> door een geldig ondertekend document. The views expressed in  this message\n> and any annex are purely those of the writer and may not be regarded as stating\n> an official position of INBO, as long as the message is not confirmed by a duly\n> signed document.\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>",
+      "body_snippet": "Dear Thierry,\n\nthe 'mefa' package should do this, and I am also interested in the\ntesting of the package for such a large number of species. I have used\nit before with 75K records, but only with ~160 ",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-c4f9844ba327",
+      "message_id": "<OF58AF8FC6.6E351EFA-ON852574DB.004AE0E8-852574DB.004C8FA1@epamail.epa.gov>",
+      "from_name": "Farrar.David at epamail.epa.gov",
+      "from_email_hash": "33e790d2f4526322ffd54c301e90184003a3ad34193267e52074c251c8977433",
+      "date": "2008-10-07T09:56:15-04:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<87zllg7fc4.fsf@blackbart.sedgenet>",
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/c10607a0/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/c10607a0/attachment.pl>",
+      "thread_id": "thread-ba4c297cee13",
+      "thread_depth": 2,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-423ce720922b",
+      "message_id": "<48EB7A83.1010900@pdx.edu>",
+      "from_name": "Christian A. Parker",
+      "from_email_hash": "2027c0f71786e7cc3b3177f36c97181dd7990668efc9f7519b8ff86ce3eed8da",
+      "date": "2008-10-07T08:04:35-07:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>"
+      ],
+      "body_plain": "This method for converting long to wide format seems to work well with \npretty large datasets and it uses only base functions.\n\n# this function will return a site*species matrix\n# based on the formula variable. Data does not need \n# to be grouped, the xtabs function will take care of\n# summing any rows that are equal according to the \n# formula.\n### units are the cell value\n### site is the row value\n### spp is the column value\nmatrify<-function(datatable, formula = units~site+spp, relativize=F){\n  tbl<-xtabs(formula,data=datatable)\n  mx<-matrix(tbl,ncol=ncol(tbl))\n  colnames(mx)<-colnames(tbl)\n  rownames(mx)<-rownames(tbl)\n  if (relativize==T) {mx<-mx/rowSums(mx)}\n  return(mx)\n}\n\n\n\nONKELINX, Thierry wrote:\n> Dear all,\n>\n> We have a problem with a large dataset that we want to cluster. The\n> dataset is in a long format: 1154024 rows with presence data. Each row\n> has the name of the species and the location. We have 1381 species and\n> 6354 locations.\n> The main problem is that we need the data in wide format (one row for\n> each location, one column for each species) for the clustering\n> algorithms. But the 6354 x 1381 dataframe is too big to fit into the\n> memory. At least when we use cast from the reshape package to convert\n> the dataframe from a long to a wide format.\n>\n> Are there any clustering tools available that can work with the data in\n> a long format or with sparse matrices (only 13% of the matrix is\n> non-zero)? If the work with sparse matrices: how to convert our dataset\n> to a sparse matrix? Other suggestions are welcome.\n>\n> We are working with R 2.7.2 on WinXP with 2 GB RAM. --max-mem-size is\n> set to 2047M.\n>\n> Thanks,\n>\n> Thierry\n>\n>\n> ------------------------------------------------------------------------\n> ----\n> ir. Thierry Onkelinx\n> Instituut voor natuur- en bosonderzoek / Research Institute for Nature\n> and Forest\n> Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n> methodology and quality assurance\n> Gaverstraat 4\n> 9500 Geraardsbergen\n> Belgium \n> tel. + 32 54/436 185\n> Thierry.Onkelinx at inbo.be \n> www.inbo.be \n>\n> To call in the statistician after the experiment is done may be no more\n> than asking him to perform a post-mortem examination: he may be able to\n> say what the experiment died of.\n> ~ Sir Ronald Aylmer Fisher\n>\n> The plural of anecdote is not data.\n> ~ Roger Brinner\n>\n> The combination of some data and an aching desire for an answer does not\n> ensure that a reasonable answer can be extracted from a given body of\n> data.\n> ~ John Tukey\n>\n> Dit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer \n> en binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\n> door een geldig ondertekend document. The views expressed in  this message \n> and any annex are purely those of the writer and may not be regarded as stating \n> an official position of INBO, as long as the message is not confirmed by a duly \n> signed document.\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>",
+      "body_snippet": "This method for converting long to wide format seems to work well with \npretty large datasets and it uses only base functions.\n\n# this function will return a site*species matrix\n# based on the formula",
+      "thread_id": "thread-ba4c297cee13",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-380a59e61d9e",
+      "message_id": "<OF21530D64.E08E01FF-ON852574DB.0054009A-852574DB.005477F9@epamail.epa.gov>",
+      "from_name": "Farrar.David at epamail.epa.gov",
+      "from_email_hash": "33e790d2f4526322ffd54c301e90184003a3ad34193267e52074c251c8977433",
+      "date": "2008-10-07T11:22:37-04:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<48EB7A83.1010900@pdx.edu>",
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/a48333e6/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/a48333e6/attachment.pl>",
+      "thread_id": "thread-ba4c297cee13",
+      "thread_depth": 2,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-7c79a0f59d32",
+      "message_id": "<COL102-W47C4D452ED595BDFFB9168DE380@phx.gbl>",
+      "from_name": "Brian Campbell",
+      "from_email_hash": "6c518f93ab9c30ce587945945e4238011258e604fced2587ee9b6552f99009b3",
+      "date": "2008-10-07T13:18:42-04:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<OF58AF8FC6.6E351EFA-ON852574DB.004AE0E8-852574DB.004C8FA1@epamail.epa.gov>",
+      "references": [
+        "<87zllg7fc4.fsf@blackbart.sedgenet>",
+        "<OF58AF8FC6.6E351EFA-ON852574DB.004AE0E8-852574DB.004C8FA1@epamail.epa.gov>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/1a95ad77/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/1a95ad77/attachment.pl>",
+      "thread_id": "thread-ba4c297cee13",
+      "thread_depth": 3,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-f147348aba05",
+      "message_id": "<48EBA913.7010104@pdx.edu>",
+      "from_name": "Christian A. Parker",
+      "from_email_hash": "2027c0f71786e7cc3b3177f36c97181dd7990668efc9f7519b8ff86ce3eed8da",
+      "date": "2008-10-07T11:23:15-07:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<OF21530D64.E08E01FF-ON852574DB.0054009A-852574DB.005477F9@epamail.epa.gov>",
+      "references": [
+        "<OF21530D64.E08E01FF-ON852574DB.0054009A-852574DB.005477F9@epamail.epa.gov>"
+      ],
+      "body_plain": "Thats great, thanks. I always like it when someone can suggest a better \nor cleaner way to do something in code.\n\n-Chris\n\nFarrar.David at epamail.epa.gov wrote:\n> Thanks for the illustration of xtabs. \n> \n> A quibble: Doesn't the following work, substituting as.matrix() for \n> matrix()? \n> (Does seem to conserve the dimensions and dimension names.) \n> \n> matrify<-function(datatable, formula = units~site+spp, relativize=F){\n>   tbl<-xtabs(formula,data=datatable)\n>   mx <-as.matrix(tbl)\n>   if (relativize==T) {mx<-mx/rowSums(mx)}\n>   return(mx)\n> }\n> \n> \n> \n> \n> \"Christian A. Parker\" <cparker at pdx.edu> \n> Sent by: r-sig-ecology-bounces at r-project.org\n> 10/07/2008 11:04 AM\n> \n> To\n> \"ONKELINX, Thierry\" <Thierry.ONKELINX at inbo.be>\n> cc\n> r-sig-ecology at r-project.org\n> Subject\n> Re: [R-sig-eco] Clustering large data\n> \n> \n> \n> \n> \n> \n> This method for converting long to wide format seems to work well with \n> pretty large datasets and it uses only base functions.\n> \n> # this function will return a site*species matrix\n> # based on the formula variable. Data does not need \n> # to be grouped, the xtabs function will take care of\n> # summing any rows that are equal according to the \n> # formula.\n> ### units are the cell value\n> ### site is the row value\n> ### spp is the column value\n> matrify<-function(datatable, formula = units~site+spp, relativize=F){\n>   tbl<-xtabs(formula,data=datatable)\n>   mx<-matrix(tbl,ncol=ncol(tbl))\n>   colnames(mx)<-colnames(tbl)\n>   rownames(mx)<-rownames(tbl)\n>   if (relativize==T) {mx<-mx/rowSums(mx)}\n>   return(mx)\n> }\n> \n> \n> \n> ONKELINX, Thierry wrote:\n> \n>>Dear all,\n>>\n>>We have a problem with a large dataset that we want to cluster. The\n>>dataset is in a long format: 1154024 rows with presence data. Each row\n>>has the name of the species and the location. We have 1381 species and\n>>6354 locations.\n>>The main problem is that we need the data in wide format (one row for\n>>each location, one column for each species) for the clustering\n>>algorithms. But the 6354 x 1381 dataframe is too big to fit into the\n>>memory. At least when we use cast from the reshape package to convert\n>>the dataframe from a long to a wide format.\n>>\n>>Are there any clustering tools available that can work with the data in\n>>a long format or with sparse matrices (only 13% of the matrix is\n>>non-zero)? If the work with sparse matrices: how to convert our dataset\n>>to a sparse matrix? Other suggestions are welcome.\n>>\n>>We are working with R 2.7.2 on WinXP with 2 GB RAM. --max-mem-size is\n>>set to 2047M.\n>>\n>>Thanks,\n>>\n>>Thierry\n>>\n>>\n>>------------------------------------------------------------------------\n>>----\n>>ir. Thierry Onkelinx\n>>Instituut voor natuur- en bosonderzoek / Research Institute for Nature\n>>and Forest\n>>Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n>>methodology and quality assurance\n>>Gaverstraat 4\n>>9500 Geraardsbergen\n>>Belgium \n>>tel. + 32 54/436 185\n>>Thierry.Onkelinx at inbo.be \n>>www.inbo.be \n>>\n>>To call in the statistician after the experiment is done may be no more\n>>than asking him to perform a post-mortem examination: he may be able to\n>>say what the experiment died of.\n>>~ Sir Ronald Aylmer Fisher\n>>\n>>The plural of anecdote is not data.\n>>~ Roger Brinner\n>>\n>>The combination of some data and an aching desire for an answer does not\n>>ensure that a reasonable answer can be extracted from a given body of\n>>data.\n>>~ John Tukey\n>>\n>>Dit bericht en eventuele bijlagen geven enkel de visie van de schrijver \n> \n> weer \n> \n>>en binden het INBO onder geen enkel beding, zolang dit bericht niet \n> \n> bevestigd is\n> \n>>door een geldig ondertekend document. The views expressed in  this \n> \n> message \n> \n>>and any annex are purely those of the writer and may not be regarded as \n> \n> stating \n> \n>>an official position of INBO, as long as the message is not confirmed by \n> \n> a duly \n> \n>>signed document.\n>>\n>>_______________________________________________\n>>R-sig-ecology mailing list\n>>R-sig-ecology at r-project.org\n>>https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>>\n> \n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> \n>",
+      "body_snippet": "Thats great, thanks. I always like it when someone can suggest a better \nor cleaner way to do something in code.\n\n-Chris\n\nFarrar.David at epamail.epa.gov wrote:\n> Thanks for the illustration of xtabs.",
+      "thread_id": "thread-ba4c297cee13",
+      "thread_depth": 3,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-d05526505b28",
+      "message_id": "<loom.20081007T202008-558@post.gmane.org>",
+      "from_name": "Marcelo Luiz de Laia",
+      "from_email_hash": "3e56683f13d30145fd0e101a5cdd081cc46ad30001510b9b462ff8ca527f3c17",
+      "date": "2008-10-07T20:35:56Z",
+      "subject": "[R-sig-eco] Mortality anslisis",
+      "subject_clean": "Mortality anslisis",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi,\n\nI have searched in archives to looking for a library (or script, or method) for\nto evaluate a mortality analysis.\n\nI test different drugs (9 test, 1 positive control, and 1 negative) on 30\ninsects larvae (each ones larvae in one coffee plastic cup). This one was\nrepeated 4 times. After five days, we have measured (count) died larvae.  Then,\nfor each drug we have 120 measures.\n\nFor analysis, we do an anova and a Tukey test.\n\nNowadays I found a survival package on CRAN. After this discovery, I am insecure\nif my previous analysis was correct!\n\nDid was correct?\n\nIf not, could you suggest me a way for to do it?\n\nThank you very much\n\nMarcelo Luiz de Laia\nBiologist",
+      "body_snippet": "Hi,\n\nI have searched in archives to looking for a library (or script, or method) for\nto evaluate a mortality analysis.\n\nI test different drugs (9 test, 1 positive control, and 1 negative) on 30\ninsect",
+      "thread_id": "thread-d05526505b28",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-0e642e37ebed",
+      "message_id": "<f7134c940810080432m74357c46i31c46666bbb17a05@mail.gmail.com>",
+      "from_name": "Stephen Cole",
+      "from_email_hash": "ad06d32eb383e570de526564d2886f65c2fd4c6f3058a7168dc85c66d0a9d4fd",
+      "date": "2008-10-08T08:32:39-03:00",
+      "subject": "[R-sig-eco] progamming functions help",
+      "subject_clean": "progamming functions help",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Not sure if i should really post this here, but i am an ecology\nstudent and my project is certainly ecological so........\n\nmy goal is to use R to write functions for and automate a series of\nanalyses i would like to do on a large data set.  The calculations are\nnot very difficult in themselves, however they will be very time\nconsuming (Plus I think R will be extremely useful and this is another\nexcuse to learn how to program).\n\nI have a vector of 20 values\n\nx <- c(20,18, 45, 16, 47, 47, 15, 26, 14,14,12,16,35,27,18,94,16,26,\n26,30)\n\n1.\nI  want to select random pairs from this data set but do it without\nreplacement exhaustively\n\nI know i can select random pairs without replacement using\n\nsample(N,n,replace=F)\nHowever i am wondering if there is any way to get 10 random pairs from\nthis data set without repeating any of the data points\nthat is to say if i got a (20, 94) for one pair, i would like to get 9\nother pairs from the data without again getting 20 or 94?\n\n2.\nThe second thing i would like to do is be able to select all possible\npairs of numbers and calculate each pairs variance.  I think i will\nneed a for loop here but I am unsure of how to do the programing.  I\nam reading two books on S and s-plus now and hope they are some help.\nI thought i would also post on this list and get some expert advice\nfor the more experienced R users\n\nThank-you very much\n\nStephen Cole\nMarine Ecology Lab\nSaint Francis Xavier University",
+      "body_snippet": "Not sure if i should really post this here, but i am an ecology\nstudent and my project is certainly ecological so........\n\nmy goal is to use R to write functions for and automate a series of\nanalyses ",
+      "thread_id": "thread-0e642e37ebed",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-cca64d8fd46e",
+      "message_id": "<48EC9E4D.8030105@oncfs.gouv.fr>",
+      "from_name": "Clément Calenge",
+      "from_email_hash": "599c7bb21e58eb2d87faf33dae39c73009649e589b73716148359a67c1e08666",
+      "date": "2008-10-08T13:49:33+02:00",
+      "subject": "[R-sig-eco] progamming functions help",
+      "subject_clean": "progamming functions help",
+      "in_reply_to": "<f7134c940810080432m74357c46i31c46666bbb17a05@mail.gmail.com>",
+      "references": [
+        "<f7134c940810080432m74357c46i31c46666bbb17a05@mail.gmail.com>"
+      ],
+      "body_plain": "Stephen Cole wrote:\n> Not sure if i should really post this here, but i am an ecology\n> student and my project is certainly ecological so........\n>\n> my goal is to use R to write functions for and automate a series of\n> analyses i would like to do on a large data set.  The calculations are\n> not very difficult in themselves, however they will be very time\n> consuming (Plus I think R will be extremely useful and this is another\n> excuse to learn how to program).\n>\n> I have a vector of 20 values\n>\n> x <- c(20,18, 45, 16, 47, 47, 15, 26, 14,14,12,16,35,27,18,94,16,26,\n> 26,30)\n>\n> 1.\n> I  want to select random pairs from this data set but do it without\n> replacement exhaustively\n>\n> I know i can select random pairs without replacement using\n>\n> sample(N,n,replace=F)\n> However i am wondering if there is any way to get 10 random pairs from\n> this data set without repeating any of the data points\n> that is to say if i got a (20, 94) for one pair, i would like to get 9\n> other pairs from the data without again getting 20 or 94?\n>   \n\n\nx <- c(20,18, 45, 16, 47, 47, 15, 26, 14,14,12,16,35,27,18,94,16,26,\n26,30)\n\nmatrix(sample(x), ncol=2)\n\n\n> 2.\n> The second thing i would like to do is be able to select all possible\n> pairs of numbers and calculate each pairs variance.  I think i will\n> need a for loop here but I am unsure of how to do the programing.  I\n> am reading two books on S and s-plus now and hope they are some help.\n> I thought i would also post on this list and get some expert advice\n> for the more experienced R users\n>   \n\n## All possible pairs\nuu <- expand.grid(x,x)\n\n## the variance on two values? are you sure?\n## technically:\napply(uu, 1, var) \n\n\nHTH\n\nCl?ment\n\n> Thank-you very much\n>\n> Stephen Cole\n> Marine Ecology Lab\n> Saint Francis Xavier University\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n>   \n\n\n-- \nCl?ment CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_snippet": "Stephen Cole wrote:\n> Not sure if i should really post this here, but i am an ecology\n> student and my project is certainly ecological so........\n>\n> my goal is to use R to write functions for and aut",
+      "thread_id": "thread-0e642e37ebed",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-33425e7ced93",
+      "message_id": "<48ECA31B.7010301@gmail.com>",
+      "from_name": "Frank Berninger",
+      "from_email_hash": "caa9745dbb4ac30b74acb3084042f0726d8d14d1b1067172f69be4a388606fc4",
+      "date": "2008-10-08T08:10:03-04:00",
+      "subject": "[R-sig-eco] reshape (was clustering large data)",
+      "subject_clean": "reshape (was clustering large data)",
+      "in_reply_to": "<mailman.1.1223460002.27398.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1223460002.27398.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "Also in my computer reshape did not work for large datasets. I conturned\nthe problem by writing my own program making using loops. This takes a\nfew hours for a non-expert like me (my code is slow and not portable but\nit works ....).  Another possibility  that came to my mind would be to\nrun the data transformation for example in SAS and reexport the data to\nR. I think that the R data transformation procedures (like reshape) are\nnot the most efficient ones.\n\nFrank\n\n\nr-sig-ecology-request at r-project.org wrote:\n> Send R-sig-ecology mailing list submissions to\n> \tr-sig-ecology at r-project.org\n>\n> To subscribe or unsubscribe via the World Wide Web, visit\n> \thttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> or, via email, send a message with subject or body 'help' to\n> \tr-sig-ecology-request at r-project.org\n>\n> You can reach the person managing the list at\n> \tr-sig-ecology-owner at r-project.org\n>\n> When replying, please edit your Subject line so it is more specific\n> than \"Re: Contents of R-sig-ecology digest...\"\n>\n>\n> Today's Topics:\n>\n>    1. Clustering large data (ONKELINX, Thierry)\n>    2. Re: Clustering large data (tyler)\n>    3. Re: Clustering large data (Peter Solymos)\n>    4. Re: Clustering large data (Farrar.David at epamail.epa.gov)\n>    5. Re: Clustering large data (Christian A. Parker)\n>    6. Re: Clustering large data (Farrar.David at epamail.epa.gov)\n>    7. Re: Clustering large data (Brian Campbell)\n>    8. Re: Clustering large data (Christian A. Parker)\n>    9. Mortality anslisis (Marcelo Luiz de Laia)\n>\n>\n> ----------------------------------------------------------------------\n>\n> Message: 1\n> Date: Tue, 7 Oct 2008 12:12:28 +0200\n> From: \"ONKELINX, Thierry\" <Thierry.ONKELINX at inbo.be>\n> Subject: [R-sig-eco] Clustering large data\n> To: <r-sig-ecology at r-project.org>\n> Message-ID:\n> \t<2E9C414912813E4EB981326983E0A10405903F59 at inboexch.inbo.be>\n> Content-Type: text/plain;\tcharset=\"us-ascii\"\n>\n> Dear all,\n>\n> We have a problem with a large dataset that we want to cluster. The\n> dataset is in a long format: 1154024 rows with presence data. Each row\n> has the name of the species and the location. We have 1381 species and\n> 6354 locations.\n> The main problem is that we need the data in wide format (one row for\n> each location, one column for each species) for the clustering\n> algorithms. But the 6354 x 1381 dataframe is too big to fit into the\n> memory. At least when we use cast from the reshape package to convert\n> the dataframe from a long to a wide format.\n>\n> Are there any clustering tools available that can work with the data in\n> a long format or with sparse matrices (only 13% of the matrix is\n> non-zero)? If the work with sparse matrices: how to convert our dataset\n> to a sparse matrix? Other suggestions are welcome.\n>\n> We are working with R 2.7.2 on WinXP with 2 GB RAM. --max-mem-size is\n> set to 2047M.\n>\n> Thanks,\n>\n> Thierry\n>\n>\n> ------------------------------------------------------------------------\n> ----\n> ir. Thierry Onkelinx\n> Instituut voor natuur- en bosonderzoek / Research Institute for Nature\n> and Forest\n> Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n> methodology and quality assurance\n> Gaverstraat 4\n> 9500 Geraardsbergen\n> Belgium \n> tel. + 32 54/436 185\n> Thierry.Onkelinx at inbo.be \n> www.inbo.be \n>\n> To call in the statistician after the experiment is done may be no more\n> than asking him to perform a post-mortem examination: he may be able to\n> say what the experiment died of.\n> ~ Sir Ronald Aylmer Fisher\n>\n> The plural of anecdote is not data.\n> ~ Roger Brinner\n>\n> The combination of some data and an aching desire for an answer does not\n> ensure that a reasonable answer can be extracted from a given body of\n> data.\n> ~ John Tukey\n>\n> Dit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer \n> en binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\n> door een geldig ondertekend document. The views expressed in  this message \n> and any annex are purely those of the writer and may not be regarded as stating \n> an official position of INBO, as long as the message is not confirmed by a duly \n> signed document.\n>\n>\n>\n> ------------------------------\n>\n> Message: 2\n> Date: Tue, 07 Oct 2008 09:35:39 -0300\n> From: tyler <tyler.smith at mail.mcgill.ca>\n> Subject: Re: [R-sig-eco] Clustering large data\n> To: r-sig-ecology at r-project.org\n> Message-ID: <87zllg7fc4.fsf at blackbart.sedgenet>\n> Content-Type: text/plain; charset=us-ascii\n>\n> \"ONKELINX, Thierry\" <Thierry.ONKELINX at inbo.be>\n> writes:\n>\n>   \n>> Dear all,\n>>\n>> We have a problem with a large dataset that we want to cluster. The\n>> dataset is in a long format: 1154024 rows with presence data. Each row\n>> has the name of the species and the location. We have 1381 species and\n>> 6354 locations.\n>> The main problem is that we need the data in wide format (one row for\n>> each location, one column for each species) for the clustering\n>> algorithms. But the 6354 x 1381 dataframe is too big to fit into the\n>> memory. At least when we use cast from the reshape package to convert\n>> the dataframe from a long to a wide format.\n>>\n>> Are there any clustering tools available that can work with the data in\n>> a long format or with sparse matrices (only 13% of the matrix is\n>> non-zero)? If the work with sparse matrices: how to convert our dataset\n>> to a sparse matrix? Other suggestions are welcome.\n>>\n>>     \n>\n> 6354 x 1381 should be well within your memory limit, so I assume it's\n> the intermediate steps that are fouling you up. Maybe you can do it in\n> pieces: \n>\n> 1. subset the original two-column matrix to include only the first 100 sites\n> 2. convert this subset to wide form\n> 3. repeat 63 times for different subsets\n> 4. rbind the resulting matrices\n>\n> Good luck,\n>\n> Tyler\n>\n>",
+      "body_snippet": "Also in my computer reshape did not work for large datasets. I conturned\nthe problem by writing my own program making using loops. This takes a\nfew hours for a non-expert like me (my code is slow and ",
+      "thread_id": "thread-33425e7ced93",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-79dbf06fa43a",
+      "message_id": "<!&!AAAAAAAAAAAYAAAAAAAAACuslGUtWCVEuZTXTZ1MvujCgAAAEAAAAM0sPkU3T49PjJsRIHv6OPwBAAAAAA==@telus.net>",
+      "from_name": "Darin Brooks",
+      "from_email_hash": "45a388857b03811cc9861a3eb187802c18ba88975991f028e0b5a70b13c82611",
+      "date": "2008-10-08T08:07:21-06:00",
+      "subject": "[R-sig-eco] Ecology and Stats",
+      "subject_clean": "Ecology and Stats",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081008/3d33b975/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081008/3d33b975/attachment.pl>",
+      "thread_id": "thread-79dbf06fa43a",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-23b40d63cac0",
+      "message_id": "<c502a9e10810080714v5a432d2brdaf4457c81d0e7e2@mail.gmail.com>",
+      "from_name": "stephen sefick",
+      "from_email_hash": "3749535363b9d644aa3f61b8bf07926d79589e6ccf7dd0b75c56781ee6a32e82",
+      "date": "2008-10-08T10:14:33-04:00",
+      "subject": "[R-sig-eco] Ecology and Stats",
+      "subject_clean": "Ecology and Stats",
+      "in_reply_to": "<!&!AAAAAAAAAAAYAAAAAAAAACuslGUtWCVEuZTXTZ1MvujCgAAAEAAAAM0sPkU3T49PjJsRIHv6OPwBAAAAAA==@telus.net>",
+      "references": [
+        "<!&!AAAAAAAAAAAYAAAAAAAAACuslGUtWCVEuZTXTZ1MvujCgAAAEAAAAM0sPkU3T49PjJsRIHv6OPwBAAAAAA==@telus.net>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081008/3b359ee3/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081008/3b359ee3/attachment.pl>",
+      "thread_id": "thread-79dbf06fa43a",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-9e3cdd1cf352",
+      "message_id": "<efb536d50810080727l6433c3c5ld344f35b949c360@mail.gmail.com>",
+      "from_name": "Sarah Goslee",
+      "from_email_hash": "273eb6baae4ac25f2de5845f3f62dce55d161cfc7cf04eb5f3cc6d94b3d4aa24",
+      "date": "2008-10-08T10:27:53-04:00",
+      "subject": "[R-sig-eco] Ecology and Stats",
+      "subject_clean": "Ecology and Stats",
+      "in_reply_to": "<!&!AAAAAAAAAAAYAAAAAAAAACuslGUtWCVEuZTXTZ1MvujCgAAAEAAAAM0sPkU3T49PjJsRIHv6OPwBAAAAAA==@telus.net>",
+      "references": [
+        "<!&!AAAAAAAAAAAYAAAAAAAAACuslGUtWCVEuZTXTZ1MvujCgAAAEAAAAM0sPkU3T49PjJsRIHv6OPwBAAAAAA==@telus.net>"
+      ],
+      "body_plain": "We don't currently have a policy on cross-posting, and hopefully won't\nneed to develop a formal one. In general, cross-posting is gently\ndiscouraged, especially simultaneous cross-posting, or near-simultaneous.\n\nA very large proportion of the active participants in r-sig-ecology are also on\nR-help. I would suggest that ecology-specific questions be posted here, and\ngeneral questions be posted there. People on these lists contribute a lot\nof volunteer expertise to providing good answers, and it's a waste of their\ntime to cross-post something.\n\nSarah Goslee, co-moderator\n\nOn Wed, Oct 8, 2008 at 10:07 AM, Darin Brooks <kfmgis at telus.net> wrote:\n> Quick question:\n>\n> Is it considered bad manners to post a question on the r-help forum and then\n> re-post the same question on the r-sig-ecology forum?  Are they considered\n> the \"same\" by R advise givers?  Double posting is discouraged in most user\n> forums.  Do users typically subscribe to both (or more than one) of the R\n> forums?\n>\n\n\n-- \nSarah Goslee\nhttp://www.functionaldiversity.org",
+      "body_snippet": "We don't currently have a policy on cross-posting, and hopefully won't\nneed to develop a formal one. In general, cross-posting is gently\ndiscouraged, especially simultaneous cross-posting, or near-sim",
+      "thread_id": "thread-79dbf06fa43a",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-1e9eaa2138c2",
+      "message_id": "<002601c92a03$5a74ead0$0f5ec070$@toure@ier.ml>",
+      "from_name": "Lassana TOURE",
+      "from_email_hash": "1680cd3412eb28944e235a75476878705471aa870188025284ad2537852596b8",
+      "date": "2008-10-09T11:37:02Z",
+      "subject": "[R-sig-eco] plotting Ripley fonctions",
+      "subject_clean": "plotting Ripley fonctions",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/7e756257/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/7e756257/attachment.pl>",
+      "thread_id": "thread-1e9eaa2138c2",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-96cbad1991c3",
+      "message_id": "<002b01c92a03$783d94e0$68b8bea0$@toure@ier.ml>",
+      "from_name": "Lassana TOURE",
+      "from_email_hash": "1680cd3412eb28944e235a75476878705471aa870188025284ad2537852596b8",
+      "date": "2008-10-09T11:37:53Z",
+      "subject": "[R-sig-eco] R-sig-ecology mailing list submission",
+      "subject_clean": "R-sig-ecology mailing list submission",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/8a2f41ae/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/8a2f41ae/attachment.pl>",
+      "thread_id": "thread-96cbad1991c3",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-73190108314e",
+      "message_id": "<30c7555b0810090559v1d218f13jd01b144dad1338c8@mail.gmail.com>",
+      "from_name": "Miltinho Astronauta",
+      "from_email_hash": "9a2bbbbbfca210aafd71b477c211db6b55065c4c26a9034ea69d5bf7da615063",
+      "date": "2008-10-09T10:59:39-02:00",
+      "subject": "[R-sig-eco] plotting Ripley fonctions",
+      "subject_clean": "plotting Ripley fonctions",
+      "in_reply_to": "<-8922774356940393242@unknownmsgid>",
+      "references": [
+        "<-8922774356940393242@unknownmsgid>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/4389495c/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/4389495c/attachment.pl>",
+      "thread_id": "thread-73190108314e",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-d2ccb68d58cf",
+      "message_id": "<350406240.50671223585220842.JavaMail.osg@osgjas03.cns.ufl.edu>",
+      "from_name": "Dulce M. Bustamante",
+      "from_email_hash": "bff6f8faef6d1ca0cd0ec0c2181f8e2236a26a97370e5c34e4a5c77728cf2dcf",
+      "date": "2008-10-09T16:47:00-04:00",
+      "subject": "[R-sig-eco] Improving efficiency in a simulation model",
+      "subject_clean": "Improving efficiency in a simulation model",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello,\n\nI am pursuing the development of an individual-based model in R \nbut there is a series of technical issues for which I don't know \nwhere to find information.\n\nI have written R functions before for simple simulations, but this \nmodel will have more complexities and each individual will need to \nbe evaluated in many aspects at each time step.  My major concern \nis that I don't know how to make my program more efficient in \nterms of using computer memory and computation time.\n\nWhat is the maximum matrix size that R could handle?\n\nI have read that R could interact with C and that that can be an \n\"extremely effective mode for numerical computation\" (Bates and \nDebRoy, DSC 2003 Working Papers).  I have looked for papers on HOW \nTO make R and C interact but I can not find many references and \nwould appreciate suggestions.\n\nWould my model benefit from using object oriented programming in \nterms of making the procedures go faster in terms of updating \nmatrices after time steps?\n\nThank you for your time.\n\nDulce M. Bustamante\nPh.D. Candidate\nFlorida Medical Entomology Laboratory\nUniversity of Florida\n200 9th Street SE\nVero Beach, FL 32962",
+      "body_snippet": "Hello,\n\nI am pursuing the development of an individual-based model in R \nbut there is a series of technical issues for which I don't know \nwhere to find information.\n\nI have written R functions before",
+      "thread_id": "thread-d2ccb68d58cf",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-3c20374323bc",
+      "message_id": "<79a13c220810091353l4af1b34dxd0a13efd93ea89fb@mail.gmail.com>",
+      "from_name": "Tim Sippel",
+      "from_email_hash": "f2715767cff350849f0ce9189201d10df5387a9d2dcbd26d12cd84b4ed200d1e",
+      "date": "2008-10-10T09:53:28+13:00",
+      "subject": "[R-sig-eco] simm.levy in adehabitat",
+      "subject_clean": "simm.levy in adehabitat",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081010/53e50612/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081010/53e50612/attachment.pl>",
+      "thread_id": "thread-3c20374323bc",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-b5a3910de7dc",
+      "message_id": "<OFA4656CBC.7DDDE84F-ON852574DD.0073006C-852574DD.00737D45@epamail.epa.gov>",
+      "from_name": "Farrar.David at epamail.epa.gov",
+      "from_email_hash": "33e790d2f4526322ffd54c301e90184003a3ad34193267e52074c251c8977433",
+      "date": "2008-10-09T17:01:27-04:00",
+      "subject": "[R-sig-eco] Improving efficiency in a simulation model",
+      "subject_clean": "Improving efficiency in a simulation model",
+      "in_reply_to": "<350406240.50671223585220842.JavaMail.osg@osgjas03.cns.ufl.edu>",
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/b6e18f66/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/b6e18f66/attachment.pl>",
+      "thread_id": "thread-d2ccb68d58cf",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-c7c7c4594169",
+      "message_id": "<87od1t6xc9.fsf@blackbart.sedgenet>",
+      "from_name": "tyler",
+      "from_email_hash": "5175000895736522a94b46846e1b695cdc12921b61083ab626f75efaaf595f24",
+      "date": "2008-10-09T22:41:10-03:00",
+      "subject": "[R-sig-eco] Improving efficiency in a simulation model",
+      "subject_clean": "Improving efficiency in a simulation model",
+      "in_reply_to": null,
+      "references": [
+        "<350406240.50671223585220842.JavaMail.osg@osgjas03.cns.ufl.edu>"
+      ],
+      "body_plain": "\"Dulce M. Bustamante\" <dbusta1 at ufl.edu> writes:\n\n> I have written R functions before for simple simulations, but this\n> model will have more complexities and each individual will need to be\n> evaluated in many aspects at each time step. My major concern is that\n> I don't know how to make my program more efficient in terms of using\n> computer memory and computation time.\n\ngc() will give you a snapshot of the current memory use of R. Rprof and\nrelated functions in the proftools library provide ways to identify\nthe parts of your simulation that are particularly time-consuming. These\nare the bits you may want to convert to C. The help files for these\nfunctions has pointers to other useful tools. Also, see the 'Writing R\nExtensions manual'.\n\n> I have read that R could interact with C and that that can be an\n> \"extremely effective mode for numerical computation\" (Bates and\n> DebRoy, DSC 2003 Working Papers). I have looked for papers on HOW TO\n> make R and C interact but I can not find many references and would\n> appreciate suggestions.\n\nThe 'Writing R Extensions' manual that comes with the standard\ndistribution includes lots of info on passing data back and forth\nbetween R and C. C code runs a lot faster than R, especially when you've\ngot a lot of loops. On the other hand, converting R loops to R\nvector/matrix operations can make a big difference too. \n\n>\n> Would my model benefit from using object oriented programming in terms\n> of making the procedures go faster in terms of updating matrices after\n> time steps?\n\nI don't know if OO will make your programs run any faster, but it may make\nthem easier to understand and maintain.\n\nCheers,\n\nTyler\n\n--",
+      "body_snippet": "\"Dulce M. Bustamante\" <dbusta1 at ufl.edu> writes:\n\n> I have written R functions before for simple simulations, but this\n> model will have more complexities and each individual will need to be\n> evalu",
+      "thread_id": "thread-d2ccb68d58cf",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-6ae17803aba4",
+      "message_id": "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+      "from_name": "ONKELINX, Thierry",
+      "from_email_hash": "c1cd3b6aa1e1e5864422a45708c7cf78ba94a2d34ddbc8add17227ed5b0432d5",
+      "date": "2008-10-10T09:44:20+02:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>"
+      ],
+      "body_plain": "Dear all,\n\nThanks for your responses. The biggest problem seems to be cast() for\nthe reshape package which could not handle the dataset. Peter's solution\nusing the mefa package worked fine. I found an other solution: table()\nwhich works fine to crosstabulate presence-only data.\n\nAfter crosstabulation I tried a few clusering methods. Agnes(), diana()\nand hclust() gave a solution. Daisy() gave an out-of-memory error.\n\nA follow-up question: I'm looking at the group membership with cutree().\nIt gives me something like:\n\n> unique(cutree(test, k = 2:8))\n     2 3 4 5 6 7 8\n[1,] 1 1 1 1 1 1 1\n[2,] 1 1 1 2 2 2 2\n[3,] 1 1 2 3 3 3 3\n[4,] 1 1 2 3 3 3 8\n[5,] 1 1 2 3 3 4 4\n[6,] 2 2 3 4 4 5 5\n[7,] 2 2 3 4 5 6 6\n[8,] 2 3 4 5 6 7 7\n\nBut I'm looking for a binary or dendrogram like coding of the group\nmembership. That would be more convenient for mapping the group\nmembership.\n\n[1,] 111\n[2,] 110\n[3,] 1011\n[4,] 1010\n[5,] 100\n[6,] 011\n[7,] 010\n[8,] 00\n\nAny suggestions on that?\n\nThierry\n\n------------------------------------------------------------------------\n----\nir. Thierry Onkelinx\nInstituut voor natuur- en bosonderzoek / Research Institute for Nature\nand Forest\nCel biometrie, methodologie en kwaliteitszorg / Section biometrics,\nmethodology and quality assurance\nGaverstraat 4\n9500 Geraardsbergen\nBelgium \ntel. + 32 54/436 185\nThierry.Onkelinx at inbo.be \nwww.inbo.be \n\nTo call in the statistician after the experiment is done may be no more\nthan asking him to perform a post-mortem examination: he may be able to\nsay what the experiment died of.\n~ Sir Ronald Aylmer Fisher\n\nThe plural of anecdote is not data.\n~ Roger Brinner\n\nThe combination of some data and an aching desire for an answer does not\nensure that a reasonable answer can be extracted from a given body of\ndata.\n~ John Tukey\n\n-----Oorspronkelijk bericht-----\nVan: r-sig-ecology-bounces at r-project.org\n[mailto:r-sig-ecology-bounces at r-project.org] Namens Peter Solymos\nVerzonden: dinsdag 7 oktober 2008 15:51\nAan: r-sig-ecology at r-project.org\nOnderwerp: Re: [R-sig-eco] Clustering large data\n\nDear Thierry,\n\nthe 'mefa' package should do this, and I am also interested in the\ntesting of the package for such a large number of species. I have used\nit before with 75K records, but only with ~160 species and 1052 sites.\nSo please let me know if it worked!\n\nYou can do the clustering like this (SAMPLES and SPECIES are the two\ncolumn in the long format, have to be the same length):\n\nx <- mefa(stcs(data.frame(SAMPLES,SPECIES)))\ncl <- hclust(dist(x$xtab))\n\nHope this works,\n\nPeter\n\nPeter Solymos, PhD\nDepartment of Mathematical and Statistical Sciences\nUniversity of Alberta\nEdmonton, Alberta, T6G 2G1\nCANADA\n\n\n\nOn Tue, Oct 7, 2008 at 4:12 AM, ONKELINX, Thierry\n<Thierry.ONKELINX at inbo.be> wrote:\n> Dear all,\n>\n> We have a problem with a large dataset that we want to cluster. The\n> dataset is in a long format: 1154024 rows with presence data. Each row\n> has the name of the species and the location. We have 1381 species and\n> 6354 locations.\n> The main problem is that we need the data in wide format (one row for\n> each location, one column for each species) for the clustering\n> algorithms. But the 6354 x 1381 dataframe is too big to fit into the\n> memory. At least when we use cast from the reshape package to convert\n> the dataframe from a long to a wide format.\n>\n> Are there any clustering tools available that can work with the data\nin\n> a long format or with sparse matrices (only 13% of the matrix is\n> non-zero)? If the work with sparse matrices: how to convert our\ndataset\n> to a sparse matrix? Other suggestions are welcome.\n>\n> We are working with R 2.7.2 on WinXP with 2 GB RAM. --max-mem-size is\n> set to 2047M.\n>\n> Thanks,\n>\n> Thierry\n>\n>\n>\n------------------------------------------------------------------------\n> ----\n> ir. Thierry Onkelinx\n> Instituut voor natuur- en bosonderzoek / Research Institute for Nature\n> and Forest\n> Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n> methodology and quality assurance\n> Gaverstraat 4\n> 9500 Geraardsbergen\n> Belgium\n> tel. + 32 54/436 185\n> Thierry.Onkelinx at inbo.be\n> www.inbo.be\n>\n> To call in the statistician after the experiment is done may be no\nmore\n> than asking him to perform a post-mortem examination: he may be able\nto\n> say what the experiment died of.\n> ~ Sir Ronald Aylmer Fisher\n>\n> The plural of anecdote is not data.\n> ~ Roger Brinner\n>\n> The combination of some data and an aching desire for an answer does\nnot\n> ensure that a reasonable answer can be extracted from a given body of\n> data.\n> ~ John Tukey\n>\n> Dit bericht en eventuele bijlagen geven enkel de visie van de\nschrijver weer\n> en binden het INBO onder geen enkel beding, zolang dit bericht niet\nbevestigd is\n> door een geldig ondertekend document. The views expressed in  this\nmessage\n> and any annex are purely those of the writer and may not be regarded\nas stating\n> an official position of INBO, as long as the message is not confirmed\nby a duly\n> signed document.\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\nDit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer \nen binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\ndoor een geldig ondertekend document. The views expressed in  this message \nand any annex are purely those of the writer and may not be regarded as stating \nan official position of INBO, as long as the message is not confirmed by a duly \nsigned document.",
+      "body_snippet": "Dear all,\n\nThanks for your responses. The biggest problem seems to be cast() for\nthe reshape package which could not handle the dataset. Peter's solution\nusing the mefa package worked fine. I found an",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-40d562b20531",
+      "message_id": "<48EF0C7D.4080206@oncfs.gouv.fr>",
+      "from_name": "Clément Calenge",
+      "from_email_hash": "599c7bb21e58eb2d87faf33dae39c73009649e589b73716148359a67c1e08666",
+      "date": "2008-10-10T10:04:13+02:00",
+      "subject": "[R-sig-eco] simm.levy in adehabitat",
+      "subject_clean": "simm.levy in adehabitat",
+      "in_reply_to": "<79a13c220810091353l4af1b34dxd0a13efd93ea89fb@mail.gmail.com>",
+      "references": [
+        "<79a13c220810091353l4af1b34dxd0a13efd93ea89fb@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Tim,\n\n\nTim Sippel wrote:\n> Hi again-\n> Clement, thanks very much for your response to my question a few days ago\n> and revised code for the simm.levy function.  Ultimately what I am aiming to\n> do is partition animal trajectories into distinct behavioural segments using\n> the functions modpartltraj, bestpartmod and partmod.ltraj.  In the function\n> mopartltraj one is required to define a reference model of animal movement\n> (argument called 'limod') to compare to a real trajectory (arguement 'tr').\n> The example 'limod' given with the functions assumes a fairly simplistic\n> normal distribution with different means for different behaviours.  However,\n> could the 'limod' argument be from a simulation of a movement process such\n> as a levy walk (simm.levy) or multi-variate Ornstein-Uhlenbeck Process\n> (simm.mou)?  \n>   \n\nUntil now, we mainly used this function to partition a trajectory into \nsegments based on the (disputable) hypothesis that the step length is \ndrawn from a normal distribution. We chose to model the step length as a \nnormal distribution because this is a common choice for the step length \ndistribution in animal movement analysis (but see Morales et al. 2004, \nEcology, 85, 2436-2445, for arguments against this choice). This \napproach gave us interesting results: for example, on the help page of \nthe function modpartltraj, we partition the trajectory of a porpoise, \nand this partitioning shows that this trajectory, that I would have \npartitioned visually into 3 segments (\"patchy\" moves, then more \"linear\" \nmoves, then again \"patchy moves\"), is more likely built by 4 segments \n(\"patchy\" moves, then more \"linear and slow\" moves, then \"linear and \nfast\" moves and finally again \"patchy\" moves). This approach helps to \nsee patterns in the data...\n\nActually, we did not try any other model (as noted on the help page, the \nmethod is still under research), but theoretically, the method can be \nused with other models, provided that each chosen model enable you to \nestimate a probability (density) for each step of the actual trajectory. \nActually, the argument 'limod' should be a list of functions, each \nfunction giving the probability density of a step with given parameters \n(length, orientation, etc.) under a given model (see the help page of \nmodpartltraj).\n\nSo it is theoretically possible (though untested) to pass to the \nargument 'limod' a list of functions giving the probability density of a \ngiven step according to the MOU or the Levy walk with specified \nparameters (these functions implementing the formulae found in the \nliterature on these movements models). But these functions are not yet \navailable in adehabitat and the user has to program them... \nAlternatively, these functions may theoretically rely on simulations to \ncompute these probabilities (using some kind of kernel smoothing to \nestimate the probability density of the steps from the simulations of a \ngiven model, or something similar)... but IMHO this approach would first \nrequire to be carefully tested...\nHope this helps\nCheers,\n\n\nCl?ment.\n\n-- \nCl?ment CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_snippet": "Hi Tim,\n\n\nTim Sippel wrote:\n> Hi again-\n> Clement, thanks very much for your response to my question a few days ago\n> and revised code for the simm.levy function.  Ultimately what I am aiming to\n> do ",
+      "thread_id": "thread-3c20374323bc",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-713349dac377",
+      "message_id": "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+      "from_name": "hadley wickham",
+      "from_email_hash": "78ed178a2a834406115d2917490a5d6eb6217493116357bc9bb8ae3e96968152",
+      "date": "2008-10-10T07:40:21-05:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>"
+      ],
+      "body_plain": "> Thanks for your responses. The biggest problem seems to be cast() for\n> the reshape package which could not handle the dataset. Peter's solution\n> using the mefa package worked fine. I found an other solution: table()\n> which works fine to crosstabulate presence-only data.\n\nExactly what error did you get?  Or did it just take a very long time\nand then you gave up?  I have an experimental rewrite of the reshape\npackage that is more memory efficient and much faster (10 - 20x) -\nhowever, it's still some time from being ready for production use.\n\nHadley\n\n\n-- \nhttp://had.co.nz/",
+      "body_snippet": "> Thanks for your responses. The biggest problem seems to be cast() for\n> the reshape package which could not handle the dataset. Peter's solution\n> using the mefa package worked fine. I found an othe",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 2,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-1f047c00e52a",
+      "message_id": "<2E9C414912813E4EB981326983E0A10405993879@inboexch.inbo.be>",
+      "from_name": "ONKELINX, Thierry",
+      "from_email_hash": "c1cd3b6aa1e1e5864422a45708c7cf78ba94a2d34ddbc8add17227ed5b0432d5",
+      "date": "2008-10-10T16:12:20+02:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Hadley,\n\nR ran out of memory. I got the \"can't allocate vector of xxx mb\" type of\nerror.\n\nI did something like this.\n\nDataset #reading a two column (species, location) dataframe from a\ndatabase. 1154024 rows, 1381 species and 6354 locations.\nDataset$value <- 1\nlibrary(reshape)\ncast(data = Dataset, formula = species ~ location) #this gave the error\n\nThierry\n\n------------------------------------------------------------------------\n----\nir. Thierry Onkelinx\nInstituut voor natuur- en bosonderzoek / Research Institute for Nature\nand Forest\nCel biometrie, methodologie en kwaliteitszorg / Section biometrics,\nmethodology and quality assurance\nGaverstraat 4\n9500 Geraardsbergen\nBelgium \ntel. + 32 54/436 185\nThierry.Onkelinx at inbo.be \nwww.inbo.be \n\nTo call in the statistician after the experiment is done may be no more\nthan asking him to perform a post-mortem examination: he may be able to\nsay what the experiment died of.\n~ Sir Ronald Aylmer Fisher\n\nThe plural of anecdote is not data.\n~ Roger Brinner\n\nThe combination of some data and an aching desire for an answer does not\nensure that a reasonable answer can be extracted from a given body of\ndata.\n~ John Tukey\n\n-----Oorspronkelijk bericht-----\nVan: hadley wickham [mailto:h.wickham at gmail.com] \nVerzonden: vrijdag 10 oktober 2008 14:40\nAan: ONKELINX, Thierry\nCC: Peter Solymos; r-sig-ecology at r-project.org\nOnderwerp: Re: [R-sig-eco] Clustering large data\n\n> Thanks for your responses. The biggest problem seems to be cast() for\n> the reshape package which could not handle the dataset. Peter's\nsolution\n> using the mefa package worked fine. I found an other solution: table()\n> which works fine to crosstabulate presence-only data.\n\nExactly what error did you get?  Or did it just take a very long time\nand then you gave up?  I have an experimental rewrite of the reshape\npackage that is more memory efficient and much faster (10 - 20x) -\nhowever, it's still some time from being ready for production use.\n\nHadley\n\n\n-- \nhttp://had.co.nz/\n\nDit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer \nen binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\ndoor een geldig ondertekend document. The views expressed in  this message \nand any annex are purely those of the writer and may not be regarded as stating \nan official position of INBO, as long as the message is not confirmed by a duly \nsigned document.",
+      "body_snippet": "Hi Hadley,\n\nR ran out of memory. I got the \"can't allocate vector of xxx mb\" type of\nerror.\n\nI did something like this.\n\nDataset #reading a two column (species, location) dataframe from a\ndatabase. 11",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 3,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-98a06ca63d20",
+      "message_id": "<OFAC20ED6B.E8366677-ON852574DE.004EE2D0-852574DE.004EFD7F@epamail.epa.gov>",
+      "from_name": "Farrar.David at epamail.epa.gov",
+      "from_email_hash": "33e790d2f4526322ffd54c301e90184003a3ad34193267e52074c251c8977433",
+      "date": "2008-10-10T10:22:47-04:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<2E9C414912813E4EB981326983E0A10405993879@inboexch.inbo.be>",
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081010/4bb9924f/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081010/4bb9924f/attachment.pl>",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 4,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-64724bacef10",
+      "message_id": "<1693283546.80931223653599899.JavaMail.osg@osgjas01.cns.ufl.edu>",
+      "from_name": "Dulce M. Bustamante",
+      "from_email_hash": "bff6f8faef6d1ca0cd0ec0c2181f8e2236a26a97370e5c34e4a5c77728cf2dcf",
+      "date": "2008-10-10T11:46:39-04:00",
+      "subject": "[R-sig-eco] Thank you",
+      "subject_clean": "Thank you",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Thank you very much for the recommendations you provide.  They are \nall very helpful.\n\nRegards,\n\n\n--------\n\nDulce M. Bustamante\nPh.D. Candidate\nFlorida Medical Entomology Laboratory\nUniversity of Florida\n200 9th Street SE\nVero Beach, FL 32962",
+      "body_snippet": "Thank you very much for the recommendations you provide.  They are \nall very helpful.\n\nRegards,\n\n\n--------\n\nDulce M. Bustamante\nPh.D. Candidate\nFlorida Medical Entomology Laboratory\nUniversity of Flor",
+      "thread_id": "thread-64724bacef10",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-f6d2ca33080d",
+      "message_id": "<C460931B72944407BBC6F0D16AED9810@Johnstone>",
+      "from_name": "Jill Johnstone",
+      "from_email_hash": "46409a1cfa86e9bc9b3674cd37f2dbdcc02e106a4429947bf8c796aea1a8cbca",
+      "date": "2008-10-10T10:41:06-06:00",
+      "subject": "[R-sig-eco] help with categorical responses in boosted classification trees (gbm package)",
+      "subject_clean": "help with categorical responses in boosted classification trees (gbm package)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello,\n\nI am working on developing code for a boosted classification tree that\npredicts membership within 4 non-ordered classes, using the gbm or gbmplus\npackages in R. I've been successful (I think) in using this package\nsuccessfully for regression trees, where the response is numeric. However,\nI'm running into problems setting up a boosted tree for a categorical\nresponse that is not simply a 0,1 response. In my case, the response is a\nnon-ordered factor that represents different vegetation community types.\nThere are 4 factor levels and n=90 for the dataset.\n\nI think the problem may be that I am not specifying a proper error\ndistribution. GBM help specifies the following options for this: \n\n\"...\"gaussian\" (squared error), \"laplace\" (absolute loss), \"bernoulli\"\n(logistic regression for 0-1 outcomes), \"adaboost\" (the AdaBoost exponential\nloss for 0-1 outcomes), \"poisson\" (count outcomes), and \"coxph\" (censored\nobservations).\"\n\nI believe that the Gaussian error distribution is most appropriate for these\ndata, and this is what I've been using. Below is the code that I am running:\n\ntree1 <- gbm(veg ~ lat+elev+moist.class+BA.stnd+pre.decid,\n    data = natseed, n.tree=900, int=3, n.minobsinnode=5,     \n    distribution=\"gaussian\", shrinkage=0.003, \n    bag.fraction=0.5, cv.folds=5)\nall.summary(tree.1)\n\nAnd the error I am currently getting specifies a problem with the\ncross-validation, but I am not sure how to interpret this:\n\"Error in if (x[[1]]$type != \"cv\") stop(\"Not a CV tree !!\\n\") : argument is\nof length zero\"\n\nI'd really appreciate suggestions about where I might be going wrong, if\nanyone has any. I've been able to run this successfully as a regular\nclassification tree using the \"tree\" library, but had hoped to apply the\nboosting approach. I've been referring to two excellent ecological papers\nthat describe this technique, but neither deals with this type of\nclassification tree:\n1. De'ath, G. 2007. Boosted trees for ecological modeling and prediction.\nEcology 88: 243-251.\n2. Elith, J., Leathwick, J.R., and Hastie, T. 2008. A working guide to\nboosted regression trees. J. Animal Ecol. 77: 802-813.\n\nThanks in advance for any suggestions.\n\nJill Johnstone\nassistant professor\nDepartment of Biology\nUniversity of Saskatchewan\n112 Science Place\nSaskatoon SK S7N 5E2\nph:(306)966-4421  fax:966-4461\nwebsite: www.usask.ca/biology/johnstone/",
+      "body_snippet": "Hello,\n\nI am working on developing code for a boosted classification tree that\npredicts membership within 4 non-ordered classes, using the gbm or gbmplus\npackages in R. I've been successful (I think) ",
+      "thread_id": "thread-f6d2ca33080d",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-1c23fd535dc9",
+      "message_id": "<2ad0cc110810111040y35549ab6p31ce017c04324b77@mail.gmail.com>",
+      "from_name": "Kingsford Jones",
+      "from_email_hash": "00566f1d7d84b323f1ffaccaba7aaa796b9ed710ad0c0882edc77c334112ea47",
+      "date": "2008-10-11T11:40:30-06:00",
+      "subject": "[R-sig-eco] help with categorical responses in boosted classification trees (gbm package)",
+      "subject_clean": "help with categorical responses in boosted classification trees (gbm package)",
+      "in_reply_to": "<C460931B72944407BBC6F0D16AED9810@Johnstone>",
+      "references": [
+        "<C460931B72944407BBC6F0D16AED9810@Johnstone>"
+      ],
+      "body_plain": "On Fri, Oct 10, 2008 at 10:41 AM, Jill Johnstone\n<jill.johnstone at usask.ca> wrote:\n> Hello,\n>\n> I am working on developing code for a boosted classification tree that\n> predicts membership within 4 non-ordered classes, using the gbm or gbmplus\n> packages in R. I've been successful (I think) in using this package\n> successfully for regression trees, where the response is numeric. However,\n> I'm running into problems setting up a boosted tree for a categorical\n> response that is not simply a 0,1 response. In my case, the response is a\n> non-ordered factor that represents different vegetation community types.\n\nAre you sure that gbm is designed to handle multi-class responses\n(i.e. >2 levels)?\n\n> There are 4 factor levels and n=90 for the dataset.\n\n90 observations may well not provide enough information to predict\nfour response levels (depending on the strengths of the relationships,\nthe number of observed successes, etc.)\n\n>\n> I think the problem may be that I am not specifying a proper error\n> distribution. GBM help specifies the following options for this:\n>\n> \"...\"gaussian\" (squared error), \"laplace\" (absolute loss), \"bernoulli\"\n> (logistic regression for 0-1 outcomes), \"adaboost\" (the AdaBoost exponential\n> loss for 0-1 outcomes), \"poisson\" (count outcomes), and \"coxph\" (censored\n> observations).\"\n>\n> I believe that the Gaussian error distribution is most appropriate for these\n> data, and this is what I've been using. Below is the code that I am running:\n\n\nGiven the categorical response, squared error loss would not be a good\nchoice.  If gbm is designed to handle multi-category responses, the\n'bernoulli or 'adaboost' options are more appropriate.\n\n\n>\n> tree1 <- gbm(veg ~ lat+elev+moist.class+BA.stnd+pre.decid,\n>    data = natseed, n.tree=900, int=3, n.minobsinnode=5,\n>    distribution=\"gaussian\", shrinkage=0.003,\n>    bag.fraction=0.5, cv.folds=5)\n> all.summary(tree.1)\n>\n> And the error I am currently getting specifies a problem with the\n> cross-validation, but I am not sure how to interpret this:\n> \"Error in if (x[[1]]$type != \"cv\") stop(\"Not a CV tree !!\\n\") : argument is\n> of length zero\"\n>\n> I'd really appreciate suggestions about where I might be going wrong, if\n> anyone has any. I've been able to run this successfully as a regular\n> classification tree using the \"tree\" library, but had hoped to apply the\n> boosting approach. I've been referring to two excellent ecological papers\n> that describe this technique, but neither deals with this type of\n> classification tree:\n\nHave a look at the randomForest package.  Also the following Google\nsearch may help:\n\nboosting \"multi-class\" OR \"k-class\" OR multicategorical OR multinomial\n\nhth,\n\nKingsford Jones\n\n\n> 1. De'ath, G. 2007. Boosted trees for ecological modeling and prediction.\n> Ecology 88: 243-251.\n> 2. Elith, J., Leathwick, J.R., and Hastie, T. 2008. A working guide to\n> boosted regression trees. J. Animal Ecol. 77: 802-813.\n>\n> Thanks in advance for any suggestions.\n>\n> Jill Johnstone\n> assistant professor\n> Department of Biology\n> University of Saskatchewan\n> 112 Science Place\n> Saskatoon SK S7N 5E2\n> ph:(306)966-4421  fax:966-4461\n> website: www.usask.ca/biology/johnstone/\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>",
+      "body_snippet": "On Fri, Oct 10, 2008 at 10:41 AM, Jill Johnstone\n<jill.johnstone at usask.ca> wrote:\n> Hello,\n>\n> I am working on developing code for a boosted classification tree that\n> predicts membership within 4 ",
+      "thread_id": "thread-f6d2ca33080d",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-3463216f0f97",
+      "message_id": "<D7B94F0B40246740A3EFF9DBBD921B7B796BED@SAGE.forestry.oregonstate.edu>",
+      "from_name": "Satterthwaite, Paul",
+      "from_email_hash": "bf865a5d93df97dcff32ff0513ded09167dbbf37a2c082ba785b3d3a0fa67e5f",
+      "date": "2008-10-13T14:33:33-07:00",
+      "subject": "[R-sig-eco] model selection AIC",
+      "subject_clean": "model selection AIC",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081013/35662d31/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081013/35662d31/attachment.pl>",
+      "thread_id": "thread-3463216f0f97",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-4018faec0afa",
+      "message_id": "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>",
+      "from_name": "ONKELINX, Thierry",
+      "from_email_hash": "c1cd3b6aa1e1e5864422a45708c7cf78ba94a2d34ddbc8add17227ed5b0432d5",
+      "date": "2008-10-14T09:52:40+02:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Hadley,\n\nHere is a more elaborate report of what I did and what when wrong. The\nexample is not reproducible because the dataset is to large. A smaller\ndummy dataset is not an option as it works with smaller datasets. I'm\nwilling to run the code again with a development version of reshape.\n\nCheers,\n\nThierry\n\n\n> library(RODBC)\n> library(reshape)\nLoading required package: plyr\n> setwd(\"d:/wouter\")\n> Sys.info()\n                     sysname                      release \n                   \"Windows\"                         \"XP\" \n                     version                     nodename \n\"build 2600, Service Pack 2\"                 \"LHPA000838\" \n                     machine                        login \n                       \"x86\"           \"thierry_onkelinx\" \n                        user \n          \"thierry_onkelinx\" \n> sessionInfo()\nR version 2.7.2 (2008-08-25) \ni386-pc-mingw32 \n\nlocale:\nLC_COLLATE=Dutch_Belgium.1252;LC_CTYPE=Dutch_Belgium.1252;LC_MONETARY=Du\ntch_Belgium.1252;LC_NUMERIC=C;LC_TIME=Dutch_Belgium.1252\n\nattached base packages:\n[1] stats     graphics  grDevices datasets  tcltk     utils     methods\n\n[8] base     \n\nother attached packages:\n[1] reshape_0.8.1  plyr_0.1       RODBC_1.2-3    svSocket_0.9-5\nsvIO_0.9-5    \n[6] R2HTML_1.59    svMisc_0.9-5   svIDE_0.9-5   \n\nloaded via a namespace (and not attached):\n[1] tools_2.7.2\n> channel <- odbcConnectAccess(\"db1.mdb\")\n> km <- sqlQuery(channel = channel, query = \"SELECT KMhokcode AS\nLocation, TaxonFK AS Species FROM kmhok_periode2_selectie ORDER BY\nKMhokcode, TaxonFK\", as.is = TRUE)\n> odbcCloseAll()\n> km$value <- 1\n> dim(km)\n[1] 1157024       3\n> length(unique(km$Location))\n[1] 6354\n> length(unique(km$Species))\n[1] 1381\n> system.time(tmp <- cast(Location ~ Species, data = km[1:1000, ], fill\n= 0))\n   user  system elapsed \n   0.11    0.00    0.17 \n> system.time(tmp <- cast(Location ~ Species, data = km[1:10000, ], fill\n= 0))\n   user  system elapsed \n    1.7     0.0     1.7 \n> system.time(tmp <- cast(Location ~ Species, data = km[1:100000, ],\nfill = 0))\n   user  system elapsed \n  46.42    0.45   47.02 \n> system.time(tmp <- cast(Location ~ Species, data = km, fill = 0))\nError: cannot allocate vector of size 33.5 Mb\nTiming stopped at: 322.95 3.43 327.4 \n> system.time(tmp <- table(km$Location, km$Species))\n   user  system elapsed \n   1.10    0.00    1.11 \n \n\n\n------------------------------------------------------------------------\n----\nir. Thierry Onkelinx\nInstituut voor natuur- en bosonderzoek / Research Institute for Nature\nand Forest\nCel biometrie, methodologie en kwaliteitszorg / Section biometrics,\nmethodology and quality assurance\nGaverstraat 4\n9500 Geraardsbergen\nBelgium \ntel. + 32 54/436 185\nThierry.Onkelinx at inbo.be \nwww.inbo.be \n\nTo call in the statistician after the experiment is done may be no more\nthan asking him to perform a post-mortem examination: he may be able to\nsay what the experiment died of.\n~ Sir Ronald Aylmer Fisher\n\nThe plural of anecdote is not data.\n~ Roger Brinner\n\nThe combination of some data and an aching desire for an answer does not\nensure that a reasonable answer can be extracted from a given body of\ndata.\n~ John Tukey\n\n-----Oorspronkelijk bericht-----\nVan: r-sig-ecology-bounces at r-project.org\n[mailto:r-sig-ecology-bounces at r-project.org] Namens hadley wickham\nVerzonden: vrijdag 10 oktober 2008 14:40\nAan: ONKELINX, Thierry\nCC: r-sig-ecology at r-project.org\nOnderwerp: Re: [R-sig-eco] Clustering large data\n\n> Thanks for your responses. The biggest problem seems to be cast() for\n> the reshape package which could not handle the dataset. Peter's\nsolution\n> using the mefa package worked fine. I found an other solution: table()\n> which works fine to crosstabulate presence-only data.\n\nExactly what error did you get?  Or did it just take a very long time\nand then you gave up?  I have an experimental rewrite of the reshape\npackage that is more memory efficient and much faster (10 - 20x) -\nhowever, it's still some time from being ready for production use.\n\nHadley\n\n\n-- \nhttp://had.co.nz/\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\nDit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer \nen binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\ndoor een geldig ondertekend document. The views expressed in  this message \nand any annex are purely those of the writer and may not be regarded as stating \nan official position of INBO, as long as the message is not confirmed by a duly \nsigned document.",
+      "body_snippet": "Hi Hadley,\n\nHere is a more elaborate report of what I did and what when wrong. The\nexample is not reproducible because the dataset is to large. A smaller\ndummy dataset is not an option as it works wit",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 3,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-766ea25a2df3",
+      "message_id": "<200810141046.m9EAkNO5029369@hypatia.math.ethz.ch>",
+      "from_name": "Phil Novack-Gottshall",
+      "from_email_hash": "385941b68eb1e86ff8eaa59e3ca281ca30c1e5cc84e07afc79a158eed8c5abaa",
+      "date": "2008-10-14T06:46:11-04:00",
+      "subject": "[R-sig-eco] Interpreting large clusters",
+      "subject_clean": "Interpreting large clusters",
+      "in_reply_to": "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>"
+      ],
+      "body_plain": "Hi all,\n\nI have a related question concerning cluster analysis of large data \nsets.  In my case, the matrix is reasonably small for R to work with, \nbut I have so many species (~2000) that it is not possible to read \nlabels on the resulting dendrogram.  I imagine that using an \nordination is a preferable method in this case, but I was wondering \nwhether anyone had any recommendations for producing a very large, \nbut still readable dendrogram.  (I've tried increasing the window \nsize and shrinking cex.text, but this still isn't sufficient.)\n\nCheers,\nPhil\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n   Phil \nNovack-Gottshall                        pnovackg at westga.edu \n\n\n   Assistant Professor\n   Department of Geosciences\n   University of West Georgia\n   Carrollton, GA 30118-3100\n   Phone: 678-839-4061\n   Fax: 678-839-4071\n   http://www.westga.edu/~pnovackg\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+      "body_snippet": "Hi all,\n\nI have a related question concerning cluster analysis of large data \nsets.  In my case, the matrix is reasonably small for R to work with, \nbut I have so many species (~2000) that it is not p",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 4,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-d494c145111a",
+      "message_id": "<30c7555b0810140554r4a3a3a98n75dd503d684ac3ef@mail.gmail.com>",
+      "from_name": "Miltinho Astronauta",
+      "from_email_hash": "9a2bbbbbfca210aafd71b477c211db6b55065c4c26a9034ea69d5bf7da615063",
+      "date": "2008-10-14T10:54:30-02:00",
+      "subject": "[R-sig-eco] Interpreting large clusters",
+      "subject_clean": "Interpreting large clusters",
+      "in_reply_to": "<200810141046.m9EAkNO5029369@hypatia.math.ethz.ch>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>",
+        "<200810141046.m9EAkNO5029369@hypatia.math.ethz.ch>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081014/72958e29/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081014/72958e29/attachment.pl>",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 5,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-4a7b90107135",
+      "message_id": "<20081014082215.13212sps24tklow0@webmail.oregonstate.edu>",
+      "from_name": "Brian Knaus",
+      "from_email_hash": "6e2f21d608d9bb595641f687d4da761d3040f42b14e5430420744c0afa2f3e4c",
+      "date": "2008-10-14T08:22:15-07:00",
+      "subject": "[R-sig-eco] Interpreting large clusters",
+      "subject_clean": "Interpreting large clusters",
+      "in_reply_to": "<200810141046.m9EAkNO5029369@hypatia.math.ethz.ch>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>",
+        "<200810141046.m9EAkNO5029369@hypatia.math.ethz.ch>"
+      ],
+      "body_plain": "Hi Phil,\n\nI'd start by asking if you can categorize your species in some sort of  \nmeaningful manner.  If so you can color code the labels of your  \ndendrogram.  The package 'ape' includes 'tip.color=...' as a parameter  \nin plot.phylo().  Create a vector of colors or numbers and use that to  \nparameterize tip.color.\n\nIn regards to viewing the graphic I'd create a pdf.  This allows you  \nto parameterize the paper size with width=7 and height=7 (units are  \ninches).  You can parameterize this to height=14 or height=28 or other  \nlarge values.  This may be printed over several pages or you can just  \nscroll over it on your monitor.\n\nGood luck!\n\n-- \nBrian J. Knaus, Ph.D.\nDepartment of Botany and Plant Pathology\nOregon State University\n2082 Cordley Hall\nCorvallis, OR 97331-2902\nhttp://oregonstate.edu/~knausb\n\n\nQuoting Phil Novack-Gottshall <pnovackg at westga.edu>:\n\n> Hi all,\n>\n> I have a related question concerning cluster analysis of large data  \n> sets.  In my case, the matrix is reasonably small for R to work  \n> with, but I have so many species (~2000) that it is not possible to  \n> read labels on the resulting dendrogram.  I imagine that using an  \n> ordination is a preferable method in this case, but I was wondering  \n> whether anyone had any recommendations for producing a very large,  \n> but still readable dendrogram.  (I've tried increasing the window  \n> size and shrinking cex.text, but this still isn't sufficient.)\n>\n> Cheers,\n> Phil\n>\n>\n> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n>   Phil Novack-Gottshall                        pnovackg at westga.edu    \n> Assistant Professor\n>   Department of Geosciences\n>   University of West Georgia\n>   Carrollton, GA 30118-3100\n>   Phone: 678-839-4061\n>   Fax: 678-839-4071\n>   http://www.westga.edu/~pnovackg\n> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>",
+      "body_snippet": "Hi Phil,\n\nI'd start by asking if you can categorize your species in some sort of  \nmeaningful manner.  If so you can color code the labels of your  \ndendrogram.  The package 'ape' includes 'tip.color=",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 5,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-7e2234f231b6",
+      "message_id": "<1223999434584-1333126.post@n2.nabble.com>",
+      "from_name": "Dave Hewitt",
+      "from_email_hash": "85e6b1690e23351fce3fb7b5532ee4031231b90525eaf07091906551058d46ef",
+      "date": "2008-10-14T08:50:34-07:00",
+      "subject": "[R-sig-eco] model selection AIC",
+      "subject_clean": "model selection AIC",
+      "in_reply_to": "<D7B94F0B40246740A3EFF9DBBD921B7B796BED@SAGE.forestry.oregonstate.edu>",
+      "references": [
+        "<D7B94F0B40246740A3EFF9DBBD921B7B796BED@SAGE.forestry.oregonstate.edu>"
+      ],
+      "body_plain": "> I am a relatively new user of R, and I am trying to select a model via\n> all-subsets regression.\n> \n> I am curious about the 'leaps' and 'regsubsets' functions in the 'leaps'\n> package...\n> \n> Is there a way to use AIC as the 'method' in these functions, rather\n> than Cp, Rsquared, or adjusted Rsquared? \n> \n> I know you can run AIC on the models that leaps or regsubsets pick after\n> the fact, but can you actually make AIC the criterion? \n> \n\nHey Paul,\n\nI think the first step with this would be to read Chapter 5, section 5.3 in\nBurnham and Anderson (2002; Model Selection and Multimodel Inference).\n\nAlthough I hesitate to recommend it (because of what is in B&A Ch. 5), what\nyou seem to be looking for is the step() function in the base stats package.\n\n-- \nView this message in context: http://n2.nabble.com/model-selection-AIC-tp1330518p1333126.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "> I am a relatively new user of R, and I am trying to select a model via\n> all-subsets regression.\n> \n> I am curious about the 'leaps' and 'regsubsets' functions in the 'leaps'\n> package...\n> \n> Is th",
+      "thread_id": "thread-3463216f0f97",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-9e3a355a6394",
+      "message_id": "<2ad0cc110810140940p139cc015ica110b3bbb09ac27@mail.gmail.com>",
+      "from_name": "Kingsford Jones",
+      "from_email_hash": "00566f1d7d84b323f1ffaccaba7aaa796b9ed710ad0c0882edc77c334112ea47",
+      "date": "2008-10-14T10:40:24-06:00",
+      "subject": "[R-sig-eco] model selection AIC",
+      "subject_clean": "model selection AIC",
+      "in_reply_to": "<1223999434584-1333126.post@n2.nabble.com>",
+      "references": [
+        "<D7B94F0B40246740A3EFF9DBBD921B7B796BED@SAGE.forestry.oregonstate.edu>",
+        "<1223999434584-1333126.post@n2.nabble.com>"
+      ],
+      "body_plain": "Hi Paul,\n\nI don't know of a function that does all-subsets selection via AIC\n(step performs stepwise selection).  But if you're fitting linear\nmodels, selection via AIC and Cp will be similar, or the same (there\nis discussion of this in MASS -- I believe the two measures differ by\nan additive constant when sigma^2 is known).\n\nHowever, all-subsets regression suffers from the same problems that\nstepwise procedures do.  Frank Harrell's \"Regression Modeling\nStrategies\" discusses these problems at length (see the bottom of this\nemail for a list posted by Frank to sci.stat.consult in the mid-90's).\n His book also offers various solutions, and he provides the Design\nand Hmisc packages to implement his suggestions.\n\nAlso, although it's always preferrable to use subject area knowlege to\nselect models (and may be essential if your goal is interpretation\nrather than prediction), there are some relatively safe methods of\nautomating the process offered in the lars package (safe in terms of\nreducing the chance of overfitting).\n\nhth,\n\nKingsford Jones\n\n\n\nHere are some of the problems with stepwise variable selection.\n\n1. It yields R-squared values that are badly biased to be high.\n\n2. The F and chi-squared tests quoted next to each variable on the\nprintout do not have the claimed distribution.\n\n3. The method yields confidence intervals for effects and predicted\nvalues that are falsely narrow (See Altman and Anderson, 1989,\nStatistics in Medicine).\n\n4. It yields p-values that do not have the proper meaning, and the\nproper correction for them is a difficult problem.\n\n5. It gives biased regression coefficients that need shrinkage (the\ncoefficients for remaining variables are too large; see Tibshirani,\n1996).\n\n6. It has severe problems in the presence of collinearity.\n\n7. It is based on methods (e.g., F tests for nested models) that were\nintended to be used to test prespecified hypotheses.\n\n8. Increasing the sample size doesn't help very much (see Derksen and\nKeselman, 1992).\n\n9. It allows us to not think about the problem.\n\n10. It uses a lot of paper.\n\n\"All possible subsets\" regression solves none of these problems.\n\n\n\n\nOn Tue, Oct 14, 2008 at 9:50 AM, Dave Hewitt <dhewitt37 at gmail.com> wrote:\n>\n>\n>\n>> I am a relatively new user of R, and I am trying to select a model via\n>> all-subsets regression.\n>>\n>> I am curious about the 'leaps' and 'regsubsets' functions in the 'leaps'\n>> package...\n>>\n>> Is there a way to use AIC as the 'method' in these functions, rather\n>> than Cp, Rsquared, or adjusted Rsquared?\n>>\n>> I know you can run AIC on the models that leaps or regsubsets pick after\n>> the fact, but can you actually make AIC the criterion?\n>>\n>\n> Hey Paul,\n>\n> I think the first step with this would be to read Chapter 5, section 5.3 in\n> Burnham and Anderson (2002; Model Selection and Multimodel Inference).\n>\n> Although I hesitate to recommend it (because of what is in B&A Ch. 5), what\n> you seem to be looking for is the step() function in the base stats package.\n>\n> --\n> View this message in context: http://n2.nabble.com/model-selection-AIC-tp1330518p1333126.html\n> Sent from the r-sig-ecology mailing list archive at Nabble.com.\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>",
+      "body_snippet": "Hi Paul,\n\nI don't know of a function that does all-subsets selection via AIC\n(step performs stepwise selection).  But if you're fitting linear\nmodels, selection via AIC and Cp will be similar, or the ",
+      "thread_id": "thread-3463216f0f97",
+      "thread_depth": 2,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-2e8105b49add",
+      "message_id": "<1224069806632-1336463.post@n2.nabble.com>",
+      "from_name": "Bio7",
+      "from_email_hash": "81185a437de19dcd53f831027ffa1f64707f01278ea182b8b439423b385e8c52",
+      "date": "2008-10-15T04:23:26-07:00",
+      "subject": "[R-sig-eco] Improving efficiency in a simulation model",
+      "subject_clean": "Improving efficiency in a simulation model",
+      "in_reply_to": "<350406240.50671223585220842.JavaMail.osg@osgjas03.cns.ufl.edu>",
+      "references": [
+        "<350406240.50671223585220842.JavaMail.osg@osgjas03.cns.ufl.edu>"
+      ],
+      "body_plain": "Hello,\n\nyou can use (in a pure R approach) the simecol package which interfaces C to\nspeed up simulations.\nhttp://simecol.r-forge.r-project.org/.\n\nFurthermore you can also have a look at my application which connects Java\nand R and is an development environment for ecological models based on an\nEclipse Rich Client Platform.\nhttp://www.uni-bielefeld.de/biologie/Oekosystembiologie/bio7app/index.html\n\nAs already noted an object oriented approach makes a lot of sense when\ndeveloping an IBM model\nfor structuring, readability and reusability.\n\nHere you can find a good book about IBM models in general:\nhttp://www.amazon.com/Individual-based-Modeling-Princeton-Theoretical-Computational/dp/0691096651/ref=pd_bbs_sr_1?ie=UTF8&s=books&qid=1224055984&sr=8-1\n\nWith kind regards\n\nM. Austenfeld \n\n-- \nView this message in context: http://n2.nabble.com/Improving-efficiency-in-a-simulation-model-tp1313929p1336463.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hello,\n\nyou can use (in a pure R approach) the simecol package which interfaces C to\nspeed up simulations.\nhttp://simecol.r-forge.r-project.org/.\n\nFurthermore you can also have a look at my applicatio",
+      "thread_id": "thread-d2ccb68d58cf",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-63922f83e43d",
+      "message_id": "<f8e6ff050810150936l285eab03pe3621362f7818c40@mail.gmail.com>",
+      "from_name": "hadley wickham",
+      "from_email_hash": "78ed178a2a834406115d2917490a5d6eb6217493116357bc9bb8ae3e96968152",
+      "date": "2008-10-15T11:36:27-05:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>"
+      ],
+      "body_plain": "Hi Thierry,\n\nThanks for the more detailed report.  I think the new version of\nreshape will help, but I just checked and it's current a total mess\nand will need a lot of work before it's ready for anyone to try.\nUnfortunately I'm unlikely to get to it until the ggplot2 book is\nfinished, so it might be a bit of a wait.\n\nHadley\n\nOn Tue, Oct 14, 2008 at 2:52 AM, ONKELINX, Thierry\n<Thierry.ONKELINX at inbo.be> wrote:\n> Hi Hadley,\n>\n> Here is a more elaborate report of what I did and what when wrong. The\n> example is not reproducible because the dataset is to large. A smaller\n> dummy dataset is not an option as it works with smaller datasets. I'm\n> willing to run the code again with a development version of reshape.\n>\n> Cheers,\n>\n> Thierry\n>\n>\n>> library(RODBC)\n>> library(reshape)\n> Loading required package: plyr\n>> setwd(\"d:/wouter\")\n>> Sys.info()\n>                     sysname                      release\n>                   \"Windows\"                         \"XP\"\n>                     version                     nodename\n> \"build 2600, Service Pack 2\"                 \"LHPA000838\"\n>                     machine                        login\n>                       \"x86\"           \"thierry_onkelinx\"\n>                        user\n>          \"thierry_onkelinx\"\n>> sessionInfo()\n> R version 2.7.2 (2008-08-25)\n> i386-pc-mingw32\n>\n> locale:\n> LC_COLLATE=Dutch_Belgium.1252;LC_CTYPE=Dutch_Belgium.1252;LC_MONETARY=Du\n> tch_Belgium.1252;LC_NUMERIC=C;LC_TIME=Dutch_Belgium.1252\n>\n> attached base packages:\n> [1] stats     graphics  grDevices datasets  tcltk     utils     methods\n>\n> [8] base\n>\n> other attached packages:\n> [1] reshape_0.8.1  plyr_0.1       RODBC_1.2-3    svSocket_0.9-5\n> svIO_0.9-5\n> [6] R2HTML_1.59    svMisc_0.9-5   svIDE_0.9-5\n>\n> loaded via a namespace (and not attached):\n> [1] tools_2.7.2\n>> channel <- odbcConnectAccess(\"db1.mdb\")\n>> km <- sqlQuery(channel = channel, query = \"SELECT KMhokcode AS\n> Location, TaxonFK AS Species FROM kmhok_periode2_selectie ORDER BY\n> KMhokcode, TaxonFK\", as.is = TRUE)\n>> odbcCloseAll()\n>> km$value <- 1\n>> dim(km)\n> [1] 1157024       3\n>> length(unique(km$Location))\n> [1] 6354\n>> length(unique(km$Species))\n> [1] 1381\n>> system.time(tmp <- cast(Location ~ Species, data = km[1:1000, ], fill\n> = 0))\n>   user  system elapsed\n>   0.11    0.00    0.17\n>> system.time(tmp <- cast(Location ~ Species, data = km[1:10000, ], fill\n> = 0))\n>   user  system elapsed\n>    1.7     0.0     1.7\n>> system.time(tmp <- cast(Location ~ Species, data = km[1:100000, ],\n> fill = 0))\n>   user  system elapsed\n>  46.42    0.45   47.02\n>> system.time(tmp <- cast(Location ~ Species, data = km, fill = 0))\n> Error: cannot allocate vector of size 33.5 Mb\n> Timing stopped at: 322.95 3.43 327.4\n>> system.time(tmp <- table(km$Location, km$Species))\n>   user  system elapsed\n>   1.10    0.00    1.11\n>\n>\n>\n> ------------------------------------------------------------------------\n> ----\n> ir. Thierry Onkelinx\n> Instituut voor natuur- en bosonderzoek / Research Institute for Nature\n> and Forest\n> Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n> methodology and quality assurance\n> Gaverstraat 4\n> 9500 Geraardsbergen\n> Belgium\n> tel. + 32 54/436 185\n> Thierry.Onkelinx at inbo.be\n> www.inbo.be\n>\n> To call in the statistician after the experiment is done may be no more\n> than asking him to perform a post-mortem examination: he may be able to\n> say what the experiment died of.\n> ~ Sir Ronald Aylmer Fisher\n>\n> The plural of anecdote is not data.\n> ~ Roger Brinner\n>\n> The combination of some data and an aching desire for an answer does not\n> ensure that a reasonable answer can be extracted from a given body of\n> data.\n> ~ John Tukey\n>\n> -----Oorspronkelijk bericht-----\n> Van: r-sig-ecology-bounces at r-project.org\n> [mailto:r-sig-ecology-bounces at r-project.org] Namens hadley wickham\n> Verzonden: vrijdag 10 oktober 2008 14:40\n> Aan: ONKELINX, Thierry\n> CC: r-sig-ecology at r-project.org\n> Onderwerp: Re: [R-sig-eco] Clustering large data\n>\n>> Thanks for your responses. The biggest problem seems to be cast() for\n>> the reshape package which could not handle the dataset. Peter's\n> solution\n>> using the mefa package worked fine. I found an other solution: table()\n>> which works fine to crosstabulate presence-only data.\n>\n> Exactly what error did you get?  Or did it just take a very long time\n> and then you gave up?  I have an experimental rewrite of the reshape\n> package that is more memory efficient and much faster (10 - 20x) -\n> however, it's still some time from being ready for production use.\n>\n> Hadley\n>\n>\n> --\n> http://had.co.nz/\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n> Dit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer\n> en binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\n> door een geldig ondertekend document. The views expressed in  this message\n> and any annex are purely those of the writer and may not be regarded as stating\n> an official position of INBO, as long as the message is not confirmed by a duly\n> signed document.\n>\n\n\n\n-- \nhttp://had.co.nz/",
+      "body_snippet": "Hi Thierry,\n\nThanks for the more detailed report.  I think the new version of\nreshape will help, but I just checked and it's current a total mess\nand will need a lot of work before it's ready for anyo",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 4,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-d3fda20a1ed3",
+      "message_id": "<1224089835.1290.1279450845@webmail.messagingengine.com>",
+      "from_name": "Nicholas Lewin-Koh",
+      "from_email_hash": "ce1a5dad09cdf256c2a72906ae1e563f0d7ec3457957c4a1a53c9b3862a71eac",
+      "date": "2008-10-15T09:57:15-07:00",
+      "subject": "[R-sig-eco] Interpreting large clusters",
+      "subject_clean": "Interpreting large clusters",
+      "in_reply_to": "<mailman.1.1224064802.11057.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1224064802.11057.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "Hi Phil,\nCan you plot the dendorgam in pieces? if you look at \nexample(hclust) the show an example where they plot the dendrogram\nshowing 10 aggregated groups from the centroids of a previous dendrogram\ncut at 10 clusters. You could also do the opposite using as.dendrogram\nexample(hclust)\nhcd<-as.dendrogram(hc)\nhcc<-cut(hcd,2000)\npar(ask=TRUE)\nfor(i in length(hcc$lower)) plot(hcc$lower[[i]])\n\ndendrogram objects are a bit easier to manipulate than \nthe output from hclust.\n\nCheers\nNicholas\n\n> Message: 1\n> Date: Tue, 14 Oct 2008 06:46:11 -0400\n> From: Phil Novack-Gottshall <pnovackg at westga.edu>\n> Subject: [R-sig-eco] Interpreting large clusters\n> To: r-sig-ecology at r-project.org\n> Message-ID: <200810141046.m9EAkNO5029369 at hypatia.math.ethz.ch>\n> Content-Type: text/plain; charset=\"us-ascii\"; format=flowed\n> \n> Hi all,\n> \n> I have a related question concerning cluster analysis of large data \n> sets.  In my case, the matrix is reasonably small for R to work with, \n> but I have so many species (~2000) that it is not possible to read \n> labels on the resulting dendrogram.  I imagine that using an \n> ordination is a preferable method in this case, but I was wondering \n> whether anyone had any recommendations for producing a very large, \n> but still readable dendrogram.  (I've tried increasing the window \n> size and shrinking cex.text, but this still isn't sufficient.)\n> \n> Cheers,\n> Phil\n> \n> \n> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n>    Phil \n> Novack-Gottshall                        pnovackg at westga.edu \n> \n> \n>    Assistant Professor\n>    Department of Geosciences\n>    University of West Georgia\n>    Carrollton, GA 30118-3100\n>    Phone: 678-839-4061\n>    Fax: 678-839-4071\n>    http://www.westga.edu/~pnovackg\n> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n>",
+      "body_snippet": "Hi Phil,\nCan you plot the dendorgam in pieces? if you look at \nexample(hclust) the show an example where they plot the dendrogram\nshowing 10 aggregated groups from the centroids of a previous dendrogr",
+      "thread_id": "thread-d3fda20a1ed3",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-47151612d494",
+      "message_id": "<20081017035346.qw1gaujzko08skcs@new.webmail.utexas.edu>",
+      "from_name": "opheliawang at mail.utexas.edu",
+      "from_email_hash": "85b41e2c25f845e25b8036b07987afc6eaa20e8816ae1d36ad653f347c6019c8",
+      "date": "2008-10-17T03:53:46-05:00",
+      "subject": "[R-sig-eco] Analyzing hemispheric photos in R?",
+      "subject_clean": "Analyzing hemispheric photos in R?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi all,\n\nThe pre-installed Windows Vista 64-bit in my new laptop does not  \nsupport Gap Light Analyzer. Has anyone used R to analyze hemispheric  \nphotos and calculate % canopy openness, LAI, etc.? Which package can  \nbe used for that? Thanks a lot!\n\nOphelia",
+      "body_snippet": "Hi all,\n\nThe pre-installed Windows Vista 64-bit in my new laptop does not  \nsupport Gap Light Analyzer. Has anyone used R to analyze hemispheric  \nphotos and calculate % canopy openness, LAI, etc.? Wh",
+      "thread_id": "thread-47151612d494",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-d2f5bfbad144",
+      "message_id": "<1224605714.29963.1280467181@webmail.messagingengine.com>",
+      "from_name": "Nicholas Lewin-Koh",
+      "from_email_hash": "ce1a5dad09cdf256c2a72906ae1e563f0d7ec3457957c4a1a53c9b3862a71eac",
+      "date": "2008-10-21T09:15:14-07:00",
+      "subject": "[R-sig-eco] Analyzing hemispheric photos in R? (opheliawang@mail.utexas.edu)",
+      "subject_clean": "Analyzing hemispheric photos in R? (opheliawang@mail.utexas.edu)",
+      "in_reply_to": "<mailman.1.1224237602.27054.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1224237602.27054.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "Hi Ophelia,\nYou are working in an area where R is pretty weak. You will have \nto write your own code to do this, however there are a few packages\nthat support image analysis. They are\n\nEBImage on bioconductor\nbiOps\nrimage\n\nSome of the Spatial packages like RGDAL and RGrass might help as well.\nYou can also look at Dr. Paul Rich's stuff at\nhttp://www.creeksidescience.com/download.html\n\nI think the one you want is canopy. \nIts an old program, so i don't know if it will work on vista.\nAnyway you slice it you'll have to do some programming.\n\nNicholas\n------------------------------------------------------------------\n> \n> Message: 1\n> Date: Fri, 17 Oct 2008 03:53:46 -0500\n> From: opheliawang at mail.utexas.edu\n> Subject: [R-sig-eco] Analyzing hemispheric photos in R?\n> To: r-sig-ecology at r-project.org\n> Cc: r-help at r-project.org\n> Message-ID: <20081017035346.qw1gaujzko08skcs at new.webmail.utexas.edu>\n> Content-Type: text/plain;\tcharset=ISO-8859-1;\tDelSp=\"Yes\";\n> \tformat=\"flowed\"\n> \n> Hi all,\n> \n> The pre-installed Windows Vista 64-bit in my new laptop does not  \n> support Gap Light Analyzer. Has anyone used R to analyze hemispheric  \n> photos and calculate % canopy openness, LAI, etc.? Which package can  \n> be used for that? Thanks a lot!\n> \n> Ophelia\n> \n> \n> \n> ------------------------------\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> \n> \n> End of R-sig-ecology Digest, Vol 7, Issue 11\n> ********************************************",
+      "body_snippet": "Hi Ophelia,\nYou are working in an area where R is pretty weak. You will have \nto write your own code to do this, however there are a few packages\nthat support image analysis. They are\n\nEBImage on bioc",
+      "thread_id": "thread-d2f5bfbad144",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-59da53b96cf7",
+      "message_id": "<48FE1F3A.7090904@u.washington.edu>",
+      "from_name": "Julian Burgos",
+      "from_email_hash": "a05064a7ea936165ad1bb410d671be628c9429a86da476e31ac20ab0ba43ac06",
+      "date": "2008-10-21T11:28:10-07:00",
+      "subject": "[R-sig-eco] Improving efficiency in a simulation model",
+      "subject_clean": "Improving efficiency in a simulation model",
+      "in_reply_to": "<350406240.50671223585220842.JavaMail.osg@osgjas03.cns.ufl.edu>",
+      "references": [
+        "<350406240.50671223585220842.JavaMail.osg@osgjas03.cns.ufl.edu>"
+      ],
+      "body_plain": "You may also want to take a look at the simecol pakage.\n\nhttp://simecol.r-forge.r-project.org/\n\nJulian\n\nDulce M. Bustamante wrote:\n> Hello,\n> \n> I am pursuing the development of an individual-based model in R but \n> there is a series of technical issues for which I don't know where to \n> find information.\n> \n> I have written R functions before for simple simulations, but this model \n> will have more complexities and each individual will need to be \n> evaluated in many aspects at each time step.  My major concern is that I \n> don't know how to make my program more efficient in terms of using \n> computer memory and computation time.\n> \n> What is the maximum matrix size that R could handle?\n> \n> I have read that R could interact with C and that that can be an \n> \"extremely effective mode for numerical computation\" (Bates and DebRoy, \n> DSC 2003 Working Papers).  I have looked for papers on HOW TO make R and \n> C interact but I can not find many references and would appreciate \n> suggestions.\n> \n> Would my model benefit from using object oriented programming in terms \n> of making the procedures go faster in terms of updating matrices after \n> time steps?\n> \n> Thank you for your time.\n> \n> Dulce M. Bustamante\n> Ph.D. Candidate\n> Florida Medical Entomology Laboratory\n> University of Florida\n> 200 9th Street SE\n> Vero Beach, FL 32962\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "You may also want to take a look at the simecol pakage.\n\nhttp://simecol.r-forge.r-project.org/\n\nJulian\n\nDulce M. Bustamante wrote:\n> Hello,\n> \n> I am pursuing the development of an individual-based mo",
+      "thread_id": "thread-d2ccb68d58cf",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-6dcac53a889a",
+      "message_id": "<48FE4D4E.4070609@ttu.edu>",
+      "from_name": "David Rogowski",
+      "from_email_hash": "0e9272cf5b85f010e2f20b54c7ffced31eefecd3ca01e8a1ce7c6ea583d795bc",
+      "date": "2008-10-21T16:44:46-05:00",
+      "subject": "[R-sig-eco] multiple vertical histograms?",
+      "subject_clean": "multiple vertical histograms?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Greetings all,\n\nI am trying to create a graph that has a time component on the X axis, \nand for each of my sample dates I want to  have a histogram orientated \nvertically of measured crayfish lengths. Does anyone know how to do \nthis? I have consulted Murrell 2006 R Graphics, and R Graph Gallery, and \nsearched on the R Wiki to no avail.  I have attached an example jpg - \nbut it may not come through - so I have attempted to represent what I am \ntrying to do below.\n\n|        :           :\n|     :              :\n|  :                :\n|   .             :\n|       .           :\n|       .             :\n|-----.------------------------\n\n\n\nThanks\n\n-- \nDavid Rogowski\nAssistant Professor\nDepartment of Natural Resources Management\nTexas Tech University\nBox 2125\nLubbock, Texas 79409-2125 USA\n\ndavid.rogowski at ttu.edu\n\nDept. phone:806-742-2841\nDirect: 806-742-6888 xt 227\nFAX: 806-742-2280\n\n\nhttp://www.rw.ttu.edu/ttunrm/",
+      "body_snippet": "Greetings all,\n\nI am trying to create a graph that has a time component on the X axis, \nand for each of my sample dates I want to  have a histogram orientated \nvertically of measured crayfish lengths.",
+      "thread_id": "thread-6dcac53a889a",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-fdfa0374d59a",
+      "message_id": "<FC0E3D2F996D574888C4E821F01B523208C809@mailfish.fpc.org>",
+      "from_name": "Jack Tuomikoski",
+      "from_email_hash": "aa76b6b62371bbec68dc4f269f9a2a183fbe5aff831cbbe2f94ea26efbb5bca3",
+      "date": "2008-10-21T16:03:48-07:00",
+      "subject": "[R-sig-eco] This is Spam multiple vertical histograms?",
+      "subject_clean": "This is Spam multiple vertical histograms?",
+      "in_reply_to": null,
+      "references": [
+        "<48FE4D4E.4070609@ttu.edu>"
+      ],
+      "body_plain": "This may or may not help but similar techniques are buried in the code\nfor this graph example.  The connection for the code is on the left.\nHope it helps.\n\nhttp://addictedtor.free.fr/graphiques/RGraphGallery.php?graph=109\n\n\n-----Original Message-----\nFrom: r-sig-ecology-bounces at r-project.org\n[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of David Rogowski\nSent: Tuesday, October 21, 2008 2:45 PM\nTo: r-sig-ecology at r-project.org\nSubject: This is Spam[R-sig-eco] multiple vertical histograms?\n\nGreetings all,\n\nI am trying to create a graph that has a time component on the X axis, \nand for each of my sample dates I want to  have a histogram orientated \nvertically of measured crayfish lengths. Does anyone know how to do \nthis? I have consulted Murrell 2006 R Graphics, and R Graph Gallery, and\n\nsearched on the R Wiki to no avail.  I have attached an example jpg - \nbut it may not come through - so I have attempted to represent what I am\n\ntrying to do below.\n\n|        :           :\n|     :              :\n|  :                :\n|   .             :\n|       .           :\n|       .             :\n|-----.------------------------\n\n\n\nThanks\n\n-- \nDavid Rogowski\nAssistant Professor\nDepartment of Natural Resources Management\nTexas Tech University\nBox 2125\nLubbock, Texas 79409-2125 USA\n\ndavid.rogowski at ttu.edu\n\nDept. phone:806-742-2841\nDirect: 806-742-6888 xt 227\nFAX: 806-742-2280\n\n\nhttp://www.rw.ttu.edu/ttunrm/",
+      "body_snippet": "This may or may not help but similar techniques are buried in the code\nfor this graph example.  The connection for the code is on the left.\nHope it helps.\n\nhttp://addictedtor.free.fr/graphiques/RGraph",
+      "thread_id": "thread-6dcac53a889a",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-9c4573dabbe1",
+      "message_id": "<4900D424.6060405@umn.edu>",
+      "from_name": "Christopher Chizinski",
+      "from_email_hash": "5a09b2de187294ace6c6dfcf4828187365ff7a7b0ba398c62dec86e22e9bce76",
+      "date": "2008-10-23T14:44:36-05:00",
+      "subject": "[R-sig-eco] output from ordisurf",
+      "subject_clean": "output from ordisurf",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Is there a way to output the X,Y,Z values for the contour lines from \nordisurf?  \n\nFor example, I am using this statement:\ntmp<-with(enviro,ordisurf(fish.nmds,enviro$Temp,choices=c(1,2),add=TRUE))\n\nnames(tmp)\n [1] \"coefficients\"      \"residuals\"         \"fitted.values\"   \n [4] \"family\"            \"linear.predictors\" \"deviance\"        \n [7] \"null.deviance\"     \"iter\"              \"weights\"         \n[10] \"prior.weights\"     \"df.null\"           \"y\"               \n[13] \"converged\"         \"sig2\"              \"edf\"             \n[16] \"hat\"               \"boundary\"          \"sp\"              \n[19] \"nsdf\"              \"Ve\"                \"Vp\"              \n[22] \"mgcv.conv\"         \"gcv.ubre\"          \"aic\"             \n[25] \"rank\"              \"gcv.ubre.dev\"      \"method\"          \n[28] \"smooth\"            \"formula\"           \"cmX\"             \n[31] \"model\"             \"control\"           \"terms\"           \n[34] \"pterms\"            \"assign\"            \"offset\"          \n[37] \"data\"              \"df.residual\"       \"min.edf\"         \n[40] \"call\"\n\nI would like to get these XYZ values or find a way to calculate them \nfrom the output for inclusion into SigmaPlot.  It is probably an easy \nsolution but I could not find what I needed.\n\nThanks for any help or insight.\n--Chris",
+      "body_snippet": "Is there a way to output the X,Y,Z values for the contour lines from \nordisurf?  \n\nFor example, I am using this statement:\ntmp<-with(enviro,ordisurf(fish.nmds,enviro$Temp,choices=c(1,2),add=TRUE))\n\nna",
+      "thread_id": "thread-9c4573dabbe1",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-71267631f3ca",
+      "message_id": "<49020FB3.3000708@montana.edu>",
+      "from_name": "Dave Roberts",
+      "from_email_hash": "9d29c84544a5d98e966c5c9627b9337f0b43639eb8b41d3bb86eebd878431ac1",
+      "date": "2008-10-24T11:10:59-07:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<f8e6ff050810150936l285eab03pe3621362f7818c40@mail.gmail.com>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>",
+        "<f8e6ff050810150936l285eab03pe3621362f7818c40@mail.gmail.com>"
+      ],
+      "body_plain": "Thierry and Hadley,\n\n     Sorry to be late coming into this (I forgot I subscribed to sig-eco).\n\n     package labdsv has a function called matrify() which takes a three \ncolumn data.frame (sample,taxa,abundance) and creates a full (sparse) \nmatrix representation.  I've never tried it on a data set as large as \nyours, and I'm curious if it would work.  It's pure R, but if worst \ncomes to worst I used to have a FORTRAN version that would probably \nwork. Please give matrify a try and let me know.\n\nDave R.\n\nmatrify <- function (data)\n{\n     if (ncol(data) != 3)\n         stop(\"data frame must have three column format\")\n     plt <- data[, 1]\n     spc <- data[, 2]\n     abu <- data[, 3]\n     plt.codes <- levels(factor(plt))\n     spc.codes <- levels(factor(spc))\n     taxa <- matrix(0, nrow = length(plt.codes), ncol =\n              length(spc.codes))\n     row <- match(plt, plt.codes)\n     col <- match(spc, spc.codes)\n     for (i in 1:length(abu)) {\n         taxa[row[i], col[i]] <- abu[i]\n     }\n     taxa <- data.frame(taxa)\n     names(taxa) <- spc.codes\n     row.names(taxa) <- plt.codes\n     taxa\n}\n\n\nhadley wickham wrote:\n> Hi Thierry,\n> \n> Thanks for the more detailed report.  I think the new version of\n> reshape will help, but I just checked and it's current a total mess\n> and will need a lot of work before it's ready for anyone to try.\n> Unfortunately I'm unlikely to get to it until the ggplot2 book is\n> finished, so it might be a bit of a wait.\n> \n> Hadley\n> \n> On Tue, Oct 14, 2008 at 2:52 AM, ONKELINX, Thierry\n> <Thierry.ONKELINX at inbo.be> wrote:\n>> Hi Hadley,\n>>\n>> Here is a more elaborate report of what I did and what when wrong. The\n>> example is not reproducible because the dataset is to large. A smaller\n>> dummy dataset is not an option as it works with smaller datasets. I'm\n>> willing to run the code again with a development version of reshape.\n>>\n>> Cheers,\n>>\n>> Thierry\n>>\n>>\n>>> library(RODBC)\n>>> library(reshape)\n>> Loading required package: plyr\n>>> setwd(\"d:/wouter\")\n>>> Sys.info()\n>>                     sysname                      release\n>>                   \"Windows\"                         \"XP\"\n>>                     version                     nodename\n>> \"build 2600, Service Pack 2\"                 \"LHPA000838\"\n>>                     machine                        login\n>>                       \"x86\"           \"thierry_onkelinx\"\n>>                        user\n>>          \"thierry_onkelinx\"\n>>> sessionInfo()\n>> R version 2.7.2 (2008-08-25)\n>> i386-pc-mingw32\n>>\n>> locale:\n>> LC_COLLATE=Dutch_Belgium.1252;LC_CTYPE=Dutch_Belgium.1252;LC_MONETARY=Du\n>> tch_Belgium.1252;LC_NUMERIC=C;LC_TIME=Dutch_Belgium.1252\n>>\n>> attached base packages:\n>> [1] stats     graphics  grDevices datasets  tcltk     utils     methods\n>>\n>> [8] base\n>>\n>> other attached packages:\n>> [1] reshape_0.8.1  plyr_0.1       RODBC_1.2-3    svSocket_0.9-5\n>> svIO_0.9-5\n>> [6] R2HTML_1.59    svMisc_0.9-5   svIDE_0.9-5\n>>\n>> loaded via a namespace (and not attached):\n>> [1] tools_2.7.2\n>>> channel <- odbcConnectAccess(\"db1.mdb\")\n>>> km <- sqlQuery(channel = channel, query = \"SELECT KMhokcode AS\n>> Location, TaxonFK AS Species FROM kmhok_periode2_selectie ORDER BY\n>> KMhokcode, TaxonFK\", as.is = TRUE)\n>>> odbcCloseAll()\n>>> km$value <- 1\n>>> dim(km)\n>> [1] 1157024       3\n>>> length(unique(km$Location))\n>> [1] 6354\n>>> length(unique(km$Species))\n>> [1] 1381\n>>> system.time(tmp <- cast(Location ~ Species, data = km[1:1000, ], fill\n>> = 0))\n>>   user  system elapsed\n>>   0.11    0.00    0.17\n>>> system.time(tmp <- cast(Location ~ Species, data = km[1:10000, ], fill\n>> = 0))\n>>   user  system elapsed\n>>    1.7     0.0     1.7\n>>> system.time(tmp <- cast(Location ~ Species, data = km[1:100000, ],\n>> fill = 0))\n>>   user  system elapsed\n>>  46.42    0.45   47.02\n>>> system.time(tmp <- cast(Location ~ Species, data = km, fill = 0))\n>> Error: cannot allocate vector of size 33.5 Mb\n>> Timing stopped at: 322.95 3.43 327.4\n>>> system.time(tmp <- table(km$Location, km$Species))\n>>   user  system elapsed\n>>   1.10    0.00    1.11\n>>\n>>\n>>\n>> ------------------------------------------------------------------------\n>> ----\n>> ir. Thierry Onkelinx\n>> Instituut voor natuur- en bosonderzoek / Research Institute for Nature\n>> and Forest\n>> Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n>> methodology and quality assurance\n>> Gaverstraat 4\n>> 9500 Geraardsbergen\n>> Belgium\n>> tel. + 32 54/436 185\n>> Thierry.Onkelinx at inbo.be\n>> www.inbo.be\n>>\n>> To call in the statistician after the experiment is done may be no more\n>> than asking him to perform a post-mortem examination: he may be able to\n>> say what the experiment died of.\n>> ~ Sir Ronald Aylmer Fisher\n>>\n>> The plural of anecdote is not data.\n>> ~ Roger Brinner\n>>\n>> The combination of some data and an aching desire for an answer does not\n>> ensure that a reasonable answer can be extracted from a given body of\n>> data.\n>> ~ John Tukey\n>>\n>> -----Oorspronkelijk bericht-----\n>> Van: r-sig-ecology-bounces at r-project.org\n>> [mailto:r-sig-ecology-bounces at r-project.org] Namens hadley wickham\n>> Verzonden: vrijdag 10 oktober 2008 14:40\n>> Aan: ONKELINX, Thierry\n>> CC: r-sig-ecology at r-project.org\n>> Onderwerp: Re: [R-sig-eco] Clustering large data\n>>\n>>> Thanks for your responses. The biggest problem seems to be cast() for\n>>> the reshape package which could not handle the dataset. Peter's\n>> solution\n>>> using the mefa package worked fine. I found an other solution: table()\n>>> which works fine to crosstabulate presence-only data.\n>> Exactly what error did you get?  Or did it just take a very long time\n>> and then you gave up?  I have an experimental rewrite of the reshape\n>> package that is more memory efficient and much faster (10 - 20x) -\n>> however, it's still some time from being ready for production use.\n>>\n>> Hadley\n>>\n>>\n>> --\n>> http://had.co.nz/\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>> Dit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer\n>> en binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\n>> door een geldig ondertekend document. The views expressed in  this message\n>> and any annex are purely those of the writer and may not be regarded as stating\n>> an official position of INBO, as long as the message is not confirmed by a duly\n>> signed document.\n>>\n> \n> \n> \n\n\n-- \n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nDavid W. Roberts                                     office 406-994-4548\nProfessor and Head                                      FAX 406-994-3190\nDepartment of Ecology                         email droberts at montana.edu\nMontana State University\nBozeman, MT 59717-3460",
+      "body_snippet": "Thierry and Hadley,\n\n     Sorry to be late coming into this (I forgot I subscribed to sig-eco).\n\n     package labdsv has a function called matrify() which takes a three \ncolumn data.frame (sample,taxa",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 5,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-16ff457a21ba",
+      "message_id": "<2E9C414912813E4EB981326983E0A10405AB4DDB@inboexch.inbo.be>",
+      "from_name": "ONKELINX, Thierry",
+      "from_email_hash": "c1cd3b6aa1e1e5864422a45708c7cf78ba94a2d34ddbc8add17227ed5b0432d5",
+      "date": "2008-10-27T10:11:29+01:00",
+      "subject": "[R-sig-eco] Clustering large data",
+      "subject_clean": "Clustering large data",
+      "in_reply_to": "<49020FB3.3000708@montana.edu>",
+      "references": [
+        "<2E9C414912813E4EB981326983E0A10405903F59@inboexch.inbo.be>",
+        "<34896f090810070646s7b5c2adpe6c79ae2a91e381e@mail.gmail.com>",
+        "<34896f090810070650v6ffa9039obd1ed29773a3d002@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A104059936B8@inboexch.inbo.be>",
+        "<f8e6ff050810100540y7b634042m714c75dce354f627@mail.gmail.com>",
+        "<2E9C414912813E4EB981326983E0A10405993CA9@inboexch.inbo.be>",
+        "<f8e6ff050810150936l285eab03pe3621362f7818c40@mail.gmail.com>",
+        "<49020FB3.3000708@montana.edu>"
+      ],
+      "body_plain": "Dear Dave,\n\nBelow you'll find a testreport of your function. It works fine with my\ndataset allthough it is slower than the plain and simple table function.\nBut that off course will only work with presence-only data like I have.\nOn the other hand: it is three time faster than the mefa package.\n\nHTH,\n\nThierry\n\n> matrify <- function (data)\n+ {\n+      if (ncol(data) != 3)\n+          stop(\"data frame must have three column format\")\n+      plt <- data[, 1]\n+      spc <- data[, 2]\n+      abu <- data[, 3]\n+      plt.codes <- levels(factor(plt))\n+      spc.codes <- levels(factor(spc))\n+      taxa <- matrix(0, nrow = length(plt.codes), ncol =\n+               length(spc.codes))\n+      row <- match(plt, plt.codes)\n+      col <- match(spc, spc.codes)\n+      for (i in 1:length(abu)) {\n+          taxa[row[i], col[i]] <- abu[i]\n+      }\n+      taxa <- data.frame(taxa)\n+      names(taxa) <- spc.codes\n+      row.names(taxa) <- plt.codes\n+      taxa\n+ }\n> library(RODBC)\n> setwd(\"d:/wouter\")\n> Sys.info()\n                     sysname                      release \n                   \"Windows\"                         \"XP\" \n                     version                     nodename \n\"build 2600, Service Pack 2\"                 \"LHPA000838\" \n                     machine                        login \n                       \"x86\"           \"thierry_onkelinx\" \n                        user \n          \"thierry_onkelinx\" \n> sessionInfo()\nR version 2.8.0 (2008-10-20) \ni386-pc-mingw32 \n\nlocale:\nLC_COLLATE=Dutch_Belgium.1252;LC_CTYPE=Dutch_Belgium.1252;LC_MONETARY=Du\ntch_Belgium.1252;LC_NUMERIC=C;LC_TIME=Dutch_Belgium.1252\n\nattached base packages:\n[1] stats     graphics  grDevices datasets  tcltk     utils     methods\n\n[8] base     \n\nother attached packages:\n[1] RODBC_1.2-3    svSocket_0.9-5 svIO_0.9-5     R2HTML_1.59\nsvMisc_0.9-5  \n[6] svIDE_0.9-5   \n\nloaded via a namespace (and not attached):\n[1] tools_2.8.0\n> channel <- odbcConnectAccess(\"db1.mdb\")\n> km <- sqlQuery(channel = channel, query = \"SELECT KMhokcode AS\nLocation, TaxonFK AS Species FROM kmhok_periode2_selectie ORDER BY\nKMhokcode, TaxonFK\", as.is = TRUE)\n> odbcCloseAll()\n> dim(km)\n[1] 1157024       2\n> length(unique(km$Location))\n[1] 6354\n> length(unique(km$Species))\n[1] 1381\n> system.time(tmp <- table(km$Location, km$Species))\n   user  system elapsed \n   1.32    0.26    1.58 \n> km$value <- 1\n> dim(km)\n[1] 1157024       3\n> system.time(tmp <- matrify(km))\n   user  system elapsed \n  10.81    0.58   11.39 \n> library(mefa)\nThis is mefa 2.0-1 \n> system.time(x <- mefa(stcs(km[, 1:2]))$xtabs)\n   user  system elapsed \n  27.05    0.76   28.61 \n> \n\n\n------------------------------------------------------------------------\n----\nir. Thierry Onkelinx\nInstituut voor natuur- en bosonderzoek / Research Institute for Nature\nand Forest\nCel biometrie, methodologie en kwaliteitszorg / Section biometrics,\nmethodology and quality assurance\nGaverstraat 4\n9500 Geraardsbergen\nBelgium \ntel. + 32 54/436 185\nThierry.Onkelinx at inbo.be \nwww.inbo.be \n\nTo call in the statistician after the experiment is done may be no more\nthan asking him to perform a post-mortem examination: he may be able to\nsay what the experiment died of.\n~ Sir Ronald Aylmer Fisher\n\nThe plural of anecdote is not data.\n~ Roger Brinner\n\nThe combination of some data and an aching desire for an answer does not\nensure that a reasonable answer can be extracted from a given body of\ndata.\n~ John Tukey\n\n-----Oorspronkelijk bericht-----\nVan: Dave Roberts [mailto:droberts at montana.edu] \nVerzonden: vrijdag 24 oktober 2008 20:11\nAan: r-sig-ecology at r-project.org\nCC: ONKELINX, Thierry\nOnderwerp: Re: [R-sig-eco] Clustering large data\n\nThierry and Hadley,\n\n     Sorry to be late coming into this (I forgot I subscribed to\nsig-eco).\n\n     package labdsv has a function called matrify() which takes a three \ncolumn data.frame (sample,taxa,abundance) and creates a full (sparse) \nmatrix representation.  I've never tried it on a data set as large as \nyours, and I'm curious if it would work.  It's pure R, but if worst \ncomes to worst I used to have a FORTRAN version that would probably \nwork. Please give matrify a try and let me know.\n\nDave R.\n\nmatrify <- function (data)\n{\n     if (ncol(data) != 3)\n         stop(\"data frame must have three column format\")\n     plt <- data[, 1]\n     spc <- data[, 2]\n     abu <- data[, 3]\n     plt.codes <- levels(factor(plt))\n     spc.codes <- levels(factor(spc))\n     taxa <- matrix(0, nrow = length(plt.codes), ncol =\n              length(spc.codes))\n     row <- match(plt, plt.codes)\n     col <- match(spc, spc.codes)\n     for (i in 1:length(abu)) {\n         taxa[row[i], col[i]] <- abu[i]\n     }\n     taxa <- data.frame(taxa)\n     names(taxa) <- spc.codes\n     row.names(taxa) <- plt.codes\n     taxa\n}\n\n\nhadley wickham wrote:\n> Hi Thierry,\n> \n> Thanks for the more detailed report.  I think the new version of\n> reshape will help, but I just checked and it's current a total mess\n> and will need a lot of work before it's ready for anyone to try.\n> Unfortunately I'm unlikely to get to it until the ggplot2 book is\n> finished, so it might be a bit of a wait.\n> \n> Hadley\n> \n> On Tue, Oct 14, 2008 at 2:52 AM, ONKELINX, Thierry\n> <Thierry.ONKELINX at inbo.be> wrote:\n>> Hi Hadley,\n>>\n>> Here is a more elaborate report of what I did and what when wrong.\nThe\n>> example is not reproducible because the dataset is to large. A\nsmaller\n>> dummy dataset is not an option as it works with smaller datasets. I'm\n>> willing to run the code again with a development version of reshape.\n>>\n>> Cheers,\n>>\n>> Thierry\n>>\n>>\n>>> library(RODBC)\n>>> library(reshape)\n>> Loading required package: plyr\n>>> setwd(\"d:/wouter\")\n>>> Sys.info()\n>>                     sysname                      release\n>>                   \"Windows\"                         \"XP\"\n>>                     version                     nodename\n>> \"build 2600, Service Pack 2\"                 \"LHPA000838\"\n>>                     machine                        login\n>>                       \"x86\"           \"thierry_onkelinx\"\n>>                        user\n>>          \"thierry_onkelinx\"\n>>> sessionInfo()\n>> R version 2.7.2 (2008-08-25)\n>> i386-pc-mingw32\n>>\n>> locale:\n>>\nLC_COLLATE=Dutch_Belgium.1252;LC_CTYPE=Dutch_Belgium.1252;LC_MONETARY=Du\n>> tch_Belgium.1252;LC_NUMERIC=C;LC_TIME=Dutch_Belgium.1252\n>>\n>> attached base packages:\n>> [1] stats     graphics  grDevices datasets  tcltk     utils\nmethods\n>>\n>> [8] base\n>>\n>> other attached packages:\n>> [1] reshape_0.8.1  plyr_0.1       RODBC_1.2-3    svSocket_0.9-5\n>> svIO_0.9-5\n>> [6] R2HTML_1.59    svMisc_0.9-5   svIDE_0.9-5\n>>\n>> loaded via a namespace (and not attached):\n>> [1] tools_2.7.2\n>>> channel <- odbcConnectAccess(\"db1.mdb\")\n>>> km <- sqlQuery(channel = channel, query = \"SELECT KMhokcode AS\n>> Location, TaxonFK AS Species FROM kmhok_periode2_selectie ORDER BY\n>> KMhokcode, TaxonFK\", as.is = TRUE)\n>>> odbcCloseAll()\n>>> km$value <- 1\n>>> dim(km)\n>> [1] 1157024       3\n>>> length(unique(km$Location))\n>> [1] 6354\n>>> length(unique(km$Species))\n>> [1] 1381\n>>> system.time(tmp <- cast(Location ~ Species, data = km[1:1000, ],\nfill\n>> = 0))\n>>   user  system elapsed\n>>   0.11    0.00    0.17\n>>> system.time(tmp <- cast(Location ~ Species, data = km[1:10000, ],\nfill\n>> = 0))\n>>   user  system elapsed\n>>    1.7     0.0     1.7\n>>> system.time(tmp <- cast(Location ~ Species, data = km[1:100000, ],\n>> fill = 0))\n>>   user  system elapsed\n>>  46.42    0.45   47.02\n>>> system.time(tmp <- cast(Location ~ Species, data = km, fill = 0))\n>> Error: cannot allocate vector of size 33.5 Mb\n>> Timing stopped at: 322.95 3.43 327.4\n>>> system.time(tmp <- table(km$Location, km$Species))\n>>   user  system elapsed\n>>   1.10    0.00    1.11\n>>\n>>\n>>\n>>\n------------------------------------------------------------------------\n>> ----\n>> ir. Thierry Onkelinx\n>> Instituut voor natuur- en bosonderzoek / Research Institute for\nNature\n>> and Forest\n>> Cel biometrie, methodologie en kwaliteitszorg / Section biometrics,\n>> methodology and quality assurance\n>> Gaverstraat 4\n>> 9500 Geraardsbergen\n>> Belgium\n>> tel. + 32 54/436 185\n>> Thierry.Onkelinx at inbo.be\n>> www.inbo.be\n>>\n>> To call in the statistician after the experiment is done may be no\nmore\n>> than asking him to perform a post-mortem examination: he may be able\nto\n>> say what the experiment died of.\n>> ~ Sir Ronald Aylmer Fisher\n>>\n>> The plural of anecdote is not data.\n>> ~ Roger Brinner\n>>\n>> The combination of some data and an aching desire for an answer does\nnot\n>> ensure that a reasonable answer can be extracted from a given body of\n>> data.\n>> ~ John Tukey\n>>\n>> -----Oorspronkelijk bericht-----\n>> Van: r-sig-ecology-bounces at r-project.org\n>> [mailto:r-sig-ecology-bounces at r-project.org] Namens hadley wickham\n>> Verzonden: vrijdag 10 oktober 2008 14:40\n>> Aan: ONKELINX, Thierry\n>> CC: r-sig-ecology at r-project.org\n>> Onderwerp: Re: [R-sig-eco] Clustering large data\n>>\n>>> Thanks for your responses. The biggest problem seems to be cast()\nfor\n>>> the reshape package which could not handle the dataset. Peter's\n>> solution\n>>> using the mefa package worked fine. I found an other solution:\ntable()\n>>> which works fine to crosstabulate presence-only data.\n>> Exactly what error did you get?  Or did it just take a very long time\n>> and then you gave up?  I have an experimental rewrite of the reshape\n>> package that is more memory efficient and much faster (10 - 20x) -\n>> however, it's still some time from being ready for production use.\n>>\n>> Hadley\n>>\n>>\n>> --\n>> http://had.co.nz/\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>> Dit bericht en eventuele bijlagen geven enkel de visie van de\nschrijver weer\n>> en binden het INBO onder geen enkel beding, zolang dit bericht niet\nbevestigd is\n>> door een geldig ondertekend document. The views expressed in  this\nmessage\n>> and any annex are purely those of the writer and may not be regarded\nas stating\n>> an official position of INBO, as long as the message is not confirmed\nby a duly\n>> signed document.\n>>\n> \n> \n> \n\n\n-- \n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nDavid W. Roberts                                     office 406-994-4548\nProfessor and Head                                      FAX 406-994-3190\nDepartment of Ecology                         email droberts at montana.edu\nMontana State University\nBozeman, MT 59717-3460\n\nDit bericht en eventuele bijlagen geven enkel de visie van de schrijver weer \nen binden het INBO onder geen enkel beding, zolang dit bericht niet bevestigd is\ndoor een geldig ondertekend document. The views expressed in  this message \nand any annex are purely those of the writer and may not be regarded as stating \nan official position of INBO, as long as the message is not confirmed by a duly \nsigned document.",
+      "body_snippet": "Dear Dave,\n\nBelow you'll find a testreport of your function. It works fine with my\ndataset allthough it is slower than the plain and simple table function.\nBut that off course will only work with pres",
+      "thread_id": "thread-59fcbb3593dd",
+      "thread_depth": 6,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-04a4b2fd6c2b",
+      "message_id": "<1225106630.6289.18.camel@biol102145.oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2008-10-27T13:23:50+02:00",
+      "subject": "[R-sig-eco] output from ordisurf",
+      "subject_clean": "output from ordisurf",
+      "in_reply_to": "<4900D424.6060405@umn.edu>",
+      "references": [
+        "<4900D424.6060405@umn.edu>"
+      ],
+      "body_plain": "On Thu, 2008-10-23 at 14:44 -0500, Christopher Chizinski wrote:\n> Is there a way to output the X,Y,Z values for the contour lines from \n> ordisurf?  \n> \n> For example, I am using this statement:\n> tmp<-with(enviro,ordisurf(fish.nmds,enviro$Temp,choices=c(1,2),add=TRUE))\n> \n> names(tmp)\n>  [1] \"coefficients\"      \"residuals\"         \"fitted.values\"   \n>  [4] \"family\"            \"linear.predictors\" \"deviance\"        \n>  [7] \"null.deviance\"     \"iter\"              \"weights\"         \n> [10] \"prior.weights\"     \"df.null\"           \"y\"               \n> [13] \"converged\"         \"sig2\"              \"edf\"             \n> [16] \"hat\"               \"boundary\"          \"sp\"              \n> [19] \"nsdf\"              \"Ve\"                \"Vp\"              \n> [22] \"mgcv.conv\"         \"gcv.ubre\"          \"aic\"             \n> [25] \"rank\"              \"gcv.ubre.dev\"      \"method\"          \n> [28] \"smooth\"            \"formula\"           \"cmX\"             \n> [31] \"model\"             \"control\"           \"terms\"           \n> [34] \"pterms\"            \"assign\"            \"offset\"          \n> [37] \"data\"              \"df.residual\"       \"min.edf\"         \n> [40] \"call\"\n> \n> I would like to get these XYZ values or find a way to calculate them \n> from the output for inclusion into SigmaPlot.  It is probably an easy \n> solution but I could not find what I needed.\n> \nDear Christopher Chizinski,\n\nI assume you mean the ordisurf() function in the vegan package. If you\nmean something else, this message is not appropriate and you may stop\nreading. \n\nFunction ordisurf (of vegan) returns visibly an object of function gam\nof the mgcv package (like documented). You can use all mgcv:::gam tools\nto handle this object, including predict.gam (of mgcv) which can be used\nto predict new values of surface (z) for any values of the coordinates\n(x, y). These results can be exported to SigmaPlot or anywhere. If you\nlook inside the function ordisurf, you can see how predict.gam is used\nto find the predicted value of the surface for a grid of axis values.\n\nI changed the ordisurf function in\nhttp://r-forge.r-project.org/projects/vegan so that it now adds the data\nused by the contour() function in a new item called \"grid\" in the\nresult. The returned data in \"grid\" contain vectors \"x\" and \"y\" for the\ngrid values on the axis, and matrix \"z\" for the fitted surface values\nfor each combination of \"x\" and \"y\" vectors. The values of \"z\" outside\nthe convex hull of observed site are marked as NA. You can directly\nexport these items or reuse them to draw the surface with the contour()\ncommand. The grid item is available from vegan working version 1.16-3\n(revision 532) in R-Forge, and Windows binary is available (probably)\nfrom tomorrow morning (Central European Standard Time).\n\nBest wishes, Jari Oksanen\n\n-- \nJari Oksanen <jari.oksanen at oulu.fi>",
+      "body_snippet": "On Thu, 2008-10-23 at 14:44 -0500, Christopher Chizinski wrote:\n> Is there a way to output the X,Y,Z values for the contour lines from \n> ordisurf?  \n> \n> For example, I am using this statement:\n> tmp",
+      "thread_id": "thread-9c4573dabbe1",
+      "thread_depth": 1,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-c1e82811569b",
+      "message_id": "<490609BA.6080604@umn.edu>",
+      "from_name": "Christopher Chizinski",
+      "from_email_hash": "5a09b2de187294ace6c6dfcf4828187365ff7a7b0ba398c62dec86e22e9bce76",
+      "date": "2008-10-27T13:34:34-05:00",
+      "subject": "[R-sig-eco] output from ordisurf",
+      "subject_clean": "output from ordisurf",
+      "in_reply_to": "<1225106630.6289.18.camel@biol102145.oulu.fi>",
+      "references": [
+        "<4900D424.6060405@umn.edu>",
+        "<1225106630.6289.18.camel@biol102145.oulu.fi>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081027/5b266495/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081027/5b266495/attachment.pl>",
+      "thread_id": "thread-9c4573dabbe1",
+      "thread_depth": 2,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-6cb1bbc95789",
+      "message_id": "<000301c939d1$2305f1b0$e978fac1@PC624976051329>",
+      "from_name": "Dominique",
+      "from_email_hash": "b63ccb2d1512e67bea6972b5cc6f48f274c05f353ac7f67185120710a1d07b90",
+      "date": "2008-10-29T07:56:01-04:00",
+      "subject": "[R-sig-eco] nls function",
+      "subject_clean": "nls function",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081029/8b36c8ef/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081029/8b36c8ef/attachment.pl>",
+      "thread_id": "thread-6cb1bbc95789",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-822cf35cda3f",
+      "message_id": "<200810301151.GAA09334@gauss.stat.iastate.edu>",
+      "from_name": "Philip Dixon",
+      "from_email_hash": "c7ab0e39ed36f833aa9dbccaa8e2d706ae3dd58a49cc15e168113bb3aec43195",
+      "date": "2008-10-30T06:51:43-05:00",
+      "subject": "[R-sig-eco] Providing derivative information to nls()",
+      "subject_clean": "Providing derivative information to nls()",
+      "in_reply_to": "Your message of \"Thu, 30 Oct 2008 12:00:01 BST.\" <mailman.1.1225364401.4020.r-sig-ecology@r-project.org> ",
+      "references": [],
+      "body_plain": "Most non-linear least squares algorithms estimate the derivatives\nnumerically.  SAS PROC NLIN does that when you omit the expressions\nfor the analytical derivatives (DER.A = ...).  My experience has\nbeen that numerical derivatives work just fine for most problems.\n\nAccording to the nls() help file, you can provide gradient\ninformation by writing a function to compute the residuals (obs -\npres) and adding a gradient attribute to those residuals.  The left\nhand side of the formula is blank.  An example is in the\ndocumentation for the nls() function.  Look for the\nweighted.MM.grad() function.  The example is more complicated than\nyou need because it is also weighting the responses.  However, nls()\nno longer seems to accept a blank response.\n\nAn alternative is to use mle() in the stats4 package.  This doesn't\ncome with quite as many helper functions as nls(), but the important\nones are available: vcov() to get the variance-covariance matrix,\nconfint() for profile confidence intervals and logLik() to get the\nmaximized log likelihood to use in tests.  To use mle() you would\nneed to:\n\n1) write a function to calculate the sum of squared residuals given\nA, C, and D\n\n2) write a function to calculate the gradient of the SS w.r.t. A, C,\nand D.\n\n3) mle(SSfn, start=list(A=.. C=.., D=..), gr=GRfn) \n\nBest wishes,\nPhilip Dixon",
+      "body_snippet": "Most non-linear least squares algorithms estimate the derivatives\nnumerically.  SAS PROC NLIN does that when you omit the expressions\nfor the analytical derivatives (DER.A = ...).  My experience has\nb",
+      "thread_id": "thread-822cf35cda3f",
+      "thread_depth": 0,
+      "month": "2008-10"
+    },
+    {
+      "id": "msg-43bba9a673e0",
+      "message_id": "<OF776F3107.819B2D1E-ON852574F2.004C35A6-852574F2.004C59BA@epamail.epa.gov>",
+      "from_name": "Farrar.David at epamail.epa.gov",
+      "from_email_hash": "33e790d2f4526322ffd54c301e90184003a3ad34193267e52074c251c8977433",
+      "date": "2008-10-30T09:53:54-04:00",
+      "subject": "[R-sig-eco] nls function",
+      "subject_clean": "nls function",
+      "in_reply_to": "<000301c939d1$2305f1b0$e978fac1@PC624976051329>",
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081030/c9f37752/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081030/c9f37752/attachment.pl>",
+      "thread_id": "thread-6cb1bbc95789",
+      "thread_depth": 1,
+      "month": "2008-10"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-5b5b90a4c76e",
+      "subject": "Bias adjusted confidence intervals with popbio",
+      "message_count": 1,
+      "participants": [
+        "Lisa Mandle"
+      ],
+      "started": "2008-10-02T12:27:00-10:00",
+      "last_reply": "2008-10-02T12:27:00-10:00",
+      "root_message_id": "msg-5b5b90a4c76e"
+    },
+    {
+      "id": "thread-b000e47de4ff",
+      "subject": "simm.levy in adehabitat",
+      "message_count": 2,
+      "participants": [
+        "Clément Calenge",
+        "Tim Sippel"
+      ],
+      "started": "2008-10-02T16:43:11+13:00",
+      "last_reply": "2008-10-02T10:57:04+02:00",
+      "root_message_id": "msg-b000e47de4ff"
+    },
+    {
+      "id": "thread-59fcbb3593dd",
+      "subject": "Clustering large data",
+      "message_count": 12,
+      "participants": [
+        "Brian Knaus",
+        "Dave Roberts",
+        "Farrar.David at epamail.epa.gov",
+        "Miltinho Astronauta",
+        "ONKELINX, Thierry",
+        "Peter Solymos",
+        "Phil Novack-Gottshall",
+        "hadley wickham"
+      ],
+      "started": "2008-10-07T07:50:57-06:00",
+      "last_reply": "2008-10-27T10:11:29+01:00",
+      "root_message_id": "msg-59fcbb3593dd"
+    },
+    {
+      "id": "thread-ba4c297cee13",
+      "subject": "Clustering large data",
+      "message_count": 7,
+      "participants": [
+        "Brian Campbell",
+        "Christian A. Parker",
+        "Farrar.David at epamail.epa.gov",
+        "ONKELINX, Thierry",
+        "tyler"
+      ],
+      "started": "2008-10-07T12:12:28+02:00",
+      "last_reply": "2008-10-07T11:23:15-07:00",
+      "root_message_id": "msg-ba4c297cee13"
+    },
+    {
+      "id": "thread-d05526505b28",
+      "subject": "Mortality anslisis",
+      "message_count": 1,
+      "participants": [
+        "Marcelo Luiz de Laia"
+      ],
+      "started": "2008-10-07T20:35:56+00:00",
+      "last_reply": "2008-10-07T20:35:56+00:00",
+      "root_message_id": "msg-d05526505b28"
+    },
+    {
+      "id": "thread-79dbf06fa43a",
+      "subject": "Ecology and Stats",
+      "message_count": 3,
+      "participants": [
+        "Darin Brooks",
+        "Sarah Goslee",
+        "stephen sefick"
+      ],
+      "started": "2008-10-08T08:07:21-06:00",
+      "last_reply": "2008-10-08T10:27:53-04:00",
+      "root_message_id": "msg-79dbf06fa43a"
+    },
+    {
+      "id": "thread-33425e7ced93",
+      "subject": "reshape (was clustering large data)",
+      "message_count": 1,
+      "participants": [
+        "Frank Berninger"
+      ],
+      "started": "2008-10-08T08:10:03-04:00",
+      "last_reply": "2008-10-08T08:10:03-04:00",
+      "root_message_id": "msg-33425e7ced93"
+    },
+    {
+      "id": "thread-0e642e37ebed",
+      "subject": "progamming functions help",
+      "message_count": 2,
+      "participants": [
+        "Clément Calenge",
+        "Stephen Cole"
+      ],
+      "started": "2008-10-08T08:32:39-03:00",
+      "last_reply": "2008-10-08T13:49:33+02:00",
+      "root_message_id": "msg-0e642e37ebed"
+    },
+    {
+      "id": "thread-73190108314e",
+      "subject": "plotting Ripley fonctions",
+      "message_count": 1,
+      "participants": [
+        "Miltinho Astronauta"
+      ],
+      "started": "2008-10-09T10:59:39-02:00",
+      "last_reply": "2008-10-09T10:59:39-02:00",
+      "root_message_id": "msg-73190108314e"
+    },
+    {
+      "id": "thread-1e9eaa2138c2",
+      "subject": "plotting Ripley fonctions",
+      "message_count": 1,
+      "participants": [
+        "Lassana TOURE"
+      ],
+      "started": "2008-10-09T11:37:02+00:00",
+      "last_reply": "2008-10-09T11:37:02+00:00",
+      "root_message_id": "msg-1e9eaa2138c2"
+    },
+    {
+      "id": "thread-96cbad1991c3",
+      "subject": "R-sig-ecology mailing list submission",
+      "message_count": 1,
+      "participants": [
+        "Lassana TOURE"
+      ],
+      "started": "2008-10-09T11:37:53+00:00",
+      "last_reply": "2008-10-09T11:37:53+00:00",
+      "root_message_id": "msg-96cbad1991c3"
+    },
+    {
+      "id": "thread-d2ccb68d58cf",
+      "subject": "Improving efficiency in a simulation model",
+      "message_count": 5,
+      "participants": [
+        "Bio7",
+        "Dulce M. Bustamante",
+        "Farrar.David at epamail.epa.gov",
+        "Julian Burgos",
+        "tyler"
+      ],
+      "started": "2008-10-09T16:47:00-04:00",
+      "last_reply": "2008-10-21T11:28:10-07:00",
+      "root_message_id": "msg-d2ccb68d58cf"
+    },
+    {
+      "id": "thread-3c20374323bc",
+      "subject": "simm.levy in adehabitat",
+      "message_count": 2,
+      "participants": [
+        "Clément Calenge",
+        "Tim Sippel"
+      ],
+      "started": "2008-10-10T09:53:28+13:00",
+      "last_reply": "2008-10-10T10:04:13+02:00",
+      "root_message_id": "msg-3c20374323bc"
+    },
+    {
+      "id": "thread-f6d2ca33080d",
+      "subject": "help with categorical responses in boosted classification trees (gbm package)",
+      "message_count": 2,
+      "participants": [
+        "Jill Johnstone",
+        "Kingsford Jones"
+      ],
+      "started": "2008-10-10T10:41:06-06:00",
+      "last_reply": "2008-10-11T11:40:30-06:00",
+      "root_message_id": "msg-f6d2ca33080d"
+    },
+    {
+      "id": "thread-64724bacef10",
+      "subject": "Thank you",
+      "message_count": 1,
+      "participants": [
+        "Dulce M. Bustamante"
+      ],
+      "started": "2008-10-10T11:46:39-04:00",
+      "last_reply": "2008-10-10T11:46:39-04:00",
+      "root_message_id": "msg-64724bacef10"
+    },
+    {
+      "id": "thread-3463216f0f97",
+      "subject": "model selection AIC",
+      "message_count": 3,
+      "participants": [
+        "Dave Hewitt",
+        "Kingsford Jones",
+        "Satterthwaite, Paul"
+      ],
+      "started": "2008-10-13T14:33:33-07:00",
+      "last_reply": "2008-10-14T10:40:24-06:00",
+      "root_message_id": "msg-3463216f0f97"
+    },
+    {
+      "id": "thread-d3fda20a1ed3",
+      "subject": "Interpreting large clusters",
+      "message_count": 1,
+      "participants": [
+        "Nicholas Lewin-Koh"
+      ],
+      "started": "2008-10-15T09:57:15-07:00",
+      "last_reply": "2008-10-15T09:57:15-07:00",
+      "root_message_id": "msg-d3fda20a1ed3"
+    },
+    {
+      "id": "thread-47151612d494",
+      "subject": "Analyzing hemispheric photos in R?",
+      "message_count": 1,
+      "participants": [
+        "opheliawang at mail.utexas.edu"
+      ],
+      "started": "2008-10-17T03:53:46-05:00",
+      "last_reply": "2008-10-17T03:53:46-05:00",
+      "root_message_id": "msg-47151612d494"
+    },
+    {
+      "id": "thread-d2f5bfbad144",
+      "subject": "Analyzing hemispheric photos in R? (opheliawang@mail.utexas.edu)",
+      "message_count": 1,
+      "participants": [
+        "Nicholas Lewin-Koh"
+      ],
+      "started": "2008-10-21T09:15:14-07:00",
+      "last_reply": "2008-10-21T09:15:14-07:00",
+      "root_message_id": "msg-d2f5bfbad144"
+    },
+    {
+      "id": "thread-6dcac53a889a",
+      "subject": "multiple vertical histograms?",
+      "message_count": 2,
+      "participants": [
+        "David Rogowski",
+        "Jack Tuomikoski"
+      ],
+      "started": "2008-10-21T16:44:46-05:00",
+      "last_reply": "2008-10-21T16:03:48-07:00",
+      "root_message_id": "msg-6dcac53a889a"
+    },
+    {
+      "id": "thread-9c4573dabbe1",
+      "subject": "output from ordisurf",
+      "message_count": 3,
+      "participants": [
+        "Christopher Chizinski",
+        "Jari Oksanen"
+      ],
+      "started": "2008-10-23T14:44:36-05:00",
+      "last_reply": "2008-10-27T13:34:34-05:00",
+      "root_message_id": "msg-9c4573dabbe1"
+    },
+    {
+      "id": "thread-6cb1bbc95789",
+      "subject": "nls function",
+      "message_count": 2,
+      "participants": [
+        "Dominique",
+        "Farrar.David at epamail.epa.gov"
+      ],
+      "started": "2008-10-29T07:56:01-04:00",
+      "last_reply": "2008-10-30T09:53:54-04:00",
+      "root_message_id": "msg-6cb1bbc95789"
+    },
+    {
+      "id": "thread-822cf35cda3f",
+      "subject": "Providing derivative information to nls()",
+      "message_count": 1,
+      "participants": [
+        "Philip Dixon"
+      ],
+      "started": "2008-10-30T06:51:43-05:00",
+      "last_reply": "2008-10-30T06:51:43-05:00",
+      "root_message_id": "msg-822cf35cda3f"
+    }
+  ]
+}

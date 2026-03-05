@@ -1,0 +1,2901 @@
+From dvrbts at ecology.msu.montana.edu  Thu Dec  1 18:27:20 2011
+From: dvrbts at ecology.msu.montana.edu (Dave Roberts)
+Date: Thu, 01 Dec 2011 10:27:20 -0700
+Subject: [R-sig-eco] post hoc in Kruskal Wallis
+In-Reply-To: <a06240800caf40c42fe98@[192.168.200.252]>
+References: <a06240800caf40c42fe98@[192.168.200.252]>
+Message-ID: <4ED7B8F8.1070801@ecology.msu.montana.edu>
+
+If the design is balanced this function will work
+
+npcompare <- function (var,class)
+{
+     k <- length(table(class))
+     n <- length(var)/k
+
+     se <- sqrt((n*(n*k)*(n*k+1))/12)
+     rvar <- rank(var)
+
+     for (i in 1:(k-1)) {
+         left <- sum(rvar[as.numeric(class)==i])
+         for (j in (i+1):k) {
+             right <- sum(rvar[as.numeric(class)==j])
+             diff = abs(left-right)
+             cat(paste(i,j,left,right,diff,round(1-pt(diff/se,k),4),'\n'))
+         }
+     }
+     cat('\n')
+}
+
+It's not formatted very elegantly, but it works.
+
+Dave R.
+
+On 11/24/2011 08:01 AM, Richard L. Boyce wrote:
+> Zar, in Biostatistical Analysis, has a Tukey-like test that is highly
+> recommended. You may need to do it by hand, but it is quite easy.
+>
+>> Message: 5
+>> Date: Wed, 23 Nov 2011 18:21:54 +0100
+>> From: "Jakub Szymkowiak"<qbaszym at tlen.pl>
+>> To:<r-sig-ecology at r-project.org>
+>> Subject: [R-sig-eco]  post hoc in Kruskal Wallis
+>> Message-ID:<C8041F4B78EB487C8707E72114C3F4CF at komp>
+>> Content-Type: text/plain; format=flowed; charset="iso-8859-1";
+>> 	reply-type=original
+>>
+>> Hi,
+>> does anyone know, how can I perform post-hoc tests (especially Least
+>> Significant Difference and Sheffe Test) for results from Kruskal-Wallis
+>> test? In KruskaI-Wallis test I found some significant differences between
+>> tested groups, but I want to know between which groups this difference is
+>> really signifficant.
+>>
+>> Cheers,
+>> Jakub
+>
+
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+David W. Roberts                                     office 406-994-4548
+Professor and Head                                      FAX 406-994-3190
+Department of Ecology                         email droberts at montana.edu
+Montana State University
+Bozeman, MT 59717-3460
+
+
+From forister at gmail.com  Thu Dec  1 23:54:35 2011
+From: forister at gmail.com (Matthew Forister)
+Date: Thu, 1 Dec 2011 14:54:35 -0800
+Subject: [R-sig-eco] reporting results from binomial glm with categorical
+	variable
+Message-ID: <CAAyypfDkrRS8ttdmQuxypnvO2OYeY4tixkoAmBQCo8L-5KvsBA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111201/200e564c/attachment.pl>
+
+From scott.foster at csiro.au  Fri Dec  2 00:29:36 2011
+From: scott.foster at csiro.au (Scott Foster)
+Date: Fri, 2 Dec 2011 10:29:36 +1100
+Subject: [R-sig-eco] reporting results from binomial glm with
+ categorical variable
+In-Reply-To: <CAAyypfDkrRS8ttdmQuxypnvO2OYeY4tixkoAmBQCo8L-5KvsBA@mail.gmail.com>
+References: <CAAyypfDkrRS8ttdmQuxypnvO2OYeY4tixkoAmBQCo8L-5KvsBA@mail.gmail.com>
+Message-ID: <4ED80DE0.4080805@csiro.au>
+
+Hi Matt,
+
+This is only obliquely an R question.  Here is an answer nonetheless.
+
+If you have G levels of the categorical factor then there are exactly G 
+means to estimate (irrespective of the outcome type).  This means that 
+you cannot estimate an overall grand mean *and* the individual level 
+means, as there would then be G+1 parameters for G means and the 
+estimates would be non-unique...  I suspect that you already knew this 
+though.
+
+The way around this is to impose some sort of constraint on the overall 
+mean and the level means.  Commonly this is done by assigning one of the 
+level `deviations' to be zero -- this is called a corner-point 
+constraint.  Another type is sum-to-zero where there is a grand mean 
+(actually the mean) and G deviations that are constrained by their sum.  
+This is the constraint that you mentioned.  There are others, of course, 
+but less common.  One that I find very useful is to omit estimating the 
+overall mean and just estimate the G factor level means.  Generally 
+though, the choice of constraint is not all that important but 
+corner-point constraints can be easier to interpret, sometimes.
+
+If you do want to use sum-to-zero constraints then all you need to do is 
+alter the `contrast' attribute of your categorical variable.  This is 
+done in R using the C() function (note capitalisation).  Your glm() call 
+would use a formula like cbind( nsuccess,nfailure)~1+C(myFac,"sum").
+
+How to report the results?  Good question...  For me, it depends 
+strongly on what information I want to convey.  Typically, for this kind 
+of analysis, that would be the means of the factor levels (unless there 
+is more to this than we are seeing).  This is most easily done using R's 
+inbuilt prediction functions (see ?predict.glm for example).  A call to 
+this function would have a newdata argument given as a G row data frame 
+with one row for each level of the factor.  Note that it will not matter 
+which contrasts you give it -- they will all perform equally well (they 
+are all equally valid).
+
+I hope this helped (it is certainly long enough),
+
+Scott
+
+PS  A couple of good references (oldies but goodies) for topics related 
+to this are
+Lane and Nelder (1982) Analysis of covariance and standardisation as 
+instances of prediction.  Biometrics, 38, 613-621
+Nelder (1994) The statistics of linear models: back to basics.  
+Statistics and Computing, 4, 221-234
+
+On 02/12/11 09:54, Matthew Forister wrote:
+> Dear All,
+>
+> I have two questions about reporting results from a binomial GLM (logit
+> link) that includes a categorical variable.  I understand how dummy coding
+> works.  My two questions are about interpretation and presentation:
+>
+> 1) The default in R seems to be to use the first level of a categorical
+> variable as the reference.  It makes more sense to me to use the grand mean
+> as the reference -- I found a webpage that describes this as "deviation
+> coding".  This seems so commonsensical, that I'm surprised that I don't see
+> more people using it instead of the default comparison to the first level.
+>   Am I missing something here? is this deviation coding a reasonable way to
+> go?  This is the website where I found that:
+> http://www.ats.ucla.edu/stat/r/library/contrast_coding.htm
+>
+> 2) Whether I use the default in R or switch to deviation coding, I will get
+> multiple coefficients associated with the different levels of my predictor
+> variable.  What is the convention for reporting the information associated
+> with the "dummy coded" levels of a categorical variable?  I had assumed
+> that I would report details associated with each of the dummy coded levels,
+> but I can't seem to find an example where someone has done that...
+>
+> thanks for your help,
+> Matt
+>
+>
+>
+
+-- 
+Scott Foster
+CSIRO Mathematics, Informatics and Statistics
+GPO Box 1538
+Castray Esplanade
+Hobart 7001
+Tasmania
+Australia
+
+Phone:     (03) 6232 5178
+Fax:       (03) 6232 5000
+Email:     scott.foster at csiro.au
+
+
+From boycer at nku.edu  Fri Dec  2 15:10:15 2011
+From: boycer at nku.edu (Richard L. Boyce)
+Date: Fri, 2 Dec 2011 09:10:15 -0500
+Subject: [R-sig-eco] post hoc in Kruskal Wallis
+In-Reply-To: <mailman.1.1322823601.27343.r-sig-ecology@r-project.org>
+References: <mailman.1.1322823601.27343.r-sig-ecology@r-project.org>
+Message-ID: <a06240800cafe8c5ddacb@[10.12.6.24]>
+
+Thanks, Dave! If I get a moment, I'll see if I can modify it for 
+unbalanced designs--Rick
+
+>Message: 1
+>Date: Thu, 01 Dec 2011 10:27:20 -0700
+>From: Dave Roberts <dvrbts at ecology.msu.montana.edu>
+>To: r-sig-ecology at r-project.org
+>Subject: Re: [R-sig-eco] post hoc in Kruskal Wallis
+>Message-ID: <4ED7B8F8.1070801 at ecology.msu.montana.edu>
+>Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+>
+>If the design is balanced this function will work
+>
+>npcompare <- function (var,class)
+>{
+>      k <- length(table(class))
+>      n <- length(var)/k
+>
+>      se <- sqrt((n*(n*k)*(n*k+1))/12)
+>      rvar <- rank(var)
+>
+>      for (i in 1:(k-1)) {
+>          left <- sum(rvar[as.numeric(class)==i])
+>          for (j in (i+1):k) {
+>              right <- sum(rvar[as.numeric(class)==j])
+>              diff = abs(left-right)
+>              cat(paste(i,j,left,right,diff,round(1-pt(diff/se,k),4),'\n'))
+>          }
+>      }
+>      cat('\n')
+>}
+>
+>It's not formatted very elegantly, but it works.
+>
+>Dave R.
+>
+>On 11/24/2011 08:01 AM, Richard L. Boyce wrote:
+>>  Zar, in Biostatistical Analysis, has a Tukey-like test that is highly
+>>  recommended. You may need to do it by hand, but it is quite easy.
+>>
+>>>  Message: 5
+>>>  Date: Wed, 23 Nov 2011 18:21:54 +0100
+>>>  From: "Jakub Szymkowiak"<qbaszym at tlen.pl>
+>>>  To:<r-sig-ecology at r-project.org>
+>>>  Subject: [R-sig-eco]  post hoc in Kruskal Wallis
+>>>  Message-ID:<C8041F4B78EB487C8707E72114C3F4CF at komp>
+>>>  Content-Type: text/plain; format=flowed; charset="iso-8859-1";
+>>>	reply-type=original
+>>>
+>>>  Hi,
+>>>  does anyone know, how can I perform post-hoc tests (especially Least
+>>>  Significant Difference and Sheffe Test) for results from Kruskal-Wallis
+>>>  test? In KruskaI-Wallis test I found some significant differences between
+>>>  tested groups, but I want to know between which groups this difference is
+>>>  really signifficant.
+>>>
+>>>  Cheers,
+>>>  Jakub
+>>
+>
+>--
+>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>David W. Roberts                                     office 406-994-4548
+>Professor and Head                                      FAX 406-994-3190
+>Department of Ecology                         email droberts at montana.edu
+>Montana State University
+>Bozeman, MT 59717-3460
+
+-- 
+================================
+Richard L. Boyce
+Director, Environmental Science Program
+Associate Professor
+Department of Biological Sciences
+Northern Kentucky University
+Nunn Drive
+Highland Heights, KY  41099  USA
+
+859-572-1407 (tel.)
+859-572-5639 (fax)
+boycer at nku.edu
+http://www.nku.edu/~boycer/
+=================================
+
+"One of the advantages of being disorderly is that one is constantly 
+making exciting discoveries." - A.A. Milne
+
+
+From mrapi090 at uottawa.ca  Sat Dec  3 01:28:16 2011
+From: mrapi090 at uottawa.ca (Michel Rapinski)
+Date: Fri, 2 Dec 2011 19:28:16 -0500 (EST)
+Subject: [R-sig-eco] Various test of significance
+Message-ID: <53221.174.88.61.54.1322872096.squirrel@webmail01.uottawa.ca>
+
+Hi,
+
+I've got a response matrix (Y) composed of multiple quantitative variables
+of the same nature which I am subjecting to multivariate analysis. I was
+wondering if there was a simple way of testing the following 3 things in
+R:
+
+1) Significance of the coefficients of correlation (from the computed
+correlation matrix of Y).
+2) Independence of the Y variables.
+3) Multinormal distribution test.
+
+Thank you,
+
+Michel
+
+
+From sarah.goslee at gmail.com  Sat Dec  3 16:41:18 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Sat, 3 Dec 2011 10:41:18 -0500
+Subject: [R-sig-eco] Various test of significance
+In-Reply-To: <53221.174.88.61.54.1322872096.squirrel@webmail01.uottawa.ca>
+References: <53221.174.88.61.54.1322872096.squirrel@webmail01.uottawa.ca>
+Message-ID: <CAM_vju=QbBdX97KtCvWrMiGDk1FGrYqu6jcXfK603L8ZZJ_fYg@mail.gmail.com>
+
+There are lots of ways to do many of those things, and we have
+no way of knowing which are most appropriate for your data and
+baseline assumptions.
+
+The very best thing you can do is learn how to find options for
+performing basic tasks yourself. Within R the help facility can
+be useful, especially ?? and apropos().
+
+For web searching, I use http://www.rseek.org a lot for information
+on packages, functions, R tips.
+
+If you have specific questions after you spend some time
+familiarizing yourself with the options, then we can help.
+
+Sarah
+
+On Fri, Dec 2, 2011 at 7:28 PM, Michel Rapinski <mrapi090 at uottawa.ca> wrote:
+> Hi,
+>
+> I've got a response matrix (Y) composed of multiple quantitative variables
+> of the same nature which I am subjecting to multivariate analysis. I was
+> wondering if there was a simple way of testing the following 3 things in
+> R:
+>
+> 1) Significance of the coefficients of correlation (from the computed
+> correlation matrix of Y).
+> 2) Independence of the Y variables.
+> 3) Multinormal distribution test.
+>
+> Thank you,
+>
+> Michel
+>
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From ptacnik at icbm.de  Mon Dec  5 09:01:41 2011
+From: ptacnik at icbm.de (Robert Ptacnik)
+Date: Mon, 5 Dec 2011 09:01:41 +0100
+Subject: [R-sig-eco] question regarding outdated maps
+Message-ID: <E9A836CD-A269-417D-9D96-B82B06351F02@icbm.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111205/380c5b61/attachment.pl>
+
+From tsuboi-shun-gw at ynu.ac.jp  Mon Dec  5 09:28:12 2011
+From: tsuboi-shun-gw at ynu.ac.jp (=?UTF-8?B?5Z2q5LqV44CA6Zq8?=)
+Date: Mon, 05 Dec 2011 17:28:12 +0900
+Subject: [R-sig-eco] The problems on BIO-ENV procedure by [R]
+Message-ID: <20111205082812.00000A77.0411@ynu.ac.jp>
+
+Dear Madam / Sir,
+
+I have two questions for the use of the ?R? program for the ecological 
+research. I am studying the relationship between the community 
+structures of environmental microbes and some environmental conditions. 
+For this objective, I have known that the BIOENV procedure, which was 
+developed by Clarke & Ainsworth (1993), is available on the ?R? software.
+  
+
+Fist question; 
+I attempted the use of the procedure to analyze the relationship between 
+the variation of the microbial community structures and the 
+environmental factors. However, I can not analyze the relationship based 
+on isoMDS function. The isoMDS was inacceptable for my dataset. The 
+command for the BIOENV procedure, which I programmed, and the error 
+massage I gained was as follow; 
+
+> library(MASS)
+> library(vegan) 
+> communitydat<-read.table("C:/Documents and Settings/shuntsuboi/desktop
+/bray.txt", head- er=T)
+> environdat<-read.csv("C:/Documents and Settings shuntsuboi/desktop/ev.
+csv",header=T)
+> env<-environdat[,c("variablesA","variablesB.","variablesC","variablesD
+","variablesE")]
+> d <- vegdist(communitydat, "bray")
+> isoMDS(d)
+error   isoMDS(d) : zero or negative distance between objects 1 and 2
+
+As mentioned above, I can not run the program because the error, which 
+is ?isoMDS(d) : zero or negative distance between objects 1 and 2?, 
+occurred. What are the ways to solve this problem ? On isoMDS function, 
+what are the ways that the zero distance of ?Bray-Curtis distance? is 
+acceptable in the function ?
+
+Second question; 
+	Based on the command as above, I ran the metaMDS function. However, 
+although I could automatically describe the two dimensional ordination 
+plot figure, I could not gain the X and Y value of the respective plots. 
+Then, the error massage was shown as follow; 
+?In ordiplot(x, choices = choices, type = type, display = display,  :
+Species scores not available?
+ 
+What are the ways to solve this problem ?
+
+Sincerely yours, 
+Shun Tsuboi
+
+
+From ubuntero.9161 at gmail.com  Mon Dec  5 09:34:06 2011
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Mon, 5 Dec 2011 10:34:06 +0200
+Subject: [R-sig-eco] question regarding outdated maps
+In-Reply-To: <E9A836CD-A269-417D-9D96-B82B06351F02@icbm.de>
+References: <E9A836CD-A269-417D-9D96-B82B06351F02@icbm.de>
+Message-ID: <CAAVnHssqPPcvSOnYDF0+XTfZ0PsipdVYf4qH=vqaNbi6iKw+ug@mail.gmail.com>
+
+On Mon, Dec 5, 2011 at 10:01 AM, Robert Ptacnik <ptacnik at icbm.de> wrote:
+> Hi list,
+> where can I find current maps of Europe? The maps contained in mapdata/GEOmaps display maps from the time before 1990 (e.g. Yugoslavia, Czechoslovakia instead of the new states).
+
+Hi Robert,
+
+I have recently found such maps on the webpage of the European
+Comission: http://is.gd/f84YSV
+
+Hope this helps,
+Ivailo
+-- 
+UBUNTU: a person is a person through other persons.
+
+
+From ubuntero.9161 at gmail.com  Mon Dec  5 10:38:59 2011
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Mon, 5 Dec 2011 11:38:59 +0200
+Subject: [R-sig-eco] Nestedness analyses in Vegan
+In-Reply-To: <CAA6CCigCSH4zQLfqsUr3mPwrrG5CEXSOT8GGG65++pu6L8CEvQ@mail.gmail.com>
+References: <CAA6CCigCSH4zQLfqsUr3mPwrrG5CEXSOT8GGG65++pu6L8CEvQ@mail.gmail.com>
+Message-ID: <CAAVnHsv4vE0+3851_Xp8O0KErs_EMe4iiR2xrCD9fS83T5bC-g@mail.gmail.com>
+
+On Mon, Nov 28, 2011 at 8:32 PM, Ricardo Solar <rrsolar at gmail.com> wrote:
+> Hi people;
+>
+> I'm thinking about a solution to show that a sample coming from 3 types of
+> killing solutions are nested. However, when I tried to do this with
+> nestedness function in Vegan I couldn't specify the groups. I guess it's
+> impossible at all, so my question is: is there any other analysis where I
+> can show this nestedness pattern?
+>
+> Att, RSolar
+
+Dear Ricardo,
+
+as you didn't specify your data structure (and that is important for
+successfully performing a nestedness analysis), we have to guess it.
+In in any case it should be entered as "community data" - i.e. site x
+species incidence matrix. An interesting aspect of your question is
+how you should organise the "community data" - will you have three
+separate matrices and compare the nestedness metric among them or will
+you combine these in one common matrix to study (common) species
+responses to the three killing solutions. I don't have an answer for
+that, but perhaps someone on the list might provide further insight...
+
+Cheers,
+Ivailo
+-- 
+UBUNTU: a person is a person through other persons.
+
+
+From danclune at yahoo.com  Mon Dec  5 18:39:57 2011
+From: danclune at yahoo.com (dan clune)
+Date: Mon, 5 Dec 2011 09:39:57 -0800 (PST)
+Subject: [R-sig-eco] envfit calculation
+Message-ID: <1323106797.11486.YahooMailNeo@web125704.mail.ne1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111205/a57b9ef7/attachment.pl>
+
+From dvrbts at ecology.msu.montana.edu  Mon Dec  5 18:57:14 2011
+From: dvrbts at ecology.msu.montana.edu (Dave Roberts)
+Date: Mon, 05 Dec 2011 10:57:14 -0700
+Subject: [R-sig-eco] The problems on BIO-ENV procedure by [R]
+In-Reply-To: <20111205082812.00000A77.0411@ynu.ac.jp>
+References: <20111205082812.00000A77.0411@ynu.ac.jp>
+Message-ID: <4EDD05FA.1050803@ecology.msu.montana.edu>
+
+Shun Tsuobi,
+
+    isoMDS (and routines based on it) will not allow zero dissimilarity, 
+which implies perfect replicates.  One alternative is to remove one of 
+the replicates, but that may have unsatisfactory effect on further 
+analyses.  Alternatively, if you are sure you want to keep the duplicate 
+plots you can change the zero to a small value
+
+d[d==0] <- 0.0001
+
+and run the isoMDS on the resulting revised dissimilarity matrix.
+
+Undoubtedly someone from the vegan group will respond to your second 
+question.
+
+Dave Roberts
+
+On 12/05/2011 01:28 AM, ???? wrote:
+> Dear Madam / Sir,
+>
+> I have two questions for the use of the ?R? program for the ecological
+> research. I am studying the relationship between the community
+> structures of environmental microbes and some environmental conditions.
+> For this objective, I have known that the BIOENV procedure, which was
+> developed by Clarke&  Ainsworth (1993), is available on the ?R? software.
+>
+>
+> Fist question;
+> I attempted the use of the procedure to analyze the relationship between
+> the variation of the microbial community structures and the
+> environmental factors. However, I can not analyze the relationship based
+> on isoMDS function. The isoMDS was inacceptable for my dataset. The
+> command for the BIOENV procedure, which I programmed, and the error
+> massage I gained was as follow;
+>
+>> library(MASS)
+>> library(vegan)
+>> communitydat<-read.table("C:/Documents and Settings/shuntsuboi/desktop
+> /bray.txt", head- er=T)
+>> environdat<-read.csv("C:/Documents and Settings shuntsuboi/desktop/ev.
+> csv",header=T)
+>> env<-environdat[,c("variablesA","variablesB.","variablesC","variablesD
+> ","variablesE")]
+>> d<- vegdist(communitydat, "bray")
+>> isoMDS(d)
+> error   isoMDS(d) : zero or negative distance between objects 1 and 2
+>
+> As mentioned above, I can not run the program because the error, which
+> is ?isoMDS(d) : zero or negative distance between objects 1 and 2?,
+> occurred. What are the ways to solve this problem ? On isoMDS function,
+> what are the ways that the zero distance of ?Bray-Curtis distance? is
+> acceptable in the function ?
+>
+> Second question;
+> 	Based on the command as above, I ran the metaMDS function. However,
+> although I could automatically describe the two dimensional ordination
+> plot figure, I could not gain the X and Y value of the respective plots.
+> Then, the error massage was shown as follow;
+> ?In ordiplot(x, choices = choices, type = type, display = display,  :
+> Species scores not available?
+>
+> What are the ways to solve this problem ?
+>
+> Sincerely yours,
+> Shun Tsuboi
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+David W. Roberts                                     office 406-994-4548
+Professor and Head                                      FAX 406-994-3190
+Department of Ecology                         email droberts at montana.edu
+Montana State University
+Bozeman, MT 59717-3460
+
+
+From szoe8822 at uni-landau.de  Mon Dec  5 20:36:02 2011
+From: szoe8822 at uni-landau.de (=?UTF-8?B?RWR1YXJkIFN6w7Zjcw==?=)
+Date: Mon, 05 Dec 2011 20:36:02 +0100
+Subject: [R-sig-eco] The problems on BIO-ENV procedure by [R]
+In-Reply-To: <4EDD05FA.1050803@ecology.msu.montana.edu>
+References: <20111205082812.00000A77.0411@ynu.ac.jp>
+	<4EDD05FA.1050803@ecology.msu.montana.edu>
+Message-ID: <4EDD1D22.5030709@uni-landau.de>
+
+Regarding your second question:
+
+Did you run metaMDS on the dissimilarity matrix? - Than metaMDS and 
+ordiplot have no information about the species.
+Try running metaMDS on your community matrix and specify the distance 
+argument.
+
+
+Hope this helps,
+
+Sz?cs Eduard
+
+
+On 12/05/2011 06:57 PM, Dave Roberts wrote:
+> Shun Tsuobi,
+>
+>    isoMDS (and routines based on it) will not allow zero 
+> dissimilarity, which implies perfect replicates.  One alternative is 
+> to remove one of the replicates, but that may have unsatisfactory 
+> effect on further analyses.  Alternatively, if you are sure you want 
+> to keep the duplicate plots you can change the zero to a small value
+>
+> d[d==0] <- 0.0001
+>
+> and run the isoMDS on the resulting revised dissimilarity matrix.
+>
+> Undoubtedly someone from the vegan group will respond to your second 
+> question.
+>
+> Dave Roberts
+>
+> On 12/05/2011 01:28 AM, ???? wrote:
+>> Dear Madam / Sir,
+>>
+>> I have two questions for the use of the ?R? program for the ecological
+>> research. I am studying the relationship between the community
+>> structures of environmental microbes and some environmental conditions.
+>> For this objective, I have known that the BIOENV procedure, which was
+>> developed by Clarke&  Ainsworth (1993), is available on the ?R? 
+>> software.
+>>
+>>
+>> Fist question;
+>> I attempted the use of the procedure to analyze the relationship between
+>> the variation of the microbial community structures and the
+>> environmental factors. However, I can not analyze the relationship based
+>> on isoMDS function. The isoMDS was inacceptable for my dataset. The
+>> command for the BIOENV procedure, which I programmed, and the error
+>> massage I gained was as follow;
+>>
+>>> library(MASS)
+>>> library(vegan)
+>>> communitydat<-read.table("C:/Documents and Settings/shuntsuboi/desktop
+>> /bray.txt", head- er=T)
+>>> environdat<-read.csv("C:/Documents and Settings shuntsuboi/desktop/ev.
+>> csv",header=T)
+>>> env<-environdat[,c("variablesA","variablesB.","variablesC","variablesD
+>> ","variablesE")]
+>>> d<- vegdist(communitydat, "bray")
+>>> isoMDS(d)
+>> error   isoMDS(d) : zero or negative distance between objects 1 and 2
+>>
+>> As mentioned above, I can not run the program because the error, which
+>> is ?isoMDS(d) : zero or negative distance between objects 1 and 2?,
+>> occurred. What are the ways to solve this problem ? On isoMDS function,
+>> what are the ways that the zero distance of ?Bray-Curtis distance? is
+>> acceptable in the function ?
+>>
+>> Second question;
+>>     Based on the command as above, I ran the metaMDS function. However,
+>> although I could automatically describe the two dimensional ordination
+>> plot figure, I could not gain the X and Y value of the respective plots.
+>> Then, the error massage was shown as follow;
+>> ?In ordiplot(x, choices = choices, type = type, display = display,  :
+>> Species scores not available?
+>>
+>> What are the ways to solve this problem ?
+>>
+>> Sincerely yours,
+>> Shun Tsuboi
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From jari.oksanen at oulu.fi  Tue Dec  6 08:53:11 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 06 Dec 2011 09:53:11 +0200
+Subject: [R-sig-eco] The problems on BIO-ENV procedure by [R]
+In-Reply-To: <20111205082812.00000A77.0411@ynu.ac.jp>
+Message-ID: <CB039687.19C64%jari.oksanen@oulu.fi>
+
+
+
+
+On 05/12/2011 10:28, "????" <tsuboi-shun-gw at ynu.ac.jp> wrote:
+
+> Dear Madam / Sir,
+> 
+> I have two questions for the use of the ?R? program for the ecological
+> research. I am studying the relationship between the community
+> structures of environmental microbes and some environmental conditions.
+> For this objective, I have known that the BIOENV procedure, which was
+> developed by Clarke & Ainsworth (1993), is available on the ?R? software.
+>   
+> 
+> Fist question; 
+> I attempted the use of the procedure to analyze the relationship between
+> the variation of the microbial community structures and the
+> environmental factors. However, I can not analyze the relationship based
+> on isoMDS function. The isoMDS was inacceptable for my dataset. The
+> command for the BIOENV procedure, which I programmed, and the error
+> massage I gained was as follow;
+> 
+>> library(MASS)
+>> library(vegan) 
+>> communitydat<-read.table("C:/Documents and Settings/shuntsuboi/desktop
+> /bray.txt", head- er=T)
+>> environdat<-read.csv("C:/Documents and Settings shuntsuboi/desktop/ev.
+> csv",header=T)
+>> env<-environdat[,c("variablesA","variablesB.","variablesC","variablesD
+> ","variablesE")]
+>> d <- vegdist(communitydat, "bray")
+>> isoMDS(d)
+> error   isoMDS(d) : zero or negative distance between objects 1 and 2
+> 
+> As mentioned above, I can not run the program because the error, which
+> is ?isoMDS(d) : zero or negative distance between objects 1 and 2?,
+> occurred. What are the ways to solve this problem ? On isoMDS function,
+> what are the ways that the zero distance of ?Bray-Curtis distance? is
+> acceptable in the function ?
+> 
+> Second question; 
+> Based on the command as above, I ran the metaMDS function. However,
+> although I could automatically describe the two dimensional ordination
+> plot figure, I could not gain the X and Y value of the respective plots.
+> Then, the error massage was shown as follow;
+> ?In ordiplot(x, choices = choices, type = type, display = display,  :
+> Species scores not available?
+>  
+Dear Shun Tsuboi,
+
+First answers to direct vegan questions:
+1) use scores() function to extract the scores of the metaMDS result.
+2) the message about "Species scores not available? is not an error but a
+warning. One difference between errors and warnings in R is that errors are
+called "errors" and warnings are called "warnings" in the output. This is an
+informative message that tells you that there are no species scores.
+Probably this happened because you supplied dissimilarities to metaMDS()
+instead of the full data, and dissimilarities have no information about
+species that were used in calculation.
+
+Then a question: you read file 'bray.txt' as your 'communitydat' and then
+you later calculate Bray-Curtis dissimilarites as 'd <-
+vegdist(communitydat, "bray")'. Is this only misleading or a user error? The
+file name sounds like you already had dissimilarities as the input, and if
+this is the case, you should not calculate dissimilarities of
+dissimilarities.
+
+Cheers, Jari Oksanen
+
+
+From boycer at nku.edu  Tue Dec  6 22:33:52 2011
+From: boycer at nku.edu (Richard L. Boyce)
+Date: Tue, 6 Dec 2011 16:33:52 -0500
+Subject: [R-sig-eco] post hoc in Kruskal Wallis
+Message-ID: <a06240800cb042a042650@[192.168.200.253]>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111206/fcf2c964/attachment.pl>
+
+From kmhernan at mail.utexas.edu  Thu Dec  8 21:54:27 2011
+From: kmhernan at mail.utexas.edu (Kyle Hernandez)
+Date: Thu, 8 Dec 2011 14:54:27 -0600
+Subject: [R-sig-eco] Random or Repeated
+Message-ID: <D5E4BD94-F5DA-44CE-AB6B-3912A69BB495@mail.utexas.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111208/016a483c/attachment.pl>
+
+From rab.mahnaz at gmail.com  Fri Dec  9 13:13:47 2011
+From: rab.mahnaz at gmail.com (Mahnaz Rabbaniha)
+Date: Fri, 9 Dec 2011 15:43:47 +0330
+Subject: [R-sig-eco] help
+Message-ID: <CANLCanWrrUyRbK5Ka8FUwOgDWsSNUFUHF__4Vb4XU3HE7MnuFg@mail.gmail.com>
+
+Hi
+
+in my project i collected its data in excel sheet that i attached,data
+were non normal then i transformed them and check the normality by
+shapiro.test that it showed again non-normality therefore i decided
+used the MDS analyses in r and download this site
+ ( http://www.statmethods.net/advstats/mds.html)
+
+but i haven't done it,  i think  the main problem is the form of excel
+matrix for doing it and also i want to know about different between  CLASSICAL
+MDS and isoMDS.
+please help me because this method is new in iran
+
+Thanks in advance
+-- 
+*Mahnaz Rabbaniha*
+*Senior expert of marine ecology *
+*Iranian Fisheries Research Organization (IFRO) *
+*P.O.Box: 14155-6116 , P.Code: 1411816618*
+Tehran, IRAN
+Phone:   +98 21 44580953
+*Fax:       +98 21 44580583*
+*Mobile:  +98 912 5790377*
+*Website: http://www.ifro.ir*
+
+From jari.oksanen at oulu.fi  Fri Dec  9 14:02:00 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 9 Dec 2011 13:02:00 +0000
+Subject: [R-sig-eco] Nestedness analyses in Vegan
+In-Reply-To: <CAAVnHsv4vE0+3851_Xp8O0KErs_EMe4iiR2xrCD9fS83T5bC-g@mail.gmail.com>
+References: <CAA6CCigCSH4zQLfqsUr3mPwrrG5CEXSOT8GGG65++pu6L8CEvQ@mail.gmail.com>
+	<CAAVnHsv4vE0+3851_Xp8O0KErs_EMe4iiR2xrCD9fS83T5bC-g@mail.gmail.com>
+Message-ID: <3DBC6692-1F4F-4CA8-80C7-7697CD990CDC@oulu.fi>
+
+
+On 05/12/2011, at 11:38 AM, Ivailo wrote:
+
+> On Mon, Nov 28, 2011 at 8:32 PM, Ricardo Solar <rrsolar at gmail.com> wrote:
+>> Hi people;
+>> 
+>> I'm thinking about a solution to show that a sample coming from 3 types of
+>> killing solutions are nested. However, when I tried to do this with
+>> nestedness function in Vegan I couldn't specify the groups. I guess it's
+>> impossible at all, so my question is: is there any other analysis where I
+>> can show this nestedness pattern?
+>> 
+>> Att, RSolar
+> 
+> Dear Ricardo,
+> 
+> as you didn't specify your data structure (and that is important for
+> successfully performing a nestedness analysis), we have to guess it.
+> In in any case it should be entered as "community data" - i.e. site x
+> species incidence matrix. An interesting aspect of your question is
+> how you should organise the "community data" - will you have three
+> separate matrices and compare the nestedness metric among them or will
+> you combine these in one common matrix to study (common) species
+> responses to the three killing solutions. I don't have an answer for
+> that, but perhaps someone on the list might provide further insight...
+
+Ricardo,
+
+I think this cannot be done in vegan. In vegan, we make a distinction between community Null models and nestedness statistics (metrics). The Null models generate random communities, and nestedness statistics are evaluated on those. The Null models for random communities are generated with constraints on marginal sums (in presence/absence data species frequencies, species richnesses), but there is no option for having clustered structures for such matrices. If you want to have something like that you must work it out yourself: you should split your matrix to submatrices, generate random communities for each and then again assemble the submatrices together. This is certainly doable, but I don't claim it be easy.
+
+Cheers, jari oksanen
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+From bbolker at gmail.com  Fri Dec  9 15:14:31 2011
+From: bbolker at gmail.com (Ben Bolker)
+Date: Fri, 9 Dec 2011 14:14:31 +0000 (UTC)
+Subject: [R-sig-eco] Random or Repeated
+References: <D5E4BD94-F5DA-44CE-AB6B-3912A69BB495@mail.utexas.edu>
+Message-ID: <loom.20111209T151250-337@post.gmane.org>
+
+Kyle Hernandez <kmhernan at ...> writes:
+
+> 
+> Hello all,
+> 
+> I am building some mixed models using QTLs for several traits. 
+> This basically gets at the underlying
+> genetic architecture.  However, I have a Recombinant Inbred 
+> Line (RIL) breeding design grown across 5
+> environments. There are a couple issues I have: 
+> 
+> 1. Each RIL is not truly independent from one another
+>  (some are more closely related than others)
+> 2. Can measuring traits for a RIL across several environments 
+> be considered "repeated" measures?
+> 
+
+  I would definitely ask this question on the r-sig-mixed-models
+list.  There are several packages (kinship, pedigreemm) for dealing
+with varying degrees of relatedness in mixed models.
+ 
+  Ben Bolker
+
+
+From sarah.goslee at gmail.com  Fri Dec  9 16:05:02 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Fri, 9 Dec 2011 10:05:02 -0500
+Subject: [R-sig-eco] help
+In-Reply-To: <CANLCanWrrUyRbK5Ka8FUwOgDWsSNUFUHF__4Vb4XU3HE7MnuFg@mail.gmail.com>
+References: <CANLCanWrrUyRbK5Ka8FUwOgDWsSNUFUHF__4Vb4XU3HE7MnuFg@mail.gmail.com>
+Message-ID: <CAM_vjukmQYgzd=Q2Y11gCWLxx72hJv5N2x5ozhRBf05Z9FQCGw@mail.gmail.com>
+
+Hi,
+
+On Fri, Dec 9, 2011 at 7:13 AM, Mahnaz Rabbaniha <rab.mahnaz at gmail.com> wrote:
+> Hi
+>
+> in my project i collected its data in excel sheet that i attached,data
+> were non normal then i transformed them and check the normality by
+> shapiro.test that it showed again non-normality therefore i decided
+> used the MDS analyses in r and download this site
+> ?( http://www.statmethods.net/advstats/mds.html)
+>
+> but i haven't done it, ?i think ?the main problem is the form of excel
+> matrix for doing it and also i want to know about different between ?CLASSICAL
+> MDS and isoMDS.
+
+We need to know more about what you're donig to be able to help with
+the excel matrix. What is the problem? How are you importing it into R?
+
+?cmdscale
+library(MASS)
+?isoMDS
+
+offers some information about the algorithms used in the two approaches,
+as well as many references for more information
+
+Briefly and simplistically, the difference has to do with whether the algorithm
+attempts to preserve actual dissimilarities or rank-order dissimilarities.
+
+> please help me because this method is new in iran
+>
+> Thanks in advance
+> --
+> *Mahnaz Rabbaniha*
+> *Senior expert of marine ecology *
+> *Iranian Fisheries Research Organization (IFRO) *
+> *P.O.Box: 14155-6116 , P.Code: 1411816618*
+> Tehran, IRAN
+> Phone: ? +98 21 44580953
+> *Fax: ? ? ? +98 21 44580583*
+> *Mobile: ?+98 912 5790377*
+> *Website: http://www.ifro.ir*
+>
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From pdixon at iastate.edu  Fri Dec  9 18:23:55 2011
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Fri, 9 Dec 2011 11:23:55 -0600
+Subject: [R-sig-eco] Random or repeated?
+Message-ID: <3E1491A19F369E448BC445A7B0666C2712930766C0@EXITS712.its.iastate.edu>
+
+Kyle,
+
+The eco-stat list seems the wrong place to ask this question.  The people to ask are the quantitative plant breeders, e.g. at Texas A&M.
+
+Some general advice about random effects and correlated observations, for either trait data or ecological data:
+1) random effects provide a way to model correlations among errors.  So do 'repeated measures'.
+2) what matters are the correlations among ERRORS.  If I remember the traditional QTL model correctly, errors are independent conditional on the state of the flanking markers.  So, you don't need random effects for RIL's, if you're analyzing a single trait at a time.  Your observation is correct: the random effect and the marker fixed effects are both trying to model the same thing.  The same trait measured in multiple environments is often considered as a multi-trait analysis, to estimate the correlation between pairs of environments.  It could also be analyzed as a single trait, with a model that includes fixed effects of environments.  Different models answering different questions.
+3) yes, pedigrees (or relatedness coefficients) can be used to parameterize a correlation matrix.  This provides one way (not the only way) to account for phylogenetic relatedness.  Animal breeders use pedigree-based correlation matrices all the time.
+
+Philip Dixon
+
+
+From sarah.goslee at gmail.com  Sat Dec 10 12:22:32 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Sat, 10 Dec 2011 06:22:32 -0500
+Subject: [R-sig-eco] help
+In-Reply-To: <CANLCanUbsyaSTPfJMbGVD=YgyUsoWvPdkXENUPcm=ELQ=2fEMg@mail.gmail.com>
+References: <CANLCanWrrUyRbK5Ka8FUwOgDWsSNUFUHF__4Vb4XU3HE7MnuFg@mail.gmail.com>
+	<CAM_vjukmQYgzd=Q2Y11gCWLxx72hJv5N2x5ozhRBf05Z9FQCGw@mail.gmail.com>
+	<CANLCanUbsyaSTPfJMbGVD=YgyUsoWvPdkXENUPcm=ELQ=2fEMg@mail.gmail.com>
+Message-ID: <CAM_vjumO-ouc1BZkzCZoGXLJ5UTEqYL0+CQdZd=VEnMuoL1Xrg@mail.gmail.com>
+
+Hi Mahnaz,
+
+Please send your replies to the mailing list, not just to me.
+
+I'm still not sure I understand where your problem lies.
+
+You do not need to transform the data prior to NMDS.
+
+If you want help with the "plot being empty" we need to know basic
+details about your data, the commands you used, etc. - ideally a
+reproducible example.
+
+Sarah
+
+On Sat, Dec 10, 2011 at 12:01 AM, Mahnaz Rabbaniha <rab.mahnaz at gmail.com> wrote:
+> ?Dear Sarah
+>
+>
+> thank you for your attention,
+>
+> I want to use PCA with supplementary variables due to correlation
+> between the independent factor such as salinity ,temperature... with
+> dependent variable ( fish larva ) therefore changed ?dependent
+> variable with log(x+1) and tested normality with shapiro test but data
+> haven't changed and remained non normality then i decided to used the
+> nonparametric analysis MDS ? and found its order from net but it
+> wasn't successfully and plot of matrix was empty.
+>
+> my question is: for using the MDS have to need the special form of
+> excel , i have to use from ternsformed data,
+> I will be happy to provide any kind of solution
+>
+> thanks
+>
+> mahnaz
+>
+>
+> On 12/9/11, Sarah Goslee <sarah.goslee at gmail.com> wrote:
+>> Hi,
+>>
+>> On Fri, Dec 9, 2011 at 7:13 AM, Mahnaz Rabbaniha <rab.mahnaz at gmail.com>
+>> wrote:
+>>> Hi
+>>>
+>>> in my project i collected its data in excel sheet that i attached,data
+>>> were non normal then i transformed them and check the normality by
+>>> shapiro.test that it showed again non-normality therefore i decided
+>>> used the MDS analyses in r and download this site
+>>> ?( http://www.statmethods.net/advstats/mds.html)
+>>>
+>>> but i haven't done it, ?i think ?the main problem is the form of excel
+>>> matrix for doing it and also i want to know about different between
+>>> ?CLASSICAL
+>>> MDS and isoMDS.
+>>
+>> We need to know more about what you're donig to be able to help with
+>> the excel matrix. What is the problem? How are you importing it into R?
+>>
+>> ?cmdscale
+>> library(MASS)
+>> ?isoMDS
+>>
+>> offers some information about the algorithms used in the two approaches,
+>> as well as many references for more information
+>>
+>> Briefly and simplistically, the difference has to do with whether the
+>> algorithm
+>> attempts to preserve actual dissimilarities or rank-order dissimilarities.
+>>
+>>> please help me because this method is new in iran
+>>>
+>>> Thanks in advance
+>>> --
+>>> *Mahnaz Rabbaniha*
+>
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From rab.mahnaz at gmail.com  Sat Dec 10 19:57:49 2011
+From: rab.mahnaz at gmail.com (Mahnaz Rabbaniha)
+Date: Sat, 10 Dec 2011 22:27:49 +0330
+Subject: [R-sig-eco] Fwd:  help
+In-Reply-To: <CANLCanUbsyaSTPfJMbGVD=YgyUsoWvPdkXENUPcm=ELQ=2fEMg@mail.gmail.com>
+References: <CANLCanWrrUyRbK5Ka8FUwOgDWsSNUFUHF__4Vb4XU3HE7MnuFg@mail.gmail.com>
+	<CAM_vjukmQYgzd=Q2Y11gCWLxx72hJv5N2x5ozhRBf05Z9FQCGw@mail.gmail.com>
+	<CANLCanUbsyaSTPfJMbGVD=YgyUsoWvPdkXENUPcm=ELQ=2fEMg@mail.gmail.com>
+Message-ID: <CANLCanXeNLoEKgbhchR+Mr=xvUYV=gAnYRs+bmQnD7gEd=b6aA@mail.gmail.com>
+
+---------- Forwarded message ----------
+From: Mahnaz Rabbaniha <rab.mahnaz at gmail.com>
+Date: Sat, 10 Dec 2011 08:31:10 +0330
+Subject: Re: [R-sig-eco] help
+To: Sarah Goslee <sarah.goslee at gmail.com>
+
+ Dear Sarah
+
+
+thank you for your attention,
+
+I want to use PCA with supplementary variables due to correlation
+between the independent factor such as salinity ,temperature... with
+dependent variable ( fish larva ) therefore changed  dependent
+variable with log(x+1) and tested normality with shapiro test but data
+haven't changed and remained non normality then i decided to used the
+nonparametric analysis MDS   and found its order from net but it
+wasn't successfully and plot of matrix was empty.
+
+my question is: for using the MDS have to need the special form of
+excel ,
+
+
+thanks
+
+mahnaz
+
+
+On 12/9/11, Sarah Goslee <sarah.goslee at gmail.com> wrote:
+> Hi,
+>
+> On Fri, Dec 9, 2011 at 7:13 AM, Mahnaz Rabbaniha <rab.mahnaz at gmail.com>
+> wrote:
+>> Hi
+>>
+>> in my project i collected its data in excel sheet that i attached,data
+>> were non normal then i transformed them and check the normality by
+>> shapiro.test that it showed again non-normality therefore i decided
+>> used the MDS analyses in r and download this site
+>>  ( http://www.statmethods.net/advstats/mds.html)
+>>
+>> but i haven't done it,  i think  the main problem is the form of excel
+>> matrix for doing it and also i want to know about different between
+>>  CLASSICAL
+>> MDS and isoMDS.
+>
+> We need to know more about what you're donig to be able to help with
+> the excel matrix. What is the problem? How are you importing it into R?
+>
+> ?cmdscale
+> library(MASS)
+> ?isoMDS
+>
+> offers some information about the algorithms used in the two approaches,
+> as well as many references for more information
+>
+> Briefly and simplistically, the difference has to do with whether the
+> algorithm
+> attempts to preserve actual dissimilarities or rank-order dissimilarities.
+>
+>> please help me because this method is new in iran
+>>
+>> Thanks in advance
+>> --
+>> *Mahnaz Rabbaniha*
+>> *Senior expert of marine ecology *
+>> *Iranian Fisheries Research Organization (IFRO) *
+>> *P.O.Box: 14155-6116 , P.Code: 1411816618*
+>> Tehran, IRAN
+>> Phone:   +98 21 44580953
+>> *Fax:       +98 21 44580583*
+>> *Mobile:  +98 912 5790377*
+>> *Website: http://www.ifro.ir*
+>>
+>
+> --
+> Sarah Goslee
+> http://www.functionaldiversity.org
+>
+
+
+From sas0025 at auburn.edu  Mon Dec 12 15:39:58 2011
+From: sas0025 at auburn.edu (Stephen Sefick)
+Date: Mon, 12 Dec 2011 08:39:58 -0600
+Subject: [R-sig-eco] Fwd:  help
+In-Reply-To: <CANLCanXeNLoEKgbhchR+Mr=xvUYV=gAnYRs+bmQnD7gEd=b6aA@mail.gmail.com>
+References: <CANLCanWrrUyRbK5Ka8FUwOgDWsSNUFUHF__4Vb4XU3HE7MnuFg@mail.gmail.com>
+	<CAM_vjukmQYgzd=Q2Y11gCWLxx72hJv5N2x5ozhRBf05Z9FQCGw@mail.gmail.com>
+	<CANLCanUbsyaSTPfJMbGVD=YgyUsoWvPdkXENUPcm=ELQ=2fEMg@mail.gmail.com>
+	<CANLCanXeNLoEKgbhchR+Mr=xvUYV=gAnYRs+bmQnD7gEd=b6aA@mail.gmail.com>
+Message-ID: <4EE6123E.5010509@auburn.edu>
+
+Mahnaz,
+
+We need this to be reproducible.  Assuming you can get this into R,  use 
+dput and copy the results of that into an email.
+
+#copy this into R
+set.seed(1000)
+x <- data.frame(a=rnorm(10), b=rnorm(10), c=rnorm(10))
+
+dput(x)
+
+
+#here is the output
+
+x <- (structure(list(a = c(-0.445778264836677, -1.2058565689643, 
+0.0411263138456899,
+0.639388407571143, -0.786554355912735, -0.38548929809552, 
+-0.475867884077706,
+0.719750691474437, -0.018505622887574, -1.37311775893855), b = 
+c(-0.982427827680338,
+-0.554488701581856, 0.121381188657659, -0.120872315937481, 
+-1.33604104855461,
+0.170057481208407, 0.155078715940733, 0.0249318673672384, 
+-2.04658541402115,
+0.213154105608615), c = c(2.67007166431368, -1.22701600631211,
+0.834247331947683, 0.532571747050487, -0.646824963186768, 
+0.603161260832291,
+-1.78384413571217, 0.334942167117471, 0.560975721885086, 1.22093565459939
+)), .Names = c("a", "b", "c"), row.names = c(NA, -10L), class = 
+"data.frame"))
+
+
+notice that I have wrapped the output in x <-() to make it copy and 
+paste ready.
+
+Now we have something to work with.  If you can't get data into R then 
+that is a different question.
+
+Stephen Sefick
+
+
+
+
+
+On 12/10/2011 12:57 PM, Mahnaz Rabbaniha wrote:
+> ---------- Forwarded message ----------
+> From: Mahnaz Rabbaniha<rab.mahnaz at gmail.com>
+> Date: Sat, 10 Dec 2011 08:31:10 +0330
+> Subject: Re: [R-sig-eco] help
+> To: Sarah Goslee<sarah.goslee at gmail.com>
+>
+>   Dear Sarah
+>
+>
+> thank you for your attention,
+>
+> I want to use PCA with supplementary variables due to correlation
+> between the independent factor such as salinity ,temperature... with
+> dependent variable ( fish larva ) therefore changed  dependent
+> variable with log(x+1) and tested normality with shapiro test but data
+> haven't changed and remained non normality then i decided to used the
+> nonparametric analysis MDS   and found its order from net but it
+> wasn't successfully and plot of matrix was empty.
+>
+> my question is: for using the MDS have to need the special form of
+> excel ,
+>
+>
+> thanks
+>
+> mahnaz
+>
+>
+> On 12/9/11, Sarah Goslee<sarah.goslee at gmail.com>  wrote:
+>> Hi,
+>>
+>> On Fri, Dec 9, 2011 at 7:13 AM, Mahnaz Rabbaniha<rab.mahnaz at gmail.com>
+>> wrote:
+>>> Hi
+>>>
+>>> in my project i collected its data in excel sheet that i attached,data
+>>> were non normal then i transformed them and check the normality by
+>>> shapiro.test that it showed again non-normality therefore i decided
+>>> used the MDS analyses in r and download this site
+>>>   ( http://www.statmethods.net/advstats/mds.html)
+>>>
+>>> but i haven't done it,  i think  the main problem is the form of excel
+>>> matrix for doing it and also i want to know about different between
+>>>   CLASSICAL
+>>> MDS and isoMDS.
+>> We need to know more about what you're donig to be able to help with
+>> the excel matrix. What is the problem? How are you importing it into R?
+>>
+>> ?cmdscale
+>> library(MASS)
+>> ?isoMDS
+>>
+>> offers some information about the algorithms used in the two approaches,
+>> as well as many references for more information
+>>
+>> Briefly and simplistically, the difference has to do with whether the
+>> algorithm
+>> attempts to preserve actual dissimilarities or rank-order dissimilarities.
+>>
+>>> please help me because this method is new in iran
+>>>
+>>> Thanks in advance
+>>> --
+>>> *Mahnaz Rabbaniha*
+>>> *Senior expert of marine ecology *
+>>> *Iranian Fisheries Research Organization (IFRO) *
+>>> *P.O.Box: 14155-6116 , P.Code: 1411816618*
+>>> Tehran, IRAN
+>>> Phone:   +98 21 44580953
+>>> *Fax:       +98 21 44580583*
+>>> *Mobile:  +98 912 5790377*
+>>> *Website: http://www.ifro.ir*
+>>>
+>> --
+>> Sarah Goslee
+>> http://www.functionaldiversity.org
+>>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Stephen Sefick
+**************************************************
+Auburn University
+Biological Sciences
+331 Funchess Hall
+Auburn, Alabama
+36849
+**************************************************
+sas0025 at auburn.edu
+http://www.auburn.edu/~sas0025
+**************************************************
+
+Let's not spend our time and resources thinking about things that are so little or so large that all they really do for us is puff us up and make us feel like gods.  We are mammals, and have not exhausted the annoying little problems of being mammals.
+
+                                 -K. Mullis
+
+"A big computer, a complex algorithm and a long time does not equal science."
+
+                               -Robert Gentleman
+
+
+From r.m.krug at gmail.com  Mon Dec 12 15:50:58 2011
+From: r.m.krug at gmail.com (Rainer M Krug)
+Date: Mon, 12 Dec 2011 15:50:58 +0100
+Subject: [R-sig-eco] Distance sampling implementation in R?
+Message-ID: <4EE614D2.5010303@gmail.com>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi
+
+I was approached to do some analysis of bird census data using the
+Distance program (http://www.ruwpa.st-and.ac.uk/distance/), i.e.
+analyze distance sampling surveys to get estimates size or desity of
+the birds.
+
+As is stated on the website of the program Distance: ?
+
+"Distance sampling is a widely used technique for estimating the size
+or density of biological populations. Many distance sampling designs
+and most analyses use the software Distance."
+
+Nevertheless, I would ike to use R for this analysis. Has anybodu=y
+experience with doing this kind of analysis with R? Which packlages
+can be recommended? Ideas? Suggestions?
+
+Thanks a lot,
+
+Rainer
+
+- -- 
+Rainer M. Krug, PhD (Conservation Ecology, SUN), MSc (Conservation
+Biology, UCT), Dipl. Phys. (Germany)
+
+Centre of Excellence for Invasion Biology
+Stellenbosch University
+South Africa
+
+Tel :       +33 - (0)9 53 10 27 44
+Cell:       +33 - (0)6 85 62 59 98
+Fax :       +33 - (0)9 58 10 27 44
+
+Fax (D):    +49 - (0)3 21 21 25 22 44
+
+email:      Rainer at krugs.de
+
+Skype:      RMkrug
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk7mFNIACgkQoYgNqgF2egodNwCeJq4mkwx+QOmzZoBxipYqQXVA
+i00An05bP8WB5y0i1RndHLUNF2i+4vc/
+=CWcz
+-----END PGP SIGNATURE-----
+
+
+From fernand_arce at yahoo.es  Mon Dec 12 16:40:51 2011
+From: fernand_arce at yahoo.es (Fernando Arce)
+Date: Mon, 12 Dec 2011 15:40:51 +0000 (GMT)
+Subject: [R-sig-eco] Distance sampling implementation in R?
+In-Reply-To: <4EE614D2.5010303@gmail.com>
+References: <4EE614D2.5010303@gmail.com>
+Message-ID: <1323704451.28109.YahooMailNeo@web27008.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111212/f98c82a5/attachment.pl>
+
+From momadou at yahoo.fr  Mon Dec 12 18:26:05 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Mon, 12 Dec 2011 17:26:05 +0000 (GMT)
+Subject: [R-sig-eco] Problem with Polygon
+Message-ID: <1323710765.88560.YahooMailNeo@web28603.mail.ukl.yahoo.com>
+
+Hi,
+I have a
+matrix with 3 columns (Date, MeanArea and SdArea). I want to draw a figure showing
+the variable MeanArea in terms ofthe
+Date. 
+But instead to use the variable SdAreaas
+bar error, I want to use ?polygon error?. I use this code but the output does
+not seem good. 
+>Poly<read.table("C:\\Users\\Documents\\AreaMonthly.csv",sep=";",dec=",",header=TRUE)
+>Poly?
+>y <-MeanArea 
+>x <-SdArea 
+>z <-Date 
+>matplot(x,cbind(y,z),type="n") 
+>polygon(c(x,rev(x)),c(y,rev(z)),col="grey50") 
+Thank
+you in advance ?
+
+From sarah.goslee at gmail.com  Mon Dec 12 18:39:40 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Mon, 12 Dec 2011 12:39:40 -0500
+Subject: [R-sig-eco] Problem with Polygon
+In-Reply-To: <1323710765.88560.YahooMailNeo@web28603.mail.ukl.yahoo.com>
+References: <1323710765.88560.YahooMailNeo@web28603.mail.ukl.yahoo.com>
+Message-ID: <CAM_vju=MpWL4Cx9PrEtc-iA++TVHR4VjVhTyUPdmp0OXxpmsFg@mail.gmail.com>
+
+It's very hard to help you without:
+a small reproducible example;
+an idea of what you are getting vs what you expect - "does not seem
+good" is not particularly informative.
+
+Otherwise we really can't tell what's wrong.
+
+Sarah
+
+On Mon, Dec 12, 2011 at 12:26 PM, momadou sow <momadou at yahoo.fr> wrote:
+> Hi,
+> I have a
+> matrix with 3 columns (Date, MeanArea and SdArea). I want to draw a figure showing
+> the variable MeanArea in terms ofthe
+> Date.
+> But instead to use the variable SdAreaas
+> bar error, I want to use ?polygon error?. I use this code but the output does
+> not seem good.
+>>Poly<read.table("C:\\Users\\Documents\\AreaMonthly.csv",sep=";",dec=",",header=TRUE)
+>>Poly
+>>y <-MeanArea
+>>x <-SdArea
+>>z <-Date
+>>matplot(x,cbind(y,z),type="n")
+>>polygon(c(x,rev(x)),c(y,rev(z)),col="grey50")
+> Thank
+> you in advance
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From momadou at yahoo.fr  Mon Dec 12 19:19:27 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Mon, 12 Dec 2011 18:19:27 +0000 (GMT)
+Subject: [R-sig-eco] Re :  Problem with Polygon
+In-Reply-To: <CAM_vju=MpWL4Cx9PrEtc-iA++TVHR4VjVhTyUPdmp0OXxpmsFg@mail.gmail.com>
+References: <1323710765.88560.YahooMailNeo@web28603.mail.ukl.yahoo.com>
+	<CAM_vju=MpWL4Cx9PrEtc-iA++TVHR4VjVhTyUPdmp0OXxpmsFg@mail.gmail.com>
+Message-ID: <1323713967.66705.YahooMailNeo@web28612.mail.ukl.yahoo.com>
+
+Thank you Sarah,
+To answer your request, I attached my output. It seem me bad because, when I drew the only variable (MeanArea)? the shape of the figure was generally concave.I suppose that my output with polygon function would take a close shape.
+Thank to you
+Momadou
+? 
+
+________________________________
+ De?: Sarah Goslee <sarah.goslee at gmail.com>
+??: momadou sow <momadou at yahoo.fr> 
+Cc?: "R-sig-ecology at r-project.org" <R-sig-ecology at r-project.org> 
+Envoy? le : Lundi 12 D?cembre 2011 19h39
+Objet?: Re: [R-sig-eco] Problem with Polygon
+ 
+It's very hard to help you without:
+a small reproducible example;
+an idea of what you are getting vs what you expect - "does not seem
+good" is not particularly informative.
+
+Otherwise we really can't tell what's wrong.
+
+Sarah
+
+On Mon, Dec 12, 2011 at 12:26 PM, momadou sow <momadou at yahoo.fr> wrote:
+> Hi,
+> I have a
+> matrix with 3 columns (Date, MeanArea and SdArea). I want to draw a figure showing
+> the variable MeanArea in terms ofthe
+> Date.
+> But instead to use the variable SdAreaas
+> bar error, I want to use ?polygon error?. I use this code but the output does
+> not seem good.
+>>Poly<read.table("C:\\Users\\Documents\\AreaMonthly.csv",sep=";",dec=",",header=TRUE)
+>>Poly
+>>y <-MeanArea
+>>x <-SdArea
+>>z <-Date
+>>matplot(x,cbind(y,z),type="n")
+>>polygon(c(x,rev(x)),c(y,rev(z)),col="grey50")
+> Thank
+> you in advance
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+From sarah.goslee at gmail.com  Mon Dec 12 19:52:00 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Mon, 12 Dec 2011 13:52:00 -0500
+Subject: [R-sig-eco] Re :  Problem with Polygon
+In-Reply-To: <1323713967.66705.YahooMailNeo@web28612.mail.ukl.yahoo.com>
+References: <1323710765.88560.YahooMailNeo@web28603.mail.ukl.yahoo.com>
+	<CAM_vju=MpWL4Cx9PrEtc-iA++TVHR4VjVhTyUPdmp0OXxpmsFg@mail.gmail.com>
+	<1323713967.66705.YahooMailNeo@web28612.mail.ukl.yahoo.com>
+Message-ID: <CAM_vjukkKxGP8Cvmp4KoM8XCy8GAxOF_yQb48Qsw_+xTEz3gww@mail.gmail.com>
+
+Still no reproducible example, but it's likely that you need to reorder
+the points: they're drawn in the order you specify. Compare:
+
+plot(1:10, 1:10, type="n")
+polygon(c(1, 2, 3, 6), c(1, 1, 8, 10))
+polygon(c(1, 2, 6, 3)+4, c(1, 1, 10, 8))
+
+You might instead want the convex hull, and code something like:
+> pointdata <- data.frame(x=c(1, 2, 3, 6), y=c(1, 1, 8, 10))
+> polygon(pointdata[chull(pointdata), ], col="blue")
+
+But please, a small reproducible example next time.
+
+Sarah
+
+On Mon, Dec 12, 2011 at 1:19 PM, momadou sow <momadou at yahoo.fr> wrote:
+> Thank you Sarah,
+> To answer your request, I attached my output. It seem me bad because, when I
+> drew the only variable (MeanArea)? the shape of the figure was generally
+> concave.I suppose that my output with polygon function would take a close
+> shape.
+> Thank to you
+> Momadou
+>
+> De?: Sarah Goslee <sarah.goslee at gmail.com>
+> ??: momadou sow <momadou at yahoo.fr>
+> Cc?: "R-sig-ecology at r-project.org" <R-sig-ecology at r-project.org>
+> Envoy? le : Lundi 12 D?cembre 2011 19h39
+> Objet?: Re: [R-sig-eco] Problem with Polygon
+>
+> It's very hard to help you without:
+> a small reproducible example;
+> an idea of what you are getting vs what you expect - "does not seem
+> good" is not particularly informative.
+>
+> Otherwise we really can't tell what's wrong.
+>
+> Sarah
+>
+> On Mon, Dec 12, 2011 at 12:26 PM, momadou sow <momadou at yahoo.fr> wrote:
+>> Hi,
+>> I have a
+>> matrix with 3 columns (Date, MeanArea and SdArea). I want to draw a figure
+>> showing
+>> the variable MeanArea in terms ofthe
+>> Date.
+>> But instead to use the variable SdAreaas
+>> bar error, I want to use ?polygon error?. I use this code but the output
+>> does
+>> not seem good.
+>>>Poly<read.table("C:\\Users\\Documents\\AreaMonthly.csv",sep=";",dec=",",header=TRUE)
+>>>Poly
+>>>y <-MeanArea
+>>>x <-SdArea
+>>>z <-Date
+>>>matplot(x,cbind(y,z),type="n")
+>>>polygon(c(x,rev(x)),c(y,rev(z)),col="grey50")
+>> Thank
+>> you in advance
+>
+>
+> --
+> Sarah Goslee
+> http://www.functionaldiversity.org
+>
+>
+
+
+
+-- 
+Sarah Goslee
+http://www.stringpage.com
+http://www.sarahgoslee.com
+http://www.functionaldiversity.org
+
+
+From momadou at yahoo.fr  Tue Dec 13 09:21:38 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Tue, 13 Dec 2011 08:21:38 +0000 (GMT)
+Subject: [R-sig-eco] Re : Re :  Problem with Polygon
+In-Reply-To: <CAM_vjukkKxGP8Cvmp4KoM8XCy8GAxOF_yQb48Qsw_+xTEz3gww@mail.gmail.com>
+References: <1323710765.88560.YahooMailNeo@web28603.mail.ukl.yahoo.com>
+	<CAM_vju=MpWL4Cx9PrEtc-iA++TVHR4VjVhTyUPdmp0OXxpmsFg@mail.gmail.com>
+	<1323713967.66705.YahooMailNeo@web28612.mail.ukl.yahoo.com>
+	<CAM_vjukkKxGP8Cvmp4KoM8XCy8GAxOF_yQb48Qsw_+xTEz3gww@mail.gmail.com>
+Message-ID: <1323764498.26003.YahooMailNeo@web28614.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111213/c09b6e03/attachment.pl>
+
+From r.m.krug at gmail.com  Tue Dec 13 11:55:31 2011
+From: r.m.krug at gmail.com (Rainer M Krug)
+Date: Tue, 13 Dec 2011 11:55:31 +0100
+Subject: [R-sig-eco] Distance sampling implementation in R?
+In-Reply-To: <1323704451.28109.YahooMailNeo@web27008.mail.ukl.yahoo.com>
+References: <4EE614D2.5010303@gmail.com>
+	<1323704451.28109.YahooMailNeo@web27008.mail.ukl.yahoo.com>
+Message-ID: <4EE72F23.3040700@gmail.com>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi Fernando,
+
+On 12/12/11 16:40, Fernando Arce wrote:
+> You are probably looking for something like unmarked package.
+
+Thanks - exactly.
+
+> take a look at
+> http://cran.r-project.org/web/packages/unmarked/vignettes/distsamp.pdf
+>  for an overview of distance sampling implementing in unmarked. You
+> can get more information on the cran website about this project
+
+Thanks a lot, I'll do so - looks like exactly what I was looking for.
+
+Are you aware of any comparison between R + unmarked and the Distance
+program? I am asking because Distance is considered as "best practice"
+and I need arguments (apart from the obvious ones like open-source,
+transparency, ...) to show that they are similar.
+
+Cheers,
+
+Rainer
+
+
+> 
+> hope it helps! Fer 
+> ------------------------------------------------------------------------
+>
+> 
+*De:* Rainer M Krug <r.m.krug at gmail.com>
+> *Para:* r-sig-ecology <r-sig-ecology at r-project.org> *Enviado:*
+> lunes 12 de diciembre de 2011 15:50 *Asunto:* [R-sig-eco] Distance
+> sampling implementation in R?
+> 
+> Hi
+> 
+> I was approached to do some analysis of bird census data using the 
+> Distance program (http://www.ruwpa.st-and.ac.uk/distance/), i.e. 
+> analyze distance sampling surveys to get estimates size or desity
+> of the birds.
+> 
+> As is stated on the website of the program Distance: ?
+> 
+> "Distance sampling is a widely used technique for estimating the
+> size or density of biological populations. Many distance sampling
+> designs and most analyses use the software Distance."
+> 
+> Nevertheless, I would ike to use R for this analysis. Has
+> anybodu=y experience with doing this kind of analysis with R? Which
+> packlages can be recommended? Ideas? Suggestions?
+> 
+> Thanks a lot,
+> 
+> Rainer
+> 
+> 
+> _______________________________________________ R-sig-ecology
+> mailing list R-sig-ecology at r-project.org
+> <mailto:R-sig-ecology at r-project.org> 
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+
+- -- 
+Rainer M. Krug, PhD (Conservation Ecology, SUN), MSc (Conservation
+Biology, UCT), Dipl. Phys. (Germany)
+
+Centre of Excellence for Invasion Biology
+Stellenbosch University
+South Africa
+
+Tel :       +33 - (0)9 53 10 27 44
+Cell:       +33 - (0)6 85 62 59 98
+Fax :       +33 - (0)9 58 10 27 44
+
+Fax (D):    +49 - (0)3 21 21 25 22 44
+
+email:      Rainer at krugs.de
+
+Skype:      RMkrug
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk7nLyMACgkQoYgNqgF2egp8hgCdFqpymWa+D8P50hnKYgzlpWW4
+giwAmgOwHTEMr6Kn0lNmvFlANp/iJQh6
+=gXQk
+-----END PGP SIGNATURE-----
+
+
+From boycer at nku.edu  Tue Dec 13 16:25:11 2011
+From: boycer at nku.edu (Richard Boyce)
+Date: Tue, 13 Dec 2011 15:25:11 +0000
+Subject: [R-sig-eco] post hoc in Kruskal Wallis
+In-Reply-To: <mailman.1.1323255601.17684.r-sig-ecology@r-project.org>
+References: <mailman.1.1323255601.17684.r-sig-ecology@r-project.org>
+Message-ID: <2420E9BB-5516-4F9C-A2C6-D06EE0877144@nku.edu>
+
+Ken Aho was kind enough to alert me to the post hoc multiple comparison test KW.multi.comp that he wrote for his package, asbio. This works well for unbalanced designs, and with a minor modification, it also works well when you have tied ranks.
+
+I've included the modified KW.multi.comp as a function. Please give it a whirl and see how it works.
+
+
+KW.multi.comp <- function (Y, X, conf)
+{
+    ranks <- rank(Y)
+    ni <- tapply(ranks, X, length)
+    N <- length(ranks)
+    r <- length(ni)
+ 
+    y <- sort(match(ranks,ranks))
+      t <- 0
+      for (i in 1:(N - 1)) {
+          tie.ranks <- sum(match(y, i),na.rm=T)
+          if (tie.ranks > 1) t <- t + tie.ranks^3 - tie.ranks
+          }
+ 
+    mean.ranks <- tapply(ranks, X, mean)
+    dif.mat <- outer(mean.ranks, mean.ranks, "-")
+    diffs <- dif.mat[upper.tri(dif.mat)]
+    ni.mat <- outer(1/ni, 1/ni, "+")
+    ni.den <- ni.mat[upper.tri(ni.mat)]
+    SE.diff <- sqrt(((N * (N + 1))/12 - t/(12 * (N - 1))) * ni.den)
+    B <- qnorm(1 - ((1 - conf)/(r^2 - r)))
+    p.val <- 2 * pnorm(abs(diffs)/SE.diff, lower = FALSE)
+    p.adj <- ifelse(p.val * ((r^2 - r)/2) >= 1, 1, round(p.val *
+        ((r^2 - r)/2), 6))
+    hwidths <- B * SE.diff
+    val <- round(cbind(diffs, diffs - hwidths, diffs + hwidths),
+        5)
+    Decision <- ifelse((val[, 2] > 0 & val[, 3] > 0) | val[,
+        2] < 0 & val[, 3] < 0, "Reject H0", "FTR H0")
+    val <- as.data.frame(cbind(val, Decision, p.adj))
+    lvl <- outer(levels(X), levels(X), function(x1, x2) {
+        paste(paste("Avg.rank", x1, sep = ""), paste("Avg.rank",
+            x2, sep = ""), sep = "-")
+    })
+    dimnames(val) <- list(lvl[upper.tri(lvl)], c("Diff", "Lower",
+        "Upper", "Decision", "Adj. p-value"))
+    val
+}
+
+> Message: 1
+> Date: Tue, 6 Dec 2011 16:33:52 -0500
+> From: "Richard L. Boyce" <boycer at nku.edu>
+> To: <r-sig-ecology at r-project.org>
+> Subject: Re: [R-sig-eco] post hoc in Kruskal Wallis
+> Message-ID: <a06240800cb042a042650@[192.168.200.253]>
+> Content-Type: text/plain
+> 
+> As promised, here is a function for the post hoc test in Kruskal 
+> Wallis when the design is unbalanced (group sizes are unequal). Note 
+> that both my and Dave's routine won't work if you have ties--perhaps 
+> I'll get versions made for those cases in the future.
+> 
+> npcompare.unequal <- function (var, class)
+> {
+>       k <- nlevels(class) #groups
+>       n <- array(dim=k)
+> 
+>       for (i in 1:k) n[i] <- as.numeric(table(class)[i]) # no. in each group
+> 
+>       rvar <- rank(var) #ranks
+> 
+>       #prints 1st group, 2nd group, difference, mean 1st group rank, 
+> mean 2nd group rank, standard error, Q, and p
+>       cat("a b Ra Rb diff se Q p", '\n') #header column
+> 
+>       for (i in 1:(k-1)) {
+>           left <- mean(rvar[as.numeric(class)==i])
+>           for (j in (i+1):k) {
+>               right <- mean(rvar[as.numeric(class)==j])
+>               diff = abs(left-right)
+>               se <- sqrt((length(var)*(length(var)+1))/12*(1/n[i]+1/n[j]))
+>               p <- round(k*(k-1)*(1-pnorm(diff/se)),4)
+>               if (p > 0.50) p <- c(">0.50")
+>               cat(paste(i, j, round(left,2), round(right,2), 
+> round(diff,2), round(se,4), round(diff/se,4), p, '\n'))
+>           }
+>       }
+>       cat('\n')
+> }
+> 
+> 
+>> Message: 1
+>> Date: Thu, 01 Dec 2011 10:27:20 -0700
+>> From: Dave Roberts <dvrbts at ecology.msu.montana.edu>
+>> To: r-sig-ecology at r-project.org
+>> Subject: Re: [R-sig-eco] post hoc in Kruskal Wallis
+>> Message-ID: <4ED7B8F8.1070801 at ecology.msu.montana.edu>
+>> Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+>> 
+>> If the design is balanced this function will work
+>> 
+>> npcompare <- function (var,class)
+>> {
+>>      k <- length(table(class))
+>>      n <- length(var)/k
+>> 
+>>      se <- sqrt((n*(n*k)*(n*k+1))/12)
+>>      rvar <- rank(var)
+>> 
+>>      for (i in 1:(k-1)) {
+>>          left <- sum(rvar[as.numeric(class)==i])
+>>          for (j in (i+1):k) {
+>>              right <- sum(rvar[as.numeric(class)==j])
+>>              diff = abs(left-right)
+>>              cat(paste(i,j,left,right,diff,round(1-pt(diff/se,k),4),'\n'))
+>>          }
+>>      }
+>>      cat('\n')
+>> }
+>> 
+>> It's not formatted very elegantly, but it works.
+>> 
+>> Dave R.
+>> 
+>> On 11/24/2011 08:01 AM, Richard L. Boyce wrote:
+>>>  Zar, in Biostatistical Analysis, has a Tukey-like test that is highly
+>>>  recommended. You may need to do it by hand, but it is quite easy.
+>>> 
+>>>>  Message: 5
+>>>>  Date: Wed, 23 Nov 2011 18:21:54 +0100
+>>>>  From: "Jakub Szymkowiak"<qbaszym at tlen.pl>
+>>>>  To:<r-sig-ecology at r-project.org>
+>>>>  Subject: [R-sig-eco]  post hoc in Kruskal Wallis
+>>>>  Message-ID:<C8041F4B78EB487C8707E72114C3F4CF at komp>
+>>>>  Content-Type: text/plain; format=flowed; charset="iso-8859-1";
+>>>> 	reply-type=original
+>>>> 
+>>>>  Hi,
+>>>>  does anyone know, how can I perform post-hoc tests (especially Least
+>>>>  Significant Difference and Sheffe Test) for results from Kruskal-Wallis
+>>>>  test? In KruskaI-Wallis test I found some significant differences between
+>>>>  tested groups, but I want to know between which groups this difference is
+>>>>  really signifficant.
+>>>> 
+>>>>  Cheers,
+>>>>  Jakub
+>>> 
+>> 
+>> --
+>> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> David W. Roberts                                     office 406-994-4548
+>> Professor and Head                                      FAX 406-994-3190
+>> Department of Ecology                         email droberts at montana.edu
+>> Montana State University
+>> Bozeman, MT 59717-3460
+> 
+> -- 
+> ================================
+> Richard L. Boyce
+> Director, Environmental Science Program
+> Associate Professor
+> Department of Biological Sciences
+> Northern Kentucky University
+> Nunn Drive
+> Highland Heights, KY  41099  USA
+> 
+> 859-572-1407 (tel.)
+> 859-572-5639 (fax)
+> boycer at nku.edu
+> http://www.nku.edu/~boycer/
+> =================================
+> 
+> "One of the advantages of being disorderly is that one is constantly 
+> making exciting discoveries." - A.A. Milne
+
+
+From schmidt.fa at gmail.com  Tue Dec 13 19:22:15 2011
+From: schmidt.fa at gmail.com (Fernando Schmidt)
+Date: Tue, 13 Dec 2011 16:22:15 -0200
+Subject: [R-sig-eco] Possible bug with dredge function
+Message-ID: <CACddD7BEOSRV+c4aFUawK8KX1itFFSiamF3UCmpt71EMECnw7Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111213/e1337b15/attachment.pl>
+
+From pacolipe at gmail.com  Tue Dec 13 20:01:16 2011
+From: pacolipe at gmail.com (Pedro Lima Pequeno)
+Date: Wed, 14 Dec 2011 04:01:16 +0900
+Subject: [R-sig-eco] Possible bug with dredge function
+In-Reply-To: <CACddD7BEOSRV+c4aFUawK8KX1itFFSiamF3UCmpt71EMECnw7Q@mail.gmail.com>
+References: <CACddD7BEOSRV+c4aFUawK8KX1itFFSiamF3UCmpt71EMECnw7Q@mail.gmail.com>
+Message-ID: <CAC4PjDv=U7BywEF7p1aJyLDpfmiRJ2zK8MNNSyt=GSij9T-V_g@mail.gmail.com>
+
+Hi, Fernando.
+
+The warning message "In mer_finalize(ans) : gr cannot be computed at
+initial par (65)" points to problems during the iterative process of
+model fitting. This may be caused by the complexity of the global
+model you're implying. Have you tried using dredge() with a simpler
+global model (e.g. without interactions)?
+
+2011/12/14, Fernando Schmidt <schmidt.fa at gmail.com>:
+> Dear colleagues,
+>
+> I am working with information-theoretic based on the second-order AKaike?s
+> Information criterion corrected for small samples sizes AICc.  I have run
+> the mixed-effect models with ?glmer? function in the lme4 package. Then, I
+> used the dredge function from the MuMIn package to test models defined by
+> all possible variables combinations and rank them by AICc-based model
+> weight.
+>
+> Usually, the main results from dredge function are AICc, delta and weight.
+> However, for one model seems to have some ?bug? I just could get AICc.
+> Delta and weight were missing:
+>
+>>
+> mfullepi1<-glmer(sepi~lhet+ldth+transect+lhet:transect+(1|park/transect),family="poisson")
+>
+>> dredge(mfullepi1)
+>
+> Global model: glmer(formula = sepi ~ lhet + ldth + transect + lhet:transect
+> +
+>
+>     (1 | park/transect), family = "poisson")
+>
+> ---
+>
+> Model selection table
+>
+>    (Int)  ldt      lht     trn lht:trn k      Dev.            AICc
+>
+> 5  1.1630                  +                   14     97.79        129.8
+>
+> 7  1.0000           0.5228 +            15     95. 62       130.2
+>
+> 6  0.9803 0.002208         +          15    96.32        130.9
+>
+> 8  0.8236 0.002160  0.5188 +    16   94.17       131.5
+>
+> 3  1.4120           0.5538                    4   124.30      132.7
+>
+> 4  1.2810 0.002287  0.5153           5   122.40     132.9
+>
+> 2  1.3920 0.002544                          4   125.00     133.3
+>
+> 1  1.5480                                             3   127.20     133.4
+>
+> 15 1.4660          -1.0140 +   +       26
+>
+> 16 1.2560 0.002198 -0.9244 +   +       27
+>
+> Random terms: 1 | park/transect
+>
+> Mensagens de aviso perdidas:
+>
+> 1: In mer_finalize(ans) : gr cannot be computed at initial par (65)
+>
+> 2: In mer_finalize(ans) : gr cannot be computed at initial par (65)
+>
+>
+>
+> Please, someone could explain me what is going on?
+>
+>
+>
+> Thanks a lot!
+>
+> All the best,
+>
+> Fernando
+>
+>
+> --
+> Fernando Augusto Schmidt
+> Lab. de Ecologia de Comunidades
+> PPG - Entomologia. Universidade Federal de Vi?osa
+> Vi?osa, MG - Brazil 36570-000
+> www.labecol.ufv.br
+> +55 3182388810
+>
+> 	[[alternative HTML version deleted]]
+>
+>
+
+
+-- 
+Pedro A. C. Lima Pequeno
+Programa de P?s-gradua??o em Ecologia
+Instituto Nacional de Pesquisas da Amaz?nia
+Manaus, AM, Brasil
+
+
+From mdu at ceh.ac.uk  Tue Dec 13 21:17:00 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Tue, 13 Dec 2011 20:17:00 +0000
+Subject: [R-sig-eco] Possible bug with dredge function
+In-Reply-To: <CAC4PjDv=U7BywEF7p1aJyLDpfmiRJ2zK8MNNSyt=GSij9T-V_g@mail.gmail.com>
+References: <CACddD7BEOSRV+c4aFUawK8KX1itFFSiamF3UCmpt71EMECnw7Q@mail.gmail.com>,
+	<CAC4PjDv=U7BywEF7p1aJyLDpfmiRJ2zK8MNNSyt=GSij9T-V_g@mail.gmail.com>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1D25D59054@nerckwmb1.ad.nerc.ac.uk>
+
+Fernando
+
+You have transect in both the fixed and random part of the model. Will the model fit when transect is not in the fixed part? Will it fit when you just call lmer with the full model without dredge? Can you explain a bit more about you data and in particular how the transect variable is coded?
+
+regards
+Mike
+
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] On Behalf Of Pedro Lima Pequeno [pacolipe at gmail.com]
+Sent: 13 December 2011 19:01
+To: Fernando Schmidt
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Possible bug with dredge function
+
+Hi, Fernando.
+
+The warning message "In mer_finalize(ans) : gr cannot be computed at
+initial par (65)" points to problems during the iterative process of
+model fitting. This may be caused by the complexity of the global
+model you're implying. Have you tried using dredge() with a simpler
+global model (e.g. without interactions)?
+
+2011/12/14, Fernando Schmidt <schmidt.fa at gmail.com>:
+> Dear colleagues,
+>
+> I am working with information-theoretic based on the second-order AKaike?s
+> Information criterion corrected for small samples sizes AICc.  I have run
+> the mixed-effect models with ?glmer? function in the lme4 package. Then, I
+> used the dredge function from the MuMIn package to test models defined by
+> all possible variables combinations and rank them by AICc-based model
+> weight.
+>
+> Usually, the main results from dredge function are AICc, delta and weight.
+> However, for one model seems to have some ?bug? I just could get AICc.
+> Delta and weight were missing:
+>
+>>
+> mfullepi1<-glmer(sepi~lhet+ldth+transect+lhet:transect+(1|park/transect),family="poisson")
+>
+>> dredge(mfullepi1)
+>
+> Global model: glmer(formula = sepi ~ lhet + ldth + transect + lhet:transect
+> +
+>
+>     (1 | park/transect), family = "poisson")
+>
+> ---
+>
+> Model selection table
+>
+>    (Int)  ldt      lht     trn lht:trn k      Dev.            AICc
+>
+> 5  1.1630                  +                   14     97.79        129.8
+>
+> 7  1.0000           0.5228 +            15     95. 62       130.2
+>
+> 6  0.9803 0.002208         +          15    96.32        130.9
+>
+> 8  0.8236 0.002160  0.5188 +    16   94.17       131.5
+>
+> 3  1.4120           0.5538                    4   124.30      132.7
+>
+> 4  1.2810 0.002287  0.5153           5   122.40     132.9
+>
+> 2  1.3920 0.002544                          4   125.00     133.3
+>
+> 1  1.5480                                             3   127.20     133.4
+>
+> 15 1.4660          -1.0140 +   +       26
+>
+> 16 1.2560 0.002198 -0.9244 +   +       27
+>
+> Random terms: 1 | park/transect
+>
+> Mensagens de aviso perdidas:
+>
+> 1: In mer_finalize(ans) : gr cannot be computed at initial par (65)
+>
+> 2: In mer_finalize(ans) : gr cannot be computed at initial par (65)
+>
+>
+>
+> Please, someone could explain me what is going on?
+>
+>
+>
+> Thanks a lot!
+>
+> All the best,
+>
+> Fernando
+>
+>
+> --
+> Fernando Augusto Schmidt
+> Lab. de Ecologia de Comunidades
+> PPG - Entomologia. Universidade Federal de Vi?osa
+> Vi?osa, MG - Brazil 36570-000
+> www.labecol.ufv.br
+> +55 3182388810
+>
+>       [[alternative HTML version deleted]]
+>
+>
+
+
+--
+Pedro A. C. Lima Pequeno
+Programa de P?s-gradua??o em Ecologia
+Instituto Nacional de Pesquisas da Amaz?nia
+Manaus, AM, Brasil
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+This message (and any attachments) is for the recipient only. NERC
+is subject to the Freedom of Information Act 2000 and the contents
+of this email and any reply you make may be disclosed by NERC unless
+it is exempt from release under the Act. Any material supplied to
+NERC may be stored in an electronic records management system.
+
+From schmidt.fa at gmail.com  Wed Dec 14 12:40:05 2011
+From: schmidt.fa at gmail.com (Fernando Schmidt)
+Date: Wed, 14 Dec 2011 09:40:05 -0200
+Subject: [R-sig-eco] Possible bug with dredge function
+In-Reply-To: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1D25D59054@nerckwmb1.ad.nerc.ac.uk>
+References: <CACddD7BEOSRV+c4aFUawK8KX1itFFSiamF3UCmpt71EMECnw7Q@mail.gmail.com>
+	<CAC4PjDv=U7BywEF7p1aJyLDpfmiRJ2zK8MNNSyt=GSij9T-V_g@mail.gmail.com>
+	<9C29AFE27E3FBA4DB1742CC8E8F74ECD1D25D59054@nerckwmb1.ad.nerc.ac.uk>
+Message-ID: <CACddD7CLqZmq53t9c+uwLV-NafyhOrL_Mf4D1az9WhTktrgY=A@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111214/52ba32c8/attachment.pl>
+
+From mdu at ceh.ac.uk  Wed Dec 14 12:56:02 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Wed, 14 Dec 2011 11:56:02 +0000
+Subject: [R-sig-eco] Possible bug with dredge function
+In-Reply-To: <CACddD7CLqZmq53t9c+uwLV-NafyhOrL_Mf4D1az9WhTktrgY=A@mail.gmail.com>
+References: <CACddD7BEOSRV+c4aFUawK8KX1itFFSiamF3UCmpt71EMECnw7Q@mail.gmail.com>
+	<CAC4PjDv=U7BywEF7p1aJyLDpfmiRJ2zK8MNNSyt=GSij9T-V_g@mail.gmail.com>
+	<9C29AFE27E3FBA4DB1742CC8E8F74ECD1D25D59054@nerckwmb1.ad.nerc.ac.uk>
+	<CACddD7CLqZmq53t9c+uwLV-NafyhOrL_Mf4D1az9WhTktrgY=A@mail.gmail.com>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1D26CC6334@nerckwmb1.ad.nerc.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111214/d63f288f/attachment.pl>
+
+From allgutz05 at gmail.com  Wed Dec 14 15:47:04 2011
+From: allgutz05 at gmail.com (Angie Larsen)
+Date: Wed, 14 Dec 2011 09:47:04 -0500
+Subject: [R-sig-eco] Post-hoc for adonis
+Message-ID: <CAK27d5zzvUURNR=vxVZFycTW-itxESOTNWMufjTub3xx8Qq0eA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111214/0b28da92/attachment.pl>
+
+From Kay.Cichini at uibk.ac.at  Wed Dec 14 20:38:41 2011
+From: Kay.Cichini at uibk.ac.at (Kay Cecil Cichini)
+Date: Wed, 14 Dec 2011 20:38:41 +0100
+Subject: [R-sig-eco] Post-hoc for adonis
+In-Reply-To: <CAK27d5zzvUURNR=vxVZFycTW-itxESOTNWMufjTub3xx8Qq0eA@mail.gmail.com>
+References: <CAK27d5zzvUURNR=vxVZFycTW-itxESOTNWMufjTub3xx8Qq0eA@mail.gmail.com>
+Message-ID: <20111214203841.213953z8nh0syi04@web-mail.uibk.ac.at>
+
+Angie,
+
+You could apply customized contrasts. Check this:
+
+http://thebiobucket.blogspot.com/2011/08/two-way-permanova-adonis-with-custom.html
+
+I'd also appreciate comments on the approach that I used in the  
+above-mentioned link!
+
+Cheers,
+Kay
+
+
+Zitat von Angie Larsen <allgutz05 at gmail.com>:
+
+> Hello everyone-
+>
+> I recently ran a NMDS and then ran adonis.  The adonis did show that there
+> are significant differences, but I have not been able to find any way to
+> run a post-hoc test for this NPMANOVA.  Does anyone have any ideas?  I
+> appreciate any suggestions!
+>
+> Thanks,
+> Angie
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From federicotomasetto at hotmail.it  Wed Dec 14 22:02:29 2011
+From: federicotomasetto at hotmail.it (Federico Tomasetto)
+Date: Wed, 14 Dec 2011 21:02:29 +0000
+Subject: [R-sig-eco] ADONIS or MRPP function problem
+In-Reply-To: <DUB107-W1375EB8B869771650FC26C8B00@phx.gbl>
+References: <CAPxEaER_Y299uOEA=j-6PGW4D-Kjv0Xvh9ujHiN7QFjbD55ztA@mail.gmail.com>,
+	<1321480963.2732.15.camel@chrysothemis.geog.ucl.ac.uk>,
+	<4EC4CD4C.2090706@univie.ac.at>,
+	<1321559425.3296.1.camel@chrysothemis.geog.ucl.ac.uk>,
+	<DUB107-W1375EB8B869771650FC26C8B00@phx.gbl>
+Message-ID: <DUB107-W130A5062B8CA2E4204EA98C8A20@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111214/ca6f492c/attachment.pl>
+
+From qbaszym at tlen.pl  Fri Dec 16 01:14:35 2011
+From: qbaszym at tlen.pl (Jakub Szymkowiak)
+Date: Fri, 16 Dec 2011 01:14:35 +0100
+Subject: [R-sig-eco] 'grouping' grouping variable
+In-Reply-To: <2420E9BB-5516-4F9C-A2C6-D06EE0877144@nku.edu>
+References: <mailman.1.1323255601.17684.r-sig-ecology@r-project.org>
+	<2420E9BB-5516-4F9C-A2C6-D06EE0877144@nku.edu>
+Message-ID: <F4A1F192F4EA41149F395926C55C6046@komp>
+
+Hello,
+I have a problem and I don't know how can I solve it.
+I have one grouping variable (16 regions in my country). Every region is 
+described by several environmental variables, in example arable fields area, 
+woodland area or meadows area.
+I want to group this regions to small number of groups so that, the similar 
+regions (in terms of my environmental variables) will be in the same group.
+Any cues, how can I solve this?
+
+Cheers,
+Jakub
+
+
+From amellado at um.es  Fri Dec 16 09:33:48 2011
+From: amellado at um.es (Andres Mellado Diaz)
+Date: Fri, 16 Dec 2011 09:33:48 +0100
+Subject: [R-sig-eco] 'grouping' grouping variable
+In-Reply-To: <F4A1F192F4EA41149F395926C55C6046@komp>
+References: <mailman.1.1323255601.17684.r-sig-ecology@r-project.org>
+	<2420E9BB-5516-4F9C-A2C6-D06EE0877144@nku.edu>
+	<F4A1F192F4EA41149F395926C55C6046@komp>
+Message-ID: <20111216093348.80564z3kjmrq08rw@webmail.atica.um.es>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111216/1c8b356f/attachment.pl>
+
+From gabriel.singer at univie.ac.at  Fri Dec 16 09:34:59 2011
+From: gabriel.singer at univie.ac.at (gabriel singer)
+Date: Fri, 16 Dec 2011 09:34:59 +0100
+Subject: [R-sig-eco] 'grouping' grouping variable
+In-Reply-To: <F4A1F192F4EA41149F395926C55C6046@komp>
+References: <mailman.1.1323255601.17684.r-sig-ecology@r-project.org>
+	<2420E9BB-5516-4F9C-A2C6-D06EE0877144@nku.edu>
+	<F4A1F192F4EA41149F395926C55C6046@komp>
+Message-ID: <4EEB02B3.9020106@univie.ac.at>
+
+hi jakub,
+
+I would suggest starting with standardizing your environmental variables 
+with scale(), then compute Euclidean distances with e.g. vegdist() in 
+{vegan} and run a cluster analysis on the distance matrix with hclust(). 
+Choose a cutoff for minimum dissimilarity and group your sites 
+accordingly. If you happen to have an idea about the number of groups 
+you expect, then kmeans() may be an alternative.
+
+cheers, gabriel
+
+On 12/16/11 1:14 AM, Jakub Szymkowiak wrote:
+> Hello,
+> I have a problem and I don't know how can I solve it.
+> I have one grouping variable (16 regions in my country). Every region 
+> is described by several environmental variables, in example arable 
+> fields area, woodland area or meadows area.
+> I want to group this regions to small number of groups so that, the 
+> similar regions (in terms of my environmental variables) will be in 
+> the same group.
+> Any cues, how can I solve this?
+>
+> Cheers,
+> Jakub
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From qbaszym at tlen.pl  Fri Dec 16 12:12:24 2011
+From: qbaszym at tlen.pl (Jakub Szymkowiak)
+Date: Fri, 16 Dec 2011 12:12:24 +0100
+Subject: [R-sig-eco] 'grouping' grouping variable
+In-Reply-To: <4EEB02B3.9020106@univie.ac.at>
+References: <mailman.1.1323255601.17684.r-sig-ecology@r-project.org>
+	<2420E9BB-5516-4F9C-A2C6-D06EE0877144@nku.edu>
+	<F4A1F192F4EA41149F395926C55C6046@komp>
+	<4EEB02B3.9020106@univie.ac.at>
+Message-ID: <6552E32136124C0F95136C950DE4F75C@komp>
+
+Thanks for every comments and ideas!
+
+Robera - woodland and meadows were only an example. I have also variables 
+describing e.g. area of rye, wheat, barley cultivation, but I agree - all my 
+variables describe habitat use in every region.
+I have also a data about birds (4 species) - in every region, birds were 
+countend on study plots (1km squares). The number of study plots vary 
+between regions.
+
+
+Cheers,
+Jakub
+
+
+From emily.bennitt at gmail.com  Fri Dec 16 13:45:43 2011
+From: emily.bennitt at gmail.com (Emily Bennitt)
+Date: Fri, 16 Dec 2011 12:45:43 +0000
+Subject: [R-sig-eco] adehabitatHR boundary definition
+Message-ID: <CACC6Fc2DacaCU+M0J=WrykoCM_mW9A_Fqs_TJT_sMi3TQAEneQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111216/57e7cbd3/attachment.pl>
+
+From pdculbert at wisc.edu  Sat Dec 17 00:28:20 2011
+From: pdculbert at wisc.edu (Patrick Culbert)
+Date: Fri, 16 Dec 2011 17:28:20 -0600
+Subject: [R-sig-eco] Support Vector Regression
+Message-ID: <CAADztS_9GBVn2YiTSAxd7V1Nkv9ZzJXs1YCGZRx0b6Lnro=Q_w@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111216/3545856a/attachment.pl>
+
+From vignalisergio30 at gmail.com  Mon Dec 19 23:14:38 2011
+From: vignalisergio30 at gmail.com (sergio vignali)
+Date: Mon, 19 Dec 2011 23:14:38 +0100
+Subject: [R-sig-eco] Install Mark and RMark on ubuntu 11.10
+Message-ID: <CALLUJBajGCFjeunLgJgywuuVpHSfP7pKp694V0TT_Vx8dAUF=A@mail.gmail.com>
+
+Hello,
+i tryed to install Mark on my machine (ubuntu 11.10), i followed the
+instructions on
+
+http://www.phidot.org/software/mark/rmark/linux/
+
+but i did it without succes! The instructions in the site above are
+not clear, i don't understand at the 2 step,
+Is there someone who can help me?
+
+Sergio
+
+
+From rab.mahnaz at gmail.com  Tue Dec 20 07:29:22 2011
+From: rab.mahnaz at gmail.com (Mahnaz Rabbaniha)
+Date: Tue, 20 Dec 2011 09:59:22 +0330
+Subject: [R-sig-eco] hi
+Message-ID: <CANLCanW7098XKQBBPAUyYS5wHsxONof1x19sPaHZ0_T90E6zyQ@mail.gmail.com>
+
+hi
+
+for doing the PCA with supplementary variables in FactoMIneR , is it
+necessary all dependent and independent variables tested with shapiro,
+in my project i check the data and they are non normal then i
+transformed them in ( density of plankton as DV)  with log(x+1) and
+(salinity,temperature,... as independent V) with log (x )but the
+results don't show very different ( after doing shapiro test again)and
+they show non normality. so my question which methods are suggestion
+for survey of related them.
+
+
+thanks
+
+Mahnaz
+
+
+From gavin.simpson at ucl.ac.uk  Tue Dec 20 10:06:59 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 20 Dec 2011 09:06:59 +0000
+Subject: [R-sig-eco] envfit calculation
+In-Reply-To: <1323106797.11486.YahooMailNeo@web125704.mail.ne1.yahoo.com>
+References: <1323106797.11486.YahooMailNeo@web125704.mail.ne1.yahoo.com>
+Message-ID: <1324372019.2777.18.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Mon, 2011-12-05 at 09:39 -0800, dan clune wrote:
+> Hello R-Ecologists,
+> I'm looking for clarification on how vectors in function envfit are
+> calculated. I understand how to use the function, it is pretty
+> straightforward. But after reading the documentation I am still
+> wondering exactly how the vectors are calculated internally by the
+> function. 
+
+It is covered in Jongman, ter Braak & van Tongeren (1995) Data Analysis
+in Community and Landscape Ecology. Cambridge University Press. It is in
+the ordination chapter. I'm away from my copy at the moment so can't
+point you to it directly I'm afraid.
+
+However, that might not help you understand the R code as IIRC Jari has
+some pretty efficient code to do fitting. If that was your aim, it might
+help to speak to Jari on the vegan help or discussion lists on
+r-forge.r-project.org.
+
+I've been meaning to write a blog post about envfit for a wee while, but
+that would only be from the point of view of what the method/idea is
+doing, not from understanding the codes Jari used to implement it.
+
+HTH
+
+G
+
+> Can anyone point me toward a more detailed explanation of the calculations?
+> Thanks for any help,
+> Dan
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From pitchfordj at yahoo.com  Wed Dec 21 21:45:55 2011
+From: pitchfordj at yahoo.com (Jonathan Pitchford)
+Date: Wed, 21 Dec 2011 12:45:55 -0800 (PST)
+Subject: [R-sig-eco] baci
+Message-ID: <1324500355.32449.YahooMailNeo@web46006.mail.sp1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111221/a49e048b/attachment.pl>
+
+From matt.gregory at oregonstate.edu  Wed Dec 21 23:22:42 2011
+From: matt.gregory at oregonstate.edu (Gregory, Matthew)
+Date: Wed, 21 Dec 2011 14:22:42 -0800
+Subject: [R-sig-eco] order of explanatory variables in vegan CCA
+Message-ID: <1D673F86DDA00841A1216F04D1CE70D646FD70E109@EXCH2.nws.oregonstate.edu>
+
+Hi all,
+
+We run vegan CCA as part of an automated process.  Our typical use case is to read in species and environment matrices (from CSV files) and subset the environmental matrix with a vector of field names ('vars'), e.g. 
+
+  spp <- read.csv(spp_file, row.names = id_field)
+  env <- read.csv(env_file, row.names = id_field)
+  env <- env[,vars]
+  cca_obj <- cca(spp, env)
+
+Today, for the first time, we received the following error:
+
+  Error in La.svd(x, nu, nv) : error code 1 from Lapack routine 'dgesdd'
+
+which from googling implies that the SVD did not converge.  If I reorder the 'vars' list and rerun, I can have it run to completion.  I am completely na?ve with ordination modeling, but is there any reason why the order of environmental variables would matter to CCA?  I would have thought this wouldn't matter.
+
+Thanks for any pointers.
+
+matt
+
+
+From m.wilkes at worc.ac.uk  Fri Dec 23 19:41:05 2011
+From: m.wilkes at worc.ac.uk (Martin Wilkes)
+Date: Fri, 23 Dec 2011 18:41:05 +0000
+Subject: [R-sig-eco] Permutation: habitat diversity
+Message-ID: <0FF99068D2A5FE47B4E705BF5A997B3067734A94@EX-MBX-01.worc.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111223/c9dea827/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Fri Dec 23 20:45:36 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Fri, 23 Dec 2011 19:45:36 +0000
+Subject: [R-sig-eco] Permutation: habitat diversity
+In-Reply-To: <0FF99068D2A5FE47B4E705BF5A997B3067734A94@EX-MBX-01.worc.ac.uk>
+References: <0FF99068D2A5FE47B4E705BF5A997B3067734A94@EX-MBX-01.worc.ac.uk>
+Message-ID: <1324669536.2995.2.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Fri, 2011-12-23 at 18:41 +0000, Martin Wilkes wrote:
+> We have counts of habitat types at three sites and want to permute the
+> sets of counts between sites to get a distribution of habitat (H)
+> diversity. We have tried several R functions (perm, sample, permtest)
+> but none seems to do what we want.  We're happy writing the code to
+> calculate the H distribution but need some help getting the
+> permutations right if possible please.
+
+Hi Martin,
+
+Its not immediately clear to me what your data looks like nor what needs
+to be shuffled and what doesn't. Could you expand, perhaps with a
+simplified example or structure of data and how you want to shuffle it?
+
+In the meantime, take a look at the permute package as it may do what
+you want. If it doesn't I'd be interested in knowing how you want to
+permute your data as it might be easy to add this sort of thing to
+permute at a later date.
+
+All the best,
+
+Gavin
+
+> Thanks
+> 
+> Martin Wilkes
+> University of Worcester
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From gavin.simpson at ucl.ac.uk  Fri Dec 23 20:49:37 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Fri, 23 Dec 2011 19:49:37 +0000
+Subject: [R-sig-eco] order of explanatory variables in vegan CCA
+In-Reply-To: <1D673F86DDA00841A1216F04D1CE70D646FD70E109@EXCH2.nws.oregonstate.edu>
+References: <1D673F86DDA00841A1216F04D1CE70D646FD70E109@EXCH2.nws.oregonstate.edu>
+Message-ID: <1324669777.2995.6.camel@chrysothemis.geog.ucl.ac.uk>
+
+Hi Matt,
+
+Would you mind sending me the data *off list* so I can see if I can
+reproduce. The failure is within a basic part of the R stack (Lapack
+matrix algebra code supplied with R) so points to something with the
+data and perhaps your matrix (or a subsidiary matrix computed during the
+CCA fitting) is close to being degenerate in some way and that when
+re-ordered it is slightly less degenerate. [I'm using the word
+degenerate loosely here).
+
+I promise to delete the data once I've reproduced the problem.
+
+G
+
+On Wed, 2011-12-21 at 14:22 -0800, Gregory, Matthew wrote:
+> Hi all,
+> 
+> We run vegan CCA as part of an automated process.  Our typical use case is to read in species and environment matrices (from CSV files) and subset the environmental matrix with a vector of field names ('vars'), e.g. 
+> 
+>   spp <- read.csv(spp_file, row.names = id_field)
+>   env <- read.csv(env_file, row.names = id_field)
+>   env <- env[,vars]
+>   cca_obj <- cca(spp, env)
+> 
+> Today, for the first time, we received the following error:
+> 
+>   Error in La.svd(x, nu, nv) : error code 1 from Lapack routine 'dgesdd'
+> 
+> which from googling implies that the SVD did not converge.  If I reorder the 'vars' list and rerun, I can have it run to completion.  I am completely na?ve with ordination modeling, but is there any reason why the order of environmental variables would matter to CCA?  I would have thought this wouldn't matter.
+> 
+> Thanks for any pointers.
+> 
+> matt
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From m.wilkes at worc.ac.uk  Fri Dec 23 21:08:09 2011
+From: m.wilkes at worc.ac.uk (Martin Wilkes)
+Date: Fri, 23 Dec 2011 20:08:09 +0000
+Subject: [R-sig-eco] Permutation: habitat diversity
+In-Reply-To: <1324669536.2995.2.camel@chrysothemis.geog.ucl.ac.uk>
+References: <0FF99068D2A5FE47B4E705BF5A997B3067734A94@EX-MBX-01.worc.ac.uk>,
+	<1324669536.2995.2.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <0FF99068D2A5FE47B4E705BF5A997B3067734AA6@EX-MBX-01.worc.ac.uk>
+
+Hi Gavin,
+
+Thanks for the reply, especially given the festive season!
+
+As an example, say we have three sites and six habitat types in total (A-F):
+
+Site 1: HabitatA 13; HabitatB 21; HabitatC 0; HabitatD 14; HabitatE 23; HabitatF 22
+Site 2: HabitatA 1; HabitatB 7; HabitatC 9; HabitatD 23; HabitatE 19; HabitatF 2
+Site 3: HabitatA 0; HabitatB 5; HabitatC 12; HabitatD 4; HabitatE 13; HabitatF 6
+
+Can we do a pairwise comparison using a permutation test to evaluate the null hypothesis that habitat diversity is not significantly different between sites?  This seems to suggest a shuffling of the habitat scores between two sites at a time, but I have very little experience of hypothesis testing using this approach!  I hope I have explained it a little better now. Can you please help?
+
+Merry Christmas to you and the family.
+
+Martin
+________________________________________
+From: Gavin Simpson [gavin.simpson at ucl.ac.uk]
+Sent: 23 December 2011 19:45
+To: Martin Wilkes
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Permutation: habitat diversity
+
+On Fri, 2011-12-23 at 18:41 +0000, Martin Wilkes wrote:
+> We have counts of habitat types at three sites and want to permute the
+> sets of counts between sites to get a distribution of habitat (H)
+> diversity. We have tried several R functions (perm, sample, permtest)
+> but none seems to do what we want.  We're happy writing the code to
+> calculate the H distribution but need some help getting the
+> permutations right if possible please.
+
+Hi Martin,
+
+Its not immediately clear to me what your data looks like nor what needs
+to be shuffled and what doesn't. Could you expand, perhaps with a
+simplified example or structure of data and how you want to shuffle it?
+
+In the meantime, take a look at the permute package as it may do what
+you want. If it doesn't I'd be interested in knowing how you want to
+permute your data as it might be easy to add this sort of thing to
+permute at a later date.
+
+All the best,
+
+Gavin
+
+> Thanks
+>
+> Martin Wilkes
+> University of Worcester
+>
+>       [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+--
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+
+From kay.cichini at gmail.com  Sat Dec 24 16:30:47 2011
+From: kay.cichini at gmail.com (Kay Cichini)
+Date: Sat, 24 Dec 2011 16:30:47 +0100
+Subject: [R-sig-eco] Permutation: habitat diversity
+In-Reply-To: <0FF99068D2A5FE47B4E705BF5A997B3067734A94@EX-MBX-01.worc.ac.uk>
+References: <0FF99068D2A5FE47B4E705BF5A997B3067734A94@EX-MBX-01.worc.ac.uk>
+Message-ID: <CADcQ+Rrz1Wwnc5x1yr+oz57Te4f9PYebFYYGf9LALJ+a85tFow@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111224/864dfd28/attachment.pl>
+
+From jari.oksanen at oulu.fi  Sun Dec 25 08:10:01 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Sun, 25 Dec 2011 07:10:01 +0000
+Subject: [R-sig-eco] order of explanatory variables in vegan CCA
+In-Reply-To: <1324669777.2995.6.camel@chrysothemis.geog.ucl.ac.uk>
+References: <1D673F86DDA00841A1216F04D1CE70D646FD70E109@EXCH2.nws.oregonstate.edu>
+	<1324669777.2995.6.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <FBC8DA5C-729E-4A7F-8196-396088E06A2A@oulu.fi>
+
+Matt & Gav,
+
+I've seen this before, and I think this can be difficult to handle in vegan: The problem is not in vegan, and it is not in R, but it is in LAPACK library. When I last had this problem, I hacked the vegan code and ran svd() within cca/rda with option LINPACK = TRUE. This helped me to get around the problem. 
+
+I think that LAPACK DGESDD error code 1 tries to tell in a cryptic way that the convergence failed. It is surprising to hear that reordering data helped here. Looks like DGESDD failed in pivoting the data when it should have done so. Are the variables very differently scaled? Vegan does not scale explanatory variables in cca/rda/capscale, but you could try if manual scaling helps here. If scaling helps, then we could re-consider scaling of constraints within cca/rda as a safe option. However, that would break at least predict(..., newdata=) and probably something else and cannot be done light-heartedly. 
+
+Cheers, Jari Oksanen
+
+On 23/12/2011, at 21:49 PM, Gavin Simpson wrote:
+
+> Hi Matt,
+> 
+> Would you mind sending me the data *off list* so I can see if I can
+> reproduce. The failure is within a basic part of the R stack (Lapack
+> matrix algebra code supplied with R) so points to something with the
+> data and perhaps your matrix (or a subsidiary matrix computed during the
+> CCA fitting) is close to being degenerate in some way and that when
+> re-ordered it is slightly less degenerate. [I'm using the word
+> degenerate loosely here).
+> 
+> I promise to delete the data once I've reproduced the problem.
+> 
+> G
+> 
+> On Wed, 2011-12-21 at 14:22 -0800, Gregory, Matthew wrote:
+>> Hi all,
+>> 
+>> We run vegan CCA as part of an automated process.  Our typical use case is to read in species and environment matrices (from CSV files) and subset the environmental matrix with a vector of field names ('vars'), e.g. 
+>> 
+>>  spp <- read.csv(spp_file, row.names = id_field)
+>>  env <- read.csv(env_file, row.names = id_field)
+>>  env <- env[,vars]
+>>  cca_obj <- cca(spp, env)
+>> 
+>> Today, for the first time, we received the following error:
+>> 
+>>  Error in La.svd(x, nu, nv) : error code 1 from Lapack routine 'dgesdd'
+>> 
+>> which from googling implies that the SVD did not converge.  If I reorder the 'vars' list and rerun, I can have it run to completion.  I am completely na?ve with ordination modeling, but is there any reason why the order of environmental variables would matter to CCA?  I would have thought this wouldn't matter.
+>> 
+>> Thanks for any pointers.
+>> 
+>> matt
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> 
+> 
+> -- 
+> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+> Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+> ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+> Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+> Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+> UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+From m.wilkes at worc.ac.uk  Tue Dec 27 17:52:24 2011
+From: m.wilkes at worc.ac.uk (Martin Wilkes)
+Date: Tue, 27 Dec 2011 16:52:24 +0000
+Subject: [R-sig-eco] Permutation: habitat diversity
+In-Reply-To: <CADcQ+Rrz1Wwnc5x1yr+oz57Te4f9PYebFYYGf9LALJ+a85tFow@mail.gmail.com>
+References: <0FF99068D2A5FE47B4E705BF5A997B3067734A94@EX-MBX-01.worc.ac.uk>,
+	<CADcQ+Rrz1Wwnc5x1yr+oz57Te4f9PYebFYYGf9LALJ+a85tFow@mail.gmail.com>
+Message-ID: <0FF99068D2A5FE47B4E705BF5A997B3067734C0D@EX-MBX-01.worc.ac.uk>
+
+Thanks Kay,
+That seems to do exactly what I wanted it to! ?I am a little concerned about some of the results I am getting using the code below, which suggests a highly significant difference for diversity between two of my sites (PodLow and PodInt) which does not seem to tally with the null-distribution. ?Am I reading the results wrong?
+##PodLow vs PodInt##Habitat counts for PodLowPodLow <- c(20,0,2,21,3,15,23)##Habitat counts for PodIntPodInt <- c(17,1,3,19,1,21,15)
+require (vegan)
+DivPodLow=diversity(t(PodLow),"shannon") ##Diversity for PodLowDivPodInt=diversity(t(PodInt),"shannon") ##Diversity for PodIntDivPodLowDivPodIntRichPodLow=sum(PodLow>0) ##Richness for PodLowRichPodInt=sum(PodInt>0) ##Richness for PodInt
+tr.diff.div=abs(PodLow-PodInt) ##Observed difference in diversitytr.diff.rich=abs(PodLow-PodInt) ##Observed difference in richness
+tr.diff.div
+K=2100
+pop.div=rep(NA,K) ##Dataframe for null population of differencespop.rich=rep(NA,K)pop.div[1:length(tr.diff.div)]=tr.diff.divpop.rich[1:length(tr.diff.div)]=tr.diff.rich
+for(j in 2:K){ ? ### loop to generate null pop. of differences?indPodLow<-sum(PodLow)indPodInt<-sum(PodInt)pool<-c(rep(1:length(PodLow),PodLow),rep(1:length(PodInt),PodInt))
+tempPodLow=sample(pool,indPodLow,replace=T) ? ### resample PodLowtempPodInt=sample(pool,indPodInt,replace=T) ? ### resample PodInt?### calculate diversity:DivPodLow.temp=diversity(t(tabulate(tempPodLow)),"shannon")DivPodInt.temp=diversity(t(tabulate(tempPodInt)),"shannon")?RichPodLow.temp=sum(tabulate(tempPodLow)>0)RichPodInt.temp=sum(tabulate(tempPodInt)>0)?temp.diff.div=abs(DivPodLow.temp-DivPodInt.temp)pop.div[j]=temp.diff.div?temp.diff.rich=abs(RichPodLow.temp-RichPodInt.temp)pop.rich[j]=temp.diff.rich}?p.div=sum(pop.div>=abs(tr.diff.div))/Kp.rich=sum(pop.rich>=abs(tr.diff.rich))/K?### diagrams to show null-distributions with obs. differences?par(mfrow=c(1,1))hist(pop.div, breaks=500, xlim=c(0,0.5))abline(v=abs(DivPodLow-DivPodInt),lty=3,col=2,lwd=2) ##Showing observed differencep.divDivPodLowDivPodInttr.diff.div
+hist(pop.rich)abline(v=tr.diff.rich,lty=3,col=2,lwd=2)p.richRichPodLowRichPodInttr.diff.rich
+
+Best wishes,
+Martin
+
+
+
+
+From: Kay Cichini [kay.cichini at gmail.com]
+
+Sent: 24 December 2011 15:30
+
+To: Martin Wilkes
+
+Cc: r-sig-ecology at r-project.org
+
+Subject: Re: [R-sig-eco] Permutation: habitat diversity
+
+
+
+hi,
+
+
+
+i don't exactly know what you want to do but this may serve as a starter: 
+http://thebiobucket.blogspot.com/2011/04/test-difference-between-diversity.html
+
+
+
+if you want to test difference in habitat diversity between sites you just need to replace my species in the example with your habitats.
+
+
+
+cheers,
+
+kay
+
+
+
+
+2011/12/23 Martin Wilkes <m.wilkes at worc.ac.uk>
+
+
+We have counts of habitat types at three sites and want to permute the sets of counts between sites to get a distribution of habitat (H) diversity. We have tried several R functions (perm, sample, permtest) but none seems to do what we want.  We're happy writing
+ the code to calculate the H distribution but need some help getting the permutations right if possible please.
+
+
+
+Thanks
+
+
+
+Martin Wilkes
+
+University of Worcester
+
+
+
+       [[alternative HTML version deleted]]
+
+
+
+_______________________________________________
+
+R-sig-ecology mailing list
+
+R-sig-ecology at r-project.org
+
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+
+
+
+
+
+
+From matt.gregory at oregonstate.edu  Thu Dec 29 21:15:50 2011
+From: matt.gregory at oregonstate.edu (Gregory, Matthew)
+Date: Thu, 29 Dec 2011 12:15:50 -0800
+Subject: [R-sig-eco] order of explanatory variables in vegan CCA
+In-Reply-To: <FBC8DA5C-729E-4A7F-8196-396088E06A2A@oulu.fi>
+References: <1D673F86DDA00841A1216F04D1CE70D646FD70E109@EXCH2.nws.oregonstate.edu>
+	<1324669777.2995.6.camel@chrysothemis.geog.ucl.ac.uk>
+	<FBC8DA5C-729E-4A7F-8196-396088E06A2A@oulu.fi>
+Message-ID: <1D673F86DDA00841A1216F04D1CE70D646FD70E629@EXCH2.nws.oregonstate.edu>
+
+Hi Jari and Gavin,
+
+Jari Oksanen wrote:
+> I've seen this before, and I think this can be difficult to handle in
+> vegan: The problem is not in vegan, and it is not in R, but it is in
+> LAPACK library. When I last had this problem, I hacked the vegan code
+> and ran svd() within cca/rda with option LINPACK = TRUE. This helped me
+> to get around the problem.
+> 
+> I think that LAPACK DGESDD error code 1 tries to tell in a cryptic way
+> that the convergence failed. It is surprising to hear that reordering
+> data helped here. Looks like DGESDD failed in pivoting the data when it
+> should have done so. Are the variables very differently scaled? Vegan
+> does not scale explanatory variables in cca/rda/capscale, but you could
+> try if manual scaling helps here. If scaling helps, then we could re-
+> consider scaling of constraints within cca/rda as a safe option.
+> However, that would break at least predict(..., newdata=) and probably
+> something else and cannot be done light-heartedly.
+
+Thank you both for your help.  I've sent Gavin sample data and a script to see if he can replicate the issue.
+
+Yes, the explanatory variables are somewhat differently scaled (I was under the na?ve assumption that cca does an internal rescaling of the constraints).  If I do a simple
+
+  env <- scale(env) 
+
+before running cca, then both ways of ordering the constraints run to completion with identical results.  Thanks for the very helpful suggestion.  
+
+I won't presume to understand all that is involved with making this change to the codebase in 'safe' mode.  I do understand that I have a work-around in case I receive this error message again.
+
+thanks, matt
+
+
+From oneil.shawnt at gmail.com  Sat Dec 31 04:36:37 2011
+From: oneil.shawnt at gmail.com (Shawn O'Neil)
+Date: Fri, 30 Dec 2011 21:36:37 -0600
+Subject: [R-sig-eco] Create new corStruct class for lme model
+Message-ID: <CAHJOu+o9i5WXgavY6qUAyTVxt9y60=M-djovSpFSSpL8yozhHg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111230/14ed9574/attachment.pl>
+

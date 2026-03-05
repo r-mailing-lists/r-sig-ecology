@@ -1,0 +1,239 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2018-06",
+  "messages": [
+    {
+      "id": "msg-a326cf205c96",
+      "message_id": "<1528217187.2351.20.camel@uqtr.ca>",
+      "from_name": "Bertolo, Andrea",
+      "from_email_hash": "b52a97766a6de9c6ff2234525170c458e51fba97b30a82952eb945766998817f",
+      "date": "2018-06-05T16:47:22Z",
+      "subject": "[R-sig-eco] CI for stratified Cox PH model",
+      "subject_clean": "CI for stratified Cox PH model",
+      "in_reply_to": "<1528211690.7228.11.camel@uqtr.ca>",
+      "references": [
+        "<1528211690.7228.11.camel@uqtr.ca>"
+      ],
+      "body_plain": "Hi everyone,\n\nI have a doubt about the way to calculate 95% CI for coefficients in\nthe stratified Cox proportional hazard models and your help is welcomed\n.\n\nSay that I have a variable of interest Imi and a stratifying variable\nUV in a interaction model (since the interaction between Imi and UV is\nof interest for me and the interaction model has a better fit than the\nno-interaction model:\n\nlibrary(survival)\nmodel1 <- coxph(Surv(start,stop, Status.time)?\n???????????????????~ Imi + Imi:UV + strata(UV)?+ cluster(ID),?\n? ? ? ? ? ? ? ? ? ? ?weights = NB_Event, data=Data.unfold)?\n\n\n\nWhereas it is pretty straightforward to calculate the coefficients (and\nassociated HR) for each combination of Imi and UV, I am not sure about\nhow to calculate the associated CI (note that, of course, I got the CI\nfor the estimate of \"Imi:UV\" from the output of model1).?\n\nIs it correct to calculate separately a model for each UV level and use\nthe CI for the Imi variable to get the CI for the two levels of UV (see\nbelow) ? ?\n\n# 2 models (one per UV level)?\ndata.Low <- subset(Data.unfold,UV==\"low\")\nmodel2.1 <- coxph(Surv(start,stop, Status.time)?\n???????????????????~ Imi + cluster(ID),?\n? ? ? ? ? ? ? ? ? ? ?weights =\nNB_Event, data=data.Low)?\n\ndata.High <- subset(Data.unfold,UV==\"high\")\nmodel2.2 <-\ncoxph(Surv(start,stop, Status.time)?\n???????????????????~ Imi +\ncluster(ID),?\n? ? ? ? ? ? ? ? ? ? ?weights = NB_Event, data=data.High)?\n\nAlternatively, is there a way to get the CI directly from the output of the stratified model ?\nMany thanks?\nAndrea Bertolo\n\n\n\nUniversit? du Qu?bec ? Trois-Rivi?res\n3351, bd des Forges\nC.P.500, Trois-Rivi?res (Qu?bec) Canada\nG9A 5H7",
+      "body_snippet": "Hi everyone,\n\nI have a doubt about the way to calculate 95% CI for coefficients in\nthe stratified Cox proportional hazard models and your help is welcomed\n.\n\nSay that I have a variable of interest Imi",
+      "thread_id": "thread-a326cf205c96",
+      "thread_depth": 0,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-d8c0b68cee47",
+      "message_id": "<CAJRWjBZQwfFWGa_G8P+iZvaii22kz2hjqQztVCCEosL75++bPw@mail.gmail.com>",
+      "from_name": "Mariano Devoto",
+      "from_email_hash": "a2dd4646945b2aff21e3056d58717ada9d6fe8fa3a8198a516caa2c000fdd8e4",
+      "date": "2018-06-05T16:28:08-03:00",
+      "subject": "[R-sig-eco] avocado pollination retworks",
+      "subject_clean": "avocado pollination retworks",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear List,\n\nOnce again I ask for your kind advice. I am analyzing the structure of\npollination networks in conventional vs organic avocado farms.\nI have four different response variables: interaction richness (a count),\ninteraction evenness, interaction selectivity and nestedness (all three\ntake values in the [0, 1] interval).\nThe explanatory variables are: farm type (fixed factor, 2 levels), sampling\nseason (fixed factor, 2 levels), and farm identity (random factor).\nAdditionally, the number of species in the network (a count) might affect\nsome of the response variables (interaction richness and nestedness\nprobably, although I am not sure about the other two), so I decided to\n\"correct\" for that effect in some of the models.\nI am generally familiar with models dealing with count data, but I am not\ntoo confident modelling 0-1 bounded continuous data.\nFor each variable I've searched the literature and online resources to try\nand find the best R function, model and error structure.\n\nI have pasted below a workable code that deals sequentially with each\nresponse variable.\nWould you say the models correctly are defined in each case? I am\nparticularly concerned with (1) the suitability of the \"simulateResidual\"\nfunction in the Dharma package (which I recently learned about) as a way to\ncheck the fit of the model,\nand (2) the validity of the offset term in model 4.\n\nYour comments and suggestions will be greatly appreciated.\n\nBest regards,\n\nMariano\n\n###############################\nrequire(RCurl); require(visreg); require(lme4); require(DHARMa);\nlibrary(lmerTest); require(glmmTMB); require(effects)\nmy.file <- getURL(\"\nhttps://docs.google.com/spreadsheets/d/e/2PACX-1vRn3_aM-OlKldXlEB45qKjL9jMoY_-CP2saOI8HteTTx4_AZv-card1sce4MDbqwYJ8kllJUaysfcBR/pub?output=csv\n\")\navocado_data <- read.csv(textConnection(my.file), head=T)\nstr(avocado_data)\n\n##Model for Interaction richness\nmodel1 <- glmer(irich ~ offset(log(species)) + type + season + (1|farm),\nfamily=poisson, data=avocado_data)\nsummary(model1)\n#diagnostic plots\nplot(model1)\nsimulationOutput <- simulateResiduals(fittedModel = model2, n = 1000)\ntestOverdispersion(simulationOutput = simulationOutput, alternative\n=\"greater\") #the data are not overdispersed relative to the Poisson\ndistribution\nplotSimulatedResiduals(simulationOutput = simulationOutput)\nvisreg(model1, pch=16, cex=1.5, rug=FALSE, ylab=\"Interaction richness\",\nline.par=list(col=\"darkgreen\"), points.par=list(col=\"red\", cex=1.5),\noverlay=TRUE)\n\n##Model for Interaction evenness\nmodel2 <- lmer(ieven~ type + season + (1|farm), data=avocado_data)\nsummary(model2)\n#diagnostic plots\nplot(model2)\nsimulationOutput <- simulateResiduals(fittedModel = model2, n = 1000)\nplotSimulatedResiduals(simulationOutput = simulationOutput)\nvisreg(model2, pch=16, cex=1.5, rug=FALSE, ylab=\"Interaction evenness\",\nline.par=list(col=\"darkgreen\"), points.par=list(col=\"red\", cex=1.5),\noverlay=TRUE)\n\n##Model for Interaction selectivity\nmodel3 <- lmer(h2 ~ type + season + (1|farm), data=avocado_data)\nsummary(model3)\n#diagnostic plots\nplot(model3)\nsimulationOutput <- simulateResiduals(fittedModel = model3, n = 1000)\nplotSimulatedResiduals(simulationOutput = simulationOutput)\nvisreg(model3, pch=16, cex=2, rug=FALSE, ylab=\"Interaction selectivity\",\nline.par=list(col=\"darkgreen\"), points.par=list(col=\"red\", cex=1.5),\noverlay=TRUE)\n\n#model for Nestedness\nmodel4 <- glmmTMB(nestedness/100 ~ offset(log(species)) + type + season +\n(1|farm), data=avocado_data, family=list(family=\"beta\", link=\"logit\"))\nsummary(model4)\n#diagnostic plots\nsimulationOutput <- simulateResiduals(fittedModel = model4, n = 1000)\nplotSimulatedResiduals(simulationOutput = simulationOutput)\nvisreg(model4, pch=16, cex=2, rug=FALSE, ylab=\"Nestedness\",\nline.par=list(col=\"darkgreen\"), points.par=list(col=\"red\", cex=1.5),\noverlay=TRUE) #does not work with glmmTMB :-(\nplot(allEffects(model4)) #doesn't work either . Any alternatives?\n\n###############################\n\n\n*Dr. Mariano Devoto*\n\nProfesor Adjunto - C?tedra de Bot?nica General, Facultad de Agronom?a de la\nUBA\nInvestigador Adjunto del CONICET\n\nAv. San Mart?n 4453 - C1417DSE - C. A. de Buenos Aires - Argentina\n+5411 4524-8069\n*https://www.researchgate.net/profile/Mariano_Devoto\n<https://www.researchgate.net/profile/Mariano_Devoto>*\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear List,\n\nOnce again I ask for your kind advice. I am analyzing the structure of\npollination networks in conventional vs organic avocado farms.\nI have four different response variables: interaction ",
+      "thread_id": "thread-d8c0b68cee47",
+      "thread_depth": 0,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-e747ca0f6ed7",
+      "message_id": "<ad2f8982-f410-188f-b005-0524af240f0f@ntnu.no>",
+      "from_name": "Bob O'Hara",
+      "from_email_hash": "cd05b56fd766ac007a949f81842953c23369071c2aab6c270ec903ecf804b0cb",
+      "date": "2018-06-06T10:08:09+02:00",
+      "subject": "[R-sig-eco] CI for stratified Cox PH model",
+      "subject_clean": "CI for stratified Cox PH model",
+      "in_reply_to": "<1528217187.2351.20.camel@uqtr.ca>",
+      "references": [
+        "<1528211690.7228.11.camel@uqtr.ca>",
+        "<1528217187.2351.20.camel@uqtr.ca>"
+      ],
+      "body_plain": "Is there any reason you can#'t use confint()? e.g.\n\n  test1 <- list(time=c(4,3,1,1,2,2,3),\n                    status=c(1,1,1,0,1,1,0),\n                    x=c(0,2,1,1,1,0,0),\n                    sex=c(0,0,0,0,1,1,1))\nconfint(coxph(Surv(time, status) ~ x + strata(sex), test1))\n\nAnother trick is to use predict(), with new data at all of hte levels \nyou are interested in:\n\npred1 <- list(x=c(0:2, 0:2),\n                    sex=c(0,0,0,1,1,1))\npredict(coxph(Surv(time, status) ~ x + strata(sex), test1), \nnewdata=pred1, type=\"lp\" , se.fit=TRUE)\n\n(it doesn't provide CIs, but mean +/-1.96s.e. should work OK for the \nlinear predictor scale)\n\nBob\n\nOn 05/06/18 18:47, Bertolo, Andrea wrote:\n> Hi everyone,\n> \n> I have a doubt about the way to calculate 95% CI for coefficients in\n> the stratified Cox proportional hazard models and your help is welcomed\n> .\n> \n> Say that I have a variable of interest Imi and a stratifying variable\n> UV in a interaction model (since the interaction between Imi and UV is\n> of interest for me and the interaction model has a better fit than the\n> no-interaction model:\n> \n> library(survival)\n> model1 <- coxph(Surv(start,stop, Status.time)\n>  ???????????????????~ Imi + Imi:UV + strata(UV)?+ cluster(ID),\n>  ? ? ? ? ? ? ? ? ? ? ?weights = NB_Event, data=Data.unfold)\n> \n> \n> \n> Whereas it is pretty straightforward to calculate the coefficients (and\n> associated HR) for each combination of Imi and UV, I am not sure about\n> how to calculate the associated CI (note that, of course, I got the CI\n> for the estimate of \"Imi:UV\" from the output of model1).\n> \n> Is it correct to calculate separately a model for each UV level and use\n> the CI for the Imi variable to get the CI for the two levels of UV (see\n> below) ?\n> \n> # 2 models (one per UV level)\n> data.Low <- subset(Data.unfold,UV==\"low\")\n> model2.1 <- coxph(Surv(start,stop, Status.time)\n>  ???????????????????~ Imi + cluster(ID),\n>  ? ? ? ? ? ? ? ? ? ? ?weights =\n> NB_Event, data=data.Low)\n> \n> data.High <- subset(Data.unfold,UV==\"high\")\n> model2.2 <-\n> coxph(Surv(start,stop, Status.time)\n>  ???????????????????~ Imi +\n> cluster(ID),\n>  ? ? ? ? ? ? ? ? ? ? ?weights = NB_Event, data=data.High)\n> \n> Alternatively, is there a way to get the CI directly from the output of the stratified model ?\n> Many thanks\n> Andrea Bertolo\n> \n> \n> \n> Universit? du Qu?bec ? Trois-Rivi?res\n> 3351, bd des Forges\n> C.P.500, Trois-Rivi?res (Qu?bec) Canada\n> G9A 5H7\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> \n\n\n-- \nBob O'Hara\nInstitutt for matematiske fag\nNTNU\n7491 Trondheim\nNorway\n\nMobile: +49 1515 888 5440\nHomepage: http://www.ntnu.edu/employees/bob.ohara\nJournal of Negative Results - EEB: www.jnr-eeb.org",
+      "body_snippet": "Is there any reason you can#'t use confint()? e.g.\n\n  test1 <- list(time=c(4,3,1,1,2,2,3),\n                    status=c(1,1,1,0,1,1,0),\n                    x=c(0,2,1,1,1,0,0),\n                    sex=",
+      "thread_id": "thread-a326cf205c96",
+      "thread_depth": 1,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-d10eab59623e",
+      "message_id": "<d5455a4d6fca6a0d8c8dc234e4750bbc@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "a49005db234a0680e39b89fc8690e893af64f94b8230db3a917426e095842f7c",
+      "date": "2018-06-07T02:59:34+01:00",
+      "subject": "[R-sig-eco] Part-funded scholarships for \"Social Network Analysis for Behavioural Scientists using R\"",
+      "subject_clean": "Part-funded scholarships for \"Social Network Analysis for Behavioural Scientists using R\"",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "PS statistics are offering part-funded scholarships for the course \n\"Social\nNetwork Analysis for Behavioural Scientists using R (SNAR01)\" to help\ntowards accommodation and course fees with 5 all inclusive places (inc.\naccommodation and meals) for ?450 (saving ?300).\n\nhttps://www.psstatistics.com/course/social-network-analysis-for-behavioral-\nscientists-snar01/\n\nThis course is delivered by Prof. James Curley in Glasgow from 2nd-5th \nJuly.\n\nCourse Overview:\nThis workshop will provide students with the opportunity to learn how to\nuse social network analysis to analyze social relational datasets such \nas\nhuman friendship networks or animal social networks. Attendees will \nlearn\nhow to use R and several R packages including igraph, sna, network, \nasnipe,\ntimeordered, tsna to create network graphs, calculate descriptive \nnetwork\nmetrics, use randomization and random models to evaluate the \nsignificance\nof these metrics, determine graph structural properties including \ncommunity\nstructures, use QAP and MRQAP methods to assess how network \ncharacteristics\nrelate to other individual and relational attributes, and measure change\nover time in dynamic networks. Attendees will also learn how to produce\nhigh quality network visualizations using R.\n\nPlease share!\n\nEmail oliverhooker at psstatistics.com for details\n\nwww.psstatistics.com/course/social-network-analysis-for-behavioral-\nscientists-snar01/\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Journal of the Linnean Society. \nDOI 10.1093/biolinnean/bly032\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "PS statistics are offering part-funded scholarships for the course \n\"Social\nNetwork Analysis for Behavioural Scientists using R (SNAR01)\" to help\ntowards accommodation and course fees with 5 all inclu",
+      "thread_id": "thread-d10eab59623e",
+      "thread_depth": 0,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-4f7bcb59a7f1",
+      "message_id": "<49bef2bb-de90-0f7a-c206-4c39f86251bb@highstat.com>",
+      "from_name": "Highland Statistics Ltd",
+      "from_email_hash": "f776a51d77a39cbecb72dfa34cf16f855449a5fe25c7547df2773f0b2a639de6",
+      "date": "2018-06-12T11:20:14+02:00",
+      "subject": "[R-sig-eco] Statistics course: Data exploration, regression, GLM & GAM with introduction to R",
+      "subject_clean": "Statistics course: Data exploration, regression, GLM & GAM with introduction to R",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Apologies for cross-posting\n\nWe would like to announce the following statistics course in Cadiz, Spain.\n\n\nCourse: Data exploration, regression, GLM & GAM with introduction to R\nWhere:? University of Cadiz, Spain.\nWhen:?? 3 - 7 September 2018\n\nCourse website: http://highstat.com/index.php/courses-upcoming\nCourse flyer: \nhttp://highstat.com/Courses/Flyers/2018/Flyer2018_09Cadiz_RGG.pdf\n\n\nKind regards,\n\nAlain Zuur\n\n\n\nOther open courses in 2018\n\nLinear Mixed Effects Models and GLMM with R. Frequentist and Bayesian \napproaches.\nNIOZ, Texel, The Netherlands. 1-5 October 2018\n\nIntroduction to regression models with spatial and temporal correlation \nusing R-INLA.\nHelmholtz Centre for Environmental Research - UFZ, Leipzig, Germany. \n26-29 November 2018\n\n\n-- \n\nDr. Alain F. Zuur\nHighland Statistics Ltd.\n9 St Clair Wynd\nAB41 6DZ Newburgh, UK\nEmail: highstat at highstat.com\nURL:   www.highstat.com\n\nAnd:\nNIOZ Royal Netherlands Institute for Sea Research,\nDepartment of Coastal Systems, and Utrecht University,\nP.O. Box 59, 1790 AB Den Burg,\nTexel, The Netherlands\n\n\n\nAuthor of:\n1. Beginner's Guide to Spatial, Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA. (2017).\n2. Beginner's Guide to Zero-Inflated Models with R (2016).\n3. Beginner's Guide to Data Exploration and Visualisation with R (2015).\n4. Beginner's Guide to GAMM with R (2014).\n5. Beginner's Guide to GLM and GLMM with R (2013).\n6. Beginner's Guide to GAM with R (2012).\n7. Zero Inflated Models and GLMM with R (2012).\n8. A Beginner's Guide to R (2009).\n9. Mixed effects models and extensions in ecology with R (2009).\n10. Analysing Ecological Data (2007).",
+      "body_snippet": "Apologies for cross-posting\n\nWe would like to announce the following statistics course in Cadiz, Spain.\n\n\nCourse: Data exploration, regression, GLM & GAM with introduction to R\nWhere:? University of C",
+      "thread_id": "thread-4f7bcb59a7f1",
+      "thread_depth": 0,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-b8d86c845297",
+      "message_id": "<3bf9a13bb2372d5537708408a6d99306@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "a49005db234a0680e39b89fc8690e893af64f94b8230db3a917426e095842f7c",
+      "date": "2018-06-13T04:56:44+01:00",
+      "subject": "[R-sig-eco] Part funded scholarships for Social Network Analysis for Behavioural Scientists using R (SNAR01)",
+      "subject_clean": "Part funded scholarships for Social Network Analysis for Behavioural Scientists using R (SNAR01)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "PS statistics are offering some part funded scholarships for their \nupcoming course on Social Network Analysis for Behavioural Scientists \nusing R (SNAR01) which may interest some behavioural ecologists.\n\nSCHOLARSHIPS CONTRIBUTE TOWARDS COURSE AND ACCOMMODATION FEES WITH 5 ALL \nINCLUSIVE PLACES (accommodation and meals included) AVAILABLE AT ?450.00 \n(Fees have been subsidised from ?750.00).\n\n\nApplications should be sent to oliverhooker at psstatistics.com and contain\n\nthe following.\n\n1.              Full name\n\n2.              Institute name\n\n3.              Masters/PhD subject title or Post doc research questions\n\n4.              Do you hold a funded position\n\n5.              150 words why this course would be relevant to your \nresearch or how it would help.\n\nApplication deadline is 17 June 2018.\n\n-- \nOliver Hooker PhD.\nPS statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Journal of the Linnean Society. \nDOI 10.1093/biolinnean/bly032",
+      "body_snippet": "PS statistics are offering some part funded scholarships for their \nupcoming course on Social Network Analysis for Behavioural Scientists \nusing R (SNAR01) which may interest some behavioural ecologis",
+      "thread_id": "thread-b8d86c845297",
+      "thread_depth": 0,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-6ad1fe4f9c41",
+      "message_id": "<CAFXQFgOpD7L4nzXkfZVqF-4dsMgQKdY5F6fHZGfHPp_hvRw=_A@mail.gmail.com>",
+      "from_name": "Alexandre F. Souza",
+      "from_email_hash": "888585e98c750c18d3890cfd04b60662165e86c658c8697134784be67f9f8671",
+      "date": "2018-06-23T07:11:54-03:00",
+      "subject": "[R-sig-eco] Is stepacross a must?",
+      "subject_clean": "Is stepacross a must?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "---------- Forwarded message ----------\nFrom: Alexandre F. Souza <alexsouza.cb.ufrn.br at gmail.com>\nDate: 2018-06-23 7:04 GMT-03:00\nSubject: Is stepacross a must?\nTo: Lista de discussao R-sig-ecology <r-sig-ecology at r-project.org>\n\n\nDear friends,\n\nI am in deep doubt regarding whether or not to apply vegan'a stepacross\nfunction to my dissimilarity matrix. The matrix is a simpson dissimilarity\nmatrix with 665 rows reflecting beta diversity between localities along the\nbrazilian atlantic florest, with over 4000 species most of which are\nsingletons. They were retained for biological reasons.\n\nWe are appying a community modelling approach with k-means in order to find\nthe best number of clusters this dataset can be divided. The problem is\nthat we are obtaining quite different results with or without applying the\nstepacross function. According to Tuomisto et al. 2012:\n\n...\"the stepacross\nmethod or extended dissimilarities (Williamson 1978,\nDe?ath 1999), originally developed to improve the performance\nof ordination. Th e aim is to fi nd the shortest path\nbetween sites that do not share any species by using intermediate\nsites as stepping-stones. The process replaces all saturated\ndissimilarity values (or any dissimilarities larger than\na specifi ed threshold value) with new values that can exceed\nunity. The new values can be as large as is necessary to reflect the amount\nof compositional heterogeneity in the dataset,\nso using extended dissimilarities instead of the original\nones in Mantel tests and multiple regression on dissimilarity\nmatrices can be expected to improve the performance of\nthese methods.\"\n\nI reproduce the code below. Without stepacross we obtain dissimilarities by\nlarge dominated by 1, and as many as 25 groups.\nWith stepacross they are more unimodal since the =1 distances were allowed\nto have higher values, but as few as 6 groups! Furthermore, the final\nnumber of groups varies more between runs with stepacross than without it.\nWith stepacross it seems almost to alternate between 6 and 11 groups, with\n6 being more frequent.\n\nWhat do you thin it would be wiser to do? I am leaning towards the\nstepacross.... but I am not that sure. The help page of the function\nmentions that in cases with high beta-diversity datasets stepacross must be\nused.\n\nThanks for any thoughts,\n\nAlexandre\n\nsimpdist = recluster.dist(sp, dist = \"simpson\")\nsimp.step = stepacross(simpdist)\ndissimilarity_matrix<-as.matrix(simp.step)\n\n# Perform an ordination via Principal Coordinate Analysis (PCoA) with\ncorrection for negative eigenvalues [add = T]\nordination_output<-cmdscale(dissimilarity_matrix,\nk=(nrow(dissimilarity_matrix)-1), eig = F, add = T, x.ret = FALSE)\npcoa_scores<-as.data.frame(ordination_output[[1]]) # Extract the PCoA\nscores for each site\n\n# Get values of the evaluation criterion (Within-Groups SS) for k varying\nfrom 2 to 'number of sites minus 1'\nsum_of_squares <- foreach(i = 2:(ncol(dissimilarity_matrix)-1),\n                          .combine = 'cbind')  %dopar% { # cbind the\nresults of foreach\n                            classification<-kmeans(pcoa_scores, i,\niter.max=1000, nstart=100)#usar inter.max=1000 e nstart=100\n                            classification$tot.withinss} # the\nWithin-Groups SS for k=i\ny<-t(as.matrix(sum_of_squares)) # convert Within-Group SS to a vector (y\nfor piecewise regressions)\nx<-c(2:(ncol(dissimilarity_matrix)-1)) # number of clusters (x for\npiecewise regressions)\n\n# Create an empty matrix to receive the values of 'max-k entered a priori'\nand the respective 'optimal k selected'\ninitial_kmax<-c(4:ncol(dissimilarity_matrix)) # At least 4 points to\nproduce two lines (L-method)\ncluster_results<-cbind(initial_kmax, c(NA)) # Dataframe to receive values\nof the breakpoints\n\n# Perform multiple piecewise regression varying the max-k entered a priori\nfrom 4 to 'number of sites'\nfor (j in 4:ncol(dissimilarity_matrix)){ # the maximum number of 'k'\nestablished a priori\n  y_selected<-y[1:j] # Limit the number of starting points (y axis)\n  x_selected<-x[1:j] # Limit the number of starting points (x axis)\n  find_the_knee <- foreach(i = 2:(j-1), # calculate the RSE for all\npossible breakpoints (i) when starting with k-max = j\n                           .combine = 'cbind')  %dopar% { #\n\npiecewise_k<-lm(y_selected~x_selected*(x_selected<i)\n+ x_selected*(x_selected>=i))\n                             summary(piecewise_k)[6]} # print the RSE for\neach piecewise regression\n  find_the_knee<-c(do.call(\"cbind\",find_the_knee)) # convert the previous\noutput (list) to vector\n  knee_found<-as.data.frame(cbind(c(2:(j-1)), find_the_knee)) # combine\nposition of breakpoint and RSE value\n  names(knee_found)<-c(\"breakpoint\", \"RSE\") # rename\n  knee_found<-na.omit(knee_found) # remove NaN values\n  k_number<-knee_found[which(knee_found$RSE==min(knee_found$RSE)),1] #\nselect breakpoint that minimizes RSE\n  cluster_results[(j-3),2]<-k_number} # print the maximum number of initial\ngroups (j) and the respective selected breakpoint (k)\n(Sys.time()-a) # How long it takes?\n\n############################################################\n##############################\n# STEP 3 Inspect the variation in the values of optimal 'k' and identify\nthe most frequent 'k'\n\n# Identify the most frequent 'k' (math-mode)\nmost_frequent_k<-as.data.frame(cluster_results)[,2]\noptimal_k<-names(sort(-table(most_frequent_k)))[1]\noptimal_k # what is the most frequent value?\nhist(most_frequent_k, n=50, ylab=\"Frequency of k\", xlab=\"Value of the\noptimal k\", main=\"\", cex.axis=1.0, cex.lab=1.2, las=1, col=\"grey\")\n\n\n\n\n-- \nDr. Alexandre F. Souza\nProfessor Adjunto IV\nUniversidade Federal do Rio Grande do Norte\nCB, Departamento de Ecologia\nCampus Universit?rio - Lagoa Nova\n59072-970 - Natal, RN - Brasil\nlattes: lattes.cnpq.br/7844758818522706\nhttp://www.esferacientifica.com.br\nhttp://www.docente.ufrn.br/alexsouza\norcid.org/0000-0001-7468-3631 <http://www.docente.ufrn.br/alexsouza>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "---------- Forwarded message ----------\nFrom: Alexandre F. Souza <alexsouza.cb.ufrn.br at gmail.com>\nDate: 2018-06-23 7:04 GMT-03:00\nSubject: Is stepacross a must?\nTo: Lista de discussao R-sig-ecology",
+      "thread_id": "thread-6ad1fe4f9c41",
+      "thread_depth": 0,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-9b6e8cf4416d",
+      "message_id": "<62ECB92E-553E-4C62-B7EC-1E73DBFA1285@utu.fi>",
+      "from_name": "Hanna Tuomisto",
+      "from_email_hash": "db615266327ed59eaf8b5dd3f3fa33adabee457a28752a498a1d864bc8233afa",
+      "date": "2018-06-23T11:29:18Z",
+      "subject": "[R-sig-eco] Is stepacross a must?",
+      "subject_clean": "Is stepacross a must?",
+      "in_reply_to": "<CAFXQFgOpD7L4nzXkfZVqF-4dsMgQKdY5F6fHZGfHPp_hvRw=_A@mail.gmail.com>",
+      "references": [
+        "<CAFXQFgOpD7L4nzXkfZVqF-4dsMgQKdY5F6fHZGfHPp_hvRw=_A@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Alexandre,\n\nYou can check how much difference extending the dissimilarities makes to the overall compositional patterns of your data by comparing PCoA plots based on extended vs. original dissimilarities. If your compositional gradient is long, the original dissimilarities may give you an ordination where the main compositional gradient is forced into a circle, because no sites are allowed to be separated by more than 1 unit in the ordination space. In this case, it will be very hard to interpret the compositional gradient or to find out which explanatory variables it might be related to. Classifications may also end up grouping sites from different parts of the gradient with each other. Extended dissimilarities should give you an ordination where the main compositional gradient is straightened up and more or less parallel to the first PCoA axis, because sites are then allowed to be separated by more than 1 unit. This makes it more likely that any explanatory variables that correlate with the main compositional gradient actually get discovered in the analyses, and that classification results are more consistent with the compositional gradient as well.\n\nAs a general rule, I'd say that if the percentage of saturated dissimilarities is large (>20%), it makes sense to use extended dissimilarities instead of the original ones. To help further in deciding, make a histogram of the extended dissimilarities. The larger the maximum, and the larger the percentage of values exceeding unity, the more likely it is that you get more realistic results with the extended than with the original dissimilarities.\n\nI hope this helps.\nHanna Tuomisto\n\n> On 23 Jun 2018, at 13:11, Alexandre F. Souza <alexsouza.cb.ufrn.br at gmail.com> wrote:\n> \n> ---------- Forwarded message ----------\n> From: Alexandre F. Souza <alexsouza.cb.ufrn.br at gmail.com>\n> Date: 2018-06-23 7:04 GMT-03:00\n> Subject: Is stepacross a must?\n> To: Lista de discussao R-sig-ecology <r-sig-ecology at r-project.org>\n> \n> \n> Dear friends,\n> \n> I am in deep doubt regarding whether or not to apply vegan'a stepacross\n> function to my dissimilarity matrix. The matrix is a simpson dissimilarity\n> matrix with 665 rows reflecting beta diversity between localities along the\n> brazilian atlantic florest, with over 4000 species most of which are\n> singletons. They were retained for biological reasons.\n> \n> We are appying a community modelling approach with k-means in order to find\n> the best number of clusters this dataset can be divided. The problem is\n> that we are obtaining quite different results with or without applying the\n> stepacross function. According to Tuomisto et al. 2012:\n> \n> ...\"the stepacross\n> method or extended dissimilarities (Williamson 1978,\n> De?ath 1999), originally developed to improve the performance\n> of ordination. Th e aim is to fi nd the shortest path\n> between sites that do not share any species by using intermediate\n> sites as stepping-stones. The process replaces all saturated\n> dissimilarity values (or any dissimilarities larger than\n> a specifi ed threshold value) with new values that can exceed\n> unity. The new values can be as large as is necessary to reflect the amount\n> of compositional heterogeneity in the dataset,\n> so using extended dissimilarities instead of the original\n> ones in Mantel tests and multiple regression on dissimilarity\n> matrices can be expected to improve the performance of\n> these methods.\"\n> \n> I reproduce the code below. Without stepacross we obtain dissimilarities by\n> large dominated by 1, and as many as 25 groups.\n> With stepacross they are more unimodal since the =1 distances were allowed\n> to have higher values, but as few as 6 groups! Furthermore, the final\n> number of groups varies more between runs with stepacross than without it.\n> With stepacross it seems almost to alternate between 6 and 11 groups, with\n> 6 being more frequent.\n> \n> What do you thin it would be wiser to do? I am leaning towards the\n> stepacross.... but I am not that sure. The help page of the function\n> mentions that in cases with high beta-diversity datasets stepacross must be\n> used.\n> \n> Thanks for any thoughts,\n> \n> Alexandre\n> \n> simpdist = recluster.dist(sp, dist = \"simpson\")\n> simp.step = stepacross(simpdist)\n> dissimilarity_matrix<-as.matrix(simp.step)\n> \n> # Perform an ordination via Principal Coordinate Analysis (PCoA) with\n> correction for negative eigenvalues [add = T]\n> ordination_output<-cmdscale(dissimilarity_matrix,\n> k=(nrow(dissimilarity_matrix)-1), eig = F, add = T, x.ret = FALSE)\n> pcoa_scores<-as.data.frame(ordination_output[[1]]) # Extract the PCoA\n> scores for each site\n> \n> # Get values of the evaluation criterion (Within-Groups SS) for k varying\n> from 2 to 'number of sites minus 1'\n> sum_of_squares <- foreach(i = 2:(ncol(dissimilarity_matrix)-1),\n>                          .combine = 'cbind')  %dopar% { # cbind the\n> results of foreach\n>                            classification<-kmeans(pcoa_scores, i,\n> iter.max=1000, nstart=100)#usar inter.max=1000 e nstart=100\n>                            classification$tot.withinss} # the\n> Within-Groups SS for k=i\n> y<-t(as.matrix(sum_of_squares)) # convert Within-Group SS to a vector (y\n> for piecewise regressions)\n> x<-c(2:(ncol(dissimilarity_matrix)-1)) # number of clusters (x for\n> piecewise regressions)\n> \n> # Create an empty matrix to receive the values of 'max-k entered a priori'\n> and the respective 'optimal k selected'\n> initial_kmax<-c(4:ncol(dissimilarity_matrix)) # At least 4 points to\n> produce two lines (L-method)\n> cluster_results<-cbind(initial_kmax, c(NA)) # Dataframe to receive values\n> of the breakpoints\n> \n> # Perform multiple piecewise regression varying the max-k entered a priori\n> from 4 to 'number of sites'\n> for (j in 4:ncol(dissimilarity_matrix)){ # the maximum number of 'k'\n> established a priori\n>  y_selected<-y[1:j] # Limit the number of starting points (y axis)\n>  x_selected<-x[1:j] # Limit the number of starting points (x axis)\n>  find_the_knee <- foreach(i = 2:(j-1), # calculate the RSE for all\n> possible breakpoints (i) when starting with k-max = j\n>                           .combine = 'cbind')  %dopar% { #\n> \n> piecewise_k<-lm(y_selected~x_selected*(x_selected<i)\n> + x_selected*(x_selected>=i))\n>                             summary(piecewise_k)[6]} # print the RSE for\n> each piecewise regression\n>  find_the_knee<-c(do.call(\"cbind\",find_the_knee)) # convert the previous\n> output (list) to vector\n>  knee_found<-as.data.frame(cbind(c(2:(j-1)), find_the_knee)) # combine\n> position of breakpoint and RSE value\n>  names(knee_found)<-c(\"breakpoint\", \"RSE\") # rename\n>  knee_found<-na.omit(knee_found) # remove NaN values\n>  k_number<-knee_found[which(knee_found$RSE==min(knee_found$RSE)),1] #\n> select breakpoint that minimizes RSE\n>  cluster_results[(j-3),2]<-k_number} # print the maximum number of initial\n> groups (j) and the respective selected breakpoint (k)\n> (Sys.time()-a) # How long it takes?\n> \n> ############################################################\n> ##############################\n> # STEP 3 Inspect the variation in the values of optimal 'k' and identify\n> the most frequent 'k'\n> \n> # Identify the most frequent 'k' (math-mode)\n> most_frequent_k<-as.data.frame(cluster_results)[,2]\n> optimal_k<-names(sort(-table(most_frequent_k)))[1]\n> optimal_k # what is the most frequent value?\n> hist(most_frequent_k, n=50, ylab=\"Frequency of k\", xlab=\"Value of the\n> optimal k\", main=\"\", cex.axis=1.0, cex.lab=1.2, las=1, col=\"grey\")\n> \n> \n> \n> \n> -- \n> Dr. Alexandre F. Souza\n> Professor Adjunto IV\n> Universidade Federal do Rio Grande do Norte\n> CB, Departamento de Ecologia\n> Campus Universit?rio - Lagoa Nova\n> 59072-970 - Natal, RN - Brasil\n> lattes: lattes.cnpq.br/7844758818522706\n> http://www.esferacientifica.com.br\n> http://www.docente.ufrn.br/alexsouza\n> orcid.org/0000-0001-7468-3631 <http://www.docente.ufrn.br/alexsouza>\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Dear Alexandre,\n\nYou can check how much difference extending the dissimilarities makes to the overall compositional patterns of your data by comparing PCoA plots based on extended vs. original dissimi",
+      "thread_id": "thread-6ad1fe4f9c41",
+      "thread_depth": 1,
+      "month": "2018-06"
+    },
+    {
+      "id": "msg-d3bc0501fcaa",
+      "message_id": "<CAKLUGQ_C+puGhvsXo2PcsBjX_bWG1ihMC6CfLb-m8NJgCEAYTA@mail.gmail.com>",
+      "from_name": "Marcos Vital",
+      "from_email_hash": "1b7862cba45abfba6e82895cfd9388ac3ccddc4b4c069cd294890de5d5c4c1dd",
+      "date": "2018-06-26T08:48:52-03:00",
+      "subject": "[R-sig-eco] Mozilla Festival 2018 - Call for Proposals (submissions due Aug 1, 2018)",
+      "subject_clean": "Mozilla Festival 2018 - Call for Proposals (submissions due Aug 1, 2018)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi, everyone!\n\nThe call for proposals <https://mozillafestival.org/proposals> for Mozilla\nFestival (MozFest) 2018 is open and the submission deadline is Aug 1. The\nfestival will happen in London, Oct 26-28. Since many people from the R\ncommunity is committed to Open Science or Open Source, this might be a good\nopportunity to showcase your work and connect to a wider community.\n\nThe festival is organized in spaces, and I'm one of the wranglers from Openness\nspace <https://mozillafestival.org/spaces#Openness>, that is likely to be\nthe choice for Open Science related projects. Session formats this year\ninclude Learning Forum, Gallery, and Shed (hands-on making, hacking and\nprototyping). There are a limited number of travel stipends available for\naccepted sessions.\n\nMore details can be found on the festival website, but feel free to reach\nout with any questions.\n\nBest regards\n\nMarcos Vital\n\n-- \nMarcos Vin?cius Carneiro Vital\nUniversidade Federal de Alagoas\nInstituto de Ci?ncias Biol?gicas e da Sa?de\nSetor de Biodiversidade e Ecologia\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi, everyone!\n\nThe call for proposals <https://mozillafestival.org/proposals> for Mozilla\nFestival (MozFest) 2018 is open and the submission deadline is Aug 1. The\nfestival will happen in London, Oct ",
+      "thread_id": "thread-d3bc0501fcaa",
+      "thread_depth": 0,
+      "month": "2018-06"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-d8c0b68cee47",
+      "subject": "avocado pollination retworks",
+      "message_count": 1,
+      "participants": [
+        "Mariano Devoto"
+      ],
+      "started": "2018-06-05T16:28:08-03:00",
+      "last_reply": "2018-06-05T16:28:08-03:00",
+      "root_message_id": "msg-d8c0b68cee47"
+    },
+    {
+      "id": "thread-a326cf205c96",
+      "subject": "CI for stratified Cox PH model",
+      "message_count": 2,
+      "participants": [
+        "Bertolo, Andrea",
+        "Bob O'Hara"
+      ],
+      "started": "2018-06-05T16:47:22+00:00",
+      "last_reply": "2018-06-06T10:08:09+02:00",
+      "root_message_id": "msg-a326cf205c96"
+    },
+    {
+      "id": "thread-d10eab59623e",
+      "subject": "Part-funded scholarships for \"Social Network Analysis for Behavioural Scientists using R\"",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2018-06-07T02:59:34+01:00",
+      "last_reply": "2018-06-07T02:59:34+01:00",
+      "root_message_id": "msg-d10eab59623e"
+    },
+    {
+      "id": "thread-4f7bcb59a7f1",
+      "subject": "Statistics course: Data exploration, regression, GLM & GAM with introduction to R",
+      "message_count": 1,
+      "participants": [
+        "Highland Statistics Ltd"
+      ],
+      "started": "2018-06-12T11:20:14+02:00",
+      "last_reply": "2018-06-12T11:20:14+02:00",
+      "root_message_id": "msg-4f7bcb59a7f1"
+    },
+    {
+      "id": "thread-b8d86c845297",
+      "subject": "Part funded scholarships for Social Network Analysis for Behavioural Scientists using R (SNAR01)",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2018-06-13T04:56:44+01:00",
+      "last_reply": "2018-06-13T04:56:44+01:00",
+      "root_message_id": "msg-b8d86c845297"
+    },
+    {
+      "id": "thread-6ad1fe4f9c41",
+      "subject": "Is stepacross a must?",
+      "message_count": 2,
+      "participants": [
+        "Alexandre F. Souza",
+        "Hanna Tuomisto"
+      ],
+      "started": "2018-06-23T07:11:54-03:00",
+      "last_reply": "2018-06-23T11:29:18+00:00",
+      "root_message_id": "msg-6ad1fe4f9c41"
+    },
+    {
+      "id": "thread-d3bc0501fcaa",
+      "subject": "Mozilla Festival 2018 - Call for Proposals (submissions due Aug 1, 2018)",
+      "message_count": 1,
+      "participants": [
+        "Marcos Vital"
+      ],
+      "started": "2018-06-26T08:48:52-03:00",
+      "last_reply": "2018-06-26T08:48:52-03:00",
+      "root_message_id": "msg-d3bc0501fcaa"
+    }
+  ]
+}

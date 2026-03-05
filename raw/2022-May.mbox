@@ -1,0 +1,1256 @@
+From |@ur@@|ee @end|ng |rom ncdenr@gov  Tue May  3 16:10:03 2022
+From: |@ur@@|ee @end|ng |rom ncdenr@gov (Lee, Laura)
+Date: Tue, 3 May 2022 14:10:03 +0000
+Subject: [R-sig-eco] Predict on zero-inflated model using design matrix and
+ parameter coefficients
+Message-ID: <DM8PR09MB6232E559033EA969205A5B5293C09@DM8PR09MB6232.namprd09.prod.outlook.com>
+
+Hi all,
+
+I am interested in predicting on a data set using a ZIP model without using the predict function. The reason is that I don't want to have to refit the model in the new script each time I want to do a prediction. I know I will have to specify the estimated coefficients and the design matrix, but I don't know what the code will look like. I would appreciate any assistance. 
+
+Cheers,
+
+Laura
+
+Laura M. Lee
+Stock Assessment Program Manager
+Division of Marine Fisheries
+Department of Environmental Quality
+
+252 808 8072??? office
+Laura.Lee at ncdenr.gov
+
+3441 Arendell Street
+P.O. Box 769
+Morehead City, NC 28557-0769
+
+
+
+Email correspondence to and from this address is subject to the
+North Carolina Public Records Law and may be disclosed to third parties.
+
+
+From @o|ymo@ @end|ng |rom u@|bert@@c@  Tue May  3 21:50:43 2022
+From: @o|ymo@ @end|ng |rom u@|bert@@c@ (Peter Solymos)
+Date: Tue, 3 May 2022 13:50:43 -0600
+Subject: [R-sig-eco] 
+ Predict on zero-inflated model using design matrix and
+ parameter coefficients
+In-Reply-To: <DM8PR09MB6232E559033EA969205A5B5293C09@DM8PR09MB6232.namprd09.prod.outlook.com>
+References: <DM8PR09MB6232E559033EA969205A5B5293C09@DM8PR09MB6232.namprd09.prod.outlook.com>
+Message-ID: <CA+cT0FgheZZFuy1_P820C+HK3N+_-HHjGp-N+h-YG3bJTSb9xA@mail.gmail.com>
+
+Laura,
+
+Depending on how you implement the ZIP model, the approach might be
+slightly different. Using the pscl package you can do this:
+
+r$> library(pscl)
+
+r$> m <- zeroinfl(art ~ . | 1, data = bioChemists)
+
+r$> cf0 <- coef(m, "zero")
+
+r$> cf0
+(Intercept)
+  -1.681349
+
+r$> cf1 <- coef(m, "count")
+
+r$> cf1
+ (Intercept)     femWomen   marMarried         kid5          phd
+ment
+ 0.553995385 -0.231609021  0.131971507 -0.170473908  0.002525835
+ 0.021542720
+
+r$> X0 <- model.matrix(m, "zero")
+
+r$> head(X0)
+  (Intercept)
+1           1
+2           1
+3           1
+4           1
+5           1
+6           1
+
+r$> X1 <- model.matrix(m, "count")
+
+r$> head(X1)
+  (Intercept) femWomen marMarried kid5  phd ment
+1           1        0          1    0 2.52    7
+2           1        1          0    0 2.05    6
+3           1        1          0    0 3.75    6
+4           1        0          1    1 1.18    3
+5           1        1          0    0 3.75   26
+6           1        1          1    2 3.59    2
+
+r$> pr <- drop((1 - plogis(X0 %*% cf0)) * exp(X1 %*% cf1))
+
+r$> summary(pr - predict(m))
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+      0       0       0       0       0       0
+
+If you are predicting for a new data set, use model.matrix(~1, newdata) to
+get X and make sure your inverse link functions are correct when using
+probit or cloglog.
+
+Cheers,
+
+P?ter S?lymos
+
+
+
+On Tue, May 3, 2022 at 8:11 AM Lee, Laura <laura.lee at ncdenr.gov> wrote:
+
+> Hi all,
+>
+> I am interested in predicting on a data set using a ZIP model without
+> using the predict function. The reason is that I don't want to have to
+> refit the model in the new script each time I want to do a prediction. I
+> know I will have to specify the estimated coefficients and the design
+> matrix, but I don't know what the code will look like. I would appreciate
+> any assistance.
+>
+> Cheers,
+>
+> Laura
+>
+> Laura M. Lee
+> Stock Assessment Program Manager
+> Division of Marine Fisheries
+> Department of Environmental Quality
+>
+> 252 808 8072    office
+> Laura.Lee at ncdenr.gov
+>
+> 3441 Arendell Street
+> P.O. Box 769
+> Morehead City, NC 28557-0769
+>
+>
+>
+> Email correspondence to and from this address is subject to the
+> North Carolina Public Records Law and may be disclosed to third parties.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From o||verhooker @end|ng |rom pr@t@t|@t|c@@com  Fri May  6 13:15:20 2022
+From: o||verhooker @end|ng |rom pr@t@t|@t|c@@com (Oliver Hooker)
+Date: Fri, 6 May 2022 12:15:20 +0100
+Subject: [R-sig-eco] =?utf-8?q?ONLINE_COURSE_=E2=80=93_Introduction_To_Mi?=
+	=?utf-8?q?xed_Models_Using_R_And_Rstudio_=28IMMR06=29?=
+Message-ID: <CAEsSYzy_3Dbwbh_zWqMUs1D8NsQy+cH67dw2+k8SDinmrQk0Mg@mail.gmail.com>
+
+ONLINE COURSE ? Introduction To Mixed Models Using R And Rstudio (IMMR06)
+This course will be delivered live
+
+https://www.prstatistics.com/course/introduction-to-mixed-models-using-r-and-rstudio-immr06/
+
+Please feel free to share!
+
+
+ABOUT THIS COURSE
+
+In this two day course, we provide a comprehensive practical and
+theoretical introduction to multilevel models, also known as hierarchical
+or mixed effects models. We will focus primarily on multilevel linear
+models, but also cover multilevel generalized linear models. Likewise, we
+will also describe Bayesian approaches to multilevel modelling. On Day 1,
+we will begin by focusing on random effects multilevel models. These models
+make it clear how multilevel models are in fact models of models. In
+addition, random effects models serve as a solid basis for understanding
+mixed effects, i.e. fixed and random effects, models. In this coverage of
+random effects, we will also cover the important concepts of statistical
+shrinkage in the estimation of effects, as well as intraclass correlation.
+We then proceed to cover linear mixed effects models, particularly focusing
+on varying intercept and/or varying slopes regresssion models. On Day 2, we
+cover further aspects of linear mixed effects models, including multilevel
+models for nested and crossed data data, and group level predictor
+variables. On Day 2, we also cover Bayesian approaches to multilevel levels
+using the brms R package.
+
+Please email oliverhooker at prstatistics.com.
+
+
+Oliver
+
+-- 
+
+Oliver Hooker PhD.
+PR statistics
+
+	[[alternative HTML version deleted]]
+
+
+From o||verhooker @end|ng |rom pr@t@t|@t|c@@com  Fri May  6 13:31:24 2022
+From: o||verhooker @end|ng |rom pr@t@t|@t|c@@com (Oliver Hooker)
+Date: Fri, 6 May 2022 12:31:24 +0100
+Subject: [R-sig-eco] =?utf-8?q?ONLINE_COURSE_=E2=80=93_Model_selection_an?=
+	=?utf-8?q?d_model_simplification_=28MSMS03=29?=
+Message-ID: <CAEsSYzz3VvPqBasQnOgqu_dwj3TXUUFYnWjzSZaQb=_CftwVNA@mail.gmail.com>
+
+ONLINE COURSE ? Model selection and model simplification (MSMS03) This
+course will be delivered live
+
+https://www.prstatistics.com/course/model-selection-and-model-simplification-msms03/
+
+Please feel free to share!
+
+
+ABOUT THIS COURSE
+
+This two day course covers the important and general topics of statistical
+model building, model evaluation, model selection, model comparison, model
+simplification, and model averaging. These topics are vitally important to
+almost every type of statistical analysis, yet these topics are often
+poorly or incompletely understood. We begin by considering the fundamental
+issue of how to measure model fit and a model?s predictive performance, and
+discuss a wide range of other major model fit measurement concepts like
+likelihood, log likelihood, deviance, residual sums of squares etc. We then
+turn to nested model comparison, particularly in general and generalized
+linear models, and their mixed effects counterparts. We then consider the
+key concept of out-of-sample predictive performance, and discuss
+over-fitting or how excellent fits to the observed data can lead to very
+poor generalization performance. As part of this discussion of
+out-of-sample generalization, we introduce leave-one-out cross-validation
+and Akaike Information Criterion (AIC). We then cover general concepts and
+methods related to variable selection, including stepwise regression, ridge
+regression, Lasso, and elastic nets. Following this, we turn to model
+averaging, which is an arguably always preferable alternative to model
+selection. Finally, we cover Bayesian methods of model comparison. Here, we
+describe how Bayesian methods allow us to easily compare completely
+distinct statistical models using a common metric. We also describe how
+Bayesian methods allow us to fit all the candidate models of potential
+interest, including cases were traditional methods fail.
+
+Please email oliverhooker at prstatistics.com.
+
+-- 
+
+Oliver Hooker PhD.
+PR statistics
+
+	[[alternative HTML version deleted]]
+
+
+From o||verhooker @end|ng |rom pr@t@t|@t|c@@com  Tue May 10 16:01:05 2022
+From: o||verhooker @end|ng |rom pr@t@t|@t|c@@com (Oliver Hooker)
+Date: Tue, 10 May 2022 15:01:05 +0100
+Subject: [R-sig-eco] =?utf-8?q?Bayesian_GLM=E2=80=99s_For_Ecologists_=28B?=
+ =?utf-8?q?GFE01=29?=
+Message-ID: <CAEsSYzwSnm72XUZu3TQimJifxNqrJ8_Gd4tOSiXPOTRUNNyY1g@mail.gmail.com>
+
+ONLINE COURSE ? Bayesian GLM?s For Ecologists (BGFE01) This course will be
+delivered live
+
+https://www.prstatistics.com/course/bayesian-glms-or-ecologists-bgfe01/
+
+COURSE DETAILS
+
+This short course is aimed at introducing researchers to analysing
+ecological and environmental data with Bayesian GLMs using R. Theory
+underpinning Bayesian inference will be discussed, as well as analytical
+methods and statistical interpretation. Sessions will be a blend of
+interactive demonstrations and lectures, where learners will have the
+opportunity to ask questions throughout. Prior to the course, attendees
+will receive R script and datasets and a list of R packages to install.
+
+By the end of the course, participants should be able to:
+
+   - Recognise the distinction between frequentist and Bayesian approaches
+   to model fitting
+   - Apply data exploration techniques and avoid the common pitfalls in
+   tackling a data analysis
+   - Apply a 9-step protocol to fitting Bayesian GLMs
+   - Understand and apply alternative approaches to model selection
+   - Apply statistical modelling methods to ecological data using Bayesian
+   GLMs
+
+
+
+If you have any questions please email oliverhooker at prstatistics.com
+
+-- 
+
+Oliver Hooker PhD.
+PR statistics
+
+	[[alternative HTML version deleted]]
+
+
+From o||verhooker @end|ng |rom pr@t@t|@t|c@@com  Wed May 11 19:00:16 2022
+From: o||verhooker @end|ng |rom pr@t@t|@t|c@@com (Oliver Hooker)
+Date: Wed, 11 May 2022 18:00:16 +0100
+Subject: [R-sig-eco] =?utf-8?q?FREE_SEMINAR_=E2=80=93_Bayesian_GLM?=
+	=?utf-8?q?=E2=80=99s_For_Ecologists_=28BGFE01S=29?=
+Message-ID: <CAEsSYzxhoJnf=LuDo7_54xxi=R-pAe4V0kHk9DoJYm22VdU47Q@mail.gmail.com>
+
+FREE SEMINAR ? Bayesian GLM?s For Ecologists (BGFE01S)
+
+https://www.prstatistics.com/course/bayesian-glms-for-ecologists-bgfe01s/
+Tuesday, May 17th, @ 15:00 UK local time
+Feel free to share!
+
+Free seminar
+
+This is a free ~30 minute seminar including a Q and A session at the end
+for our up-coming course ?Bayesian GLM?s for Ecologists?.
+
+
+Speaker
+
+Course Instructor Dr. Carl Smith
+
+
+About this course
+
+This short course is aimed at introducing researchers to analysing
+ecological and environmental data with Bayesian GLMs using R. Theory
+underpinning Bayesian inference will be discussed, as well as analytical
+methods and statistical interpretation. Sessions will be a blend of
+interactive demonstrations and lectures, where learners will have the
+opportunity to ask questions throughout. Prior to the course, attendees
+will receive R script and datasets and a list of R packages to install.
+
+By the end of the course, participants should be able to:
+
+   - Recognise the distinction between frequentist and Bayesian approaches
+   to model fitting
+   - Apply data exploration techniques and avoid the common pitfalls in
+   tackling a data analysis
+   - Apply a 9-step protocol to fitting Bayesian GLMs
+   - Understand and apply alternative approaches to model selection
+   - Apply statistical modelling methods to ecological data using Bayesian
+   GLMs
+
+Full course details can be found using this link
+
+https://www.prstatistics.com/course/bayesian-glms-or-ecologists-bgfe01/
+
+Any questions email oliverhooker at prstatistics.com
+-- 
+
+Oliver Hooker PhD.
+PR statistics
+
+	[[alternative HTML version deleted]]
+
+
+From i@io m@iii@g oii phys@ii@-courses@org  Tue May 24 15:24:28 2022
+From: i@io m@iii@g oii phys@ii@-courses@org (i@io m@iii@g oii phys@ii@-courses@org)
+Date: Tue, 24 May 2022 15:24:28 +0200 (CEST)
+Subject: [R-sig-eco] ONLINE COURSE - Getting the most out of R
+Message-ID: <1653398668.975432314@webmail.jimdo.com>
+
+
+
+
+Dear all,
+ 
+registrations are now open for the 2nd edition of the Physalia course "Getting the most out of R"
+ 
+Course website: [ https://www.physalia-courses.org/courses-workshops/gmr/ ]( https://www.physalia-courses.org/courses-workshops/gmr/ )
+ 
+Dates: Online, 3-6 October 2022   
+ 
+Many scientists start using R for very specific purposes with little training in computer science, data organization, and software development. Even advanced users may bypass important tools and abstractions which can ultimately lead to bad habits and wasting time. Get the most of R by exploring topics that usually fall outside of data analysis and visualization curricula.
+This course will cover blind spots in existing materials by working through the intermediate steps in various pairs of problems and solutions that often get overlooked because of assumed knowledge.
+ 
+Full list of our courses and Workshops: [ https://www.physalia-courses.org/courses-workshops ]( https://www.physalia-courses.org/courses-workshops )
+ 
+ 
+Should you have any questions, please do not hesitate to contact us at: info at physalia-courses.org
+ 
+Best regards,
+Carlo
+ 
+ 
+--------------------
+
+Carlo Pecoraro, Ph.D
+
+
+Physalia-courses DIRECTOR
+
+info at physalia-courses.org
+
+mobile: +49 17645230846
+
+Follow us on [ Twitter ]( https://twitter.com/Physacourses )
+	[[alternative HTML version deleted]]
+
+
+From g|||br|@n@ @end|ng |rom gm@||@com  Fri May 27 01:12:35 2022
+From: g|||br|@n@ @end|ng |rom gm@||@com (Brian A. Gill)
+Date: Thu, 26 May 2022 16:12:35 -0700
+Subject: [R-sig-eco] Another adonis model specification question.
+Message-ID: <CAE58x0AnGgqzVS4SMgEO29JrTMZtx2=3=fHOrq-XypPf9xyJRg@mail.gmail.com>
+
+Hi R-sig-ecology.
+
+Writing with another adonis (vegan) model specification question.
+
+I have 10 regions (REGION) where I collected biological samples. Within
+each region, I established 10 sites (SITE). At each site, I collected 3
+samples each using a different method (METHOD). I'd like to test if each of
+the three sampling methods recovers the same biological community.
+
+Since there is no replication within sites for the different sampling
+methods, I think that I will have to do this within regions grouping site
+level data by sampling method.
+
+I have come up with the model formulas below, but could use advice on the
+appropriate specification.
+
+DISTANCES ~ METHOD with strata = REGION
+DISTANCES ~ REGION + METHOD with strata = REGION
+
+Should nesting be specified? Should SITE be included somehow?
+
+Any help is much appreciated.
+
+Thanks.
+
+
+Brian
+
+
+
+-- 
+Brian A. Gill, Ph.D. (He/Him)
+
+Postdoctoral Research Associate
+School of Natural Resources and the Environment
+University of Arizona, Tucson, Arizona, USA
+www.BrianGillPhD.com
+
+	[[alternative HTML version deleted]]
+
+
+From o||verhooker @end|ng |rom pr@t@t|@t|c@@com  Mon May 30 15:25:33 2022
+From: o||verhooker @end|ng |rom pr@t@t|@t|c@@com (Oliver Hooker)
+Date: Mon, 30 May 2022 14:25:33 +0100
+Subject: [R-sig-eco] Introduction to Machine Learning and Deep Learning
+ using R (IMDL03)
+Message-ID: <CAEsSYzx+KeoetgegFuG4vk0HfqAv-Gi4E5o6DTAYozA9dbtY7g@mail.gmail.com>
+
+ONLINE COURSE ? Introduction to Machine Learning and Deep Learning using R
+(IMDL03) This course will be delivered live
+
+https://www.prstatistics.com/course/introduction-to-machine-learning-and-deep-learning-using-r-imdl03/
+
+Please feel free to share!
+
+COURSE DETAILS
+
+In this two day course, we provide an introduction to machine learning and
+deep learning using R. We begin by providing an overview of the machine
+learning and deep learning landscape, and then turn to some major machine
+learning applications. We begin with binary and multiclass classification
+problems, then look at decision trees and random forests, then look at
+unsupervised learning methods, all of which are major topics in machine
+learning. We then cover artificial neural networks and deep learning. For
+this, we will use the powerful TensorFlow and Keras deep learning
+toolboxes. As examples of deep learning nets, we will cover the relatively
+easy to understand multilayer perceptron and then turn to convolutional
+neural networks.
+
+
+Email oliverhooker at prstatistics.com
+
+
+*Up-coming and pre recorded courses*
+
+Wednesday, June 1st 2022
+
+ONLINE COURSE ? Introduction To Mixed Models Using R And Rstudio (IMMR06)
+This course will be delivered live
+
+https://www.prstatistics.com/course/introduction-to-mixed-models-using-r-and-rstudio-immr06/
+
+
+
+Wednesday, June 15th, 2022
+
+ONLINE COURSE ? Model Selection and Model Simplification Using R And
+Rstudio (IMMR06) This course will be delivered live
+
+https://www.prstatistics.com/course/model-selection-and-model-simplification-msms03/
+
+
+
+Monday, June 20th 2022
+
+ONLINE COURSE ? Bayesian GLM?s For Ecologists (BGFE01) This course will be
+delivered live
+
+https://www.prstatistics.com/course/bayesian-glms-or-ecologists-bgfe01/
+
+
+
+Wednesday, June 20th, 2022
+
+ONLINE COURSE ? Introduction to Machine Learning and Deep Learning using R
+(IMDL03) This course will be delivered live
+
+https://www.prstatistics.com/course/introduction-to-machine-learning-and-deep-learning-using-r-imdl03/
+
+
+
+Monday July 11th 2022
+
+ONLINE COURSE ? Introduction to spatial analysis of ecological data using R
+(ISPE05) This course will delivered live
+
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe05/
+
+Monday, August 15th, 2022
+
+ONLINE COURSE ? Landscape genetic data analysis using R (LNDG05) This
+course will be delivered live
+
+https://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg05/
+
+
+
+Monday, August 29th 2022
+
+ONLINE COURSE ? Introduction To Multivariate Analysis In Ecology And
+Evolutionary Biology (IMAE01) This course will be delivered live
+
+https://www.prstatistics.com/course/online-course-introduction-to-multivariate-analysis-in-ecology-and-evolutionary-biology-imae01-this-course-will-be-delivered-live/
+
+
+
+Monday, September 12th, 2022
+
+ONLINE COURSE ? Multivariate Analysis Of Ecological Communities Using R
+With The VEGAN package (VGNR04) This course will be delivered live
+
+https://www.prstatistics.com/course/multivariate-analysis-of-ecological-communities-using-r-with-the-vegan-package-vgnr04/
+
+
+
+Tuesday, September 13th, 2022
+
+ONLINE COURSE ? Bioacoustics For Ecologists: Hardware, Survey design And
+Data analysis (BIAC03) This course will be delivered live
+
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac03/
+
+Monday, September 26th, 2022
+
+ONLINE COURSE ? Species Distribution Modelling With Bayesian Statistics
+Using R (SDMB04) This course will be delivered live
+
+https://www.prstatistics.com/course/online-course-species-distribution-modelling-with-bayesian-statistics-in-r-sdmb04/
+
+
+
+Monday, September 26th, 2022
+
+ONLINE COURSE ? Remote Sensing With Satellite Multi-Spectral Sensors
+(RSMS01) This course will be delivered live
+
+https://www.prstatistics.com/course/remote-sensing-with-satellite-multi-spectral-sensors-rsms01/
+
+
+
+Monday, 28th November, 2022
+
+ONLINE COURSE ? Remote Sensing With Aircraft And Drone LiDAR Sensors
+(RSLD01) This course will be delivered live
+
+https://www.prstatistics.com/course/remote-sensing-with-aircraft-and-drone-lidar-sensors-rsld01/
+
+
+Monday, December 12th, 2022
+
+ONLINE COURSE ? Ecological niche modelling using R (ENMR04) This course
+will be delivered live
+
+https://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr04/
+
+
+Monday, February 6th, 2023
+
+ONLINE COURSE ? Remote Sensing With Drone RGB And Near Infrared Cameras
+(RSWD01) This course will be delivered live
+
+https://www.prstatistics.com/course/remote-sensing-with-drone-rgb-and-near-infrared-cameras-rswd01/
+
+
+
+
+
+*Remember* we have over 30 courses archived and available on demand on our
+recorded courses page https://www.prstatistics.com/recorded-courses/
+<https://www.prstatistics.com/recorded-courses/>*
+
+
+
+Moving our courses online due to the COVID pandemic has allowed us to
+archive all our previous courses and offer them in a recorded format.
+
+*This is ideal for;*
+People with busy schedules who can?t take long periods off work to attend
+workshops.
+Allows attendees to work at their own pace with email support.
+Suitable for people from all timezones.
+The recordings are taken from our Live Online Courses which ensures all
+materials and software packages are constantly up-to-date.
+
+
+
+?General? Courses
+
+
+
+FREE 1 DAY INTRO TO R AND R STUDIO (FIRR01R)
+
+https://www.prstatistics.com/course/free-1-day-intro-to-r-and-r-studio-firr01r/
+
+
+
+Introduction To Statistics Using R And Rstudio (IRRS03R)
+
+https://www.prstatistics.com/course/introduction-to-statistics-using-r-and-rstudio-irrs03r/
+
+
+
+Introduction To Generalised Linear Models Using R And Rstudio (IGLM04R)
+
+https://www.prstatistics.com/course/introduction-to-generalised-linear-models-using-r-and-rstudio-iglm04r/
+
+
+
+Introduction To Mixed Models Using R And Rstudio (IMMR05R)
+
+https://www.prstatistics.com/course/introduction-to-mixed-models-using-r-and-rstudio-immr05r/
+
+
+
+Nonlinear Regression Using Generalized Additive Models (GAMR01R)
+
+https://www.prstatistics.com/course/nonlinear-regression-using-generalized-additive-models-gamr01r/
+
+
+
+Hidden Markov and State Space Models Using R (HMSS01R)
+
+Coming soon
+
+
+
+Introduction To Machine Learning And Deep Learning Using R (IMDL02R)
+
+https://www.prstatistics.com/course/introduction-to-machine-learning-and-deep-learning-using-r-imdl02r/
+
+Model Selection And Model Simplification (MSMS02R)
+
+https://www.prstatistics.com/course/model-selection-and-model-simplification-msms02r/
+
+Reproducible Data Science Using RMarkdown, Git, R Packages, Docker, Make &
+Drake And Other Tools (RDRP01R)
+
+https://www.prstatistics.com/course/reproducible-data-science-using-rmarkdown-git-r-packages-docker-make-drake-and-other-tools-rdrp01r/
+
+Data Wrangling Using R And Rstudio (DWRS02R)
+
+https://www.prstatistics.com/course/data-wrangling-using-r-and-rstudio-dwrs02r/
+
+Data visualization using GG plot 2 (R and Rstudio) (DVGG02R)
+
+https://www.prstatistics.com/course/data-visualization-using-gg-plot-2-r-and-rstudio-dvgg02r/
+
+
+
+Introduction To Data Wrangling And Data Visualization Using R (DWDV01R)
+
+https://www.prstatistics.com/course/introduction-to-data-wrangling-and-data-visualization-using-r-dwdv01r/
+
+
+
+Bayesian
+
+
+
+Fundamentals of Bayesian Data Analysis using R (FBDA01R)
+
+https://www.prstatistics.com/course/introduction-fundamentals-of-bayesian-data-analysis-statistics-using-r-fbda01r/
+
+
+
+Bayesian Approaches To Regression And Mixed Effects Models Using R And brms
+(BARM01R)
+
+https://www.prstatistics.com/course/bayesian-approaches-to-regression-and-mixed-effects-models-using-r-and-brms-barm01r/
+
+
+
+Bayesian Hierarchical Modelling Using R (IBHM05R)
+
+https://www.prstatistics.com/course/bayesian-hierarchical-modelling-using-r-ibhm05r/
+
+
+
+Bayesian Data Analysis (BADA01R)
+
+https://www.prstatistics.com/course/bayesian-data-analysis-bada01r/
+
+
+
+Introduction To Stan For Bayesian Data Analysis (ISBD01R)
+
+https://www.prstatistics.com/course/introduction-to-stan-for-bayesian-data-analysis-isbd01r/
+
+
+
+
+
+Spatial / Spatial Ecology
+
+
+
+Introduction To Spatial Analysis Of Ecological Data Using R (ISPE04R)
+
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe04r/
+
+
+
+Making Beautiful And Effective Maps In R (MAPR03R)
+
+https://www.prstatistics.com/course/making-beautiful-and-effective-maps-in-r-mapr03r/
+
+
+
+Adapting to the recent changes in R spatial packages (sf, terra, PROJ
+library) (PROJ02R)
+
+https://www.prstatistics.com/course/adapting-to-the-recent-changes-in-r-spatial-packages-sf-terra-proj-library-proj02r/
+
+
+
+Species Distribution Modeling using R (SDMR04R)
+
+https://www.prstatistics.com/course/species-distribution-modeling-using-r-sdmr04r/
+
+
+
+Ecological niche modelling using R (ENMR03R)
+
+https://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03r/
+
+
+
+Advanced Ecological Niche Modelling Using R (ANMR01R)
+
+https://www.prstatistics.com/course/advanced-ecological-niche-modelling-using-r-anmr01r/
+
+
+Model-Based Multivariate Analysis Of Abundance Data Using R (MBMV03R)
+
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03r/
+
+
+Movement Ecology (MOVE04R)
+
+https://www.prstatistics.com/course/movement-ecology-move04r/
+
+
+
+
+
+Molecular Ecology
+
+
+
+Introduction To Eco-Phylogenetics And Comparative Analyses Using R (ECPH01R)
+
+https://www.prstatistics.com/course/introduction-to-eco-phylogenetics-and-comparative-analyses-using-r-ecph01r/
+
+
+
+Fundamentals Of Population Genetics Using R (FOPG01R)
+
+https://www.prstatistics.com/course/fundamentals-of-population-genetics-using-r-fopg01r/
+
+
+
+
+
+Miscellaneous Ecology
+
+
+
+Stable Isotope Mixing Models Using SIBER, SIAR, MixSIAR (SIMM08R)
+
+https://www.prstatistics.com/course/stable-isotope-mixing-models-using-siber-siar-mixsiar-simm08r/
+
+
+
+Bioacoustics For Ecologists: Hardware, Survey Design and Data Analysis
+(BIAC02R)
+
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac02r/
+
+
+
+Python
+
+
+
+Introduction to Python and Programming in Python (PYIN03R)
+
+https://www.prstatistics.com/course/introduction-to-python-and-programming-in-python-pyin03r/
+
+
+
+Introduction To Scientific, Numerical And Data Analysis Programming In
+Python (PYSC02R)
+
+https://www.prstatistics.com/course/introduction-to-scientific-numerical-and-data-analysis-programming-in-python-pysc02r/
+
+
+
+Machine Learning and Deep Learning Using Python (PYML02R)
+
+https://www.prstatistics.com/course/machine-learning-and-deep-learning-using-python-pyml02r/
+
+
+
+Python For Data Science, Machine Learning And Scientific Computing (PDMS02R)
+
+https://www.prstatistics.com/course/python-for-data-science-machine-learning-and-scientific-computing-pdms02r/
+
+-- 
+
+Oliver Hooker PhD.
+PR statistics
+
+	[[alternative HTML version deleted]]
+
+
+From o||verhooker @end|ng |rom pr@t@t|@t|c@@com  Mon May 30 16:50:44 2022
+From: o||verhooker @end|ng |rom pr@t@t|@t|c@@com (Oliver Hooker)
+Date: Mon, 30 May 2022 15:50:44 +0100
+Subject: [R-sig-eco] Introduction to spatial analysis of ecological data
+ using R (ISPE05)
+Message-ID: <CAEsSYzzLDPijLUfSvmY9JYUn3vah0d3V_g1AarJ+ckG32s91MQ@mail.gmail.com>
+
+ONLINE COURSE ? Introduction to spatial analysis of ecological data using R
+(ISPE05) This course will delivered live
+
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe05/
+
+Please feel free to share!
+
+COURSE DETAILS
+
+The aim of the course is to introduce you to spatial data processing,
+analysis, and visualization capabilities of the R programming language. It
+will teach a range of techniques using a mixture of lectures, computer
+exercises and case studies.
+
+By the end of the course participants should:
+
+   - Understand the basic concepts of spatial data analysis
+   - Know R?s spatial capabilities
+   - Understand how to import a range of spatial data sources into R
+   - Be confident with using R?s command-line interface (CLI) for spatial
+   data processing
+   - Be able to perform a range of attribute operations (e.g. subsetting
+   and joining), spatial operations (e.g. distance relations, topological
+   relations), and geometry operations (e.g. clipping, aggregations)
+   - Understand coordinate reference systems (CRSs), be able to decide
+   which CRS to use, and how to reproject spatial data
+   - Know how to visualize the results of a spatial analysis in the form of
+   static and interactive maps
+   - Have the confidence to apply spatial analysis skills to their own
+   projects
+
+
+Email oliverhooker at prstatistics.com
+
+
+*Up-coming and pre recorded courses*
+
+Wednesday, June 1st 2022
+
+ONLINE COURSE ? Introduction To Mixed Models Using R And Rstudio (IMMR06)
+This course will be delivered live
+
+https://www.prstatistics.com/course/introduction-to-mixed-models-using-r-and-rstudio-immr06/
+
+
+
+Wednesday, June 15th, 2022
+
+ONLINE COURSE ? Model Selection and Model Simplification Using R And
+Rstudio (IMMR06) This course will be delivered live
+
+https://www.prstatistics.com/course/model-selection-and-model-simplification-msms03/
+
+
+
+Monday, June 20th 2022
+
+ONLINE COURSE ? Bayesian GLM?s For Ecologists (BGFE01) This course will be
+delivered live
+
+https://www.prstatistics.com/course/bayesian-glms-or-ecologists-bgfe01/
+
+
+
+Wednesday, June 20th, 2022
+
+ONLINE COURSE ? Introduction to Machine Learning and Deep Learning using R
+(IMDL03) This course will be delivered live
+
+https://www.prstatistics.com/course/introduction-to-machine-learning-and-deep-learning-using-r-imdl03/
+
+
+
+Monday July 11th 2022
+
+ONLINE COURSE ? Introduction to spatial analysis of ecological data using R
+(ISPE05) This course will delivered live
+
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe05/
+
+Monday, August 15th, 2022
+
+ONLINE COURSE ? Landscape genetic data analysis using R (LNDG05) This
+course will be delivered live
+
+https://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg05/
+
+
+
+Monday, August 29th 2022
+
+ONLINE COURSE ? Introduction To Multivariate Analysis In Ecology And
+Evolutionary Biology (IMAE01) This course will be delivered live
+
+https://www.prstatistics.com/course/online-course-introduction-to-multivariate-analysis-in-ecology-and-evolutionary-biology-imae01-this-course-will-be-delivered-live/
+
+
+
+Monday, September 12th, 2022
+
+ONLINE COURSE ? Multivariate Analysis Of Ecological Communities Using R
+With The VEGAN package (VGNR04) This course will be delivered live
+
+https://www.prstatistics.com/course/multivariate-analysis-of-ecological-communities-using-r-with-the-vegan-package-vgnr04/
+
+
+
+Tuesday, September 13th, 2022
+
+ONLINE COURSE ? Bioacoustics For Ecologists: Hardware, Survey design And
+Data analysis (BIAC03) This course will be delivered live
+
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac03/
+
+Monday, September 26th, 2022
+
+ONLINE COURSE ? Species Distribution Modelling With Bayesian Statistics
+Using R (SDMB04) This course will be delivered live
+
+https://www.prstatistics.com/course/online-course-species-distribution-modelling-with-bayesian-statistics-in-r-sdmb04/
+
+
+
+Monday, September 26th, 2022
+
+ONLINE COURSE ? Remote Sensing With Satellite Multi-Spectral Sensors
+(RSMS01) This course will be delivered live
+
+https://www.prstatistics.com/course/remote-sensing-with-satellite-multi-spectral-sensors-rsms01/
+
+
+
+Monday, 28th November, 2022
+
+ONLINE COURSE ? Remote Sensing With Aircraft And Drone LiDAR Sensors
+(RSLD01) This course will be delivered live
+
+https://www.prstatistics.com/course/remote-sensing-with-aircraft-and-drone-lidar-sensors-rsld01/
+
+
+Monday, December 12th, 2022
+
+ONLINE COURSE ? Ecological niche modelling using R (ENMR04) This course
+will be delivered live
+
+https://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr04/
+
+
+Monday, February 6th, 2023
+
+ONLINE COURSE ? Remote Sensing With Drone RGB And Near Infrared Cameras
+(RSWD01) This course will be delivered live
+
+https://www.prstatistics.com/course/remote-sensing-with-drone-rgb-and-near-infrared-cameras-rswd01/
+
+
+
+
+
+*Remember* we have over 30 courses archived and available on demand on our
+recorded courses page https://www.prstatistics.com/recorded-courses/
+<https://www.prstatistics.com/recorded-courses/>*
+
+
+
+Moving our courses online due to the COVID pandemic has allowed us to
+archive all our previous courses and offer them in a recorded format.
+
+*This is ideal for;*
+People with busy schedules who can?t take long periods off work to attend
+workshops.
+Allows attendees to work at their own pace with email support.
+Suitable for people from all timezones.
+The recordings are taken from our Live Online Courses which ensures all
+materials and software packages are constantly up-to-date.
+
+
+
+?General? Courses
+
+
+
+FREE 1 DAY INTRO TO R AND R STUDIO (FIRR01R)
+
+https://www.prstatistics.com/course/free-1-day-intro-to-r-and-r-studio-firr01r/
+
+
+
+Introduction To Statistics Using R And Rstudio (IRRS03R)
+
+https://www.prstatistics.com/course/introduction-to-statistics-using-r-and-rstudio-irrs03r/
+
+
+
+Introduction To Generalised Linear Models Using R And Rstudio (IGLM04R)
+
+https://www.prstatistics.com/course/introduction-to-generalised-linear-models-using-r-and-rstudio-iglm04r/
+
+
+
+Introduction To Mixed Models Using R And Rstudio (IMMR05R)
+
+https://www.prstatistics.com/course/introduction-to-mixed-models-using-r-and-rstudio-immr05r/
+
+
+
+Nonlinear Regression Using Generalized Additive Models (GAMR01R)
+
+https://www.prstatistics.com/course/nonlinear-regression-using-generalized-additive-models-gamr01r/
+
+
+
+Hidden Markov and State Space Models Using R (HMSS01R)
+
+Coming soon
+
+
+
+Introduction To Machine Learning And Deep Learning Using R (IMDL02R)
+
+https://www.prstatistics.com/course/introduction-to-machine-learning-and-deep-learning-using-r-imdl02r/
+
+Model Selection And Model Simplification (MSMS02R)
+
+https://www.prstatistics.com/course/model-selection-and-model-simplification-msms02r/
+
+Reproducible Data Science Using RMarkdown, Git, R Packages, Docker, Make &
+Drake And Other Tools (RDRP01R)
+
+https://www.prstatistics.com/course/reproducible-data-science-using-rmarkdown-git-r-packages-docker-make-drake-and-other-tools-rdrp01r/
+
+Data Wrangling Using R And Rstudio (DWRS02R)
+
+https://www.prstatistics.com/course/data-wrangling-using-r-and-rstudio-dwrs02r/
+
+Data visualization using GG plot 2 (R and Rstudio) (DVGG02R)
+
+https://www.prstatistics.com/course/data-visualization-using-gg-plot-2-r-and-rstudio-dvgg02r/
+
+
+
+Introduction To Data Wrangling And Data Visualization Using R (DWDV01R)
+
+https://www.prstatistics.com/course/introduction-to-data-wrangling-and-data-visualization-using-r-dwdv01r/
+
+
+
+Bayesian
+
+
+
+Fundamentals of Bayesian Data Analysis using R (FBDA01R)
+
+https://www.prstatistics.com/course/introduction-fundamentals-of-bayesian-data-analysis-statistics-using-r-fbda01r/
+
+
+
+Bayesian Approaches To Regression And Mixed Effects Models Using R And brms
+(BARM01R)
+
+https://www.prstatistics.com/course/bayesian-approaches-to-regression-and-mixed-effects-models-using-r-and-brms-barm01r/
+
+
+
+Bayesian Hierarchical Modelling Using R (IBHM05R)
+
+https://www.prstatistics.com/course/bayesian-hierarchical-modelling-using-r-ibhm05r/
+
+
+
+Bayesian Data Analysis (BADA01R)
+
+https://www.prstatistics.com/course/bayesian-data-analysis-bada01r/
+
+
+
+Introduction To Stan For Bayesian Data Analysis (ISBD01R)
+
+https://www.prstatistics.com/course/introduction-to-stan-for-bayesian-data-analysis-isbd01r/
+
+
+
+
+
+Spatial / Spatial Ecology
+
+
+
+Introduction To Spatial Analysis Of Ecological Data Using R (ISPE04R)
+
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe04r/
+
+
+
+Making Beautiful And Effective Maps In R (MAPR03R)
+
+https://www.prstatistics.com/course/making-beautiful-and-effective-maps-in-r-mapr03r/
+
+
+
+Adapting to the recent changes in R spatial packages (sf, terra, PROJ
+library) (PROJ02R)
+
+https://www.prstatistics.com/course/adapting-to-the-recent-changes-in-r-spatial-packages-sf-terra-proj-library-proj02r/
+
+
+
+Species Distribution Modeling using R (SDMR04R)
+
+https://www.prstatistics.com/course/species-distribution-modeling-using-r-sdmr04r/
+
+
+
+Ecological niche modelling using R (ENMR03R)
+
+https://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03r/
+
+
+
+Advanced Ecological Niche Modelling Using R (ANMR01R)
+
+https://www.prstatistics.com/course/advanced-ecological-niche-modelling-using-r-anmr01r/
+
+
+Model-Based Multivariate Analysis Of Abundance Data Using R (MBMV03R)
+
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03r/
+
+
+Movement Ecology (MOVE04R)
+
+https://www.prstatistics.com/course/movement-ecology-move04r/
+
+
+
+
+
+Molecular Ecology
+
+
+
+Introduction To Eco-Phylogenetics And Comparative Analyses Using R (ECPH01R)
+
+https://www.prstatistics.com/course/introduction-to-eco-phylogenetics-and-comparative-analyses-using-r-ecph01r/
+
+
+
+Fundamentals Of Population Genetics Using R (FOPG01R)
+
+https://www.prstatistics.com/course/fundamentals-of-population-genetics-using-r-fopg01r/
+
+
+
+
+
+Miscellaneous Ecology
+
+
+
+Stable Isotope Mixing Models Using SIBER, SIAR, MixSIAR (SIMM08R)
+
+https://www.prstatistics.com/course/stable-isotope-mixing-models-using-siber-siar-mixsiar-simm08r/
+
+
+
+Bioacoustics For Ecologists: Hardware, Survey Design and Data Analysis
+(BIAC02R)
+
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac02r/
+
+
+
+Python
+
+
+
+Introduction to Python and Programming in Python (PYIN03R)
+
+https://www.prstatistics.com/course/introduction-to-python-and-programming-in-python-pyin03r/
+
+
+
+Introduction To Scientific, Numerical And Data Analysis Programming In
+Python (PYSC02R)
+
+https://www.prstatistics.com/course/introduction-to-scientific-numerical-and-data-analysis-programming-in-python-pysc02r/
+
+
+
+Machine Learning and Deep Learning Using Python (PYML02R)
+
+https://www.prstatistics.com/course/machine-learning-and-deep-learning-using-python-pyml02r/
+
+
+
+Python For Data Science, Machine Learning And Scientific Computing (PDMS02R)
+
+https://www.prstatistics.com/course/python-for-data-science-machine-learning-and-scientific-computing-pdms02r/
+
+-- 
+
+Oliver Hooker PhD.
+PR statistics
+
+	[[alternative HTML version deleted]]
+
+

@@ -1,0 +1,1846 @@
+From mspinola10 at gmail.com  Fri Mar  6 15:00:41 2009
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Fri, 6 Mar 2009 08:00:41 -0600
+Subject: [R-sig-eco] Possion model for paired data
+Message-ID: <c210f3650903060600m7c71ba3as3ace998ddc26bd46@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090306/a133a3fc/attachment.pl>
+
+From solymos at ualberta.ca  Fri Mar  6 17:13:54 2009
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Fri, 6 Mar 2009 09:13:54 -0700
+Subject: [R-sig-eco] Possion model for paired data
+In-Reply-To: <c210f3650903060600m7c71ba3as3ace998ddc26bd46@mail.gmail.com>
+References: <c210f3650903060600m7c71ba3as3ace998ddc26bd46@mail.gmail.com>
+Message-ID: <34896f090903060813h65c764c6w6c70272e7cb7c8c2@mail.gmail.com>
+
+Hi Manuel,
+
+I would suggest to use the signed difference. This will be Skellam
+distribution with expected value mu1-mu2 (means of the two Poisson
+distr) and variance mu1+mu2. The skellam and vglm functions in the
+VGAM package can be used for a likelihood ratio test for equal means
+(see example(skellam)). Please let me know if this works, because I
+haven't tried yet.
+
+P?ter
+
+P?ter
+
+P?ter S?lymos, PhD
+Postdoctoral Fellow
+Department of Mathematical and Statistical Sciences
+University of Alberta
+Edmonton, Alberta, T6G 2G1
+Canada
+email <- paste("solymos", "ualberta.ca", sep = "@")
+
+
+
+On Fri, Mar 6, 2009 at 7:00 AM, Manuel Sp?nola <mspinola10 at gmail.com> wrote:
+> Dear list memebers,
+>
+> Is there a way to do a paired t test but using a poisson model (for counts).
+> Thank you very much in advance.
+> Best,
+>
+> Manuel Sp?nola
+>
+> ? ? ? ?[[alternative HTML version deleted]]
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From kingsfordjones at gmail.com  Sat Mar  7 22:01:36 2009
+From: kingsfordjones at gmail.com (Kingsford Jones)
+Date: Sat, 7 Mar 2009 14:01:36 -0700
+Subject: [R-sig-eco] Possion model for paired data
+In-Reply-To: <c210f3650903060600m7c71ba3as3ace998ddc26bd46@mail.gmail.com>
+References: <c210f3650903060600m7c71ba3as3ace998ddc26bd46@mail.gmail.com>
+Message-ID: <2ad0cc110903071301lb567c38u2af3d763236c0255@mail.gmail.com>
+
+Hi Manuel,
+
+A couple more options:
+
+i) Look at a density plot or histogram of the pairwise differences --
+if they are not wildly skewed and the number of pairs is not very
+small then use the normal-theory paired t-test.  Even if the
+differences are quite skewed, with greater than say 30 pairs, the mean
+difference will be approximately normally distributed (by the Central
+Limit Theorem).
+
+ii) You can get paired t-test results using a mixed model.  E.g,
+
+set.seed(777)
+tmtA <- rpois(20,4)
+tmtB <- tmtA + rpois(20,2)
+t.test(tmtB, tmtA, paired=1)
+
+#         Paired t-test
+#
+# data:  tmtB and tmtA
+# t = 7.3461, df = 19, p-value = 5.807e-07
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#  1.537427 2.762573
+# sample estimates:
+# mean of the differences
+#                    2.15
+
+dfr <- data.frame(y=c(tmtA,tmtB), tmt=rep(c('A','B'),each=20), pr=rep(1:20,2))
+library(nlme)
+f1 <- lme(y ~ tmt, data=dfr, random=~1|pr)
+summary(f1)$tTable
+
+#             Value Std.Error DF  t-value      p-value
+# (Intercept)  4.20 0.5352691 19 7.846521 2.231988e-07
+# tmtB         2.15 0.2926738 19 7.346062 5.806570e-07
+
+intervals(f1)
+
+# Approximate 95% confidence intervals
+#
+#  Fixed effects:
+#                lower est.    upper
+# (Intercept) 3.079669 4.20 5.320331
+# tmtB        1.537427 2.15 2.762573
+
+
+However, a Poisson GLMM to draw inference on the pairwise differences
+is most likely more trouble than it's worth...
+
+
+hope it helps,
+
+Kingsford Jones
+
+
+On Fri, Mar 6, 2009 at 7:00 AM, Manuel Sp?nola <mspinola10 at gmail.com> wrote:
+> Dear list memebers,
+>
+> Is there a way to do a paired t test but using a poisson model (for counts).
+> Thank you very much in advance.
+> Best,
+>
+> Manuel Sp?nola
+>
+> ? ? ? ?[[alternative HTML version deleted]]
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From mspinola10 at gmail.com  Sun Mar  8 15:46:42 2009
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Sun, 08 Mar 2009 08:46:42 -0600
+Subject: [R-sig-eco] 2 questions about NMDS in vegan
+Message-ID: <49B3DA52.8060405@gmail.com>
+
+Dear list members,
+
+I am trying to run an NMDS with 9 standardized variables regarding to 
+water quality and I got the following message:
+
+ > aguae.mds <- metaMDS(aguae, dist="euclidean", k=2, zerodist="add")
+Using step-across dissimilarities:
+Too long or NA distances: 564 out of 666 (84.7%)
+Stepping across 666 dissimilarities...
+Error in isoMDS(dist, k = k, trace = isotrace) :
+ an initial configuration must be supplied with NA/Infs in 'd'
+In addition: Warning messages:
+1: In metaMDSdist(comm, distance = distance, autotransform = 
+autotransform,  :
+ Zero dissimilarities changed into 0.0759809585356366
+2: In stepacross(dis, trace = trace, ...) :
+ Disconnected data: Result will contain NAs
+3: In metaMDSdist(comm, distance = distance, autotransform = 
+autotransform,  :
+ Data are disconnected, results may be meaningless
+
+1) Should I do not standardize the variables?
+
+2) In a plot for a nmds with fitted environmental variables (function 
+envfit) how can I change the name of the labels of the vectors (arrows)?
+
+Thank you very much in advance.
+Best,
+
+Manuel Sp?nola
+
+-- 
+Manuel Sp?nola, Ph.D.
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.ac.cr
+mspinola10 at gamil.com
+Tel?fono: (506) 2277-3598
+Fax: (506) 2237-7036
+
+
+From epistat at gmail.com  Sun Mar  8 15:48:38 2009
+From: epistat at gmail.com (zhijie zhang)
+Date: Sun, 8 Mar 2009 22:48:38 +0800
+Subject: [R-sig-eco] How to solve it? Y is not only related with the same
+	year's X, but 	also the previsous few years' X and Y
+Message-ID: <2fc17e30903080748p3f5c4221w9e08f25846edc951@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090308/4ca914c7/attachment.pl>
+
+From rusers.sh at gmail.com  Sun Mar  8 07:21:26 2009
+From: rusers.sh at gmail.com (zhijie zhang)
+Date: Sun, 8 Mar 2009 14:21:26 +0800
+Subject: [R-sig-eco] How to solve it? Y is not only related with the same
+	year's X, but 	also the previsous few years' X and Y
+Message-ID: <a835c81e0903072221u665b4a2do173bbc3aa1a1387a@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090308/aeb210b9/attachment.pl>
+
+From mspinola10 at gmail.com  Tue Mar 10 19:49:02 2009
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Tue, 10 Mar 2009 12:49:02 -0600
+Subject: [R-sig-eco] Constrained quadratic ordination in VGAM
+Message-ID: <c210f3650903101149p1a59ab5eu78057846763fea73@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090310/ce622546/attachment.pl>
+
+From jari.oksanen at oulu.fi  Tue Mar 10 20:28:01 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 10 Mar 2009 21:28:01 +0200
+Subject: [R-sig-eco] 2 questions about NMDS in vegan
+In-Reply-To: <1236711699.2960.241.camel@desktop.localhost>
+References: <49B3DA52.8060405@gmail.com>
+	<1236711699.2960.241.camel@desktop.localhost>
+Message-ID: <2B3FAD10-B2F8-4909-9597-56AAF5A88877@oulu.fi>
+
+Hello Gavin, Manuel and others,
+
+Thank you for bringing this to our attention. There really seems to be  
+a bug in metaMDS: it was geared for handling only typical community  
+dissimilarity values (the "recommended" ones) which have maximum value  
+of 1 when there is nothing in common between compared units. I'll fix  
+that in R-Forge ASAP (the function already is half aware of those open- 
+ended dissimilarities with no fixed maximum: it counts correctly the  
+number of pairs with no shared species, but it doesn't handle them  
+correctly in stepacross). I'll fix this.
+
+Labelling of entries in plot.envfit is indeed a bit trickier, at least  
+if we try to do that in the canonical R way, where the labels are  
+given as an argument of the plot() command. It would be easier to  
+change labels in the envfit but then they would be permanently saved  
+with the fitted object. Gavin, if you think this can be done cleanly  
+and in an R way, please go on. I don't know yet a snappy solution.
+
+Cheers, jari oksanen
+On 10/03/2009, at 21:01 PM, Gavin Simpson wrote:
+
+> On Sun, 2009-03-08 at 08:46 -0600, Manuel Sp?nola wrote:
+>> Dear list members,
+>>
+>> I am trying to run an NMDS with 9 standardized variables regarding to
+>> water quality and I got the following message:
+>>
+>>> aguae.mds <- metaMDS(aguae, dist="euclidean", k=2, zerodist="add")
+>> Using step-across dissimilarities:
+>> Too long or NA distances: 564 out of 666 (84.7%)
+>> Stepping across 666 dissimilarities...
+>> Error in isoMDS(dist, k = k, trace = isotrace) :
+>> an initial configuration must be supplied with NA/Infs in 'd'
+>> In addition: Warning messages:
+>> 1: In metaMDSdist(comm, distance = distance, autotransform =
+>> autotransform,  :
+>> Zero dissimilarities changed into 0.0759809585356366
+>> 2: In stepacross(dis, trace = trace, ...) :
+>> Disconnected data: Result will contain NAs
+>> 3: In metaMDSdist(comm, distance = distance, autotransform =
+>> autotransform,  :
+>> Data are disconnected, results may be meaningless
+>
+> I'm guessing as I don;t have your data, but...
+>
+>> 1) Should I do not standardize the variables?
+>
+> This has nothing to do with it (or perhaps only tangentially). Your  
+> data
+> have triggered the use of step-across distances (?stepacross) because
+> 10% of your samples do not share any "species" (here your water  
+> quality
+> variables).
+>
+> stepacross then tries to find a dissimilarity between these samples  
+> that
+> do not share any species, by replacing all distances greater than 1  
+> with
+> NA and then trying to fill them back in using the shortest path  
+> method.
+> See ?stepacross.
+>
+> Of course, toolong = 1, the argument controlling which distances are
+> replaced with NA, which defaults to 1, is far too small for Euclidean
+> distances which have no upper bound. The output shows that 85% of your
+> dissimilarities were replaced by NA and they it tried to fill them  
+> back
+> in using the remaining 15%. It failed to achieve this, hardly
+> surprisingly, so told you that NA's were in the result. isoMDS can;t
+> operate with NA's in the input dissimilarities without an initial
+> configuration being supplied; something metaMDS does not do, hence it
+> borked and threw the error.
+>
+
+
+This really is a bug in metaMDS: it is so stupid that it only expects  
+"normal" dissimilarities with maximum of 1 when there is nothing in  
+common between rows. It is only half-witty: it is prepared for open- 
+ended dissimilarities when it counts
+> Either 1) read everything on ?metaMDS and ?stepacross at least twice  
+> and
+> then read the associated references so you understand what is going on
+> --- I'm only vaguely aware of what all this code does --- then come  
+> back
+> and set the various arguments to metaMDS and stepacross to be more
+> appropriate for your data and dissimilarities and try again, or
+>
+> 2) turn off step-across dissimilarities by setting no.shared = 1 in  
+> your
+> call to metaMDS and see if that helps.
+>
+>>
+>> 2) In a plot for a nmds with fitted environmental variables (function
+>> envfit) how can I change the name of the labels of the vectors  
+>> (arrows)?
+>
+> Changes the names of your original data and refit - it takes the  
+> labels
+> from names(my_data) where my_data is your data object originally.
+>
+> Or, look at the code being the plot method for plot.envfit:
+>
+> https://r-forge.r-project.org/plugins/scmsvn/viewcvs.php/pkg/vegan/R/plot.envfit.R?rev=570&root=vegan&view=markup
+>
+> copy/paste that into your editor, and then towards the bottom, find:
+>
+>    if (!is.null(vect)) {
+>        arrows(at[1], at[2], vect[, 1], vect[, 2], len = 0.05,
+>               col = col)
+>        text(vtext, rownames(x$vectors$arrows), col = col, ...)
+>    }
+>    if (!is.null(x$factors)) {
+>        text(x$factors$centroids[, choices, drop = FALSE], rownames(x 
+> $factors$centroids),
+>             col = col, ...)
+>    }
+>
+> This sets the labels for the arrows/centroids (top if is arrows,  
+> bottom
+> centroids). Change the rownames(x$FOO$BAR) bits to be the vector of
+> labels you want for the arrows/centroids. You need to provide all  
+> labels
+> and you need them to be in the correct order. After making that  
+> change,
+> paste back into R and use it as normal.
+>
+> I could change plot.envfit directly in vegan to allow arbitrary labels
+> (it should be easy, but it is slightly complicated because you can  
+> have
+> two types of things drawn) supplied by user via a 'labels = NULL'
+> argument to this plot method. But as Jari authored this we should
+> probably ask him if such a change would be warranted? He's CC'd here.
+>
+>>
+>> Thank you very much in advance.
+>
+> You're welcome, hope it helps,
+>
+> G
+>
+>> Best,
+>>
+>> Manuel Sp?nola
+>>
+> -- 
+> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+> Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+> ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+> Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+> Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+> UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+>
+
+
+From jari.oksanen at oulu.fi  Tue Mar 10 21:23:19 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 10 Mar 2009 22:23:19 +0200
+Subject: [R-sig-eco] 2 questions about NMDS in vegan
+In-Reply-To: <1236711699.2960.241.camel@desktop.localhost>
+References: <49B3DA52.8060405@gmail.com>
+	<1236711699.2960.241.camel@desktop.localhost>
+Message-ID: <683925FC-7FD8-4E99-BE0A-1201FC7526AD@oulu.fi>
+
+Howdy Folks,
+
+While Gavin and Manuel were watching Liverpool vs. Real Madrid  
+football match, I fixed the metaMDS part of the problem. You can get  
+the fixed version of metaMDSdist.R from http://r-forge.r-project.org/projects/vegan/ 
+  (select the SCM tab and Browse Subversion Repository). Packaged  
+versions will be available in a day or two from the same address.
+
+Cheers, Jari Oksanen
+
+
+From jari.oksanen at oulu.fi  Tue Mar 10 22:10:45 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 10 Mar 2009 23:10:45 +0200
+Subject: [R-sig-eco] 2 questions about NMDS in vegan
+In-Reply-To: <1236711699.2960.241.camel@desktop.localhost>
+References: <49B3DA52.8060405@gmail.com>
+	<1236711699.2960.241.camel@desktop.localhost>
+Message-ID: <F64FB2BE-E098-4513-BADE-A1028C2A10F1@oulu.fi>
+
+Manuel & readers,
+
+I didn't comment on the use of stepacross with Euclidean distances  
+earlier, but I do it now: I don't think it makes sense. This is a user  
+choice, and technically it now works in the R-Forge version of vegan,  
+but I do think that no user should do this (but what am I to stop  
+them?). The problem is that the distances among points with nothing in  
+common are not necessarily longest Euclidean distances. You may have  
+very short Euclidean distances between two sites with no shared  
+species if the total abundances in these two sites are low. So the  
+stepacross finds the distances across low abundance sites instead of  
+really intermediate sites. I do think that you should use stepacross  
+only with the usual closed indices with upper limit = 1. If you want  
+to use them with open indices (no upper limit, variable values for  
+pairs with nothing in common), you should be prepared to research the  
+adequacy of your choice.
+
+Setting noshare=0 will turn off automatic stepacross in metaMDS. I  
+recommend this be used with Euclidean, Manhattan and other open  
+distances, although this is not enforced: the choice is yours.
+
+Cheers, Jari Oksanen
+
+
+From mudrak at wisc.edu  Fri Mar 13 16:50:19 2009
+From: mudrak at wisc.edu (Erika Mudrak)
+Date: Fri, 13 Mar 2009 10:50:19 -0500
+Subject: [R-sig-eco] using tree() for CART on a binary response variable
+Message-ID: <e339d4be159b6.49ba3a6b@wiscmail.wisc.edu>
+
+I am working on a project where we are trying to model levels of Phosphorous runoff on farms as a function of several variables, such as farm size in acres, slope, proximity to streams, number of animals, etc..   We have grouped these explanatory variables into three classes: cheap, medium and expensive, according to how hard it is to obtain that information.   We are most interested in making a model to identify "hot" farms, or those farms with a P runoff level over a certain value.  For this reason we have converted the P runoff variable from actual numbers into 1/0, reflecting the cutoff (1= above cutoff/hot farm, 0= below cutoff/farm is ok). We are working with 42 observations. 
+
+ Since, the models will be used often by county office personnel, we would like to analyze the data with classification trees or regression trees, and essentially provide the county office with a decision tree to help identify farms to investigate.  We would like to include a tree for each of the variable classes (a cheap tree, a medium tree and an expensive tree). 
+
+First we ran the tree() command on the data with the 1/0 response, and it worked for all three variable classes, but I later realized that they were regression trees, treating the 1/0 as numeric.  We then ran the tree() command with the response variable wrapped in the factor() command, to convert the 1/0 data from numeric to factor type.  A classification tree works for the cheap variables, but not for the medium set, which has only 4 explanatory variables.  The error message says something about the tree being too large.   Why would the tree be constructable as a regression tree but not as a classification tree?   Is it appropriate to run a regression tree on binary response data like this?  
+
+I appreciate any guidance.
+
+Erika Mudrak
+
+-------------------------------------------
+Erika Mudrak
+Graduate Student
+Department of Botany
+University of Wisconsin-Madison
+430 Lincoln Dr
+Madison WI, 53706
+608-265-2191
+mudrak at wisc.edu
+
+
+From gdimba at gmail.com  Thu Mar 19 13:21:20 2009
+From: gdimba at gmail.com (Gladys Dimba)
+Date: Thu, 19 Mar 2009 15:21:20 +0300
+Subject: [R-sig-eco] backcalculation of HIV infection rates
+Message-ID: <2306f4b10903190521x2f1a5f94s8ddd11d8bc6ce4e3@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090319/b21b0469/attachment.pl>
+
+From ssefick at gmail.com  Thu Mar 19 14:17:29 2009
+From: ssefick at gmail.com (stephen sefick)
+Date: Thu, 19 Mar 2009 09:17:29 -0400
+Subject: [R-sig-eco] backcalculation of HIV infection rates
+In-Reply-To: <2306f4b10903190521x2f1a5f94s8ddd11d8bc6ce4e3@mail.gmail.com>
+References: <2306f4b10903190521x2f1a5f94s8ddd11d8bc6ce4e3@mail.gmail.com>
+Message-ID: <c502a9e10903190617s1be31641tc6ccb5da3823e00d@mail.gmail.com>
+
+It seems like that would not be that hard, but it is not in my area.
+My advice is to break the problem up, write code for each sub-problem,
+and then combine all of the little functions into one big function to
+"solve" the problem.
+my two cents,
+
+Stephen Sefick
+
+On Thu, Mar 19, 2009 at 8:21 AM, Gladys Dimba <gdimba at gmail.com> wrote:
+> The backcalculation is a procedure that has been used to calculate the HIV
+> incidence given AIDS diagnosis cases (usually annual cases or quarterly
+> cases) and some assumed incubation period distribution : usually the Weibull
+> or gama has been used.
+>
+> How can the backcalculation be implemented in R?
+>
+> ? ? ? ?[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Stephen Sefick
+
+Let's not spend our time and resources thinking about things that are
+so little or so large that all they really do for us is puff us up and
+make us feel like gods.  We are mammals, and have not exhausted the
+annoying little problems of being mammals.
+
+								-K. Mullis
+
+
+From Farrar.David at epamail.epa.gov  Thu Mar 19 15:46:55 2009
+From: Farrar.David at epamail.epa.gov (Farrar.David at epamail.epa.gov)
+Date: Thu, 19 Mar 2009 10:46:55 -0400
+Subject: [R-sig-eco] backcalculation of HIV infection rates
+In-Reply-To: <c502a9e10903190617s1be31641tc6ccb5da3823e00d@mail.gmail.com>
+References: <2306f4b10903190521x2f1a5f94s8ddd11d8bc6ce4e3@mail.gmail.com>
+	<c502a9e10903190617s1be31641tc6ccb5da3823e00d@mail.gmail.com>
+Message-ID: <OF38CC1AF8.57717593-ON8525757E.00512FB2-8525757E.00512F99@epamail.epa.gov>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090319/3f1a595c/attachment.pl>
+
+From vianam at tcd.ie  Thu Mar 19 15:42:16 2009
+From: vianam at tcd.ie (Mafalda Viana)
+Date: Thu, 19 Mar 2009 14:42:16 +0000
+Subject: [R-sig-eco] Bayesian hierarchical model
+Message-ID: <e86892490903190742w33cfa6bs15977ce76ff71d54@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090319/80d3a8b5/attachment.pl>
+
+From mick.wu at mail.mcgill.ca  Thu Mar 19 19:27:49 2009
+From: mick.wu at mail.mcgill.ca (Gi-Mick Wu)
+Date: Thu, 19 Mar 2009 14:27:49 -0400
+Subject: [R-sig-eco] Correct dispersion parameter for glmmML?
+Message-ID: <B89AE5DF4F2A964FB322E3F53F02EE0D2301D09482@EXMBXVS4A.campus.mcgill.ca>
+
+Hi everyone, (my first post, after reading the archives a lot)
+
+I hope I'm not asking an old question (I have searched hours on the internet and R help files, with no success)
+I?m fitting a generalized linear mixed model to binary data using glmmML (version 0.81-4), but am unsure of how to obtain the correct dispersion parameter. (I have also just updated R to version 2.8.1)
+
+For a glm model, I read that it should be the SS Pearson's residuals / df, rather than the default residuals (deviance). In my case:
+
+# GLM
+# using Pearson's residuals:
+> sum(residuals(modl.glm,type="pearson")^2)/modl.glm$df.residual
+[1] 1.062947
+# using deviance
+> modl.glm$deviance/modl.glm$df.residual
+[1] 1.409863
+
+For glmmML however, I cannot obtain the pearson residuals, but only the deviance and null deviance (same as deviance for glm):
+
+# GLMM
+# using Pearson's residuals
+> residuals(modl.glmmML)
+NULL
+# using deviance
+> modl.glmmML$deviance/modl.glmmML$df.residual
+[1] 1.413364
+# using null deviance
+> modl.glmmML$cluster.null.deviance/modl.glmmML$cluster.null.df
+[1] 1.409863
+
+I am confused as to which (if any) of the dispersion parameter is valid for th glmm model. Any one have an idea?
+
+Thanks in advance for reading and hopefully for some much needed answers.
+Mick
+
+
+
+PS Iin case it is relevant or for curiosity's sake, here's the experimental design:
+
+The experiment consists in testing the effect of experience on odour preferences of parasitoid wasps. Parasitoids lay eggs in host insects, which will be devoured from the inside until they die; like the movie Alien :-)
+
+Wasps were exposed to two different odours, with or without the presence of hosts (call them rewarded / unrewarded odour). Their odour preference was then tested in a Y-tube olfactometer 5 times after exposure (2h, 6h, 26h, 50h, 98h). 36 individuals were exposed to each odour either 1,2,3, or 4 times (9 individuals/treatment level). Odours were presented in alternation with half the wasps starting with the rewarded odour.
+(Total number of binary choices = 180). I set Time and NbExposure as fixed effects because I'm really interested in their effect and wasp ID as random. I also added body size, which seem to play a role on the effect of experience in honeybees. I could argue it is overfitted... so I may remove body size (it is secondary).
+
+# R code for fitting the glmm
+form <- cbind(RewardOdour, UnrewardOdour) ~ (Time + NbExposure + Ordr + BodySize)^2   # interaction terms limited to second order
+modl.glmmML <- glmmML(form, family=binomial, data=clean.dat,cluster=clean.dat[,"ID"],
+			prior="gaussian", method="ghq", n.points=8)                            # same results with n.points = 20
+
+> modl.glmmML
+
+Call:  glmmML(formula = form, family = binomial, data = clean.dat, cluster = clean.dat[, "ID"], prior = "gaussian", method = "ghq", n.points = 8) 
+
+                             coef            se(coef)      z           Pr(>|z|)
+(Intercept)           -7.539e+00  7.5906651  -0.99324   0.3210
+Interv                  -6.303e-03   0.0648177  -0.09724   0.9230
+TrainExp                2.843e+00  2.3465958   1.21139   0.2260
+TrainLastD             4.366e+00  5.1119166   0.85401   0.3930
+TibiaL                    1.324e-02   0.0126869   1.04333   0.2970
+Interv:TrainExp       1.295e-03   0.0042982   0.30123   0.7630
+Interv:TrainLastD     2.042e-02   0.0093118   2.19259   0.0283
+Interv:TibiaL           -2.554e-06  0.0001093  -0.02337   0.9810
+TrainExp:TrainLastD -2.333e-01  0.3489015  -0.66859   0.5040
+TrainExp:TibiaL       -4.833e-03   0.0037688  -1.28235   0.2000
+TrainLastD:TibiaL    -7.487e-03   0.0086466  -0.86585   0.3870
+
+Scale parameter in mixing distribution:  0.484 gaussian 
+Std. Error:                                       0.3204 
+
+Residual deviance: 237.4 on 168 degrees of freedom      AIC: 261.4
+
+
+From gunnar.hoyer at uni-oldenburg.de  Thu Mar 19 23:04:15 2009
+From: gunnar.hoyer at uni-oldenburg.de (Gunnar Hoyer)
+Date: Thu, 19 Mar 2009 23:04:15 +0100
+Subject: [R-sig-eco] Phase spectrum
+Message-ID: <49C2C15F.4070903@uni-oldenburg.de>
+
+Hello,
+
+I have trouble to interpret the phase spectrum correctly.
+
+Here is the code (with different data) I used to get the phase spectrum:
+
+mfdeaths.spc <- spec.pgram(ts.union(mdeaths, fdeaths), spans = c(3,3))
+plot(mfdeaths.spc, plot.type = "phase")
+
+I would like to know whether positive or negative values indicate that 
+the time series mdeaths leads or lags.
+
+Thanks in advance
+Gunnar Hoyer
+
+
+From ssefick at gmail.com  Fri Mar 20 02:10:50 2009
+From: ssefick at gmail.com (stephen sefick)
+Date: Thu, 19 Mar 2009 21:10:50 -0400
+Subject: [R-sig-eco] Phase spectrum
+In-Reply-To: <49C2C15F.4070903@uni-oldenburg.de>
+References: <49C2C15F.4070903@uni-oldenburg.de>
+Message-ID: <c502a9e10903191810r5d8290a0n787646f36ce5c69e@mail.gmail.com>
+
+lag.plot2=function(data1,data2,max.lag=0,corr=TRUE,smooth=FALSE){
+   name1=paste(deparse(substitute(data1)),"(t-",sep="")
+   name2=paste(deparse(substitute(data2)),"(t)",sep="")
+   data1=as.ts(data1)
+   data2=as.ts(data2)
+   max.lag=as.integer(max.lag)
+   m1=max.lag+1
+   prow=ceiling(sqrt(m1))
+   pcol=ceiling(m1/prow)
+   a=ccf(data1,data2,max.lag,plot=FALSE)$acf
+  par(mfrow=c(prow,pcol), mar=c(2.5, 4, 2.5, 1), cex.main=1.1, font.main=1)
+  for(h in 0:max.lag){
+   plot(lag(data1,-h), data2, xy.labels=F,
+main=paste(name1,h,")",sep=""), ylab=name2, xlab="")
+    if (smooth==TRUE)
+    lines(lowess(ts.intersect(lag(data1,-h),data2)[,1],
+                 ts.intersect(lag(data1,-h),data2)[,2]), col="red")
+    if (corr==TRUE)
+    legend("topright", legend=round(a[m1-h], digits=2), text.col
+="blue", bg="white", x.intersp=0)
+   }
+}
+
+I believe that it is neither
+
+library(zoo)
+plot(coredata(mdeaths)~coredata(fdeaths))
+
+But I am still learning about timeseries analysis.
+
+Stephen Sefick
+
+
+On Thu, Mar 19, 2009 at 6:04 PM, Gunnar Hoyer
+<gunnar.hoyer at uni-oldenburg.de> wrote:
+> Hello,
+>
+> I have trouble to interpret the phase spectrum correctly.
+>
+> Here is the code (with different data) I used to get the phase spectrum:
+>
+> mfdeaths.spc <- spec.pgram(ts.union(mdeaths, fdeaths), spans = c(3,3))
+> plot(mfdeaths.spc, plot.type = "phase")
+>
+> I would like to know whether positive or negative values indicate that the
+> time series mdeaths leads or lags.
+>
+> Thanks in advance
+> Gunnar Hoyer
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Stephen Sefick
+
+Let's not spend our time and resources thinking about things that are
+so little or so large that all they really do for us is puff us up and
+make us feel like gods.  We are mammals, and have not exhausted the
+annoying little problems of being mammals.
+
+								-K. Mullis
+
+
+From mujeebrahmanp at gmail.com  Fri Mar 20 12:21:52 2009
+From: mujeebrahmanp at gmail.com (mujeeb rahman)
+Date: Fri, 20 Mar 2009 16:51:52 +0530
+Subject: [R-sig-eco] CCA/COI
+Message-ID: <ac3840600903200421k3ac684b9m353a5c1ade914502@mail.gmail.com>
+
+Hi
+I extend my thanks to all of you for timely help to my previous
+queries about PCA in ade4TkGUI. This helped much towards my learning
+programme of R.
+Moreover I also expect your valuable suggesions in following matters
+too. As I am new to R (also to multivariate analysis..) I am facing
+such problems.
+
+First of all I elaborated about data set with me. I workign in soil
+fauna biodiversity, the data contains soil fauna abundance data from
+15 landuse systems each with four replicates (15*4=60 rows). During
+this study 17 type of macrofauna were observed (17 columns)(60rows*17
+columns). From this whole landuse we have information on 16 different
+explantory variable-soil physicochemical and climatic factors(60 rows
+* 16 columns). My queries are listed below.
+
+1. to interpret the abundance of soil fauna which analysis is suitable
+CCA of Co-Inertia analysis? While going through the literature of Dray
+et al 2003, it make little confusion while selecting a suitable
+analysis.
+
+2. Which is the suitable document available for the interpretation CCA
+or COI result?
+
+Please pay attention through this mail, I am thankful to share your
+valuable time in this matter.
+
+Mujeeb Rahman P
+Senior Research Fellow, Department of Entomology, Forest Health Division
+Kerala Forest Research Institute
+Peechi, Thrissur, Kerala
+India - 680653
+
+
+From mujeebrahmanp at gmail.com  Fri Mar 20 12:24:38 2009
+From: mujeebrahmanp at gmail.com (mujeeb rahman)
+Date: Fri, 20 Mar 2009 16:54:38 +0530
+Subject: [R-sig-eco] CCA/COI
+Message-ID: <ac3840600903200424s750f674bid9b2912ff0113624@mail.gmail.com>
+
+Hi
+I extend my thanks to all of you for timely help to my previous
+queries about PCA in ade4TkGUI. This helped much towards my learning
+programme of R.
+Moreover I also expect your valuable suggesions in following matters
+too. As I am new to R (also to multivariate analysis..) I am facing
+such problems.
+
+First of all I elaborated about data set with me. I workign in soil
+fauna biodiversity, the data contains soil fauna abundance data from
+15 landuse systems each with four replicates (15*4=60 rows). During
+this study 17 type of macrofauna were observed (17 columns)(60rows*17
+columns). From this whole landuse we have information on 16 different
+explantory variable-soil physicochemical and climatic factors(60 rows
+* 16 columns). My queries are listed below.
+
+1. to interpret the abundance of soil fauna which analysis is suitable
+CCA of Co-Inertia analysis? While going through the literature of Dray
+et al 2003, it make little confusion while selecting a suitable
+analysis.
+
+2. Which is the suitable document available for the interpretation CCA
+or COI result?
+
+Please pay attention through this mail, I am thankful to share your
+valuable time in this matter.
+
+Mujeeb Rahman P
+Senior Research Fellow, Department of Entomology, Forest Health Division
+Kerala Forest Research Institute
+Peechi, Thrissur, Kerala
+India - 680653
+
+
+From Kate.Pressland at bristol.ac.uk  Tue Mar 24 16:35:27 2009
+From: Kate.Pressland at bristol.ac.uk (CL Pressland)
+Date: Tue, 24 Mar 2009 15:35:27 +0000
+Subject: [R-sig-eco] mixed model for repeat obs
+Message-ID: <43704A29163BCC0D7C169BB5@bio-mammal03.bio.bris.ac.uk>
+
+I have a data set that is unbalanced and consists of:
+
+67 SITEs measured over several YEARs every WEEK for butterflies (LEPS per 
+m). I'm interested in the MANagement code assigned to each site, but I have 
+also data on TEMPerature, average SUN and WIND. My guess is that a linear 
+mixed model would be most appropriate and have constructed this code:
+
+model1<-lme(LEPS~MAN,random=~YEAR/WEEK|SITE)
+
+The output gives me:
+--------------------------------------------------------------------
+Linear mixed-effects model fit by REML
+ Data: NULL
+        AIC       BIC   logLik
+  -37631.24 -37566.48 18824.62
+
+Random effects:
+ Formula: ~YEAR/WEEK| SITE
+ Structure: General positive-definite, Log-Cholesky parametrization
+             	 StdDev       Corr
+(Intercept)   	5.875102e-03 (Intr) YEAR
+YEAR          	1.392439e-06 -0.164
+YEAR:WEEK 		5.068196e-07  0.531  0.301
+Residual      	3.532589e-02
+
+Fixed effects: LEPS ~ MAN
+                  Value   Std.Error   DF  t-value p-value
+(Intercept) 0.009866718 0.001428957 9793 6.904841    0.00
+MAN     	0.000028304 0.001127429   65 0.025105    0.98
+ Correlation:
+        (Intr)
+MAN -0.685
+
+Standardized Within-Group Residuals:
+        Min          Q1         Med          Q3         Max
+-2.70566579 -0.40089121 -0.18073723  0.05900735 19.16411466
+
+Number of Observations: 9860
+Number of Groups: 67
+--------------------------------------------------------------------
+
+This output confuses me greatly! I figure that this clearly means that 
+management has no effect on butterflies but how can I figure out what 
+effect SITE, YEAR and WEEK have on the data? Would I have to also include 
+them in the fixed effects side of the formula (I'm unsure if this is 
+allowed)? Also, how could I include my weather variables? Would they just 
+be placed on the fixed effect side of the formula? If they are correlated 
+(I expect the weather variables are) would I have to place them in an 
+interaction rather than separately?
+
+Any help that would be given would be gratefully received!
+
+Kate
+
+
+From solymos at ualberta.ca  Tue Mar 24 18:09:18 2009
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Tue, 24 Mar 2009 11:09:18 -0600
+Subject: [R-sig-eco] mixed model for repeat obs
+In-Reply-To: <43704A29163BCC0D7C169BB5@bio-mammal03.bio.bris.ac.uk>
+References: <43704A29163BCC0D7C169BB5@bio-mammal03.bio.bris.ac.uk>
+Message-ID: <34896f090903241009n77b40848hd6d700a1eda598a@mail.gmail.com>
+
+Hi Kate,
+
+You can use time series analysis (ar, arima functions at first)
+instead, because YEAR and WEEK clearly has structure (i.e.
+observations are conditional on previous observations with some lag).
+To control for SITE, you can use polynomials of the geographical
+coordinates (or write a hierarchical space-time series model say in
+WinBUGS). Anyway, you should decide what are your parameters of
+interest, and what you consider as nuisance parameters, and formulate
+the model accordingly.
+
+Cheers,
+
+P?ter
+
+P?ter S?lymos, PhD
+Postdoctoral Fellow
+Department of Mathematical and Statistical Sciences
+University of Alberta
+Edmonton, Alberta, T6G 2G1
+Canada
+email <- paste("solymos", "ualberta.ca", sep = "@")
+
+
+
+On Tue, Mar 24, 2009 at 9:35 AM, CL Pressland
+<Kate.Pressland at bristol.ac.uk> wrote:
+> I have a data set that is unbalanced and consists of:
+>
+> 67 SITEs measured over several YEARs every WEEK for butterflies (LEPS per
+> m). I'm interested in the MANagement code assigned to each site, but I have
+> also data on TEMPerature, average SUN and WIND. My guess is that a linear
+> mixed model would be most appropriate and have constructed this code:
+>
+> model1<-lme(LEPS~MAN,random=~YEAR/WEEK|SITE)
+>
+> The output gives me:
+> --------------------------------------------------------------------
+> Linear mixed-effects model fit by REML
+> Data: NULL
+> ? ? ? AIC ? ? ? BIC ? logLik
+> ?-37631.24 -37566.48 18824.62
+>
+> Random effects:
+> Formula: ~YEAR/WEEK| SITE
+> Structure: General positive-definite, Log-Cholesky parametrization
+> ? ? ? ? ? ? ? ? StdDev ? ? ? Corr
+> (Intercept) ? ? 5.875102e-03 (Intr) YEAR
+> YEAR ? ? ? ? ? ?1.392439e-06 -0.164
+> YEAR:WEEK ? ? ? ? ? ? ? 5.068196e-07 ?0.531 ?0.301
+> Residual ? ? ? ?3.532589e-02
+>
+> Fixed effects: LEPS ~ MAN
+> ? ? ? ? ? ? ? ? Value ? Std.Error ? DF ?t-value p-value
+> (Intercept) 0.009866718 0.001428957 9793 6.904841 ? ?0.00
+> MAN ? ? ? ? ? ? 0.000028304 0.001127429 ? 65 0.025105 ? ?0.98
+> Correlation:
+> ? ? ? (Intr)
+> MAN -0.685
+>
+> Standardized Within-Group Residuals:
+> ? ? ? Min ? ? ? ? ?Q1 ? ? ? ? Med ? ? ? ? ?Q3 ? ? ? ? Max
+> -2.70566579 -0.40089121 -0.18073723 ?0.05900735 19.16411466
+>
+> Number of Observations: 9860
+> Number of Groups: 67
+> --------------------------------------------------------------------
+>
+> This output confuses me greatly! I figure that this clearly means that
+> management has no effect on butterflies but how can I figure out what effect
+> SITE, YEAR and WEEK have on the data? Would I have to also include them in
+> the fixed effects side of the formula (I'm unsure if this is allowed)? Also,
+> how could I include my weather variables? Would they just be placed on the
+> fixed effect side of the formula? If they are correlated (I expect the
+> weather variables are) would I have to place them in an interaction rather
+> than separately?
+>
+> Any help that would be given would be gratefully received!
+>
+> Kate
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From frankberninger at gmail.com  Thu Mar 26 14:53:45 2009
+From: frankberninger at gmail.com (Frank Berninger)
+Date: Thu, 26 Mar 2009 09:53:45 -0400
+Subject: [R-sig-eco] mixed model for repeat obs (CL Pressland)
+In-Reply-To: <mailman.1.1237978801.14952.r-sig-ecology@r-project.org>
+References: <mailman.1.1237978801.14952.r-sig-ecology@r-project.org>
+Message-ID: <49CB88E9.2060209@gmail.com>
+
+It gives me a sadistic pleasure that other people have similar
+headaches as me.
+
+A few comments:
+You can get estimates of the Year, Week and Site effects by extracting
+the random effects.
+
+random.effects(model1)
+
+This gives you an idea of the signifcances of random effects. Note
+that there are assumptions attached to your random effects in this
+kind of analysis.
+
+I noted also that you did not seem to specify a correlation structure
+of your random effects which will usually make the estimation of your
+fixed effects less reliable since your algorithm
+will assume no correlation between random effects (i.e. the number of
+butterflies in week 2 is completely independent of the number of
+butterflies in week 1 etc....)
+
+Considering that you have a yearly pattern the previous comment that
+it would be good to find a time series structure for your data seems
+appropiate. (I would, ideally, identify the actual correlation
+structure in the time series analysis programs and then introduce them
+into the lme). I had often more bad luck than good luck with the approach.
+
+There is another possibility to make the time series analysis for each
+series and compare parameters between sites. This is less elegant but
+might be easier to get to work. (I applied that approach in a paper by
+me in Tree Physiology in 2004).
+
+Note that time series analysis does not support missing or unequally
+spaced observations and usually at least 30 observations. Also, time
+series requires that your time series are stationary.
+
+Frank
+
+r-sig-ecology-request at r-project.org wrote:
+>    1. Re: mixed model for repeat obs (CL Pressland)
+>    2. Re: mixed model for repeat obs (Peter Solymos)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Tue, 24 Mar 2009 15:35:27 +0000
+> From: CL Pressland <Kate.Pressland at bristol.ac.uk>
+> Subject: Re: [R-sig-eco] mixed model for repeat obs
+> To: r-sig-ecology at r-project.org
+> Message-ID: <43704A29163BCC0D7C169BB5 at bio-mammal03.bio.bris.ac.uk>
+> Content-Type: text/plain; charset=us-ascii; format=flowed
+>
+> I have a data set that is unbalanced and consists of:
+>
+> 67 SITEs measured over several YEARs every WEEK for butterflies (LEPS per
+> m). I'm interested in the MANagement code assigned to each site, but I
+have
+> also data on TEMPerature, average SUN and WIND. My guess is that a linear
+> mixed model would be most appropriate and have constructed this code:
+>
+> model1<-lme(LEPS~MAN,random=~YEAR/WEEK|SITE)
+>
+> The output gives me:
+> --------------------------------------------------------------------
+> Linear mixed-effects model fit by REML
+>  Data: NULL
+>         AIC       BIC   logLik
+>   -37631.24 -37566.48 18824.62
+>
+> Random effects:
+>  Formula: ~YEAR/WEEK| SITE
+>  Structure: General positive-definite, Log-Cholesky parametrization
+>                   StdDev       Corr
+> (Intercept)       5.875102e-03 (Intr) YEAR
+> YEAR              1.392439e-06 -0.164
+> YEAR:WEEK         5.068196e-07  0.531  0.301
+> Residual          3.532589e-02
+>
+> Fixed effects: LEPS ~ MAN
+>                   Value   Std.Error   DF  t-value p-value
+> (Intercept) 0.009866718 0.001428957 9793 6.904841    0.00
+> MAN         0.000028304 0.001127429   65 0.025105    0.98
+>  Correlation:
+>         (Intr)
+> MAN -0.685
+>
+> Standardized Within-Group Residuals:
+>         Min          Q1         Med          Q3         Max
+> -2.70566579 -0.40089121 -0.18073723  0.05900735 19.16411466
+>
+> Number of Observations: 9860
+> Number of Groups: 67
+> --------------------------------------------------------------------
+>
+> This output confuses me greatly! I figure that this clearly means that
+> management has no effect on butterflies but how can I figure out what
+> effect SITE, YEAR and WEEK have on the data? Would I have to also include
+> them in the fixed effects side of the formula (I'm unsure if this is
+> allowed)? Also, how could I include my weather variables? Would they just
+> be placed on the fixed effect side of the formula? If they are correlated
+> (I expect the weather variables are) would I have to place them in an
+> interaction rather than separately?
+>
+> Any help that would be given would be gratefully received!
+>
+> Kate
+>
+>
+>
+> ------------------------------
+>
+> Message: 2
+> Date: Tue, 24 Mar 2009 11:09:18 -0600
+> From: Peter Solymos <solymos at ualberta.ca>
+> Subject: Re: [R-sig-eco] mixed model for repeat obs
+> To: CL Pressland <Kate.Pressland at bristol.ac.uk>
+> Cc: r-sig-ecology at r-project.org
+> Message-ID:
+>     <34896f090903241009n77b40848hd6d700a1eda598a at mail.gmail.com>
+> Content-Type: text/plain; charset=UTF-8
+>
+> Hi Kate,
+>
+> You can use time series analysis (ar, arima functions at first)
+> instead, because YEAR and WEEK clearly has structure (i.e.
+> observations are conditional on previous observations with some lag).
+> To control for SITE, you can use polynomials of the geographical
+> coordinates (or write a hierarchical space-time series model say in
+> WinBUGS). Anyway, you should decide what are your parameters of
+> interest, and what you consider as nuisance parameters, and formulate
+> the model accordingly.
+>
+> Cheers,
+>
+> P?ter
+>
+> P?ter S?lymos, PhD
+> Postdoctoral Fellow
+> Department of Mathematical and Statistical Sciences
+> University of Alberta
+> Edmonton, Alberta, T6G 2G1
+> Canada
+> email <- paste("solymos", "ualberta.ca", sep = "@")
+>
+>
+>
+> On Tue, Mar 24, 2009 at 9:35 AM, CL Pressland
+> <Kate.Pressland at bristol.ac.uk> wrote:
+>> I have a data set that is unbalanced and consists of:
+>>
+>> 67 SITEs measured over several YEARs every WEEK for butterflies (LEPS per
+>> m). I'm interested in the MANagement code assigned to each site, but I
+have
+>> also data on TEMPerature, average SUN and WIND. My guess is that a linear
+>> mixed model would be most appropriate and have constructed this code:
+>>
+>> model1<-lme(LEPS~MAN,random=~YEAR/WEEK|SITE)
+>>
+>> The output gives me:
+>> --------------------------------------------------------------------
+>> Linear mixed-effects model fit by REML
+>> Data: NULL
+>> ? ? ? AIC ? ? ? BIC ? logLik
+>> ?-37631.24 -37566.48 18824.62
+>>
+>> Random effects:
+>> Formula: ~YEAR/WEEK| SITE
+>> Structure: General positive-definite, Log-Cholesky parametrization
+>> ? ? ? ? ? ? ? ? StdDev ? ? ? Corr
+>> (Intercept) ? ? 5.875102e-03 (Intr) YEAR
+>> YEAR ? ? ? ? ? ?1.392439e-06 -0.164
+>> YEAR:WEEK ? ? ? ? ? ? ? 5.068196e-07 ?0.531 ?0.301
+>> Residual ? ? ? ?3.532589e-02
+>>
+>> Fixed effects: LEPS ~ MAN
+>> ? ? ? ? ? ? ? ? Value ? Std.Error ? DF ?t-value p-value
+>> (Intercept) 0.009866718 0.001428957 9793 6.904841 ? ?0.00
+>> MAN ? ? ? ? ? ? 0.000028304 0.001127429 ? 65 0.025105 ? ?0.98
+>> Correlation:
+>> ? ? ? (Intr)
+>> MAN -0.685
+>>
+>> Standardized Within-Group Residuals:
+>> ? ? ? Min ? ? ? ? ?Q1 ? ? ? ? Med ? ? ? ? ?Q3 ? ? ? ? Max
+>> -2.70566579 -0.40089121 -0.18073723 ?0.05900735 19.16411466
+>>
+>> Number of Observations: 9860
+>> Number of Groups: 67
+>> --------------------------------------------------------------------
+>>
+>> This output confuses me greatly! I figure that this clearly means that
+>> management has no effect on butterflies but how can I figure out what
+effect
+>> SITE, YEAR and WEEK have on the data? Would I have to also include them in
+>> the fixed effects side of the formula (I'm unsure if this is allowed)?
+Also,
+>> how could I include my weather variables? Would they just be placed on the
+>> fixed effect side of the formula? If they are correlated (I expect the
+>> weather variables are) would I have to place them in an interaction rather
+>> than separately?
+>>
+>> Any help that would be given would be gratefully received!
+>>
+>> Kate
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>
+>
+>
+> ------------------------------
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> End of R-sig-ecology Digest, Vol 12, Issue 8
+> ********************************************
+>
+
+
+From mdu at ceh.ac.uk  Thu Mar 26 15:11:23 2009
+From: mdu at ceh.ac.uk (Mike Dunbar)
+Date: Thu, 26 Mar 2009 14:11:23 +0000
+Subject: [R-sig-eco] mixed model for repeat obs (CL Pressland)
+Message-ID: <s9cb8d24.091@wpo.nerc.ac.uk>
+
+>From a quick look only, I'm not convinced that the structure of the model as suggested by Kate, is correct.
+
+There is only one random effect in the model, site. Year and Week are specified as random slopes. But they are not in the fixed part of the model, hence I don't think this makes sense. Also if butterflies are measured every week, then what does week represent. It can't be a specific random effect as there is no replication within week. 
+
+The question is how to treat time in the model. If there is autocorrelation in time for the residuals then it would make sense to model  this. But lme can only estimate a single common AR parameter across all sites. If there are seasonal patterns then again it would make sense to include this, either using some kind of sine or cosine functions or simply a factor representing the seasons. 
+
+It would clearly make sense to include the other relevant covariates (temp etc) and this might reduce the autocorrelation in the residuals. 
+
+Mike
+
+
+>>> Frank Berninger <frankberninger at gmail.com> 26/03/2009 13:53 >>>
+It gives me a sadistic pleasure that other people have similar
+headaches as me.
+
+A few comments:
+You can get estimates of the Year, Week and Site effects by extracting
+the random effects.
+
+random.effects(model1)
+
+This gives you an idea of the signifcances of random effects. Note
+that there are assumptions attached to your random effects in this
+kind of analysis.
+
+I noted also that you did not seem to specify a correlation structure
+of your random effects which will usually make the estimation of your
+fixed effects less reliable since your algorithm
+will assume no correlation between random effects (i.e. the number of
+butterflies in week 2 is completely independent of the number of
+butterflies in week 1 etc....)
+
+Considering that you have a yearly pattern the previous comment that
+it would be good to find a time series structure for your data seems
+appropiate. (I would, ideally, identify the actual correlation
+structure in the time series analysis programs and then introduce them
+into the lme). I had often more bad luck than good luck with the approach.
+
+There is another possibility to make the time series analysis for each
+series and compare parameters between sites. This is less elegant but
+might be easier to get to work. (I applied that approach in a paper by
+me in Tree Physiology in 2004).
+
+Note that time series analysis does not support missing or unequally
+spaced observations and usually at least 30 observations. Also, time
+series requires that your time series are stationary.
+
+Frank
+
+r-sig-ecology-request at r-project.org wrote:
+>    1. Re: mixed model for repeat obs (CL Pressland)
+>    2. Re: mixed model for repeat obs (Peter Solymos)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Tue, 24 Mar 2009 15:35:27 +0000
+> From: CL Pressland <Kate.Pressland at bristol.ac.uk>
+> Subject: Re: [R-sig-eco] mixed model for repeat obs
+> To: r-sig-ecology at r-project.org 
+> Message-ID: <43704A29163BCC0D7C169BB5 at bio-mammal03.bio.bris.ac.uk>
+> Content-Type: text/plain; charset=us-ascii; format=flowed
+>
+> I have a data set that is unbalanced and consists of:
+>
+> 67 SITEs measured over several YEARs every WEEK for butterflies (LEPS per
+> m). I'm interested in the MANagement code assigned to each site, but I
+have
+> also data on TEMPerature, average SUN and WIND. My guess is that a linear
+> mixed model would be most appropriate and have constructed this code:
+>
+> model1<-lme(LEPS~MAN,random=~YEAR/WEEK|SITE)
+>
+> The output gives me:
+> --------------------------------------------------------------------
+> Linear mixed-effects model fit by REML
+>  Data: NULL
+>         AIC       BIC   logLik
+>   -37631.24 -37566.48 18824.62
+>
+> Random effects:
+>  Formula: ~YEAR/WEEK| SITE
+>  Structure: General positive-definite, Log-Cholesky parametrization
+>                   StdDev       Corr
+> (Intercept)       5.875102e-03 (Intr) YEAR
+> YEAR              1.392439e-06 -0.164
+> YEAR:WEEK         5.068196e-07  0.531  0.301
+> Residual          3.532589e-02
+>
+> Fixed effects: LEPS ~ MAN
+>                   Value   Std.Error   DF  t-value p-value
+> (Intercept) 0.009866718 0.001428957 9793 6.904841    0.00
+> MAN         0.000028304 0.001127429   65 0.025105    0.98
+>  Correlation:
+>         (Intr)
+> MAN -0.685
+>
+> Standardized Within-Group Residuals:
+>         Min          Q1         Med          Q3         Max
+> -2.70566579 -0.40089121 -0.18073723  0.05900735 19.16411466
+>
+> Number of Observations: 9860
+> Number of Groups: 67
+> --------------------------------------------------------------------
+>
+> This output confuses me greatly! I figure that this clearly means that
+> management has no effect on butterflies but how can I figure out what
+> effect SITE, YEAR and WEEK have on the data? Would I have to also include
+> them in the fixed effects side of the formula (I'm unsure if this is
+> allowed)? Also, how could I include my weather variables? Would they just
+> be placed on the fixed effect side of the formula? If they are correlated
+> (I expect the weather variables are) would I have to place them in an
+> interaction rather than separately?
+>
+> Any help that would be given would be gratefully received!
+>
+> Kate
+>
+>
+>
+> ------------------------------
+>
+> Message: 2
+> Date: Tue, 24 Mar 2009 11:09:18 -0600
+> From: Peter Solymos <solymos at ualberta.ca>
+> Subject: Re: [R-sig-eco] mixed model for repeat obs
+> To: CL Pressland <Kate.Pressland at bristol.ac.uk>
+> Cc: r-sig-ecology at r-project.org 
+> Message-ID:
+>     <34896f090903241009n77b40848hd6d700a1eda598a at mail.gmail.com>
+> Content-Type: text/plain; charset=UTF-8
+>
+> Hi Kate,
+>
+> You can use time series analysis (ar, arima functions at first)
+> instead, because YEAR and WEEK clearly has structure (i.e.
+> observations are conditional on previous observations with some lag).
+> To control for SITE, you can use polynomials of the geographical
+> coordinates (or write a hierarchical space-time series model say in
+> WinBUGS). Anyway, you should decide what are your parameters of
+> interest, and what you consider as nuisance parameters, and formulate
+> the model accordingly.
+>
+> Cheers,
+>
+> P?ter
+>
+> P?ter S?lymos, PhD
+> Postdoctoral Fellow
+> Department of Mathematical and Statistical Sciences
+> University of Alberta
+> Edmonton, Alberta, T6G 2G1
+> Canada
+> email <- paste("solymos", "ualberta.ca", sep = "@")
+>
+>
+>
+> On Tue, Mar 24, 2009 at 9:35 AM, CL Pressland
+> <Kate.Pressland at bristol.ac.uk> wrote:
+>> I have a data set that is unbalanced and consists of:
+>>
+>> 67 SITEs measured over several YEARs every WEEK for butterflies (LEPS per
+>> m). I'm interested in the MANagement code assigned to each site, but I
+have
+>> also data on TEMPerature, average SUN and WIND. My guess is that a linear
+>> mixed model would be most appropriate and have constructed this code:
+>>
+>> model1<-lme(LEPS~MAN,random=~YEAR/WEEK|SITE)
+>>
+>> The output gives me:
+>> --------------------------------------------------------------------
+>> Linear mixed-effects model fit by REML
+>> Data: NULL
+>> ? ? ? AIC ? ? ? BIC ? logLik
+>> ?-37631.24 -37566.48 18824.62
+>>
+>> Random effects:
+>> Formula: ~YEAR/WEEK| SITE
+>> Structure: General positive-definite, Log-Cholesky parametrization
+>> ? ? ? ? ? ? ? ? StdDev ? ? ? Corr
+>> (Intercept) ? ? 5.875102e-03 (Intr) YEAR
+>> YEAR ? ? ? ? ? ?1.392439e-06 -0.164
+>> YEAR:WEEK ? ? ? ? ? ? ? 5.068196e-07 ?0.531 ?0.301
+>> Residual ? ? ? ?3.532589e-02
+>>
+>> Fixed effects: LEPS ~ MAN
+>> ? ? ? ? ? ? ? ? Value ? Std.Error ? DF ?t-value p-value
+>> (Intercept) 0.009866718 0.001428957 9793 6.904841 ? ?0.00
+>> MAN ? ? ? ? ? ? 0.000028304 0.001127429 ? 65 0.025105 ? ?0.98
+>> Correlation:
+>> ? ? ? (Intr)
+>> MAN -0.685
+>>
+>> Standardized Within-Group Residuals:
+>> ? ? ? Min ? ? ? ? ?Q1 ? ? ? ? Med ? ? ? ? ?Q3 ? ? ? ? Max
+>> -2.70566579 -0.40089121 -0.18073723 ?0.05900735 19.16411466
+>>
+>> Number of Observations: 9860
+>> Number of Groups: 67
+>> --------------------------------------------------------------------
+>>
+>> This output confuses me greatly! I figure that this clearly means that
+>> management has no effect on butterflies but how can I figure out what
+effect
+>> SITE, YEAR and WEEK have on the data? Would I have to also include them in
+>> the fixed effects side of the formula (I'm unsure if this is allowed)?
+Also,
+>> how could I include my weather variables? Would they just be placed on the
+>> fixed effect side of the formula? If they are correlated (I expect the
+>> weather variables are) would I have to place them in an interaction rather
+>> than separately?
+>>
+>> Any help that would be given would be gratefully received!
+>>
+>> Kate
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org 
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology 
+>>
+>>
+>
+>
+>
+> ------------------------------
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology 
+>
+>
+> End of R-sig-ecology Digest, Vol 12, Issue 8
+> ********************************************
+>
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org 
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+This message (and any attachments) is for the recipient ...{{dropped:6}}
+
+
+From j.struve at imperial.ac.uk  Fri Mar 27 14:29:19 2009
+From: j.struve at imperial.ac.uk (Struve, Juliane)
+Date: Fri, 27 Mar 2009 13:29:19 +0000
+Subject: [R-sig-eco] as.ltraj in adehabitat
+Message-ID: <5D1820C78E313F42AF9CD1C3DA846282051399CCB5@ICEXM5.ic.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090327/a7b77a46/attachment.pl>
+
+From dray at biomserv.univ-lyon1.fr  Fri Mar 27 16:01:19 2009
+From: dray at biomserv.univ-lyon1.fr (=?ISO-8859-1?Q?St=E9phane_Dray?=)
+Date: Fri, 27 Mar 2009 16:01:19 +0100
+Subject: [R-sig-eco] as.ltraj in adehabitat
+In-Reply-To: <5D1820C78E313F42AF9CD1C3DA846282051399CCB5@ICEXM5.ic.ac.uk>
+References: <5D1820C78E313F42AF9CD1C3DA846282051399CCB5@ICEXM5.ic.ac.uk>
+Message-ID: <49CCEA3F.4040309@biomserv.univ-lyon1.fr>
+
+Juliane,
+it seems that you have two relocations observed at the same time. 
+Without details (e.g., what did you type in R), it is difficult to give 
+you a more precised answer.
+
+Cheers.
+
+Struve, Juliane wrote:
+> Dear list,
+>
+> I am trying to convert a dataframe into an ltraj object and have a hard time defing the burst argument. The data consist of locations, dates and  time for only one individual (id=1646). An example is given below. The individual may have been seen several times during one day at several different locations. When I try to convert the dataframe I get error message
+>
+> Error in as.ltraj(track_1646, date, id, burst, typeII = TRUE, slsp = c("remove",  :
+>   non unique dates for a given burst
+> Would somebody be able to help ?
+>
+> Thank you very much for your time.
+>
+> Juliane
+>
+>
+> X       Y       date    id      burst   Time    ID      VR2number
+> -82.5632        27.303  18/08/2006      1646    1646    08:48:59        64      32
+> -82.5605        27.30237        18/08/2006      1646    1646    09:53:20        63      30
+> -82.5632        27.303  18/08/2006      1646    1646    13:27:48        121     32
+> -82.5737        27.31475        18/08/2006      1646    1646    20:39:18        91      33
+> -82.5445        27.27731        05/09/2006      1646    1646    22:17:52        3243    19
+> -82.5356        27.2716 05/09/2006      1646    1646    23:29:38        16319   20
+> -82.5445        27.27731        08/09/2006      1646    1646    23:34:30        3904    19
+> -82.5356        27.2716 09/09/2006      1646    1646    02:39:48        25023   20
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>   
+
+-- 
+St?phane DRAY (dray at biomserv.univ-lyon1.fr )
+Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+Tel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88
+http://pbil.univ-lyon1.fr/members/dray/
+
+
+From j.struve at imperial.ac.uk  Fri Mar 27 18:55:20 2009
+From: j.struve at imperial.ac.uk (Struve, Juliane)
+Date: Fri, 27 Mar 2009 17:55:20 +0000
+Subject: [R-sig-eco] as.ltraj in adehabitat
+In-Reply-To: <49CCEA3F.4040309@biomserv.univ-lyon1.fr>
+References: <5D1820C78E313F42AF9CD1C3DA846282051399CCB5@ICEXM5.ic.ac.uk>,
+	<49CCEA3F.4040309@biomserv.univ-lyon1.fr>
+Message-ID: <5D1820C78E313F42AF9CD1C3DA846282051399CCB7@ICEXM5.ic.ac.uk>
+
+Hello,
+many thanks for replying ! In the example there are 4 observations for 18/06/2006, at 4 different times, 2 observations for 05/09/2006 at two different times andso on. My data are in excel files, one per individual.
+I use this code to read in and prepare the example data set:
+
+library(PBSmapping)
+library(adehabitat)
+track_1646=read.table("AllChange_1646R.txt", sep="\t", header=TRUE)
+attr(track_1646, "projection") <- c("LL")
+track_1646.utm <- convUL(track_1646)
+track_1646 <- track_1646.utm
+#colnames(track_1646) <- c("X","Y","date","id","burst","Time","ID","VR2number")
+id <- as.character(track_1646$id)
+burst <- as.character(track_1646$burst)
+date <- as.POSIXct(strptime(as.character(track_1646$date),"%d/%m/%Y"))
+as.ltraj(track_1646, date, id, burst,typeII = TRUE, slsp = c("remove", "missing"))
+
+The last line yields the error message. I am not really sure about the burst argument, and I do not know why as.traj () needs it. Can you shed light on this ?
+Many thanks for your time. 
+Juliane 
+
+
+________________________________________
+From: St?phane Dray [dray at biomserv.univ-lyon1.fr]
+Sent: 27 March 2009 15:01
+To: Struve, Juliane
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] as.ltraj in adehabitat
+
+Juliane,
+it seems that you have two relocations observed at the same time.
+Without details (e.g., what did you type in R), it is difficult to give
+you a more precised answer.
+
+Cheers.
+
+Struve, Juliane wrote:
+> Dear list,
+>
+> I am trying to convert a dataframe into an ltraj object and have a hard time defing the burst argument. The data consist of locations, dates and  time for only one individual (id=1646). An example is given below. The individual may have been seen several times during one day at several different locations. When I try to convert the dataframe I get error message
+>
+> Error in as.ltraj(track_1646, date, id, burst, typeII = TRUE, slsp = c("remove",  :
+>   non unique dates for a given burst
+> Would somebody be able to help ?
+>
+> Thank you very much for your time.
+>
+> Juliane
+>
+>
+> X       Y                       date                   id      burst          Time       ID      VR2number
+> -82.5632        27.303  18/08/2006      1646    1646    08:48:59        64      32
+> -82.5605        27.30237 18/08/2006      1646    1646    09:53:20        63      30
+> -82.5632        27.303  18/08/2006      1646    1646    13:27:48        121     32
+> -82.5737        27.31475 18/08/2006      1646    1646    20:39:18        91      33
+> -82.5445        27.27731 05/09/2006      1646    1646    22:17:52        3243    19
+> -82.5356        27.2716 05/09/2006      1646    1646    23:29:38        16319   20
+> -82.5445        27.27731 08/09/2006      1646    1646    23:34:30        3904    19
+> -82.5356        27.2716 09/09/2006      1646    1646    02:39:48        25023   20
+>
+>       [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+
+--
+St?phane DRAY (dray at biomserv.univ-lyon1.fr )
+Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+Tel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88
+http://pbil.univ-lyon1.fr/members/dray/
+
+From dray at biomserv.univ-lyon1.fr  Sat Mar 28 09:14:56 2009
+From: dray at biomserv.univ-lyon1.fr (=?ISO-8859-1?Q?St=E9phane_Dray?=)
+Date: Sat, 28 Mar 2009 09:14:56 +0100
+Subject: [R-sig-eco] as.ltraj in adehabitat
+In-Reply-To: <5D1820C78E313F42AF9CD1C3DA846282051399CCB7@ICEXM5.ic.ac.uk>
+References: <5D1820C78E313F42AF9CD1C3DA846282051399CCB5@ICEXM5.ic.ac.uk>,
+	<49CCEA3F.4040309@biomserv.univ-lyon1.fr>
+	<5D1820C78E313F42AF9CD1C3DA846282051399CCB7@ICEXM5.ic.ac.uk>
+Message-ID: <49CDDC80.8060400@biomserv.univ-lyon1.fr>
+
+
+
+Struve, Juliane wrote:
+> Hello,
+> many thanks for replying ! In the example there are 4 observations for 18/06/2006, at 4 different times, 2 observations for 05/09/2006 at two different times andso on. My data are in excel files, one per individual.
+> I use this code to read in and prepare the example data set:
+>
+> library(PBSmapping)
+> library(adehabitat)
+> track_1646=read.table("AllChange_1646R.txt", sep="\t", header=TRUE)
+> attr(track_1646, "projection") <- c("LL")
+> track_1646.utm <- convUL(track_1646)
+> track_1646 <- track_1646.utm
+> #colnames(track_1646) <- c("X","Y","date","id","burst","Time","ID","VR2number")
+> id <- as.character(track_1646$id)
+> burst <- as.character(track_1646$burst)
+> date <- as.POSIXct(strptime(as.character(track_1646$date),"%d/%m/%Y"))
+>   
+you need to include the "Time" in your date otherwise dates of a same 
+day are considered as duplicated.
+> as.ltraj(track_1646, date, id, burst,typeII = TRUE, slsp = c("remove", "missing"))
+>
+> The last line yields the error message. I am not really sure about the burst argument, and I do not know why as.traj () needs it. Can you shed light on this ?
+> Many thanks for your time. 
+>   
+See ?as.ltraj and you can have a look to C. Calenge, S. Dray, and M. 
+Royer-Carenzi. The concept of animals trajectories from a data analysis 
+perspective. Ecological Informatics, 4:34-41, 2009. 
+(http://pbil.univ-lyon1.fr/members/dray/files/articles/SD857.pdf)
+> Juliane 
+>
+>
+> ________________________________________
+> From: St?phane Dray [dray at biomserv.univ-lyon1.fr]
+> Sent: 27 March 2009 15:01
+> To: Struve, Juliane
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] as.ltraj in adehabitat
+>
+> Juliane,
+> it seems that you have two relocations observed at the same time.
+> Without details (e.g., what did you type in R), it is difficult to give
+> you a more precised answer.
+>
+> Cheers.
+>
+> Struve, Juliane wrote:
+>   
+>> Dear list,
+>>
+>> I am trying to convert a dataframe into an ltraj object and have a hard time defing the burst argument. The data consist of locations, dates and  time for only one individual (id=1646). An example is given below. The individual may have been seen several times during one day at several different locations. When I try to convert the dataframe I get error message
+>>
+>> Error in as.ltraj(track_1646, date, id, burst, typeII = TRUE, slsp = c("remove",  :
+>>   non unique dates for a given burst
+>> Would somebody be able to help ?
+>>
+>> Thank you very much for your time.
+>>
+>> Juliane
+>>
+>>
+>> X       Y                       date                   id      burst          Time       ID      VR2number
+>> -82.5632        27.303  18/08/2006      1646    1646    08:48:59        64      32
+>> -82.5605        27.30237 18/08/2006      1646    1646    09:53:20        63      30
+>> -82.5632        27.303  18/08/2006      1646    1646    13:27:48        121     32
+>> -82.5737        27.31475 18/08/2006      1646    1646    20:39:18        91      33
+>> -82.5445        27.27731 05/09/2006      1646    1646    22:17:52        3243    19
+>> -82.5356        27.2716 05/09/2006      1646    1646    23:29:38        16319   20
+>> -82.5445        27.27731 08/09/2006      1646    1646    23:34:30        3904    19
+>> -82.5356        27.2716 09/09/2006      1646    1646    02:39:48        25023   20
+>>
+>>       [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>>
+>>     
+>
+> --
+> St?phane DRAY (dray at biomserv.univ-lyon1.fr )
+> Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+> 43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+> Tel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88
+> http://pbil.univ-lyon1.fr/members/dray/
+>
+>
+>   
+
+-- 
+St?phane DRAY (dray at biomserv.univ-lyon1.fr )
+Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+Tel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88
+http://pbil.univ-lyon1.fr/members/dray/
+
+
+From n.singh at imperial.ac.uk  Sat Mar 28 18:37:37 2009
+From: n.singh at imperial.ac.uk (Singh, Navinder J)
+Date: Sat, 28 Mar 2009 17:37:37 +0000
+Subject: [R-sig-eco] Habitat Suitability Mapping with Mahalanobis Distances
+Message-ID: <EF11F144924726479E40FB82FC3A72072F2AC316@ICEXM1.ic.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20090328/bb2c8046/attachment.pl>
+
+From j.struve at imperial.ac.uk  Mon Mar 30 10:57:20 2009
+From: j.struve at imperial.ac.uk (Struve, Juliane)
+Date: Mon, 30 Mar 2009 09:57:20 +0100
+Subject: [R-sig-eco] as.ltraj in adehabitat - solved
+Message-ID: <5D1820C78E313F42AF9CD1C3DA846282051399CCB9@ICEXM5.ic.ac.uk>
+
+Stephane and Clement,
+
+thank you for your help. Clement's suggestion:
+
+da <- as.POSIXct(strptime(paste(track_1646$date, track_1646$Time), "%d/%m/%Y %H:%M:%S"))
+tr <- as.ltraj(track_1646[,c("X","Y")], date=da, id=track_1646$id, typeII = TRUE)
+
+takes into account the time of the relocation  and solves my problem.
+
+Thank you again for your time,
+
+Juliane 
+
+________________________________________
+From: St?phane Dray [dray at biomserv.univ-lyon1.fr]
+Sent: 28 March 2009 08:14
+To: Struve, Juliane
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] as.ltraj in adehabitat
+
+Struve, Juliane wrote:
+> Hello,
+> many thanks for replying ! In the example there are 4 observations for 18/06/2006, at 4 different times, 2 observations for 05/09/2006 at two different times andso on. My data are in excel files, one per individual.
+> I use this code to read in and prepare the example data set:
+>
+> library(PBSmapping)
+> library(adehabitat)
+> track_1646=read.table("AllChange_1646R.txt", sep="\t", header=TRUE)
+> attr(track_1646, "projection") <- c("LL")
+> track_1646.utm <- convUL(track_1646)
+> track_1646 <- track_1646.utm
+> #colnames(track_1646) <- c("X","Y","date","id","burst","Time","ID","VR2number")
+> id <- as.character(track_1646$id)
+> burst <- as.character(track_1646$burst)
+> date <- as.POSIXct(strptime(as.character(track_1646$date),"%d/%m/%Y"))
+>
+you need to include the "Time" in your date otherwise dates of a same
+day are considered as duplicated.
+> as.ltraj(track_1646, date, id, burst,typeII = TRUE, slsp = c("remove", "missing"))
+>
+> The last line yields the error message. I am not really sure about the burst argument, and I do not know why as.traj () needs it. Can you shed light on this ?
+> Many thanks for your time.
+>
+See ?as.ltraj and you can have a look to C. Calenge, S. Dray, and M.
+Royer-Carenzi. The concept of animals trajectories from a data analysis
+perspective. Ecological Informatics, 4:34-41, 2009.
+(http://pbil.univ-lyon1.fr/members/dray/files/articles/SD857.pdf)
+> Juliane
+>
+>
+> ________________________________________
+> From: St?phane Dray [dray at biomserv.univ-lyon1.fr]
+> Sent: 27 March 2009 15:01
+> To: Struve, Juliane
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] as.ltraj in adehabitat
+>
+> Juliane,
+> it seems that you have two relocations observed at the same time.
+> Without details (e.g., what did you type in R), it is difficult to give
+> you a more precised answer.
+>
+> Cheers.
+>
+> Struve, Juliane wrote:
+>
+>> Dear list,
+>>
+>> I am trying to convert a dataframe into an ltraj object and have a hard time defing the burst argument. The data consist of locations, dates and  time for only one individual (id=1646). An example is given below. The individual may have been seen several times during one day at several different locations. When I try to convert the dataframe I get error message
+>>
+>> Error in as.ltraj(track_1646, date, id, burst, typeII = TRUE, slsp = c("remove",  :
+>>   non unique dates for a given burst
+>> Would somebody be able to help ?
+>>
+>> Thank you very much for your time.
+>>
+>> Juliane
+>>
+>>
+>> X       Y                       date                   id      burst          Time       ID      VR2number
+>> -82.5632        27.303  18/08/2006      1646    1646    08:48:59        64      32
+>> -82.5605        27.30237 18/08/2006      1646    1646    09:53:20        63      30
+>> -82.5632        27.303  18/08/2006      1646    1646    13:27:48        121     32
+>> -82.5737        27.31475 18/08/2006      1646    1646    20:39:18        91      33
+>> -82.5445        27.27731 05/09/2006      1646    1646    22:17:52        3243    19
+>> -82.5356        27.2716 05/09/2006      1646    1646    23:29:38        16319   20
+>> -82.5445        27.27731 08/09/2006      1646    1646    23:34:30        3904    19
+>> -82.5356        27.2716 09/09/2006      1646    1646    02:39:48        25023   20
+>>
+>>       [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>>
+>>
+>
+> --
+> St?phane DRAY (dray at biomserv.univ-lyon1.fr )
+> Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+> 43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+> Tel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88
+> http://pbil.univ-lyon1.fr/members/dray/
+>
+>
+>
+
+--
+St?phane DRAY (dray at biomserv.univ-lyon1.fr )
+Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+Tel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88
+http://pbil.univ-lyon1.fr/members/dray/
+

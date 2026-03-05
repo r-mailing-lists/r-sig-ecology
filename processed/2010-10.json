@@ -1,0 +1,919 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2010-10",
+  "messages": [
+    {
+      "id": "msg-fb4a4d5cc1dd",
+      "message_id": "<AANLkTikeB18PY17GR7bMTt1Cb6HenXN1M3BUuVDWpDEm@mail.gmail.com>",
+      "from_name": "Michael Sumner",
+      "from_email_hash": "acd579fb79d1a9375bc76a80cfcc85617e73f5138102204ab0c04aca43dd7766",
+      "date": "2010-10-01T11:38:30+10:00",
+      "subject": "[R-sig-eco] How to calculate time spent on a world grid with circumpolar trips",
+      "subject_clean": "How to calculate time spent on a world grid with circumpolar trips",
+      "in_reply_to": "<4CA486BE.80405@cebc.cnrs.fr>",
+      "references": [
+        "<4C5BDFAE.80903@cebc.cnrs.fr>",
+        "<AANLkTim9WCYohSP-m1eakf=RHfe-khm9D374EjcpY6i6@mail.gmail.com>",
+        "<4CA486BE.80405@cebc.cnrs.fr>"
+      ],
+      "body_plain": "Thanks David, I'll investigate.\n\nAlso, I've been thinking there's probably no real reason not to allow\n2-location trips. ;)\n\nCheers, Mike\n\n2010/9/30 Pinaud David <pinaud at cebc.cnrs.fr>:\n> ?Hi Mike!\n> I've fixed my problem by running this (unelegant) code, with the same idea\n> as yours. I don't know if it's worth to include it in the trip package, but\n> here is the code! Feel free to adapt it and use it if you want.\n> I needed to change a little bit the trip class definition to convert a path\n> with two locations in a trip object. You set the limit at 3 locs when\n> defining a trip object, it makes sense that an interesting trip would have\n> more than 3 locs, but some colleagues here are working with dispersal of\n> individuals, calculating distance and bearing with 2 locs (birth / death or\n> birth/first reproduction place), so the package can be also usefull in this\n> case.\n> Thanks\n> David\n>\n> Le 09/09/2010 15:28, Michael Sumner a ?crit :\n>>\n>> Sorry to have missed this.\n>>\n>> There's really no way to do this in longitude / latitude without a lot\n>> of manual handling. You could split into two trips, one using the\n>> eastern hemisphere, the other the western and use a shared [-180,180]\n>> grid that you sum together.\n>>\n>> What to do at the split coordinate depends on your actual data, there\n>> are many options.\n>>\n>> If you are still looking for an answer I could have a closer look at\n>> your example code, but real data would be more helpful if you can\n>> share it. There are a number of problems in the code you posted that\n>> prevent it from being easily run.\n>>\n>> Cheers, Mike.\n>>\n>>\n>>\n>>\n>> On Fri, Aug 6, 2010 at 8:10 PM, Pinaud David<pinaud at cebc.cnrs.fr> ?wrote:\n>>>\n>>> Dear all,\n>>> I want to calculate a grid of time spent per cell with albatross data.\n>>> The\n>>> goal is then to relate this to fisheries data set on a 1x1? grid.\n>>> I use the trip package with tripGrid(), but have some problems with birds\n>>> crossing the date line.\n>>> Usually I use a projection to do that but here I need to keep the 1x1?\n>>> grid\n>>> in order to relate density tu some data (fisheries...).\n>>> I've tried with recenter() and nowrapSpatialLines(), without success.\n>>> Here a code:\n>>>\n>>> library(trip)\n>>> library(maps) ? # to draw world maps\n>>>\n>>> d<- data.frame(x=c(seq(50, 180, 10), seq(-170, 50, 10)), y=rnorm(n=37,\n>>> m=-50, sd=3), tms=Sys.time()-(37:1*60*60*24), id=rep(1, 37)) ?# an\n>>> example\n>>> coordinates(d)<- ~x+y\n>>> tr<- trip(d, c(\"tms\", \"id\"))\n>>> proj4string(at)<- CRS(\"+proj=longlat +ellps=WGS84\")\n>>>\n>>> map('world')\n>>> plot(tr, add=T)\n>>> points(coordinates(tr), t=\"l\")\n>>>\n>>> # grid\n>>> grid.base<- expand.grid(Long=seq(-180, 180, by=1), Lat=seq(-70, -15,\n>>> by=1))\n>>> ? # tab coords\n>>> coordinates(grid.base)<- ~ Long + Lat\n>>> proj4string(grid.base)<- CRS(\"+proj=longlat +ellps=WGS84\")\n>>> gt<- makeGridTopology(grid.base, cellsize = c(1, 1)) ?# def grid topo\n>>>\n>>> # time spent per cell\n>>> tppc<- tripGrid(tr, grid = gt)\n>>> tppc01<- tppc ? ? ? ? ? ? ? # a copy for pres/abs\n>>> tppc01 at data$z<- ifelse(tppc at data$z> ?0, 1, 0)\n>>>\n>>> image(tppc, col=rev(heat.colors(500))) ?# seems ok\n>>> map('world', add=T)\n>>> points(coordinates(tr), t=\"l\")\n>>>\n>>> # but with presence/absence:\n>>> image(tppc01, col=c(\"white\", \"green\"))\n>>> map('world', add=T)\n>>> points(coordinates(tr), t=\"l\", col=\"blue\")\n>>>\n>>> Some ideas ?\n>>>\n>>>\n>>> Many thanks for your time.\n>>> David\n>>>\n>>> --\n>>> ***************************************************\n>>> David PINAUD\n>>> Ing?nieur de Recherche \"Analyses spatiales\"\n>>>\n>>> Centre d'Etudes Biologiques de Chiz? - CNRS UPR1934\n>>> 79360 Villiers-en-Bois, France poste 485\n>>> Tel: +33 (0)5.49.09.35.58\n>>> Fax: +33 (0)5.49.09.65.26\n>>> http://www.cebc.cnrs.fr/\n>>>\n>>> ***************************************************\n>>>\n>>>\n>>>\n>>>\n>>> __________ Information from ESET Mail Security, version of virus\n>>> signature\n>>> database 5346 (20100806) __________\n>>>\n>>> The message was checked by ESET Mail Security.\n>>> http://www.eset.com\n>>>\n>>>\n>>> _______________________________________________\n>>> R-sig-ecology mailing list\n>>> R-sig-ecology at r-project.org\n>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>\n>>>\n>>\n>>\n>\n> --\n> ***************************************************\n> David PINAUD\n> Ing?nieur de Recherche \"Analyses spatiales\"\n>\n> Centre d'Etudes Biologiques de Chiz? - CNRS UPR1934\n> 79360 Villiers-en-Bois, France\n> poste 485\n> Tel: +33 (0)5.49.09.35.58\n> Fax: +33 (0)5.49.09.65.26\n> http://www.cebc.cnrs.fr/\n>\n> ***************************************************\n>\n>\n>\n>\n> __________ Information from ESET Mail Security, version of virus signature\n> database 5492 (20100930) __________\n>\n> The message was checked by ESET Mail Security.\n> http://www.eset.com\n>\n>\n\n\n\n-- \nMichael Sumner\nInstitute for Marine and Antarctic Studies, University of Tasmania\nHobart, Australia\ne-mail: mdsumner at gmail.com",
+      "body_snippet": "Thanks David, I'll investigate.\n\nAlso, I've been thinking there's probably no real reason not to allow\n2-location trips. ;)\n\nCheers, Mike\n\n2010/9/30 Pinaud David <pinaud at cebc.cnrs.fr>:\n> ?Hi Mike!\n",
+      "thread_id": "thread-fb4a4d5cc1dd",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-d516a073e237",
+      "message_id": "<4CA58FAE.40102@ub.edu>",
+      "from_name": "\"José M. Blanco Moreno\"",
+      "from_email_hash": "04cc8f0ba15f995821410408f1b52865295d8841b7e6e9fb65cef3ff4e0878d9",
+      "date": "2010-10-01T09:37:18+02:00",
+      "subject": "[R-sig-eco] assign unique pch characters to a string of rows",
+      "subject_clean": "assign unique pch characters to a string of rows",
+      "in_reply_to": "<AANLkTi=eWC8A+BP55hKjj+y6wtQHMOdoQx3itR5gDiaS@mail.gmail.com>",
+      "references": [
+        "<AANLkTi=eWC8A+BP55hKjj+y6wtQHMOdoQx3itR5gDiaS@mail.gmail.com>"
+      ],
+      "body_plain": "Hello,\nSometimes I have used a named vector of pch such as:\npch.vec <- c('june_2728'=1,'june_2829'=6, \n'june_29'=8,'july_01'=15,'july_14' =17)\n\nand, suposing that these dates are stored in a vector called date, then \nuse them as follows:\n\nplot(data$sarp_avg ~data$cstar_avg, xlim=c(0,3), ylim=c(0,3.5), xlab=\"CSTAR LAI\", ylab=\"SARP LAI\", main=\"PISTACHIOS JUNE 27- JULY 14\",\npch=pch.vec[date])\n\n(a quick answer with no checking, use with caution!)\n\n\n\n\nAl 30/09/2010 22:53, En/na jenna martin ha escrit:\n> Hi -\n>\n> I am trying to assign a unique pch character to 5 different sections of one\n> row.\n> For example, in my data set, i would like a unique character representing\n> each group of rows (one character rep's the multiple values for each date,\n> so 5 unique values for 5 dates)\n>\n> rows 1:26 are attached to june_2728, and\n> rows 27:78 are june_2829\n> rows 79:104 are june_29\n> rows 105:114 are july_01\n> rows 115:146 are july_14\n>\n> I tried\n>\n>> plot(data$sarp_avg ~data$cstar_avg, xlim=c(0,3), ylim=c(0,3.5),\n> xlab=\"CSTAR LAI\", ylab=\"SARP LAI\", main=\"PISTACHIOS JUNE 27- JULY 14\",\n> pch=c(1,6,8,15,17))\n>\n>\n> but I have a feeling it is just recycling the 5 pch values, instead of\n> assigning them to the specific string of rows.\n>\n> Thanks for any help you might have!!\n>\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n---------------------------------------\nJos? M. Blanco-Moreno\n\nDept. de Biologia Vegetal (Bot?nica)\nFacultat de Biologia\nUniversitat de Barcelona\nAv. Diagonal 645\n08028 Barcelona\nSPAIN\n---------------------------------------\n\nphone: (+34) 934 039 863\nfax: (+34) 934 112 842",
+      "body_snippet": "Hello,\nSometimes I have used a named vector of pch such as:\npch.vec <- c('june_2728'=1,'june_2829'=6, \n'june_29'=8,'july_01'=15,'july_14' =17)\n\nand, suposing that these dates are stored in a vector ca",
+      "thread_id": "thread-d516a073e237",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-8b8e3b647fb8",
+      "message_id": "<4CA61802.8050508@tu-dresden.de>",
+      "from_name": "Thomas Petzoldt",
+      "from_email_hash": "3221ae08bdf4f7466b5fc73f2e690233d8c64cb67da7f8476c4ec5c734737d1e",
+      "date": "2010-10-01T19:18:58+02:00",
+      "subject": "[R-sig-eco] 3 Postdoc Positions for Ecological Statistics and Modeling",
+      "subject_clean": "3 Postdoc Positions for Ecological Statistics and Modeling",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear ecologists,\n\nplease note the job offers below, especially the three postdoc positions \nin ecological statistics resp. ecological modeling. We are seeking for \nexcellent candidates.\n\nThomas Petzoldt\n\n\nNITROLIMIT: Nitrogen limitation in freshwaters ? Is nitrogen reduction \necologically meaningful and economically feasible?\nAims and scope: The impact of nitrogen on the regulation of \nphytoplankton growth and biomass will be studied in comparison to other \nrelevant environmental variables to analyze whether nitrogen reduction \nis a meaningful measure to improve the ecological state of lakes and \nrivers. Nitrogen input into lakes and rivers, internal turnover rates \nand retention will be quantified. Results on nitrogen input and \nretention as well as its ecological effectiveness will be used to \nimprove ecosystem and catchment area models for the simulation of \ndifferent scenarios of lake and river development. Costs and benefits of \nnitrogen reduction will be analyzed and recommendations for sustainable \nmanagement of lakes and rivers will be compiled.\n\n\nSummary (3 Postdocs, 5 PhD students):\n\nhttp://www.dgl-ev.de/stellenboerse/Jobannouncements%20NITROLIMIT.pdf\n\n\n\nPostdoc, Ecological Statistics, Cottbus:\n\nhttp://jobboerse.bmvbs.de/cln_015/nn_197754/SharedDocs/Stellenbeschreibungen/DE/24__09__10__BfG__Umweltwissenschaftler__882.html\n\nPostdoc, Ecological Modeling (Lakes), Dresden:\n\nhttp://tu-dresden.de/die_tu_dresden/fakultaeten/fakultaet_forst_geo_und_hydrowissenschaften/fachrichtung_wasserwesen/ihb/jobs?set_language=en&cl=en\n\n\nPostdoc, Ecological Modeling (Rivers), Koblenz:\n\nhttp://jobboerse.bmvbs.de/cln_015/nn_197754/SharedDocs/Stellenbeschreibungen/DE/24__09__10__BfG__Umweltwissenschaftler__882.html\n\n\n\n\n-- \nThomas Petzoldt\nTechnische Universitaet Dresden\nInstitut fuer Hydrobiologie        thomas.petzoldt at tu-dresden.de\n01062 Dresden                      http://tu-dresden.de/hydrobiologie/\nGERMANY",
+      "body_snippet": "Dear ecologists,\n\nplease note the job offers below, especially the three postdoc positions \nin ecological statistics resp. ecological modeling. We are seeking for \nexcellent candidates.\n\nThomas Petzol",
+      "thread_id": "thread-8b8e3b647fb8",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-bc0bed80b392",
+      "message_id": "<4CAB063A.9050909@rug.nl>",
+      "from_name": "Maaike Versteegh",
+      "from_email_hash": "7df71c22c0ff80b8cbe3b925470d520514b076963ac0e8975b31a414c7494e7a",
+      "date": "2010-10-05T13:04:26+02:00",
+      "subject": "[R-sig-eco] assign unique pch characters to a string of rows",
+      "subject_clean": "assign unique pch characters to a string of rows",
+      "in_reply_to": "<4CA58FAE.40102@ub.edu>",
+      "references": [
+        "<AANLkTi=eWC8A+BP55hKjj+y6wtQHMOdoQx3itR5gDiaS@mail.gmail.com>",
+        "<4CA58FAE.40102@ub.edu>"
+      ],
+      "body_plain": "Hello jenna,\nAlternatively you could use the library lattice and make a xyplot. I am\nalso assuming (like Jose) that you have a variable called \"date\", which\nindicates the groups that you want to appear with different symbols. The\ncode would then be:\n\nlibrary(lattice)\n\nxyplot(data$sarp_avg ~data$cstar_avg, groups=data$date, xlim=c(0,3),\nylim=c(0,3.5),\nxlab=\"CSTAR LAI\", ylab=\"SARP LAI\", main=\"PISTACHIOS JUNE 27- JULY 14\",\npch=c(1,6,8,15,17), col=\"black\")\n\nCheers,\nMaaike\n\n\n\nJos? M. Blanco Moreno wrote:\n>  Hello,\n> Sometimes I have used a named vector of pch such as:\n> pch.vec <- c('june_2728'=1,'june_2829'=6,\n> 'june_29'=8,'july_01'=15,'july_14' =17)\n>\n> and, suposing that these dates are stored in a vector called date,\n> then use them as follows:\n>\n> plot(data$sarp_avg ~data$cstar_avg, xlim=c(0,3), ylim=c(0,3.5),\n> xlab=\"CSTAR LAI\", ylab=\"SARP LAI\", main=\"PISTACHIOS JUNE 27- JULY 14\",\n> pch=pch.vec[date])\n>\n> (a quick answer with no checking, use with caution!)\n>\n>\n>\n>\n> Al 30/09/2010 22:53, En/na jenna martin ha escrit:\n>> Hi -\n>>\n>> I am trying to assign a unique pch character to 5 different sections\n>> of one\n>> row.\n>> For example, in my data set, i would like a unique character\n>> representing\n>> each group of rows (one character rep's the multiple values for each\n>> date,\n>> so 5 unique values for 5 dates)\n>>\n>> rows 1:26 are attached to june_2728, and\n>> rows 27:78 are june_2829\n>> rows 79:104 are june_29\n>> rows 105:114 are july_01\n>> rows 115:146 are july_14\n>>\n>> I tried\n>>\n>>> plot(data$sarp_avg ~data$cstar_avg, xlim=c(0,3), ylim=c(0,3.5),\n>> xlab=\"CSTAR LAI\", ylab=\"SARP LAI\", main=\"PISTACHIOS JUNE 27- JULY 14\",\n>> pch=c(1,6,8,15,17))\n>>\n>>\n>> but I have a feeling it is just recycling the 5 pch values, instead of\n>> assigning them to the specific string of rows.\n>>\n>> Thanks for any help you might have!!\n>>\n>>     [[alternative HTML version deleted]]\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\n-- \nMaaike Versteegh\nAnimal Ecology Group\n\nUniversity of Groningen\nPO Box 14\n9750 AA Haren\nThe Netherlands\n\nphone +31 50 363 3408\nfax   +31 50 363 5205\ne-mail m.a.versteegh at rug.nl",
+      "body_snippet": "Hello jenna,\nAlternatively you could use the library lattice and make a xyplot. I am\nalso assuming (like Jose) that you have a variable called \"date\", which\nindicates the groups that you want to appea",
+      "thread_id": "thread-d516a073e237",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-2f5089791ccf",
+      "message_id": "<AANLkTi=5zOTERy46bjKeQOL36NJN7NSQ750BZ33_4UbY@mail.gmail.com>",
+      "from_name": "Laura S",
+      "from_email_hash": "f1bf1f5ba38bba645286aa5a5c6852ced1d118bbdb2a8d927099385dd60a88de",
+      "date": "2010-10-08T18:50:04-07:00",
+      "subject": "[R-sig-eco] Calculating a spatial weight matrix and Moran's I given queen's case continuity",
+      "subject_clean": "Calculating a spatial weight matrix and Moran's I given queen's case continuity",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101008/e196b893/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101008/e196b893/attachment.pl>",
+      "thread_id": "thread-2f5089791ccf",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-c05e3b4af066",
+      "message_id": "<BLU151-ds8DB07E31D517980F29FD7CF510@phx.gbl>",
+      "from_name": "Qi Li",
+      "from_email_hash": "6752fe0bc95c966afd62f95739a384d9e41b51e13342ce3824d10473d90e390d",
+      "date": "2010-10-09T11:32:54+08:00",
+      "subject": "[R-sig-eco] How to get the confidence intervals of the regression slope from the permuytation test in MRM (package: \"ecodist\")",
+      "subject_clean": "How to get the confidence intervals of the regression slope from the permuytation test in MRM (package: \"ecodist\")",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101009/12728687/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101009/12728687/attachment.pl>",
+      "thread_id": "thread-c05e3b4af066",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-595393afb099",
+      "message_id": "<B3B2F4076C41C2863D1FEE24@bio-mammal012.bio.bris.ac.uk>",
+      "from_name": "Emma Stone",
+      "from_email_hash": "3de36c6c5023daf27ac337866224c9be4a203fd7a65891de6461fcab6e7f30f5",
+      "date": "2010-10-11T15:10:47+01:00",
+      "subject": "[R-sig-eco] Help with Adonis",
+      "subject_clean": "Help with Adonis",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear All\n\nI am trying to run a non-parametric manova  and am using the adonis\n    function in the VEGAN package in R.\n    I am trying to assess the number and types of bat mitigation used at \nsites\n    as a function of four predictors. The predictors are : number of bats\n    (nobats= continuous), impact (factor with 3 categories) and roost\n    type(rtype = factor with 5 categories) and species (factor with 5 \nlevels).\n    There are three responses which are count data: number of boxes, number \nof\n    barns and number of lofts.\n    The problem is that I have a lot of zeros in the data and they are not \nall\n    integers. I am able to run adonis on each predictor seperately but am\n    unable to manage to get all the predictors in the same model.\n    For each predictor my code is as follows:\n    adonis(resp~Impact,data=pred,method=euclidean,permutation=500)\n    I am not sure how to set up the data so that I can get them all in one\n    model and then do interactions etc.\n\n To date I have put all the data in one frame and used the following code \nto\n    set up the response;\n\n    resp<-alldata[,-1]\n\n    and coded the predictor (in this case impact) as:\n\n    impact<-factor(alldata[,1])\n\n    Is there any way i can incorporate each other predictor in here? If so \ndoes     anyone know how I can code it and set up the data frame.\n\n    Any help would be most appreciated.\n\n    Thanks\n\n    Emma\n\n\n\n    ----------------------\n    Emma Stone\n    Postgraduate Researcher\n    Bat Ecology and Bioacoustics Lab\n    & Mammal Research Unit\n    School of Biological Sciences,\n    University of Bristol, Woodland Road,\n    Bristol, BS8 1UG\n    Email: emma.stone at bristol.ac.uk\n\n\n\n----------------------\nEmma Stone\nPostgraduate Researcher\nBat Ecology and Bioacoustics Lab\n& Mammal Research Unit\nSchool of Biological Sciences,\nUniversity of Bristol, Woodland Road,\nBristol, BS8 1UG\nEmail: emma.stone at bristol.ac.uk",
+      "body_snippet": "Dear All\n\nI am trying to run a non-parametric manova  and am using the adonis\n    function in the VEGAN package in R.\n    I am trying to assess the number and types of bat mitigation used at \nsites\n  ",
+      "thread_id": "thread-595393afb099",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-66e4c9b2b5f5",
+      "message_id": "<AANLkTi=f+-TfjJgaPR+UR_spofBVUyxZTcQzoJwErouh@mail.gmail.com>",
+      "from_name": "Nelson Fernandez",
+      "from_email_hash": "64e060c9c12dc40a16fd9cf52f5cd2f3a9d09167b0f5ebfa800cf9cf6c560f3d",
+      "date": "2010-10-12T10:28:48-05:00",
+      "subject": "[R-sig-eco] Coordinates Spatstat",
+      "subject_clean": "Coordinates Spatstat",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101012/718075fa/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101012/718075fa/attachment.pl>",
+      "thread_id": "thread-66e4c9b2b5f5",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-7054b1cf17a2",
+      "message_id": "<C5A32987BF9078709C47B08E@bio-mammal012.bio.bris.ac.uk>",
+      "from_name": "Emma Stone",
+      "from_email_hash": "3de36c6c5023daf27ac337866224c9be4a203fd7a65891de6461fcab6e7f30f5",
+      "date": "2010-10-13T11:38:33+01:00",
+      "subject": "[R-sig-eco] Contrasts for Adonis in Vegan",
+      "subject_clean": "Contrasts for Adonis in Vegan",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi guys,\n\nJust wandered if anyone can help regards contrasts for   adonis in the \nVegan package.\n\nI am running the following code for adonis\n\nadonis(formula = resp ~ roostfact + impactfact + sppfact, data = alldata, \npermutations = 999, method = \"euclidean\")\n\nAnd would like to run a contrast on the impactfact which has three levels.\n\nI have tried setting it up using the following code:\n\n\ncontrasts(impactfact)<-cbind(c(-1,0,1),c(0,-1,1))\ncontrasts(impactfact)\n\nBut I am not sure what to do next can anyone help at all?\n\nThanks\n\nEmma\n\n\n\n----------------------\nEmma Stone\nPostgraduate Researcher\nBat Ecology and Bioacoustics Lab\n& Mammal Research Unit\nSchool of Biological Sciences,\nUniversity of Bristol, Woodland Road,\nBristol, BS8 1UG\nEmail: emma.stone at bristol.ac.uk",
+      "body_snippet": "Hi guys,\n\nJust wandered if anyone can help regards contrasts for   adonis in the \nVegan package.\n\nI am running the following code for adonis\n\nadonis(formula = resp ~ roostfact + impactfact + sppfact, ",
+      "thread_id": "thread-7054b1cf17a2",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-21b11dc4a440",
+      "message_id": "<4CB597EC.2080201@gmail.com>",
+      "from_name": "Manuel Spínola",
+      "from_email_hash": "c67b4a8f4e027cf75cc3544d4e04791324bee3c4417f2f5edf4561a1da2f995b",
+      "date": "2010-10-13T05:28:44-06:00",
+      "subject": "[R-sig-eco] se and confidence limits for predictors from a model output not obtained in R",
+      "subject_clean": "se and confidence limits for predictors from a model output not obtained in R",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101013/442ac43c/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101013/442ac43c/attachment.pl>",
+      "thread_id": "thread-21b11dc4a440",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-0ab0a08fe009",
+      "message_id": "<0D6399D2E9A66846B227AE8661541B29127327@CTSPITDCEMMVX28.cihs.ad.gov.on.ca>",
+      "from_name": "Howe, Eric (MNR)",
+      "from_email_hash": "041c718dfaea8c5d944e7c75117d81fd1bc5cdeae97b1842c82d8a45ef366681",
+      "date": "2010-10-14T15:20:00-04:00",
+      "subject": "[R-sig-eco] Spatiotemporal interactions among animals",
+      "subject_clean": "Spatiotemporal interactions among animals",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101014/74d7f1f7/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101014/74d7f1f7/attachment.pl>",
+      "thread_id": "thread-0ab0a08fe009",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-70625a221497",
+      "message_id": "<AANLkTikPfE7RMtxzFsJepdkzp8rSjndakw3R8yEcV6Ab@mail.gmail.com>",
+      "from_name": "Michael Sumner",
+      "from_email_hash": "acd579fb79d1a9375bc76a80cfcc85617e73f5138102204ab0c04aca43dd7766",
+      "date": "2010-10-19T14:30:33+11:00",
+      "subject": "[R-sig-eco] How to calculate time spent on a world grid with circumpolar trips",
+      "subject_clean": "How to calculate time spent on a world grid with circumpolar trips",
+      "in_reply_to": "<AANLkTikeB18PY17GR7bMTt1Cb6HenXN1M3BUuVDWpDEm@mail.gmail.com>",
+      "references": [
+        "<4C5BDFAE.80903@cebc.cnrs.fr>",
+        "<AANLkTim9WCYohSP-m1eakf=RHfe-khm9D374EjcpY6i6@mail.gmail.com>",
+        "<4CA486BE.80405@cebc.cnrs.fr>",
+        "<AANLkTikeB18PY17GR7bMTt1Cb6HenXN1M3BUuVDWpDEm@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101019/541c1fb9/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101019/541c1fb9/attachment.pl>",
+      "thread_id": "thread-fb4a4d5cc1dd",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-067c0d2ddbd1",
+      "message_id": "<478366.87476.qm@web53903.mail.re2.yahoo.com>",
+      "from_name": "o paknia",
+      "from_email_hash": "14aa66e2471d55904f0926c6deeed97fa19fb4d23e47eb79c2f6e10a80d978be",
+      "date": "2010-10-21T06:11:15-07:00",
+      "subject": "[R-sig-eco] Simpson dissimilarity in NMDS",
+      "subject_clean": "Simpson dissimilarity in NMDS",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101021/d28acb84/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101021/d28acb84/attachment.pl>",
+      "thread_id": "thread-067c0d2ddbd1",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-0bc4594c2c6f",
+      "message_id": "<1287668661.13760.16.camel@prometheus.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-10-21T14:44:21+01:00",
+      "subject": "[R-sig-eco] Simpson dissimilarity in NMDS",
+      "subject_clean": "Simpson dissimilarity in NMDS",
+      "in_reply_to": "<478366.87476.qm@web53903.mail.re2.yahoo.com>",
+      "references": [
+        "<478366.87476.qm@web53903.mail.re2.yahoo.com>"
+      ],
+      "body_plain": "On Thu, 2010-10-21 at 06:11 -0700, o paknia wrote:\n> Dear all,\n> I am trying to use Simpson dissimilarity measure (in Koelf et al 2003 JAE, as \n> Beta Sim) to perform Nonmetric Multidimensional Scaling. \n> \n> First by making a dissimilarity matrix:\n> \n> dis.mat <-betadiver(fine.scale, index = 22)\n> dis.mat<-as.matrix(dis.mat)\n> \n> then using this matrix in meta MDS:\n> nms<-metaMDS(dis.mat,trymax=100,zerodist=\"add\")\n> \n> but I get this error:\n> \n> Error in isoMDS(dist, k = k, trace = isotrace) : zero or negative distance \n> between objects 5 and 6\n> \n> checking my matrix, there is neither negative value or zero in my matrix.\n> So I am confused, where I am doing wrong.\n\nWithout any evidence to the contrary (more than your say so) I suggest\nyou are mistaken in your belief that you don't have 0 or negative\ndistances. I cannot reproduce what you claim, but I reproduce the error\nusing the inbuilt data 'varespec'\n\n> data(varespec)\n> dist.mat <- betadiver(varespec, index = 22)\n> nms <- metaMDS(dist.mat,trymax=100,zerodist=\"add\")\nError in isoMDS(dist, k = k, trace = isotrace) : \n  zero or negative distance between objects 2 and 21\n> dist.mat[c(2,21), c(2,21)]\n   15 12\n15  0  0\n12  0  0\n\nSo try (using your objects):\n\ndis.mat[c(5,6), c(5,6)]\n\nand see what it returns? If it shows that these are not zero, then could\nyou send your data to me off list and then I can step through metaMDS to\nsee what is happening? I promise to delete it after tracking down the\nproblem and not to use it for anything other than working out what the\nerror is.\n\nNotice also that zerodist = \"add\" won't do anything as you have supplied\nmetaMDS with the dissimilarities. 'zerodist' is an argument to\nmetaMDSdist() and as ?metaMDS tells you all steps are skipped other than\nrandom starts and centring and PC rotation of \"axes\", including\nzerodist. If you do have zero dissimilarities, you'll have to sort out\nadding the required value or deleting the duplicate samples to get\nmetaMDS to work.\n\nHTH\n\nG\n\n> \n> Thank you very much for creating time and giving any hint.\n> Kind regards,\n> Omid\n> \n>  \n> \n> \n> \n> \n>  Omid Paknia,\n> Institute of Experimental Ecology,\n> Albert-Einstein-Allee 11 \n> University of Ulm\n> D-89069 Ulm, \n> Germany\n> http://www.uni-ulm.de/nawi/bio3/kalko/phdstud/paknia.html\n> \n> \n> \n>       \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Thu, 2010-10-21 at 06:11 -0700, o paknia wrote:\n> Dear all,\n> I am trying to use Simpson dissimilarity measure (in Koelf et al 2003 JAE, as \n> Beta Sim) to perform Nonmetric Multidimensional Scalin",
+      "thread_id": "thread-067c0d2ddbd1",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-d32657486d1c",
+      "message_id": "<D215283B-CE1D-45FD-9507-E6C5E0AA60A8@gmail.com>",
+      "from_name": "Yingjie Zhang",
+      "from_email_hash": "5b54181421735aa064d0a82898ba02ae32c6911a9c2d49e4fe0755349d28b516",
+      "date": "2010-10-22T10:08:33+02:00",
+      "subject": "[R-sig-eco] snowfall variable export",
+      "subject_clean": "snowfall variable export",
+      "in_reply_to": "<mailman.1.1287050402.7474.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1287050402.7474.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101022/0108e949/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101022/0108e949/attachment.pl>",
+      "thread_id": "thread-d32657486d1c",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-e771c27af577",
+      "message_id": "<BD4FDBE270F9534FA385E3A42F25009107075379@YKXMS02.corp.ds.gov.nt.ca>",
+      "from_name": "Dean Cluff",
+      "from_email_hash": "3de36dd39b5b48e73adbc47a30e01caca02593e69653703e696199f16ab6dfe7",
+      "date": "2010-10-22T15:45:35-06:00",
+      "subject": "[R-sig-eco] glmmML and empirical varibance estimates",
+      "subject_clean": "glmmML and empirical varibance estimates",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101022/0016c449/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101022/0016c449/attachment.pl>",
+      "thread_id": "thread-e771c27af577",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-d5ff71637642",
+      "message_id": "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+      "from_name": "Soumi Ray",
+      "from_email_hash": "1e964e3bdfcf165d4edb7424cc26424e8909f2683e1ae290ca4fed6f6f1c50ba",
+      "date": "2010-10-25T14:10:25-04:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101025/864fe62b/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101025/864fe62b/attachment.pl>",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-25358f91b8a8",
+      "message_id": "<AANLkTimCej_3QKdQPHD1nRJdWzO+NYMMB3fWTxi-sBWK@mail.gmail.com>",
+      "from_name": "Soumi Ray",
+      "from_email_hash": "1e964e3bdfcf165d4edb7424cc26424e8909f2683e1ae290ca4fed6f6f1c50ba",
+      "date": "2010-10-25T14:27:11-04:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>"
+      ],
+      "body_plain": "Thank you Roman, here is my datafile.\n\nSoumi\n\nOn Mon, Oct 25, 2010 at 2:10 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n\n> Hi listers,\n>\n> I am trying to run NMDS in vegan package. I have a species dataset - with\n> columns as species and rows as variables. All my data are 0/1\n> (presence/absence). My data has missing values. I saved my data in txt file\n> and the missing values are blank spaces. I am using the syntax:\n> <nmds <-read.table ('nmds.txt', header=T, rows.names=1, sep=\"\\t\")\n> <nmds.mds.alt <- metaMDS (nmds, distance=\"bray\", k=2, autotransform=FALSE)\n>\n> But it is showing me the error:\n> Error in distfun(comm, method = distance, ...) :\n>   NA/NaN/Inf in foreign function call (arg 1)\n> In addition: Warning message:\n> In distfun(comm, method = distance, ...) :\n>   you have empty rows: their dissimilarities may be meaningless in method\n> bray\n>\n> Could anyone kindly let me know where am I going wrong? I admit i am new to\n> R, trying to self tutor myself.\n>\n> Thank you,\n>\n> Regards,\n>\n> Soumi\n>\n-------------- next part --------------\n\tSpA\tSpB\tSpC\tSpD\n1\t0\t0\t0\t0\n2\t0\t0\t0\t0\n3\t0\t1\t0\t0\n4\t0\t0\t1\t0\n5\t0\t0\t0\t0\n6\t0\t0\t0\t0\n7\t0\t0\t0\t0\n8\t0\t0\t1\t0\n9\t1\t0\t1\t1\n10\t0\t0\t0\t0\n11\t0\t0\t1\t0\n12\t0\t1\t\t0\n13\t0\t1\t1\t0\n14\t0\t0\t1\t0\n15\t0\t0\t1\t0\n16\t0\t0\t1\t0\n17\t0\t0\t1\t0\n18\t0\t0\t0\t0\n19\t0\t0\t1\t0\n20\t0\t0\t\t0\n21\t0\t0\t\t0\n22\t0\t0\t\t0\n23\t0\t1\t0\t0\n24\t1\t0\t1\t0\n25\t0\t0\t0\t0\n26\t0\t0\t\t0\n27\t0\t0\t1\t0\n28\t1\t1\t0\t0\n29\t1\t0\t\t0\n30\t0\t0\t\t0\n31\t1\t0\t\t0\n32\t0\t0\t0\t0\n33\t1\t0\t\t0\n34\t0\t1\t1\t0\n35\t0\t0\t\t0\n36\t0\t0\t0\t0\n37\t0\t1\t\t0\n38\t0\t0\t\t0\n39\t0\t1\t0\t0\n40\t0\t0\t\t0\n41\t0\t0\t\t0\n42\t0\t0\t0\t0\n43\t0\t0\t\t0\n44\t1\t1\t\t0\n45\t1\t1\t1\t1\n46\t0\t0\t1\t0\n47\t0\t0\t\t0\n48\t1\t0\t1\t0\n49\t0\t0\t1\t0\n50\t0\t0\t\t0\n51\t0\t0\t1\t0\n52\t\t0\t\t0\n53\t0\t1\t1\t0\n54\t0\t0\t0\t0\n55\t0\t1\t0\t0\n56\t0\t0\t1\t0\n57\t0\t0\t0\t0\n58\t0\t0\t1\t0\n59\t0\t0\t\t0\n60\t0\t1\t1\t0\n61\t0\t0\t0\t0\n62\t0\t0\t0\t0\n63\t0\t0\t1\t0\n64\t0\t0\t1\t0\n65\t0\t0\t1\t0\n66\t0\t\t0\t1\n67\t0\t1\t\t1\n68\t0\t0\t1\t0\n69\t0\t0\t0\t0\n70\t0\t0\t0\t0\n71\t1\t0\t\t0\n72\t0\t0\t1\t0\n73\t0\t0\t0\t0\n74\t0\t0\t1\t0\n75\t0\t0\t\t0\n76\t0\t0\t1\t0\n77\t0\t0\t\t0\n78\t1\t0\t1\t0\n79\t0\t0\t0\t0\n80\t0\t0\t0\t0\n81\t0\t1\t\t0\n82\t0\t0\t\t0\n83\t0\t0\t\t0\n84\t0\t0\t1\t0\n85\t0\t1\t\t0\n86\t0\t0\t1\t0\n87\t0\t1\t0\t0\n88\t1\t0\t1\t0\n89\t0\t0\t0\t0\n90\t0\t1\t1\t0\n91\t0\t0\t0\t0\n92\t1\t0\t0\t0\n93\t0\t0\t1\t0\n94\t0\t1\t1\t0\n95\t0\t0\t0\t0\n96\t1\t0\t1\t0\n97\t\t1\t0\t0\n98\t0\t0\t1\t0\n99\t1\t0\t1\t0\n100\t0\t0\t0\t0\n101\t0\t0\t1\t0\n102\t0\t0\t1\t0\n103\t0\t0\t1\t0\n104\t0\t0\t1\t0\n105\t1\t0\t1\t0\n106\t0\t1\t1\t0\n107\t0\t1\t\t0\n108\t0\t0\t\t0\n109\t0\t0\t0\t0\n110\t1\t1\t1\t1\n111\t0\t0\t\t0\n112\t0\t0\t\t0\n113\t0\t0\t1\t0\n114\t1\t1\t\t0\n115\t0\t0\t0\t0\n116\t0\t0\t0\t0\n117\t0\t1\t1\t0\n118\t\t0\t0\t0\n119\t0\t0\t\t0\n120\t0\t0\t0\t0\n121\t0\t0\t\t0\n122\t0\t0\t\t0\n123\t0\t1\t1\t0\n124\t0\t0\t0\t0\n125\t1\t1\t\t0\n126\t0\t0\t1\t0\n127\t0\t1\t1\t0\n128\t0\t0\t0\t0\n129\t1\t0\t1\t0\n130\t1\t0\t1\t0\n131\t1\t1\t\t0\n132\t\t0\t\t0\n133\t1\t0\t\t0\n134\t1\t1\t1\t0\n135\t0\t0\t0\t0\n136\t1\t1\t0\t0\n137\t0\t1\t0\t0\n138\t0\t0\t1\t0\n139\t\t0\t\t\n140\t0\t0\t1\t0\n141\t0\t0\t0\t0\n142\t1\t1\t0\t0\n143\t0\t0\t\t0\n144\t0\t0\t0\t0\n145\t0\t0\t\t0\n146\t0\t0\t0\t0\n147\t1\t1\t0\t0\n148\t0\t0\t0\t0\n149\t1\t1\t\t0\n150\t0\t0\t\t0\n151\t0\t0\t1\t0\n152\t0\t0\t0\t0\n153\t0\t1\t\t0\n154\t0\t0\t0\t0\n155\t0\t1\t0\t0\n156\t0\t0\t0\t0\n157\t0\t0\t1\t0\n158\t0\t1\t\t0\n159\t0\t0\t0\t0\n160\t0\t1\t0\t0\n161\t0\t0\t0\t0\n162\t0\t0\t1\t0\n163\t0\t1\t\t0\n164\t0\t\t\t0\n165\t1\t0\t1\t0\n166\t0\t0\t0\t0\n167\t0\t0\t1\t0\n168\t0\t0\t0\t0\n169\t0\t0\t0\t0\n170\t1\t0\t\t0\n171\t0\t1\t\t0\n172\t0\t0\t1\t0\n173\t0\t0\t\t0\n174\t0\t0\t0\t0\n175\t0\t0\t1\t0\n176\t0\t0\t0\t0\n177\t0\t0\t0\t0\n178\t1\t1\t1\t0\n179\t0\t1\t1\t0\n180\t0\t0\t\t0\n181\t0\t0\t1\t0\n182\t0\t0\t0\t0\n183\t0\t1\t1\t0\n184\t0\t0\t\t0\n185\t1\t0\t0\t0\n186\t0\t0\t\t0\n187\t0\t0\t1\t0\n188\t0\t1\t\t1\n189\t0\t0\t1\t0\n190\t1\t0\t0\t0\n191\t0\t1\t\t0\n192\t1\t0\t0\t0\n193\t0\t0\t\t0\n194\t0\t0\t1\t0\n195\t0\t0\t\t0\n196\t1\t0\t1\t0\n197\t0\t0\t0\t0\n198\t1\t0\t1\t0\n199\t1\t0\t1\t0\n200\t1\t0\t1\t0\n201\t0\t0\t1\t0\n202\t0\t0\t\t0\n203\t0\t0\t1\t0\n204\t1\t1\t1\t0\n205\t0\t0\t\t0\n206\t0\t1\t1\t0\n207\t1\t1\t\t0\n208\t0\t0\t0\t0\n209\t0\t1\t\t0\n210\t0\t0\t1\t0\n211\t0\t1\t1\t0\n212\t0\t1\t1\t0\n213\t0\t0\t0\t0\n214\t0\t0\t1\t0\n215\t0\t0\t\t0\n216\t0\t0\t1\t0\n217\t0\t0\t0\t0\n218\t0\t0\t0\t0\n219\t0\t0\t\t0\n220\t0\t0\t1\t0\n221\t0\t0\t\t0\n222\t0\t1\t\t0\n223\t0\t0\t0\t0\n224\t0\t0\t1\t0\n225\t0\t0\t\t0\n226\t0\t1\t1\t0\n227\t0\t0\t1\t0\n228\t0\t0\t\t0\n229\t0\t0\t\t0\n230\t1\t0\t\t0\n231\t0\t0\t0\t0\n232\t1\t1\t1\t0\n233\t0\t1\t0\t0\n234\t0\t0\t\t0\n235\t0\t1\t1\t0\n236\t0\t0\t0\t0\n237\t1\t0\t1\t0\n238\t0\t0\t0\t0\n239\t1\t0\t0\t0\n240\t0\t0\t0\t0\n241\t0\t0\t\t0\n242\t1\t0\t\t0\n243\t0\t0\t\t0\n244\t0\t0\t1\t0\n245\t0\t0\t\t0\n246\t0\t0\t1\t0\n247\t0\t0\t1\t0\n248\t0\t0\t0\t0\n249\t0\t0\t1\t0\n250\t0\t0\t0\t0\n251\t1\t0\t\t1\n252\t0\t0\t0\t0\n253\t1\t0\t\t0\n254\t0\t0\t\t0\n255\t0\t0\t1\t0\n256\t0\t0\t\t0\n257\t0\t0\t0\t0\n258\t0\t0\t1\t0\n259\t0\t0\t1\t0\n260\t0\t1\t0\t0\n261\t1\t0\t1\t0\n262\t0\t0\t0\t0\n263\t0\t0\t0\t0\n264\t0\t0\t1\t0\n265\t0\t1\t\t0\n266\t0\t1\t\t0\n267\t0\t0\t\t0\n268\t0\t0\t0\t0\n269\t0\t0\t1\t0\n270\t0\t0\t0\t0\n271\t0\t0\t0\t0\n272\t0\t0\t\t0\n273\t0\t0\t1\t0\n274\t0\t0\t1\t0\n275\t0\t0\t0\t0\n276\t0\t0\t1\t0\n277\t1\t0\t1\t0\n278\t1\t0\t1\t0\n279\t0\t0\t1\t0\n280\t1\t0\t\t0\n281\t1\t0\t\t1\n282\t0\t1\t0\t0\n283\t0\t0\t1\t0\n284\t0\t0\t\t0\n285\t0\t0\t\t0\n286\t1\t1\t\t0\n287\t0\t1\t\t0\n288\t0\t0\t0\t0\n289\t0\t0\t1\t0\n290\t0\t0\t0\t0\n291\t0\t0\t\t0\n292\t0\t0\t1\t0\n293\t0\t0\t0\t0\n294\t0\t0\t1\t0\n295\t1\t1\t1\t0\n296\t0\t0\t\t0\n297\t0\t0\t\t0\n298\t1\t1\t\t0\n299\t0\t0\t0\t0\n300\t0\t0\t0\t0\n301\t0\t0\t0\t0\n302\t1\t0\t0\t0\n303\t0\t0\t1\t0\n304\t0\t0\t0\t0\n305\t0\t0\t1\t0\n306\t0\t0\t0\t0\n307\t0\t0\t0\t0\n308\t0\t0\t\t0\n309\t0\t1\t1\t0\n310\t0\t1\t\t0\n311\t1\t0\t\t0\n312\t1\t1\t1\t0\n313\t1\t0\t0\t0\n314\t1\t0\t\t0\n315\t0\t1\t\t0\n316\t0\t0\t1\t0\n317\t0\t0\t0\t0\n318\t0\t0\t1\t0\n319\t0\t1\t1\t0\n320\t1\t0\t1\t0\n321\t0\t1\t\t0\n322\t0\t0\t\t0\n323\t0\t1\t\t0\n324\t1\t0\t0\t0\n325\t0\t0\t\t0\n326\t0\t0\t0\t0\n327\t1\t0\t1\t0\n328\t0\t0\t0\t0\n329\t0\t0\t0\t0\n330\t0\t0\t0\t0\n331\t0\t1\t0\t0\n332\t0\t1\t0\t0\n333\t1\t0\t0\t0\n334\t1\t0\t1\t0\n335\t1\t0\t\t0\n336\t0\t0\t\t0\n337\t0\t1\t\t0\n338\t1\t0\t\t0\n339\t0\t0\t1\t0\n340\t1\t0\t\t0\n341\t0\t0\t1\t0\n342\t0\t0\t\t0\n343\t0\t0\t0\t0\n344\t0\t0\t\t0\n345\t0\t1\t0\t0\n346\t1\t1\t\t0\n347\t0\t0\t0\t0\n348\t0\t1\t0\t0\n349\t0\t0\t1\t0\n350\t0\t0\t0\t0\n351\t0\t1\t\t0\n352\t0\t0\t1\t0\n353\t0\t0\t1\t0\n354\t0\t0\t\t0\n355\t0\t0\t0\t0\n356\t0\t0\t1\t0\n357\t0\t0\t\t0\n358\t0\t0\t0\t0\n359\t0\t0\t\t0\n360\t1\t0\t1\t0\n361\t0\t0\t1\t0\n362\t1\t0\t0\t0\n363\t0\t0\t\t0\n364\t0\t1\t\t0\n365\t1\t0\t0\t0\n366\t0\t0\t1\t0\n367\t0\t0\t\t0\n368\t0\t0\t0\t0\n369\t0\t0\t\t0\n370\t0\t0\t\t0\n371\t0\t0\t\t0\n372\t0\t0\t1\t0\n373\t1\t0\t1\t0\n374\t1\t0\t0\t0\n375\t0\t0\t\t0\n376\t0\t0\t\t0\n377\t1\t0\t\t1\n378\t0\t0\t1\t0\n379\t0\t1\t0\t0\n380\t0\t0\t0\t0\n381\t0\t0\t\t0\n382\t0\t1\t0\t0\n383\t0\t0\t0\t0\n384\t0\t0\t0\t0\n385\t0\t0\t1\t0\n386\t0\t0\t0\t0\n387\t0\t1\t\t0\n388\t0\t0\t0\t0\n389\t1\t0\t1\t0\n390\t0\t0\t0\t0\n391\t0\t0\t0\t0\n392\t0\t0\t1\t0\n393\t0\t0\t0\t0\n394\t0\t1\t0\t0\n395\t0\t0\t0\t0\n396\t1\t0\t1\t0\n397\t0\t0\t1\t0\n398\t0\t0\t0\t0\n399\t0\t0\t0\t0\n400\t0\t0\t1\t0\n401\t0\t0\t0\t0\n402\t0\t0\t0\t0\n403\t0\t0\t0\t0\n404\t0\t0\t\t0\n405\t0\t0\t0\t0\n406\t0\t0\t1\t0\n407\t0\t0\t0\t0\n408\t0\t0\t0\t0\n409\t0\t0\t0\t0\n410\t0\t0\t\t0\n411\t0\t1\t1\t0\n412\t0\t0\t1\t0\n413\t1\t1\t\t0\n414\t0\t0\t0\t0\n415\t0\t1\t0\t0\n416\t0\t0\t1\t0\n417\t0\t0\t\t0\n418\t1\t0\t\t0\n419\t0\t1\t\t0\n420\t0\t0\t0\t0\n421\t1\t0\t0\t0\n422\t1\t0\t1\t0\n423\t1\t0\t1\t0\n424\t0\t1\t0\t0\n425\t0\t1\t0\t0\n426\t1\t1\t0\t0\n427\t0\t1\t\t0\n428\t0\t0\t1\t0\n429\t1\t0\t1\t0\n430\t0\t0\t0\t0\n431\t0\t1\t1\t0\n432\t0\t0\t\t0\n433\t1\t0\t1\t0\n434\t0\t0\t1\t0\n435\t0\t0\t1\t0\n436\t0\t0\t1\t0\n437\t0\t0\t0\t0\n438\t0\t1\t0\t1",
+      "body_snippet": "Thank you Roman, here is my datafile.\n\nSoumi\n\nOn Mon, Oct 25, 2010 at 2:10 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n\n> Hi listers,\n>\n> I am trying to run NMDS in vegan package. I have a species ",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-5f905353b0ee",
+      "message_id": "<AANLkTik6MzDS28u1kvry3kAoBontSjdBUZ0T4KuFPZM4@mail.gmail.com>",
+      "from_name": "Soumi Ray",
+      "from_email_hash": "1e964e3bdfcf165d4edb7424cc26424e8909f2683e1ae290ca4fed6f6f1c50ba",
+      "date": "2010-10-25T14:47:12-04:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101025/3637c4e3/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101025/3637c4e3/attachment.pl>",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-b73893d643c4",
+      "message_id": "<1288034759.3681.1.camel@desktop-sefick>",
+      "from_name": "ssefick",
+      "from_email_hash": "3749535363b9d644aa3f61b8bf07926d79589e6ccf7dd0b75c56781ee6a32e82",
+      "date": "2010-10-25T14:25:59-05:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTik6MzDS28u1kvry3kAoBontSjdBUZ0T4KuFPZM4@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+        "<AANLkTik6MzDS28u1kvry3kAoBontSjdBUZ0T4KuFPZM4@mail.gmail.com>"
+      ],
+      "body_plain": "Try saving as a csv.  This has worked for me in the past.  And, maybe\nexplicitly set the NAs as something.  Maybe NA in the raw data.\nHTH\n\nStephen\n\nOn Mon, 2010-10-25 at 14:47 -0400, Soumi Ray wrote:\n> Hi Roman,\n> \n> here is the output:\n> \n> nmds <-read.table ('nmds.txt', header=T, row.names=1)\n> Error in scan(file, what, nmax, sep, dec, quote, skip, nlines, na.strings,\n> :\n>   line 12 did not have 5 elements\n> \n> \n> Soumi\n> \n> \n> On Mon, Oct 25, 2010 at 2:10 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n> \n> > Hi listers,\n> >\n> > I am trying to run NMDS in vegan package. I have a species dataset - with\n> > columns as species and rows as variables. All my data are 0/1\n> > (presence/absence). My data has missing values. I saved my data in txt file\n> > and the missing values are blank spaces. I am using the syntax:\n> > <nmds <-read.table ('nmds.txt', header=T, rows.names=1, sep=\"\\t\")\n> > <nmds.mds.alt <- metaMDS (nmds, distance=\"bray\", k=2, autotransform=FALSE)\n> >\n> > But it is showing me the error:\n> > Error in distfun(comm, method = distance, ...) :\n> >   NA/NaN/Inf in foreign function call (arg 1)\n> > In addition: Warning message:\n> > In distfun(comm, method = distance, ...) :\n> >   you have empty rows: their dissimilarities may be meaningless in method\n> > bray\n> >\n> > Could anyone kindly let me know where am I going wrong? I admit i am new to\n> > R, trying to self tutor myself.\n> >\n> > Thank you,\n> >\n> > Regards,\n> >\n> > Soumi\n> >\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Try saving as a csv.  This has worked for me in the past.  And, maybe\nexplicitly set the NAs as something.  Maybe NA in the raw data.\nHTH\n\nStephen\n\nOn Mon, 2010-10-25 at 14:47 -0400, Soumi Ray wrote:\n",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 2,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-2032b42e7fdf",
+      "message_id": "<C8EBCA9C.12D44%jari.oksanen@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2010-10-26T00:00:28+03:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+      "references": [],
+      "body_plain": "On 25/10/10 21:10 PM, \"Soumi Ray\" <soumiray74 at gmail.com> wrote:\n\n> Hi listers,\n> \n> I am trying to run NMDS in vegan package. I have a species dataset - with\n> columns as species and rows as variables. All my data are 0/1\n> (presence/absence). My data has missing values. I saved my data in txt file\n> and the missing values are blank spaces. I am using the syntax:\n> <nmds <-read.table ('nmds.txt', header=T, rows.names=1, sep=\"\\t\")\n> <nmds.mds.alt <- metaMDS (nmds, distance=\"bray\", k=2, autotransform=FALSE)\n> \nSoumi,\n\nThe basic problem with metaMDS of vegan (NMDS is in MASS) is that you have\nmissing values. You are not supposed to have missing values in species data,\nand most dissimilarity measures cannot cope with those (some can: check the\ndocs). Further, it is usually not meaningful to handle community composition\nof empty communities: their composition is NA. Most dissimilarity measures\ncannot handle such cases meaningfully. Some can handle those, but I'm not\nsure if they do it meaningfully. Getting around these two things may help\nyou further in metaMDS.\n\nCheers, Jari Oksanen\n> But it is showing me the error:\n> Error in distfun(comm, method = distance, ...) :\n>   NA/NaN/Inf in foreign function call (arg 1)\n> In addition: Warning message:\n> In distfun(comm, method = distance, ...) :\n>   you have empty rows: their dissimilarities may be meaningless in method\n> bray\n> \n> Could anyone kindly let me know where am I going wrong? I admit i am new to\n> R, trying to self tutor myself.\n> \n> Thank you,\n> \n> Regards,\n> \n> Soumi\n> \n> [[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "On 25/10/10 21:10 PM, \"Soumi Ray\" <soumiray74 at gmail.com> wrote:\n\n> Hi listers,\n> \n> I am trying to run NMDS in vegan package. I have a species dataset - with\n> columns as species and rows as variab",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-1196d3f7b1e7",
+      "message_id": "<20101026092718.GA9693@sevenc.co.za>",
+      "from_name": "Karen Kotschy",
+      "from_email_hash": "4a0b42aa01743019836290520ff59c310e2cf1755334d0f39cd53564e1322a6f",
+      "date": "2010-10-26T11:27:18+02:00",
+      "subject": "[R-sig-eco] Relating abundance and cover data",
+      "subject_clean": "Relating abundance and cover data",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear list\n\nThis seems like something I really should know by now, but I'm getting so \nconfused, I'd really appreciate a little help!\n\nI am trying to model the relationship between relative abundance (%) and \nrelative cover (%) data for plant species. I want to know to \nwhat extent the 2 measures correlate, and to compare the extent of this \ncorrelation at different sites. Obviously, both sets of data are \nzero-inflated and highly skewed.\n\nThe \"traditional\" thing to do would be to log-transform both of them and \nuse lm(). However, a recent paper (O'Hara & Kotze, 2010) argues that a \nmuch better approach is to use glm() and to specify Poisson or negative \nbinomial models, rather than using transformations. This does make a lot \nof sense, I think!\n\nI have tried using \"quasipoisson\" and \"quasibinomial\" families in glm(), \nbut I am left with a number of questions: \n\n1) Should relative abundance and relative cover be treated as \"count\" \ndata, given that the values are not actually integers but rather \npercentages?\n\n2) Which parts of the output of glm(...family=quasipoisson(link=log)) do I \nuse to evaluate the fit? Just residual deviance and the p value?\n\n3) How do I plot the data so as to graphically represent the model? If I \nam using a log link should I use log axes for x and y?\n\nThanks so much for any help!\nKaren\n\n---\nKaren Kotschy\nCentre for Water in the Environment\nUniversity of the Witwatersrand, Johannesburg\nTel: +2711 717-6425\n\n-- \nThis message has been scanned for viruses and\ndangerous content by MailScanner, and is\nbelieved to be clean.",
+      "body_snippet": "Dear list\n\nThis seems like something I really should know by now, but I'm getting so \nconfused, I'd really appreciate a little help!\n\nI am trying to model the relationship between relative abundance (",
+      "thread_id": "thread-1196d3f7b1e7",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-9e3a0643eb4d",
+      "message_id": "<AANLkTinGFQuiJCucL9tdsVh015WygMdFPznzoJMfKfD=@mail.gmail.com>",
+      "from_name": "Soumi Ray",
+      "from_email_hash": "1e964e3bdfcf165d4edb7424cc26424e8909f2683e1ae290ca4fed6f6f1c50ba",
+      "date": "2010-10-26T14:30:28-04:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101026/778468a6/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101026/778468a6/attachment.pl>",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-a8491d922bc4",
+      "message_id": "<AANLkTikdSaoyYhPeL1ah-CVcZmeNrSaEWm4BZ7W+C6mG@mail.gmail.com>",
+      "from_name": "stephen sefick",
+      "from_email_hash": "3749535363b9d644aa3f61b8bf07926d79589e6ccf7dd0b75c56781ee6a32e82",
+      "date": "2010-10-26T13:37:13-05:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTinGFQuiJCucL9tdsVh015WygMdFPznzoJMfKfD=@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+        "<AANLkTinGFQuiJCucL9tdsVh015WygMdFPznzoJMfKfD=@mail.gmail.com>"
+      ],
+      "body_plain": "highlight all of the cells in the data matrix and in the edit menu (?)\nyou should find \"find and replace\".\nHTH,\n\nStephen\n\nOn Tue, Oct 26, 2010 at 1:30 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n> Hi all,\n> It worked when I replaced the blanks (missing) in my spreadsheet as NA and\n> saved it as csv.\n> Stephen, my data is in excel spreadsheet, I have no clue how to replace all\n> the blank cells in the huge dataset as NA.\n>\n> Thank for the help.\n>\n> Soumi\n>\n> On Mon, Oct 25, 2010 at 2:10 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n>\n>> Hi listers,\n>>\n>> I am trying to run NMDS in vegan package. I have a species dataset - with\n>> columns as species and rows as variables. All my data are 0/1\n>> (presence/absence). My data has missing values. I saved my data in txt file\n>> and the missing values are blank spaces. I am using the syntax:\n>> <nmds <-read.table ('nmds.txt', header=T, rows.names=1, sep=\"\\t\")\n>> <nmds.mds.alt <- metaMDS (nmds, distance=\"bray\", k=2, autotransform=FALSE)\n>>\n>> But it is showing me the error:\n>> Error in distfun(comm, method = distance, ...) :\n>> ? NA/NaN/Inf in foreign function call (arg 1)\n>> In addition: Warning message:\n>> In distfun(comm, method = distance, ...) :\n>> ? you have empty rows: their dissimilarities may be meaningless in method\n>> bray\n>>\n>> Could anyone kindly let me know where am I going wrong? I admit i am new to\n>> R, trying to self tutor myself.\n>>\n>> Thank you,\n>>\n>> Regards,\n>>\n>> Soumi\n>>\n>\n> ? ? ? ?[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\n\n-- \nStephen Sefick\n____________________________________\n| Auburn University? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?? |\n| Department of Biological Sciences? ? ? ? ?? |\n| 331 Funchess Hall? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? |\n| Auburn, Alabama? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?? |\n| 36849? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? |\n|___________________________________|\n| sas0025 at auburn.edu? ? ? ? ? ? ? ? ? ? ? ? ? ?? |\n| http://www.auburn.edu/~sas0025? ? ? ? ? ?? |\n|___________________________________|\n\nLet's not spend our time and resources thinking about things that are\nso little or so large that all they really do for us is puff us up and\nmake us feel like gods.? We are mammals, and have not exhausted the\nannoying little problems of being mammals.\n\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? -K. Mullis\n\n\"A big computer, a complex algorithm and a long time does not equal science.\"\n\n? ? ? ? ? ? ? ? ? ? ? ? ? ? ? -Robert Gentleman",
+      "body_snippet": "highlight all of the cells in the data matrix and in the edit menu (?)\nyou should find \"find and replace\".\nHTH,\n\nStephen\n\nOn Tue, Oct 26, 2010 at 1:30 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n> ",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 2,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-0950056cd7f1",
+      "message_id": "<1288118699.2358.40.camel@desktop.localdomain>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-10-26T19:44:59+01:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTinGFQuiJCucL9tdsVh015WygMdFPznzoJMfKfD=@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+        "<AANLkTinGFQuiJCucL9tdsVh015WygMdFPznzoJMfKfD=@mail.gmail.com>"
+      ],
+      "body_plain": "On Tue, 2010-10-26 at 14:30 -0400, Soumi Ray wrote:\n> Hi all,\n> It worked when I replaced the blanks (missing) in my spreadsheet as NA and\n> saved it as csv.\n\nI really, really doubt that. A blank is the same as an NA as far as\nread.csv() and read.table are concerned. With this in a csv file named\n\"foo.csv\":\n\n\"Site\",\"Var1\",\"Var2\",\"Var3\"\n\"A\",1,2,1\n\"B\",2,3,2\n\"C\",3,\"NA\",3\n\"D\",4,3,4\n\"E\",5,4,5\n\"F\",,4,6\n\"G\",6,5,7\n\"H\",7,67,\n\"I\",8,7,\"NA\"\n\"J\",9,8,3\n\"K\",10,1,4\n\"L\",11,9,5\n\nWhen read into R, the two blanks *and* the two \"NA\" strings are all\nconverted to NA (missing) within R:\n\n> read.csv(\"foo.csv\")\n   Site Var1 Var2 Var3\n1     A    1    2    1\n2     B    2    3    2\n3     C    3   NA    3\n4     D    4    3    4\n5     E    5    4    5\n6     F   NA    4    6\n7     G    6    5    7\n8     H    7   67   NA\n9     I    8    7   NA\n10    J    9    8    3\n11    K   10    1    4\n12    L   11    9    5\n> str(read.csv(\"foo.csv\"))\n'data.frame':\t12 obs. of  4 variables:\n $ Site: Factor w/ 12 levels \"A\",\"B\",\"C\",\"D\",..: 1 2 3 4 5 6 7 8 9\n10 ...\n $ Var1: int  1 2 3 4 5 NA 6 7 8 9 ...\n $ Var2: int  2 3 NA 3 4 4 5 67 7 8 ...\n $ Var3: int  1 2 3 4 5 6 7 NA NA 3 ...\n\n> Stephen, my data is in excel spreadsheet, I have no clue how to replace all\n> the blank cells in the huge dataset as NA.\n\nYou don't need to. Blank is fine. As Jari pointed out, your problems\nwere due to other things. That these sorted themselves out whilst you\nfiddled with your data, does not mean the fiddling worked ;-)\n\nHTH\n\nG\n\n> Thank for the help.\n> \n> Soumi\n> \n> On Mon, Oct 25, 2010 at 2:10 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n> \n> > Hi listers,\n> >\n> > I am trying to run NMDS in vegan package. I have a species dataset - with\n> > columns as species and rows as variables. All my data are 0/1\n> > (presence/absence). My data has missing values. I saved my data in txt file\n> > and the missing values are blank spaces. I am using the syntax:\n> > <nmds <-read.table ('nmds.txt', header=T, rows.names=1, sep=\"\\t\")\n> > <nmds.mds.alt <- metaMDS (nmds, distance=\"bray\", k=2, autotransform=FALSE)\n> >\n> > But it is showing me the error:\n> > Error in distfun(comm, method = distance, ...) :\n> >   NA/NaN/Inf in foreign function call (arg 1)\n> > In addition: Warning message:\n> > In distfun(comm, method = distance, ...) :\n> >   you have empty rows: their dissimilarities may be meaningless in method\n> > bray\n> >\n> > Could anyone kindly let me know where am I going wrong? I admit i am new to\n> > R, trying to self tutor myself.\n> >\n> > Thank you,\n> >\n> > Regards,\n> >\n> > Soumi\n> >\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Tue, 2010-10-26 at 14:30 -0400, Soumi Ray wrote:\n> Hi all,\n> It worked when I replaced the blanks (missing) in my spreadsheet as NA and\n> saved it as csv.\n\nI really, really doubt that. A blank is t",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 2,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-421e3dc209e9",
+      "message_id": "<4CC72A0F.9080907@gmail.com>",
+      "from_name": "Ben Bolker",
+      "from_email_hash": "18f6c2b0b79bec76f7afe0fad5e36fffd27297982eaee9a3a21101b9461258e5",
+      "date": "2010-10-26T15:20:47-04:00",
+      "subject": "[R-sig-eco] Relating abundance and cover data",
+      "subject_clean": "Relating abundance and cover data",
+      "in_reply_to": "<20101026092718.GA9693@sevenc.co.za>",
+      "references": [
+        "<20101026092718.GA9693@sevenc.co.za>"
+      ],
+      "body_plain": "On 10-10-26 05:27 AM, Karen Kotschy wrote:\n> Dear list\n> \n> This seems like something I really should know by now, but I'm getting so \n> confused, I'd really appreciate a little help!\n> \n> I am trying to model the relationship between relative abundance (%) and \n> relative cover (%) data for plant species. I want to know to \n> what extent the 2 measures correlate, and to compare the extent of this \n> correlation at different sites. Obviously, both sets of data are \n> zero-inflated and highly skewed.\n> \n> The \"traditional\" thing to do would be to log-transform both of them and \n> use lm(). However, a recent paper (O'Hara & Kotze, 2010) argues that a \n> much better approach is to use glm() and to specify Poisson or negative \n> binomial models, rather than using transformations. This does make a lot \n> of sense, I think!\n> \n> I have tried using \"quasipoisson\" and \"quasibinomial\" families in glm(), \n> but I am left with a number of questions: \n> \n> 1) Should relative abundance and relative cover be treated as \"count\" \n> data, given that the values are not actually integers but rather \n> percentages?\n> \n> 2) Which parts of the output of glm(...family=quasipoisson(link=log)) do I \n> use to evaluate the fit? Just residual deviance and the p value?\n> \n> 3) How do I plot the data so as to graphically represent the model? If I \n> am using a log link should I use log axes for x and y?\n> \n> Thanks so much for any help!\n> Karen\n\n\n   Interesting paper by O'Hara and Kotze, but it does not refer to cover\n(compositional) data, but rather to count data.  Cover data is actually\na considerably harder problem to handle in the generalized linear model\ncase (alas), *unless* the data come from a point count of some sort\n(i.e., where you know the 'denominator', or the total number of counts\nthat would correspond to 100% cover, in which case you can use a\nbinomial GLM: see e.g. [Seavy, N. E, S. Quader, John D. Alexander, and\nC. John Ralph. 2002. Generalized linear models and point count data:\nstatistical considerations for the design and analysis of monitoring\nstudies. In Bird Conservation Implementation and Integration in the\nAmericas: Proceedings of the Third International Partners in Flight\nConference, ed. C. John Ralph and Terrell D. Rich, 2:744-753. Asilomar,\nCA: U.S. Dept. of Agriculture, Forest Service, Pacific Southwest\nResearch Station, March 20.\nhttp://www.fs.fed.us/psw/publications/documents/psw_gtr191/psw_gtr191_0744-0753_seavy.pdf.]\n\n   The natural (to a statistician) way to deal with this would be via\nbeta regression [Smithson, Michael, and Jay Verkuilen. 2006. A better\nlemon squeezer? Maximum-likelihood regression with beta-distributed\ndependent variables. Psychological Methods 11, no. 1 (March): 54-71.\ndoi:2006-03820-004.]  Beta distributions are a natural description of\ncover -- they are distributions defined on [0,1] with a simple\nmathematical description, that can be fitted similarly to GLMs [see the\n'betareg' package on CRAN].  I think I heard a talk at ESA a few years\nago that used beta regression (or maybe I just thought it should have\nused beta regression).  There's one big problem, though -- zeros do not\nnaturally fit into the statistical framework, so you have to do some\nkind of ad hoc fix for this (this is discussed, briefly, in Smithson and\nVerkuilen 2006).  I looked for ecology papers that used beta regression\nor cited SV2006, but didn't find very many (see below).\n\n   If you have a point count statistic, I would analyze your data in\nterms of 'number of points occupied out of total census points', with a\nbinomial or quasibinomial model.  If they are assessed in some other way\nwhere there is no natural denominator, I would either (sigh) use\ntransformations or look into beta regression.\n\n  I'd be interested to hear other opinions.\n\n  good luck,\n    Ben Bolker\n\n\n\n\nBoughton, Elizabeth H., Pedro F. Quintana-Ascencio, and Patrick J.\nBohlen. 2010. Refuge effects of Juncus effusus in grazed, subtropical\nwetland plant communities. Plant Ecology (9).\ndoi:10.1007/s11258-010-9836-4.\nhttp://www.springerlink.com/content/u18v4526k10uw2p1/.\nIrvine, Kathryn M., and Thomas J. Rodhouse. 2010. Power analysis for\ntrend in ordinal cover classes: implications for long-term vegetation\nmonitoring. Journal of Vegetation Science (8): no-no.\ndoi:10.1111/j.1654-1103.2010.01214.x.\nhttp://onlinelibrary.wiley.com/doi/10.1111/j.1654-1103.2010.01214.x/full.\nRoyo, Alejandro A., Ramona Bates, and Elizabeth P. Lacey. 2008.\nDemographic constraints in three populations of Lobelia boykinii: a rare\nwetland endemic. The Journal of the Torrey Botanical Society 135, no. 2\n(4): 189-199. doi:10.3159/07-RA-039.1.\nhttp://www.bioone.org/doi/abs/10.3159/07-RA-039.1?cookieSet=1&prevSearch=.",
+      "body_snippet": "On 10-10-26 05:27 AM, Karen Kotschy wrote:\n> Dear list\n> \n> This seems like something I really should know by now, but I'm getting so \n> confused, I'd really appreciate a little help!\n> \n> I am trying",
+      "thread_id": "thread-1196d3f7b1e7",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-122364f2c29a",
+      "message_id": "<1288141029.26139.97.camel@globetrotter>",
+      "from_name": "Etienne Laliberté",
+      "from_email_hash": "00e279a650bf2cb3cba9358398c4d14a2ff31fa3dafc8b5bb893f9bee376c52c",
+      "date": "2010-10-27T08:57:09+08:00",
+      "subject": "[R-sig-eco] Relating abundance and cover data",
+      "subject_clean": "Relating abundance and cover data",
+      "in_reply_to": "<20101026092718.GA9693@sevenc.co.za>",
+      "references": [
+        "<20101026092718.GA9693@sevenc.co.za>"
+      ],
+      "body_plain": "Dear Karen,\n\nI was recently confronted with a similar problem, see paper:\n\nhttp://www.elaliberte.info/Laliberte_et_al_2010_RangEcolManag.pdf?attredirects=0\n\nWe ended up using major axis regression on transformed data, among other\nthings. Then we simply plotted the relative abundance vs relative cover\nof different species and compared against the 1:1 line.\n\nI do realize that this is simplistic, a bit ad hoc and not very pretty\n(in part because normality is assumed with MA regression). That said, I\nthought it did allow us to quickly see which sampling method\nover/under-estimates different species, which was the main goal. But I'd\nbe interested in knowing what approach you end up using.\n\nIf anything, you could cite that rather unexciting paper as a good\nexample of what the \"bad approach\" is -- it may end up being the only\ntime it ever gets cited! :)\n\nCheers\n\nEtienne\n\n\n\nOn Tue, 2010-10-26 at 11:27 +0200, Karen Kotschy wrote:\n> Dear list\n> \n> This seems like something I really should know by now, but I'm getting so \n> confused, I'd really appreciate a little help!\n> \n> I am trying to model the relationship between relative abundance (%) and \n> relative cover (%) data for plant species. I want to know to \n> what extent the 2 measures correlate, and to compare the extent of this \n> correlation at different sites. Obviously, both sets of data are \n> zero-inflated and highly skewed.\n> \n> The \"traditional\" thing to do would be to log-transform both of them and \n> use lm(). However, a recent paper (O'Hara & Kotze, 2010) argues that a \n> much better approach is to use glm() and to specify Poisson or negative \n> binomial models, rather than using transformations. This does make a lot \n> of sense, I think!\n> \n> I have tried using \"quasipoisson\" and \"quasibinomial\" families in glm(), \n> but I am left with a number of questions: \n> \n> 1) Should relative abundance and relative cover be treated as \"count\" \n> data, given that the values are not actually integers but rather \n> percentages?\n> \n> 2) Which parts of the output of glm(...family=quasipoisson(link=log)) do I \n> use to evaluate the fit? Just residual deviance and the p value?\n> \n> 3) How do I plot the data so as to graphically represent the model? If I \n> am using a log link should I use log axes for x and y?\n> \n> Thanks so much for any help!\n> Karen\n> \n> ---\n> Karen Kotschy\n> Centre for Water in the Environment\n> University of the Witwatersrand, Johannesburg\n> Tel: +2711 717-6425\n> \n\n\n-- \nEtienne Lalibert?\n================================\nSchool of Plant Biology, M090\nThe University of Western Australia\n35 Stirling Highway\nCrawley, Perth\nWestern Australia 6009\nPhone: +61 8 6488 2214\nwww.elaliberte.info",
+      "body_snippet": "Dear Karen,\n\nI was recently confronted with a similar problem, see paper:\n\nhttp://www.elaliberte.info/Laliberte_et_al_2010_RangEcolManag.pdf?attredirects=0\n\nWe ended up using major axis regression on ",
+      "thread_id": "thread-1196d3f7b1e7",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-889ab8f56a03",
+      "message_id": "<AANLkTi=a3kdCXL1A8NpyGNs6LaJrjXS4d+r2uRkEgpBC@mail.gmail.com>",
+      "from_name": "Soumi Ray",
+      "from_email_hash": "1e964e3bdfcf165d4edb7424cc26424e8909f2683e1ae290ca4fed6f6f1c50ba",
+      "date": "2010-10-26T23:03:39-04:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101026/c2a9ccd9/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101026/c2a9ccd9/attachment.pl>",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-b6bfaddbf55a",
+      "message_id": "<1288161055.2358.54.camel@desktop.localdomain>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2010-10-27T07:30:55+01:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": "<AANLkTi=a3kdCXL1A8NpyGNs6LaJrjXS4d+r2uRkEgpBC@mail.gmail.com>",
+      "references": [
+        "<AANLkTik-ArreJm9KdjtJE5LXr7bqOxoaFvtjZhU8jgqC@mail.gmail.com>",
+        "<AANLkTi=a3kdCXL1A8NpyGNs6LaJrjXS4d+r2uRkEgpBC@mail.gmail.com>"
+      ],
+      "body_plain": "On Tue, 2010-10-26 at 23:03 -0400, Soumi Ray wrote:\n> Hi all,\n> \n> Finally I could get a NMDS plot! My first venture in R!  I used ordiplot in\n> vegan to make the graph - I have three categories of sites (A-site#1-4,\n> B-site#5-15, C=site#16-22) - is it possible to represent these three\n> cateories with different symbols. I followed the vegan package code :\n> \n> fig <-ordiplot (nmds.mds, type=\"none\")\n> point (fig, \"sites\", pch=21, col=\"red\", bg=\"yellow\")\n  ^^^^^^\nI presume points() here.\n\nYes. You need a factor variable holding the site info, to act as an\nindicator variable selecting from a choice of plotting characters. The\nlatter are provided as argument pch.\n\n## Indicator variable - a factor\nmy.site <- factor(rep(c(\"A\",\"B\",\"C\"), times = c(4,11,7)))\n\n## add points - here we use pch = c(21,22,23)\n## and index pch by my.site\npoints(fig, \"sites\", pch=(21:23)[my.site], col=\"red\", bg=\"yellow\")\n\nIt is instructive to visualise what is going on here. Internally,\nmy.site can be thought of as a vector of 1s, 2s, and 3s. A 1 refers to\n\"A\", a 2 to \"B\" and so on. (21:23) is also a vector, of length 3, if we\nask for element 1 from this vector we get 21, element 2 we get 22 etc.\n\nSo when we do:\n\n(21:23)[my.site]\n\nwhat we get is a vector that is the same length as my.site containing\nthe values, 21, 22, and 23 only. In this way, we specify a 'pch' for\nevery site, and which pch is chosen depends on which groups of sites a\nsample belongs to.\n\n> head((21:23)[my.site])\n[1] 21 21 21 21 22 22\n> length((21:23)[my.site])\n[1] 22\n> length(my.site)\n[1] 22\n\nHTH\n\nG\n\n> Thanks\n> \n> Soumi\n> \n> \n> \n> \n> \n> On Mon, Oct 25, 2010 at 2:10 PM, Soumi Ray <soumiray74 at gmail.com> wrote:\n> \n> > Hi listers,\n> >\n> > I am trying to run NMDS in vegan package. I have a species dataset - with\n> > columns as species and rows as variables. All my data are 0/1\n> > (presence/absence). My data has missing values. I saved my data in txt file\n> > and the missing values are blank spaces. I am using the syntax:\n> > <nmds <-read.table ('nmds.txt', header=T, rows.names=1, sep=\"\\t\")\n> > <nmds.mds.alt <- metaMDS (nmds, distance=\"bray\", k=2, autotransform=FALSE)\n> >\n> > But it is showing me the error:\n> > Error in distfun(comm, method = distance, ...) :\n> >   NA/NaN/Inf in foreign function call (arg 1)\n> > In addition: Warning message:\n> > In distfun(comm, method = distance, ...) :\n> >   you have empty rows: their dissimilarities may be meaningless in method\n> > bray\n> >\n> > Could anyone kindly let me know where am I going wrong? I admit i am new to\n> > R, trying to self tutor myself.\n> >\n> > Thank you,\n> >\n> > Regards,\n> >\n> > Soumi\n> >\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Tue, 2010-10-26 at 23:03 -0400, Soumi Ray wrote:\n> Hi all,\n> \n> Finally I could get a NMDS plot! My first venture in R!  I used ordiplot in\n> vegan to make the graph - I have three categories of si",
+      "thread_id": "thread-d5ff71637642",
+      "thread_depth": 2,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-2363d4e6727b",
+      "message_id": "<4CC80608.5060404@mail.iastate.edu>",
+      "from_name": "Philip Dixon",
+      "from_email_hash": "c7ab0e39ed36f833aa9dbccaa8e2d706ae3dd58a49cc15e168113bb3aec43195",
+      "date": "2010-10-27T05:59:20-05:00",
+      "subject": "[R-sig-eco] Relating species abundance and cover",
+      "subject_clean": "Relating species abundance and cover",
+      "in_reply_to": "<mailman.1.1288173601.27526.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1288173601.27526.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "Karen,\n\nI suggest you step back and ask two questions:\n1) what are you trying to do? (i.e. what is the real goal?)\n2) what do you do it to?  (i.e. what's the appropriate data?)\n\nDo you want to construct a model or estimate correlations?  Your \ndetailed questions suggest that your real interest is the correlations.  \nIf so, you don't need an explicit model.  Just estimate the \ncorrelation.  You get to choose how to define correlation.  The four \nmost common choices are Pearson correlation on the original scale, \nPearson correlation on some transformed scale, Spearman (rank) \ncorrelation, or Kendall's (tau) correlation.\n\nI presume the 0's arise from species that are absent from a site, i.e. a \n(0,0) pair of (abundance, cover).  Is it appropriate to include these?  \nYou could define correlation in three ways:\n1) conditional on a species present at a site.  That eliminates all the \n(0,0).\n2) conditional on a species present in the regional species pool.  This \nMAY be the same as conditional on a species present in your data set.  \nYou clearly have the second.  The BIG issue is whether 'in your data' is \nan adequate representation of 'in the regional species pool'.\n3) conditional on all extant species in your taxonomic group.  That adds \nadditional (0,0) pairs for all species present in other regions.\nIf you really want to model the relationship, this issue is still important.\n\nBest wishes,\nPhilip Dixon",
+      "body_snippet": "Karen,\n\nI suggest you step back and ask two questions:\n1) what are you trying to do? (i.e. what is the real goal?)\n2) what do you do it to?  (i.e. what's the appropriate data?)\n\nDo you want to constru",
+      "thread_id": "thread-2363d4e6727b",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-b6c1fb14f6ea",
+      "message_id": "<4CC8061B.2070708@mail.iastate.edu>",
+      "from_name": "Philip Dixon",
+      "from_email_hash": "c7ab0e39ed36f833aa9dbccaa8e2d706ae3dd58a49cc15e168113bb3aec43195",
+      "date": "2010-10-27T05:59:39-05:00",
+      "subject": "[R-sig-eco] Relating species abundance and cover",
+      "subject_clean": "Relating species abundance and cover",
+      "in_reply_to": "<mailman.1.1288173601.27526.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1288173601.27526.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "Karen,\n\nI suggest you step back and ask two questions:\n1) what are you trying to do? (i.e. what is the real goal?)\n2) what do you do it to?  (i.e. what's the appropriate data?)\n\nDo you want to construct a model or estimate correlations?  Your \ndetailed questions suggest that your real interest is the correlations.  \nIf so, you don't need an explicit model.  Just estimate the \ncorrelation.  You get to choose how to define correlation.  The four \nmost common choices are Pearson correlation on the original scale, \nPearson correlation on some transformed scale, Spearman (rank) \ncorrelation, or Kendall's (tau) correlation.\n\nI presume the 0's arise from species that are absent from a site, i.e. a \n(0,0) pair of (abundance, cover).  Is it appropriate to include these?  \nYou could define correlation in three ways:\n1) conditional on a species present at a site.  That eliminates all the \n(0,0).\n2) conditional on a species present in the regional species pool.  This \nMAY be the same as conditional on a species present in your data set.  \nYou clearly have the second.  The BIG issue is whether 'in your data' is \nan adequate representation of 'in the regional species pool'.\n3) conditional on all extant species in your taxonomic group.  That adds \nadditional (0,0) pairs for all species present in other regions.\nIf you really want to model the relationship, this issue is still important.\n\nBest wishes,\nPhilip Dixon",
+      "body_snippet": "Karen,\n\nI suggest you step back and ask two questions:\n1) what are you trying to do? (i.e. what is the real goal?)\n2) what do you do it to?  (i.e. what's the appropriate data?)\n\nDo you want to constru",
+      "thread_id": "thread-b6c1fb14f6ea",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-42e18ebee744",
+      "message_id": "<AD82EC0E2CED0E47BA8AA205DD7BD20A51F85439@BL2PRD0103MB038.prod.exchangelabs.com>",
+      "from_name": "John Jay Wiley Jr.",
+      "from_email_hash": "435c49d3809cdebee7660bc0a6b8cf20e4e25b0a674859d7075654ba8ae6252e",
+      "date": "2010-10-27T14:31:15Z",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "This is not necessarily an R method, but may be useful to some.\n\nIn Excel, one can quickly replace blank cells with a particular value (e.g., 0, NA) by the following method:\n\n1) Select the data region\n2) ctrl+g (Go To)\n3) Click \"special\"\n4) Select \"blanks\"\n5) Click \"OK\" [All blanks will now be selected, and one blank will be the active cell]\n6) Type \"0\" [or NA, etc.]\n7) ctrl+enter [All selected blanks are now filled with 0's]\n\nCheers,\nJohn J. Wiley, Jr.\nPhD student\nDept. of Env. For. Bio.\nSUNY ESF\n1 Forestry Dr.\nSyracuse, NY 13210\n740.590.6121\n\n----------------------------------------------------------------------\n\nDate: Tue, 26 Oct 2010 14:30:28 -0400\nFrom: Soumi Ray <soumiray74 at gmail.com>\nTo: r-sig-ecology at r-project.org\nSubject: Re: [R-sig-eco] NMDS vegan\nMessage-ID:\n        <AANLkTinGFQuiJCucL9tdsVh015WygMdFPznzoJMfKfD=@mail.gmail.com>\nContent-Type: text/plain\n\nHi all,\nIt worked when I replaced the blanks (missing) in my spreadsheet as NA and\nsaved it as csv.\nStephen, my data is in excel spreadsheet, I have no clue how to replace all\nthe blank cells in the huge dataset as NA.\n\nThank for the help.\n\nSoumi",
+      "body_snippet": "This is not necessarily an R method, but may be useful to some.\n\nIn Excel, one can quickly replace blank cells with a particular value (e.g., 0, NA) by the following method:\n\n1) Select the data region",
+      "thread_id": "thread-42e18ebee744",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-e7e6b4819c0c",
+      "message_id": "<B9E5A5AC60155740A89769A323B828BA51F122204D@VPEXCH08.purdue.lcl>",
+      "from_name": "Pekin, Burak K",
+      "from_email_hash": "cd3430ab481ce6d9ba0bb70fdb5f7e158e72470e2eb0517ae1b0df8d2a82c9aa",
+      "date": "2010-10-28T11:11:03-04:00",
+      "subject": "[R-sig-eco] NMDS vegan",
+      "subject_clean": "NMDS vegan",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101028/686ea4d5/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20101028/686ea4d5/attachment.pl>",
+      "thread_id": "thread-e7e6b4819c0c",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-e144273892c5",
+      "message_id": "<AANLkTi=jF8AbZW-jTFRjsa2b9yU6QLb2pFjWrT0dJY6T@mail.gmail.com>",
+      "from_name": "Alessandro Gherlenda",
+      "from_email_hash": "cdc2fff68e233ecad81c9bb427dc7410fc3b40b4618a91a3ff6eabb4121b9b03",
+      "date": "2010-10-28T20:05:42+02:00",
+      "subject": "[R-sig-eco] hierarchical partitioning in generalized linear mixed models",
+      "subject_clean": "hierarchical partitioning in generalized linear mixed models",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear colleagues,\n\nI would to use hierarchical partitioning methods to evaluate variance\ncontributions of different predictors as proposed by Chevan and\nSutherland (1991) and Mac Nally (2000 & 2002), within a generalized\nlinear mixed modelling framework. The standard package in R for\nhierarchical partioning is hier.part.  However, the hier.part  package\nonly works within a generalized linear modelling framework.  I was\nwondering wether there is any function out there that might perform\nhierarchical partioning for mixed models.\n\nthanks in advance\n\nBest wishes,\n\nAlessandro\n\n\nChevan, A. & Sutherland, M. (1991) Hierarchical partitioning. American\nStatistician, 45, 90?96.\n\nMac Nally, R. (2000) Regression and model-building in conservation\nbiology, biogeography and ecology: the distinction between?and\nreconciliation of??predictive?and ?explanatory?models. Biodiversity\nand Conservation, 9, 655?671.\n\nMac Nally, R. (2002) Multiple regression and inference in ecology and\nconservation biology: further comments on identifying important\npredictor variables. Biodiversity and Conservation, 11, 1397?1401.\n\n\n--\nAlessandro Gherlenda\nEcological Consultant-Bologna Italy",
+      "body_snippet": "Dear colleagues,\n\nI would to use hierarchical partitioning methods to evaluate variance\ncontributions of different predictors as proposed by Chevan and\nSutherland (1991) and Mac Nally (2000 & 2002), w",
+      "thread_id": "thread-e144273892c5",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-635469ca323b",
+      "message_id": "<4CCA65DE.7020001@ufz.de>",
+      "from_name": "Carsten Dormann",
+      "from_email_hash": "7de2b03457c9086c81d19d43c6bb620436859580c68f7d0c5c042e3b17a24a6f",
+      "date": "2010-10-29T08:12:46+02:00",
+      "subject": "[R-sig-eco] hierarchical partitioning in generalized linear mixed models",
+      "subject_clean": "hierarchical partitioning in generalized linear mixed models",
+      "in_reply_to": "<AANLkTi=jF8AbZW-jTFRjsa2b9yU6QLb2pFjWrT0dJY6T@mail.gmail.com>",
+      "references": [
+        "<AANLkTi=jF8AbZW-jTFRjsa2b9yU6QLb2pFjWrT0dJY6T@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Alessandro,\n\nat the risk of inciting furious comments, I like to express my doubts \nabout the usefulness of hierarchical partitioning as a way to quantify \nthe contribution of separate variables. My concern has two facets: one \nis that the method is ad hoc, proposed rather tentatively by Chevan & \nSutherland, more as an option one could consider for simple cases than \nas the silver bullet it is currently often sold. For example, it is \nrestricted to linear combinations and hence doesn't accommodate \npolynomial terms for a variable.\nSecondly, my experience is that it doesn't allow me to really \ndifferentiate between joined effects caused by the collinearity of \nvariables and those caused by interactions. The first I would regard as \n\"problematic\" (in the sense that variance inflation combined with model \nselection can cause serious bias) while the second I find ecologically \nhighly relevant and interesting.\n\n(BTW, no, I don't know of a package to carry hier.part out on mixed \nmodels; it would require a leaps-like implementation for mixed models, \nwhich I also haven't seen. )\n\nCheers,\n\nCarsten\n\n\n\n\nOn 28.10.10 20:05, Alessandro Gherlenda wrote:\n> Dear colleagues,\n>\n> I would to use hierarchical partitioning methods to evaluate variance\n> contributions of different predictors as proposed by Chevan and\n> Sutherland (1991) and Mac Nally (2000&  2002), within a generalized\n> linear mixed modelling framework. The standard package in R for\n> hierarchical partioning is hier.part.  However, the hier.part  package\n> only works within a generalized linear modelling framework.  I was\n> wondering wether there is any function out there that might perform\n> hierarchical partioning for mixed models.\n>\n> thanks in advance\n>\n> Best wishes,\n>\n> Alessandro\n>\n>\n> Chevan, A.&  Sutherland, M. (1991) Hierarchical partitioning. American\n> Statistician, 45, 90?96.\n>\n> Mac Nally, R. (2000) Regression and model-building in conservation\n> biology, biogeography and ecology: the distinction between?and\n> reconciliation of??predictive?and ?explanatory?models. Biodiversity\n> and Conservation, 9, 655?671.\n>\n> Mac Nally, R. (2002) Multiple regression and inference in ecology and\n> conservation biology: further comments on identifying important\n> predictor variables. Biodiversity and Conservation, 11, 1397?1401.\n>\n>\n> --\n> Alessandro Gherlenda\n> Ecological Consultant-Bologna Italy\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \nDr. Carsten F. Dormann\nDepartment of Computational Landscape Ecology\nHelmholtz Centre for Environmental Research-UFZ\t\n(Department Landschafts?kologie)\n(Helmholtz Zentrum f?r Umweltforschung - UFZ)\nPermoserstr. 15\t\n04318 Leipzig\t\t\t\t\nGermany\n\nTel: ++49(0)341 2351946\nFax: ++49(0)341 2351939\nEmail: carsten.dormann at ufz.de\ninternet: http://www.ufz.de/index.php?de=4205\n\nRegistered Office/Sitz der Gesellschaft: Leipzig\nCommercial Register Number/Registergericht: Amtsgericht Leipzig, \nHandelsregister Nr. B 4703\nChairman of the Supervisory Board/Vorsitzender des Aufsichtsrats: MinR \nWilfried Kraus\nScientific Managing Director/Wissenschaftlicher Gesch?ftsf?hrer: Prof. \nDr. Georg Teutsch\nAdministrative Managing Director/Administrativer Gesch?ftsf?hrer: Dr. \nAndreas Schmidt",
+      "body_snippet": "Dear Alessandro,\n\nat the risk of inciting furious comments, I like to express my doubts \nabout the usefulness of hierarchical partitioning as a way to quantify \nthe contribution of separate variables.",
+      "thread_id": "thread-e144273892c5",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-d875f74185cf",
+      "message_id": "<4CCA68DC.6030800@ufz.de>",
+      "from_name": "Carsten Dormann",
+      "from_email_hash": "7de2b03457c9086c81d19d43c6bb620436859580c68f7d0c5c042e3b17a24a6f",
+      "date": "2010-10-29T08:25:32+02:00",
+      "subject": "[R-sig-eco] Relating abundance and cover data",
+      "subject_clean": "Relating abundance and cover data",
+      "in_reply_to": "<20101026092718.GA9693@sevenc.co.za>",
+      "references": [
+        "<20101026092718.GA9693@sevenc.co.za>"
+      ],
+      "body_plain": "Dear Karen,\n\nseconding the comments of Phil and Etienne: One key question is whether \nyou can assume no error on the values of your predictors (i.e. run a \nmodel 1-regression). If you can, Ben Bolker's comments point in the \nright way; if you cannot, my heart goes out for the \"simplistic\" \napproach of Etienne and try to pad your results with a bit of \n\"robustness testing\".\n(E.g. perturb/jitter your values and see if it makes a difference to \nyour regression. This may not be \"official\" stats, but should show clear \ndifferences when the pattern is not robust. For example, the many 0s in \nyour data may be caused by detection problems (rather than true \nabsences) and hence giving them a random low cover/abundance (e.g. 1/2 \nof the respective minimum value) should NOT change your results. If it \ndoes, I would interpret this as the data not supporting a clear \ncorrelation between abundance and cover.)\n\nHTH,\n\nCarsten\n\n\nOn 26.10.10 11:27, Karen Kotschy wrote:\n> Dear list\n>\n> This seems like something I really should know by now, but I'm getting so\n> confused, I'd really appreciate a little help!\n>\n> I am trying to model the relationship between relative abundance (%) and\n> relative cover (%) data for plant species. I want to know to\n> what extent the 2 measures correlate, and to compare the extent of this\n> correlation at different sites. Obviously, both sets of data are\n> zero-inflated and highly skewed.\n>\n> The \"traditional\" thing to do would be to log-transform both of them and\n> use lm(). However, a recent paper (O'Hara&  Kotze, 2010) argues that a\n> much better approach is to use glm() and to specify Poisson or negative\n> binomial models, rather than using transformations. This does make a lot\n> of sense, I think!\n>\n> I have tried using \"quasipoisson\" and \"quasibinomial\" families in glm(),\n> but I am left with a number of questions:\n>\n> 1) Should relative abundance and relative cover be treated as \"count\"\n> data, given that the values are not actually integers but rather\n> percentages?\n>\n> 2) Which parts of the output of glm(...family=quasipoisson(link=log)) do I\n> use to evaluate the fit? Just residual deviance and the p value?\n>\n> 3) How do I plot the data so as to graphically represent the model? If I\n> am using a log link should I use log axes for x and y?\n>\n> Thanks so much for any help!\n> Karen\n>\n> ---\n> Karen Kotschy\n> Centre for Water in the Environment\n> University of the Witwatersrand, Johannesburg\n> Tel: +2711 717-6425\n>\n\n-- \nDr. Carsten F. Dormann\nDepartment of Computational Landscape Ecology\nHelmholtz Centre for Environmental Research-UFZ\t\n(Department Landschafts?kologie)\n(Helmholtz Zentrum f?r Umweltforschung - UFZ)\nPermoserstr. 15\t\n04318 Leipzig\t\t\t\t\nGermany\n\nTel: ++49(0)341 2351946\nFax: ++49(0)341 2351939\nEmail: carsten.dormann at ufz.de\ninternet: http://www.ufz.de/index.php?de=4205\n\nRegistered Office/Sitz der Gesellschaft: Leipzig\nCommercial Register Number/Registergericht: Amtsgericht Leipzig, \nHandelsregister Nr. B 4703\nChairman of the Supervisory Board/Vorsitzender des Aufsichtsrats: MinR \nWilfried Kraus\nScientific Managing Director/Wissenschaftlicher Gesch?ftsf?hrer: Prof. \nDr. Georg Teutsch\nAdministrative Managing Director/Administrativer Gesch?ftsf?hrer: Dr. \nAndreas Schmidt",
+      "body_snippet": "Dear Karen,\n\nseconding the comments of Phil and Etienne: One key question is whether \nyou can assume no error on the values of your predictors (i.e. run a \nmodel 1-regression). If you can, Ben Bolker'",
+      "thread_id": "thread-1196d3f7b1e7",
+      "thread_depth": 1,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-786d24a6382d",
+      "message_id": "<4CCC3D39.5010604@gmail.com>",
+      "from_name": "Ben Bolker",
+      "from_email_hash": "18f6c2b0b79bec76f7afe0fad5e36fffd27297982eaee9a3a21101b9461258e5",
+      "date": "2010-10-30T11:43:53-04:00",
+      "subject": "[R-sig-eco] demographic matrix diagrams?",
+      "subject_clean": "demographic matrix diagrams?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "before I waste time doing it, has anyone written code that uses\nRgraphviz to translate demographic (Leslie/Lefkovitch) matrices into\nstate diagrams?  Can't find anything on the web ...\n\n  Ben Bolker",
+      "body_snippet": "before I waste time doing it, has anyone written code that uses\nRgraphviz to translate demographic (Leslie/Lefkovitch) matrices into\nstate diagrams?  Can't find anything on the web ...\n\n  Ben Bolker",
+      "thread_id": "thread-786d24a6382d",
+      "thread_depth": 0,
+      "month": "2010-10"
+    },
+    {
+      "id": "msg-debacdf13af7",
+      "message_id": "<4CCC4082.9040809@gmail.com>",
+      "from_name": "Ben Bolker",
+      "from_email_hash": "18f6c2b0b79bec76f7afe0fad5e36fffd27297982eaee9a3a21101b9461258e5",
+      "date": "2010-10-30T11:57:54-04:00",
+      "subject": "[R-sig-eco] demographic matrix graphs: ugly but a start",
+      "subject_clean": "demographic matrix graphs: ugly but a start",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "library(Rgraphviz)\nX <- matrix(c(0, 0.1, 1.5,\n              1,   0, 0,\n              0,   0.4, 0.2),\n            byrow=TRUE,\n            nrow=3)\ndimnames(X) <- list(c(\"J\",\"A1\",\"A2\"),c(\"J\",\"A1\",\"A2\"))\nX\n\nXg <- as(t(X),\"graphNEL\")\nplot(Xg,recipEdges=\"distinct\")\n\n\new <- as.character(unlist(edgeWeights(Xg)))\new <- ew[setdiff(seq(along = ew), removedEdges(Xg))]\nnames(ew) <- edgeNames(Xg)\neAttrs <- list(label=ew)\nplot(Xg, edgeAttrs = eAttrs, recipEdges=\"distinct\")",
+      "body_snippet": "library(Rgraphviz)\nX <- matrix(c(0, 0.1, 1.5,\n              1,   0, 0,\n              0,   0.4, 0.2),\n            byrow=TRUE,\n            nrow=3)\ndimnames(X) <- list(c(\"J\",\"A1\",\"A2\"),c(\"J\",\"A1\",\"A2\"))\n",
+      "thread_id": "thread-debacdf13af7",
+      "thread_depth": 0,
+      "month": "2010-10"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-d516a073e237",
+      "subject": "assign unique pch characters to a string of rows",
+      "message_count": 2,
+      "participants": [
+        "\"José M. Blanco Moreno\"",
+        "Maaike Versteegh"
+      ],
+      "started": "2010-10-01T09:37:18+02:00",
+      "last_reply": "2010-10-05T13:04:26+02:00",
+      "root_message_id": "msg-d516a073e237"
+    },
+    {
+      "id": "thread-fb4a4d5cc1dd",
+      "subject": "How to calculate time spent on a world grid with circumpolar trips",
+      "message_count": 2,
+      "participants": [
+        "Michael Sumner"
+      ],
+      "started": "2010-10-01T11:38:30+10:00",
+      "last_reply": "2010-10-19T14:30:33+11:00",
+      "root_message_id": "msg-fb4a4d5cc1dd"
+    },
+    {
+      "id": "thread-8b8e3b647fb8",
+      "subject": "3 Postdoc Positions for Ecological Statistics and Modeling",
+      "message_count": 1,
+      "participants": [
+        "Thomas Petzoldt"
+      ],
+      "started": "2010-10-01T19:18:58+02:00",
+      "last_reply": "2010-10-01T19:18:58+02:00",
+      "root_message_id": "msg-8b8e3b647fb8"
+    },
+    {
+      "id": "thread-2f5089791ccf",
+      "subject": "Calculating a spatial weight matrix and Moran's I given queen's case continuity",
+      "message_count": 1,
+      "participants": [
+        "Laura S"
+      ],
+      "started": "2010-10-08T18:50:04-07:00",
+      "last_reply": "2010-10-08T18:50:04-07:00",
+      "root_message_id": "msg-2f5089791ccf"
+    },
+    {
+      "id": "thread-c05e3b4af066",
+      "subject": "How to get the confidence intervals of the regression slope from the permuytation test in MRM (package: \"ecodist\")",
+      "message_count": 1,
+      "participants": [
+        "Qi Li"
+      ],
+      "started": "2010-10-09T11:32:54+08:00",
+      "last_reply": "2010-10-09T11:32:54+08:00",
+      "root_message_id": "msg-c05e3b4af066"
+    },
+    {
+      "id": "thread-595393afb099",
+      "subject": "Help with Adonis",
+      "message_count": 1,
+      "participants": [
+        "Emma Stone"
+      ],
+      "started": "2010-10-11T15:10:47+01:00",
+      "last_reply": "2010-10-11T15:10:47+01:00",
+      "root_message_id": "msg-595393afb099"
+    },
+    {
+      "id": "thread-66e4c9b2b5f5",
+      "subject": "Coordinates Spatstat",
+      "message_count": 1,
+      "participants": [
+        "Nelson Fernandez"
+      ],
+      "started": "2010-10-12T10:28:48-05:00",
+      "last_reply": "2010-10-12T10:28:48-05:00",
+      "root_message_id": "msg-66e4c9b2b5f5"
+    },
+    {
+      "id": "thread-21b11dc4a440",
+      "subject": "se and confidence limits for predictors from a model output not obtained in R",
+      "message_count": 1,
+      "participants": [
+        "Manuel Spínola"
+      ],
+      "started": "2010-10-13T05:28:44-06:00",
+      "last_reply": "2010-10-13T05:28:44-06:00",
+      "root_message_id": "msg-21b11dc4a440"
+    },
+    {
+      "id": "thread-7054b1cf17a2",
+      "subject": "Contrasts for Adonis in Vegan",
+      "message_count": 1,
+      "participants": [
+        "Emma Stone"
+      ],
+      "started": "2010-10-13T11:38:33+01:00",
+      "last_reply": "2010-10-13T11:38:33+01:00",
+      "root_message_id": "msg-7054b1cf17a2"
+    },
+    {
+      "id": "thread-0ab0a08fe009",
+      "subject": "Spatiotemporal interactions among animals",
+      "message_count": 1,
+      "participants": [
+        "Howe, Eric (MNR)"
+      ],
+      "started": "2010-10-14T15:20:00-04:00",
+      "last_reply": "2010-10-14T15:20:00-04:00",
+      "root_message_id": "msg-0ab0a08fe009"
+    },
+    {
+      "id": "thread-067c0d2ddbd1",
+      "subject": "Simpson dissimilarity in NMDS",
+      "message_count": 2,
+      "participants": [
+        "Gavin Simpson",
+        "o paknia"
+      ],
+      "started": "2010-10-21T06:11:15-07:00",
+      "last_reply": "2010-10-21T14:44:21+01:00",
+      "root_message_id": "msg-067c0d2ddbd1"
+    },
+    {
+      "id": "thread-d32657486d1c",
+      "subject": "snowfall variable export",
+      "message_count": 1,
+      "participants": [
+        "Yingjie Zhang"
+      ],
+      "started": "2010-10-22T10:08:33+02:00",
+      "last_reply": "2010-10-22T10:08:33+02:00",
+      "root_message_id": "msg-d32657486d1c"
+    },
+    {
+      "id": "thread-e771c27af577",
+      "subject": "glmmML and empirical varibance estimates",
+      "message_count": 1,
+      "participants": [
+        "Dean Cluff"
+      ],
+      "started": "2010-10-22T15:45:35-06:00",
+      "last_reply": "2010-10-22T15:45:35-06:00",
+      "root_message_id": "msg-e771c27af577"
+    },
+    {
+      "id": "thread-d5ff71637642",
+      "subject": "NMDS vegan",
+      "message_count": 10,
+      "participants": [
+        "Gavin Simpson",
+        "Jari Oksanen",
+        "Soumi Ray",
+        "ssefick",
+        "stephen sefick"
+      ],
+      "started": "2010-10-25T14:10:25-04:00",
+      "last_reply": "2010-10-27T07:30:55+01:00",
+      "root_message_id": "msg-d5ff71637642"
+    },
+    {
+      "id": "thread-1196d3f7b1e7",
+      "subject": "Relating abundance and cover data",
+      "message_count": 4,
+      "participants": [
+        "Ben Bolker",
+        "Carsten Dormann",
+        "Etienne Laliberté",
+        "Karen Kotschy"
+      ],
+      "started": "2010-10-26T11:27:18+02:00",
+      "last_reply": "2010-10-29T08:25:32+02:00",
+      "root_message_id": "msg-1196d3f7b1e7"
+    },
+    {
+      "id": "thread-2363d4e6727b",
+      "subject": "Relating species abundance and cover",
+      "message_count": 1,
+      "participants": [
+        "Philip Dixon"
+      ],
+      "started": "2010-10-27T05:59:20-05:00",
+      "last_reply": "2010-10-27T05:59:20-05:00",
+      "root_message_id": "msg-2363d4e6727b"
+    },
+    {
+      "id": "thread-b6c1fb14f6ea",
+      "subject": "Relating species abundance and cover",
+      "message_count": 1,
+      "participants": [
+        "Philip Dixon"
+      ],
+      "started": "2010-10-27T05:59:39-05:00",
+      "last_reply": "2010-10-27T05:59:39-05:00",
+      "root_message_id": "msg-b6c1fb14f6ea"
+    },
+    {
+      "id": "thread-42e18ebee744",
+      "subject": "NMDS vegan",
+      "message_count": 1,
+      "participants": [
+        "John Jay Wiley Jr."
+      ],
+      "started": "2010-10-27T14:31:15+00:00",
+      "last_reply": "2010-10-27T14:31:15+00:00",
+      "root_message_id": "msg-42e18ebee744"
+    },
+    {
+      "id": "thread-e7e6b4819c0c",
+      "subject": "NMDS vegan",
+      "message_count": 1,
+      "participants": [
+        "Pekin, Burak K"
+      ],
+      "started": "2010-10-28T11:11:03-04:00",
+      "last_reply": "2010-10-28T11:11:03-04:00",
+      "root_message_id": "msg-e7e6b4819c0c"
+    },
+    {
+      "id": "thread-e144273892c5",
+      "subject": "hierarchical partitioning in generalized linear mixed models",
+      "message_count": 2,
+      "participants": [
+        "Alessandro Gherlenda",
+        "Carsten Dormann"
+      ],
+      "started": "2010-10-28T20:05:42+02:00",
+      "last_reply": "2010-10-29T08:12:46+02:00",
+      "root_message_id": "msg-e144273892c5"
+    },
+    {
+      "id": "thread-786d24a6382d",
+      "subject": "demographic matrix diagrams?",
+      "message_count": 1,
+      "participants": [
+        "Ben Bolker"
+      ],
+      "started": "2010-10-30T11:43:53-04:00",
+      "last_reply": "2010-10-30T11:43:53-04:00",
+      "root_message_id": "msg-786d24a6382d"
+    },
+    {
+      "id": "thread-debacdf13af7",
+      "subject": "demographic matrix graphs: ugly but a start",
+      "message_count": 1,
+      "participants": [
+        "Ben Bolker"
+      ],
+      "started": "2010-10-30T11:57:54-04:00",
+      "last_reply": "2010-10-30T11:57:54-04:00",
+      "root_message_id": "msg-debacdf13af7"
+    }
+  ]
+}

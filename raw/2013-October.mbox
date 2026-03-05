@@ -1,0 +1,3631 @@
+From nobeeakon at gmail.com  Thu Oct  3 05:31:11 2013
+From: nobeeakon at gmail.com (Daniel Torres)
+Date: Wed, 2 Oct 2013 22:31:11 -0500
+Subject: [R-sig-eco] Biplot of Principal components
+Message-ID: <CAJGorGyw7FAV3J+bZ83n8WttV99F+vUCBrRU6ziMq7xuZCPzYQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131002/bead9bc6/attachment.pl>
+
+From paolo.piras at uniroma3.it  Thu Oct  3 13:59:15 2013
+From: paolo.piras at uniroma3.it (Paolo Piras)
+Date: Thu, 3 Oct 2013 11:59:15 +0000
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+Message-ID: <e2d4dfd166664b2b9b4ebac9b82cb070@DB3PR04MB153.eurprd04.prod.outlook.com>
+
+Dear list,
+I would like to easily compute the adjusted R-square in a lm model without intercept (excluding the intercept is essential for my analysis)
+
+I found that RsquareAdj() in vegan returns NA if the argument is  a multiple-multivariate lm model thus including multivariate responses and multiple predictors, while it works for univariate response and multiple predictors. 
+
+For example:
+library(vegan)
+
+yy<-matrix(rnorm(200,0,1),ncol=4)
+xx<-matrix(rnorm(200,0,1),ncol=4)
+RsquareAdj(lm(yy~xx-1))
+RsquareAdj(lm(yy[,1]~xx-1))
+
+
+
+There some specific reason for this behavior?
+Thanks in advance for any advice
+best regards
+Poalo
+
+
+
+
+
+
+
+From jari.oksanen at oulu.fi  Thu Oct  3 14:25:48 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 3 Oct 2013 12:25:48 +0000
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+In-Reply-To: <e2d4dfd166664b2b9b4ebac9b82cb070@DB3PR04MB153.eurprd04.prod.outlook.com>
+References: <e2d4dfd166664b2b9b4ebac9b82cb070@DB3PR04MB153.eurprd04.prod.outlook.com>
+Message-ID: <66C03CD1145C95448A4D73676DD9C2EDF9F3CA@nippu2>
+
+Specific reason is that nobody has implemented this. These things don't come by automatic writing, but somebody must do them.
+
+What would you expect to get? Is this what was on your mind:
+
+> sapply(summary(lm(yy~xx-1)), function(x) c("r.squared" = x$r.squared, "adj.r.squared" = x$adj.r.squared))
+              Response Y1 Response Y2 Response Y3 Response Y4
+r.squared      0.06845032  0.04788037  0.01702738  0.11253059
+adj.r.squared -0.01255400 -0.03491264 -0.06844849  0.03535934
+
+
+This could be implemented, but (1) is this what you or anybody else would like to have?, (2) how many things would it break by returning several values instead of one?
+
+If you want to have this, you really do not need to use vegan. vegan:::RsquareAdj.lm() takes its results from summary(<lm_object>). You can use that stats:::summary.lm directly.
+
+Cheers, Jari Oksanen
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] on behalf of Paolo Piras [paolo.piras at uniroma3.it]
+Sent: 03 October 2013 14:59
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Dear list,
+I would like to easily compute the adjusted R-square in a lm model without intercept (excluding the intercept is essential for my analysis)
+
+I found that RsquareAdj() in vegan returns NA if the argument is  a multiple-multivariate lm model thus including multivariate responses and multiple predictors, while it works for univariate response and multiple predictors.
+
+For example:
+library(vegan)
+
+yy<-matrix(rnorm(200,0,1),ncol=4)
+xx<-matrix(rnorm(200,0,1),ncol=4)
+RsquareAdj(lm(yy~xx-1))
+RsquareAdj(lm(yy[,1]~xx-1))
+
+
+
+There some specific reason for this behavior?
+Thanks in advance for any advice
+best regards
+Poalo
+
+
+
+
+
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From alexsouza at cb.ufrn.br  Thu Oct  3 14:49:27 2013
+From: alexsouza at cb.ufrn.br (Alexandre Fadigas de Souza)
+Date: Thu, 3 Oct 2013 09:49:27 -0300 (BRT)
+Subject: [R-sig-eco] Question on Quadratic and Cubic Parameters
+Message-ID: <469308753.835549.1380804567341.JavaMail.zimbra@cb.ufrn.br>
+
+Dear colleagues,
+
+   I am working on a Linear Mixed Model with nested structure, based on the book of Zuur et al. 2009. Mixed Effects Models and Extensions in Ecology with R, and have a question to ask to those of you more experienced with this model family.
+
+   I am using several topographic variables (elevation, slope, convexity, facing) and one light-related variable (canopy openness) to explain species abundance variation in 85 plots placed on 17 transects dispersed through a coastal vegetation complex on sandy soils in northeastern Brazil. The dependent variable is axes of a floristic ordination (e.g., NMDS), with one separate model adjusted for each axis.
+
+   I will use two levels of spatial aggregation as random factors: the transects (5 plots per transect) and broad transect clusters (transect clusters were logistically conditioned).
+
+   In the ecological literature, I have seen the suggestion of including quadratic and even cubic versions of the fixed effects variables (in this case topographic and light) as a means to account for possible nonlinear effects of these variables on the dependent variable. One recent example is 
+
+Brunbjerg, A.K., Ejrn?s, R., Svenning, J.-C., 2012. Species sorting dominates plant metacommunity structure in coastal dunes. Acta Oecologica 39, 33?42.
+
+   However, the inclusion of such quadratic and/or cubic terms in the model produces high colinearity levels (VIF > 25, sometimes even 38!).
+
+   Do you think this is a valid procedure, the inclusion of these polynomial terms? 
+ 
+   Thank you in advance for any ideas,
+
+   Alexandre
+
+Dr. Alexandre F. Souza 
+Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia  Universidade Federal do Rio Grande do Norte (UFRN)  http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+
+
+From paolo.piras at uniroma3.it  Thu Oct  3 14:52:48 2013
+From: paolo.piras at uniroma3.it (Paolo Piras)
+Date: Thu, 3 Oct 2013 12:52:48 +0000
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+In-Reply-To: <66C03CD1145C95448A4D73676DD9C2EDF9F3CA@nippu2>
+References: <e2d4dfd166664b2b9b4ebac9b82cb070@DB3PR04MB153.eurprd04.prod.outlook.com>,
+	<66C03CD1145C95448A4D73676DD9C2EDF9F3CA@nippu2>
+Message-ID: <b7022c5b8b5548de9def008d3e3477b8@DB3PR04MB153.eurprd04.prod.outlook.com>
+
+Thankyou very much Jari!
+I think that it is nearly ok
+what I would like to have is the same as in
+RsquareAdj(vegan::rda(yy,xx))
+
+that is a GLOBAL measure of the association
+BUT...I want it for a multiple-multivariate lm model that does not include the intercept;
+an alternative could be to build a rda design for the exclusion of intercept but I really cannot figure out how to do it. 
+
+I think I just need to compute the average of single adjusted r squared from the output of your line of code, 
+But the results are not identical 
+EXAMPLE  WITH INTERCEPT IN ORDER TO COMPARE WITH RDA
+
+RsquareAdj(vegan::rda(yy,xx))
+mean(sapply(summary(lm(yy~xx)), function(x) c("r.squared" = x$r.squared, "adj.r.squared" = x$adj.r.squared))[2,])
+
+Or.... I just miss something in this computation
+
+Thanks again for any further suggestion
+
+
+________________________________________
+Da: Jari Oksanen <jari.oksanen at oulu.fi>
+Inviato: gioved? 3 ottobre 2013 14.25
+A: Paolo Piras; r-sig-ecology at r-project.org
+Oggetto: RE: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Specific reason is that nobody has implemented this. These things don't come by automatic writing, but somebody must do them.
+
+What would you expect to get? Is this what was on your mind:
+
+> sapply(summary(lm(yy~xx-1)), function(x) c("r.squared" = x$r.squared, "adj.r.squared" = x$adj.r.squared))
+              Response Y1 Response Y2 Response Y3 Response Y4
+r.squared      0.06845032  0.04788037  0.01702738  0.11253059
+adj.r.squared -0.01255400 -0.03491264 -0.06844849  0.03535934
+
+
+This could be implemented, but (1) is this what you or anybody else would like to have?, (2) how many things would it break by returning several values instead of one?
+
+If you want to have this, you really do not need to use vegan. vegan:::RsquareAdj.lm() takes its results from summary(<lm_object>). You can use that stats:::summary.lm directly.
+
+Cheers, Jari Oksanen
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] on behalf of Paolo Piras [paolo.piras at uniroma3.it]
+Sent: 03 October 2013 14:59
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Dear list,
+I would like to easily compute the adjusted R-square in a lm model without intercept (excluding the intercept is essential for my analysis)
+
+I found that RsquareAdj() in vegan returns NA if the argument is  a multiple-multivariate lm model thus including multivariate responses and multiple predictors, while it works for univariate response and multiple predictors.
+
+For example:
+library(vegan)
+
+yy<-matrix(rnorm(200,0,1),ncol=4)
+xx<-matrix(rnorm(200,0,1),ncol=4)
+RsquareAdj(lm(yy~xx-1))
+RsquareAdj(lm(yy[,1]~xx-1))
+
+
+
+There some specific reason for this behavior?
+Thanks in advance for any advice
+best regards
+Poalo
+
+
+
+
+
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From jari.oksanen at oulu.fi  Thu Oct  3 15:56:45 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 3 Oct 2013 13:56:45 +0000
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+In-Reply-To: <b7022c5b8b5548de9def008d3e3477b8@DB3PR04MB153.eurprd04.prod.outlook.com>
+References: <e2d4dfd166664b2b9b4ebac9b82cb070@DB3PR04MB153.eurprd04.prod.outlook.com>,
+	<66C03CD1145C95448A4D73676DD9C2EDF9F3CA@nippu2>,
+	<b7022c5b8b5548de9def008d3e3477b8@DB3PR04MB153.eurprd04.prod.outlook.com>
+Message-ID: <66C03CD1145C95448A4D73676DD9C2EDF9F581@nippu2>
+
+Paolo,
+
+See ?RsquareAdj for the call interface. The default method can be called as RsquareAdj(x, n, m), and in the default method x is the unadjusted correlation, n is the number of observations and m is the number of parameters (degrees of freedom) in the fitted model. Specific methods for univariate lm or for rda (and some others) find these variables in the result object, but then they just call the default method with the found x, n and m. You can build your model on that. It is possible to build a specific function for mlm objects, but nobody has done so in vegan.
+
+You cannot build an rda design without an intercept. It was a conscious design decision to make this impossible without hacking the rda.default code (I even say this in decision-vegan vignette). I am not going to make easy to have non-centred RDA: I care too much about people and i don't want to do evil. If you really *know* that you need non-centred RDA. then you know how to change those lines of code in rda.default. 
+
+Cheers, Jari Oksanen
+________________________________________
+From: Paolo Piras [paolo.piras at uniroma3.it]
+Sent: 03 October 2013 15:52
+To: Jari Oksanen; r-sig-ecology at r-project.org
+Subject: RE: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Thankyou very much Jari!
+I think that it is nearly ok
+what I would like to have is the same as in
+RsquareAdj(vegan::rda(yy,xx))
+
+that is a GLOBAL measure of the association
+BUT...I want it for a multiple-multivariate lm model that does not include the intercept;
+an alternative could be to build a rda design for the exclusion of intercept but I really cannot figure out how to do it.
+
+I think I just need to compute the average of single adjusted r squared from the output of your line of code,
+But the results are not identical
+EXAMPLE  WITH INTERCEPT IN ORDER TO COMPARE WITH RDA
+
+RsquareAdj(vegan::rda(yy,xx))
+mean(sapply(summary(lm(yy~xx)), function(x) c("r.squared" = x$r.squared, "adj.r.squared" = x$adj.r.squared))[2,])
+
+Or.... I just miss something in this computation
+
+Thanks again for any further suggestion
+
+
+________________________________________
+Da: Jari Oksanen <jari.oksanen at oulu.fi>
+Inviato: gioved? 3 ottobre 2013 14.25
+A: Paolo Piras; r-sig-ecology at r-project.org
+Oggetto: RE: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Specific reason is that nobody has implemented this. These things don't come by automatic writing, but somebody must do them.
+
+What would you expect to get? Is this what was on your mind:
+
+> sapply(summary(lm(yy~xx-1)), function(x) c("r.squared" = x$r.squared, "adj.r.squared" = x$adj.r.squared))
+              Response Y1 Response Y2 Response Y3 Response Y4
+r.squared      0.06845032  0.04788037  0.01702738  0.11253059
+adj.r.squared -0.01255400 -0.03491264 -0.06844849  0.03535934
+
+
+This could be implemented, but (1) is this what you or anybody else would like to have?, (2) how many things would it break by returning several values instead of one?
+
+If you want to have this, you really do not need to use vegan. vegan:::RsquareAdj.lm() takes its results from summary(<lm_object>). You can use that stats:::summary.lm directly.
+
+Cheers, Jari Oksanen
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] on behalf of Paolo Piras [paolo.piras at uniroma3.it]
+Sent: 03 October 2013 14:59
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Dear list,
+I would like to easily compute the adjusted R-square in a lm model without intercept (excluding the intercept is essential for my analysis)
+
+I found that RsquareAdj() in vegan returns NA if the argument is  a multiple-multivariate lm model thus including multivariate responses and multiple predictors, while it works for univariate response and multiple predictors.
+
+For example:
+library(vegan)
+
+yy<-matrix(rnorm(200,0,1),ncol=4)
+xx<-matrix(rnorm(200,0,1),ncol=4)
+RsquareAdj(lm(yy~xx-1))
+RsquareAdj(lm(yy[,1]~xx-1))
+
+
+
+There some specific reason for this behavior?
+Thanks in advance for any advice
+best regards
+Poalo
+
+
+
+
+
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+From paolo.piras at uniroma3.it  Thu Oct  3 19:40:32 2013
+From: paolo.piras at uniroma3.it (Paolo Piras)
+Date: Thu, 3 Oct 2013 17:40:32 +0000
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+In-Reply-To: <66C03CD1145C95448A4D73676DD9C2EDF9F581@nippu2>
+References: <e2d4dfd166664b2b9b4ebac9b82cb070@DB3PR04MB153.eurprd04.prod.outlook.com>,
+	<66C03CD1145C95448A4D73676DD9C2EDF9F3CA@nippu2>,
+	<b7022c5b8b5548de9def008d3e3477b8@DB3PR04MB153.eurprd04.prod.outlook.com>,
+	<66C03CD1145C95448A4D73676DD9C2EDF9F581@nippu2>
+Message-ID: <a745f63530ec4c71b137df8b610c3679@DB3PR04MB153.eurprd04.prod.outlook.com>
+
+Thanks Jari, I understand
+Before going trough the code of rda I would prefer to see if I can do this using RsquareAdj
+
+When you say "The default method can be called as RsquareAdj(x, n, m), and in the default method x is the unadjusted correlation...etc.."
+my problem is to extract the global unadjusted correlation that is a single global R-square; 
+As I said, just averaging the single adjusted R-squared does not return the same values of RsquareAdj
+
+best
+paolo
+
+
+________________________________________
+Da: Jari Oksanen <jari.oksanen at oulu.fi>
+Inviato: gioved? 3 ottobre 2013 15.56
+A: Paolo Piras; r-sig-ecology at r-project.org
+Oggetto: RE: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Paolo,
+
+See ?RsquareAdj for the call interface. The default method can be called as RsquareAdj(x, n, m), and in the default method x is the unadjusted correlation, n is the number of observations and m is the number of parameters (degrees of freedom) in the fitted model. Specific methods for univariate lm or for rda (and some others) find these variables in the result object, but then they just call the default method with the found x, n and m. You can build your model on that. It is possible to build a specific function for mlm objects, but nobody has done so in vegan.
+
+You cannot build an rda design without an intercept. It was a conscious design decision to make this impossible without hacking the rda.default code (I even say this in decision-vegan vignette). I am not going to make easy to have non-centred RDA: I care too much about people and i don't want to do evil. If you really *know* that you need non-centred RDA. then you know how to change those lines of code in rda.default.
+
+Cheers, Jari Oksanen
+________________________________________
+From: Paolo Piras [paolo.piras at uniroma3.it]
+Sent: 03 October 2013 15:52
+To: Jari Oksanen; r-sig-ecology at r-project.org
+Subject: RE: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Thankyou very much Jari!
+I think that it is nearly ok
+what I would like to have is the same as in
+RsquareAdj(vegan::rda(yy,xx))
+
+that is a GLOBAL measure of the association
+BUT...I want it for a multiple-multivariate lm model that does not include the intercept;
+an alternative could be to build a rda design for the exclusion of intercept but I really cannot figure out how to do it.
+
+I think I just need to compute the average of single adjusted r squared from the output of your line of code,
+But the results are not identical
+EXAMPLE  WITH INTERCEPT IN ORDER TO COMPARE WITH RDA
+
+RsquareAdj(vegan::rda(yy,xx))
+mean(sapply(summary(lm(yy~xx)), function(x) c("r.squared" = x$r.squared, "adj.r.squared" = x$adj.r.squared))[2,])
+
+Or.... I just miss something in this computation
+
+Thanks again for any further suggestion
+
+
+________________________________________
+Da: Jari Oksanen <jari.oksanen at oulu.fi>
+Inviato: gioved? 3 ottobre 2013 14.25
+A: Paolo Piras; r-sig-ecology at r-project.org
+Oggetto: RE: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Specific reason is that nobody has implemented this. These things don't come by automatic writing, but somebody must do them.
+
+What would you expect to get? Is this what was on your mind:
+
+> sapply(summary(lm(yy~xx-1)), function(x) c("r.squared" = x$r.squared, "adj.r.squared" = x$adj.r.squared))
+              Response Y1 Response Y2 Response Y3 Response Y4
+r.squared      0.06845032  0.04788037  0.01702738  0.11253059
+adj.r.squared -0.01255400 -0.03491264 -0.06844849  0.03535934
+
+
+This could be implemented, but (1) is this what you or anybody else would like to have?, (2) how many things would it break by returning several values instead of one?
+
+If you want to have this, you really do not need to use vegan. vegan:::RsquareAdj.lm() takes its results from summary(<lm_object>). You can use that stats:::summary.lm directly.
+
+Cheers, Jari Oksanen
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] on behalf of Paolo Piras [paolo.piras at uniroma3.it]
+Sent: 03 October 2013 14:59
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] vegan RsquareAdj() for lm models
+
+Dear list,
+I would like to easily compute the adjusted R-square in a lm model without intercept (excluding the intercept is essential for my analysis)
+
+I found that RsquareAdj() in vegan returns NA if the argument is  a multiple-multivariate lm model thus including multivariate responses and multiple predictors, while it works for univariate response and multiple predictors.
+
+For example:
+library(vegan)
+
+yy<-matrix(rnorm(200,0,1),ncol=4)
+xx<-matrix(rnorm(200,0,1),ncol=4)
+RsquareAdj(lm(yy~xx-1))
+RsquareAdj(lm(yy[,1]~xx-1))
+
+
+
+There some specific reason for this behavior?
+Thanks in advance for any advice
+best regards
+Poalo
+
+
+
+
+
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+From botta-dukat.zoltan at okologia.mta.hu  Thu Oct  3 17:38:01 2013
+From: botta-dukat.zoltan at okologia.mta.hu (Zoltan Botta-Dukat)
+Date: Thu, 03 Oct 2013 17:38:01 +0200
+Subject: [R-sig-eco] Question on Quadratic and Cubic Parameters
+In-Reply-To: <469308753.835549.1380804567341.JavaMail.zimbra@cb.ufrn.br>
+References: <469308753.835549.1380804567341.JavaMail.zimbra@cb.ufrn.br>
+Message-ID: <524D8F59.5000601@okologia.mta.hu>
+
+Dear Alexandre,
+
+If your variables have only positive values, there will be strong 
+correlation between linear, quadratic and cubic terms that leads to high 
+VIF. You can avoid it by centering the variables before calculating 
+quadratic and cubic terms:
+
+quadratic<-(x-mean(x))^2
+cubic<-(x-mean(x))^3
+
+Regards,
+
+Zoltan
+
+
+2013.10.03. 14:49 keltez?ssel, Alexandre Fadigas de Souza ?rta:
+> Dear colleagues,
+>
+>     I am working on a Linear Mixed Model with nested structure, based on the book of Zuur et al. 2009. Mixed Effects Models and Extensions in Ecology with R, and have a question to ask to those of you more experienced with this model family.
+>
+>     I am using several topographic variables (elevation, slope, convexity, facing) and one light-related variable (canopy openness) to explain species abundance variation in 85 plots placed on 17 transects dispersed through a coastal vegetation complex on sandy soils in northeastern Brazil. The dependent variable is axes of a floristic ordination (e.g., NMDS), with one separate model adjusted for each axis.
+>
+>     I will use two levels of spatial aggregation as random factors: the transects (5 plots per transect) and broad transect clusters (transect clusters were logistically conditioned).
+>
+>     In the ecological literature, I have seen the suggestion of including quadratic and even cubic versions of the fixed effects variables (in this case topographic and light) as a means to account for possible nonlinear effects of these variables on the dependent variable. One recent example is
+>
+> Brunbjerg, A.K., Ejrn?s, R., Svenning, J.-C., 2012. Species sorting dominates plant metacommunity structure in coastal dunes. Acta Oecologica 39, 33?42.
+>
+>     However, the inclusion of such quadratic and/or cubic terms in the model produces high colinearity levels (VIF > 25, sometimes even 38!).
+>
+>     Do you think this is a valid procedure, the inclusion of these polynomial terms?
+>   
+>     Thank you in advance for any ideas,
+>
+>     Alexandre
+>
+> Dr. Alexandre F. Souza
+> Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia  Universidade Federal do Rio Grande do Norte (UFRN)  http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+Botta-Duk?t Zolt?n
+--------------------------------
+?kol?giai ?s Botanikai Int?zet
+Magyar Tudom?nyos Akad?mia
+?kol?giai Kutat?k?zpont
+--------------------------------
+2163. V?cr?t?t, Alkotm?ny u. 2-4.
+tel: +36 28 360122/157
+fax: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+Zolt?n BOTTA-Duk?t
+--------------------------------
+Institute of Ecology and Botany
+Hungarian Academy of Sciences
+Centre for Ecological Research
+--------------------------------
+H-2163 V?cr?t?t, Alkom?ny u. 2-4.
+HUNGARY
+Phone: +36 28 360122/157
+Fax..: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+From scott.foster at csiro.au  Fri Oct  4 12:27:21 2013
+From: scott.foster at csiro.au (Scott Foster)
+Date: Fri, 4 Oct 2013 20:27:21 +1000
+Subject: [R-sig-eco] Question on Quadratic and Cubic Parameters
+In-Reply-To: <524D8F59.5000601@okologia.mta.hu>
+References: <469308753.835549.1380804567341.JavaMail.zimbra@cb.ufrn.br>
+	<524D8F59.5000601@okologia.mta.hu>
+Message-ID: <524E9809.1060806@csiro.au>
+
+Hi,
+
+Centring will help reduce the correlation amongst covariates -- it is a good (and old) trick.  A surer way is to use orthogonal polynomials.  They are 
+slightly harder to interpret, but often this is immaterial.  Try poly(x,3) and ?poly.  Another option would be to ditch the idea of using a global 
+polynomial and use semi-parametric methods, such as B-splines (in library splines), or GAMMs (in library mgcv).
+
+I fear that this is all fairly academic though.  Cubics may be good enough -- check the model through diagnostics.  Even though this is not trivial 
+for mixed models.
+
+What concerns me a bit is the comment that the dependent variable is obtained from an NMDS.  How is the uncertainty in the original data propagated 
+through the NMDS and the mixed model?  At all?  Are there any comments / opinions about this?  Intrigued.
+
+Scott
+
+On 04/10/13 01:38, Zoltan Botta-Dukat wrote:
+> Dear Alexandre,
+>
+> If your variables have only positive values, there will be strong correlation between linear, quadratic and cubic terms that leads to high VIF. You 
+> can avoid it by centering the variables before calculating quadratic and cubic terms:
+>
+> quadratic<-(x-mean(x))^2
+> cubic<-(x-mean(x))^3
+>
+> Regards,
+>
+> Zoltan
+>
+>
+> 2013.10.03. 14:49 keltez?ssel, Alexandre Fadigas de Souza ?rta:
+>> Dear colleagues,
+>>
+>>     I am working on a Linear Mixed Model with nested structure, based on the book of Zuur et al. 2009. Mixed Effects Models and Extensions in 
+>> Ecology with R, and have a question to ask to those of you more experienced with this model family.
+>>
+>>     I am using several topographic variables (elevation, slope, convexity, facing) and one light-related variable (canopy openness) to explain 
+>> species abundance variation in 85 plots placed on 17 transects dispersed through a coastal vegetation complex on sandy soils in northeastern 
+>> Brazil. The dependent variable is axes of a floristic ordination (e.g., NMDS), with one separate model adjusted for each axis.
+>>
+>>     I will use two levels of spatial aggregation as random factors: the transects (5 plots per transect) and broad transect clusters (transect 
+>> clusters were logistically conditioned).
+>>
+>>     In the ecological literature, I have seen the suggestion of including quadratic and even cubic versions of the fixed effects variables (in this 
+>> case topographic and light) as a means to account for possible nonlinear effects of these variables on the dependent variable. One recent example is
+>>
+>> Brunbjerg, A.K., Ejrn?s, R., Svenning, J.-C., 2012. Species sorting dominates plant metacommunity structure in coastal dunes. Acta Oecologica 39, 
+>> 33?42.
+>>
+>>     However, the inclusion of such quadratic and/or cubic terms in the model produces high colinearity levels (VIF > 25, sometimes even 38!).
+>>
+>>     Do you think this is a valid procedure, the inclusion of these polynomial terms?
+>>       Thank you in advance for any ideas,
+>>
+>>     Alexandre
+>>
+>> Dr. Alexandre F. Souza
+>> Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia  Universidade Federal do Rio Grande do Norte (UFRN) 
+>> http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+-- 
+Scott Foster
+Computational Informatics
+CSIRO
+E scott.foster at csiro.au T +61 3 6232 5178
+Postal address: CSIRO Computational Informatics, GPO Box 1538, Hobart TAS 7001
+Street Address: CSIRO Computational Informatics, Castray Esplanade, Hobart Tas 7001, Australia
+www.csiro.au
+
+
+From pacolipe at gmail.com  Fri Oct  4 16:20:53 2013
+From: pacolipe at gmail.com (Pedro Pequeno)
+Date: Fri, 4 Oct 2013 11:20:53 -0300
+Subject: [R-sig-eco] Question on Quadratic and Cubic Parameters
+In-Reply-To: <524E9809.1060806@csiro.au>
+References: <469308753.835549.1380804567341.JavaMail.zimbra@cb.ufrn.br>
+	<524D8F59.5000601@okologia.mta.hu> <524E9809.1060806@csiro.au>
+Message-ID: <CAC4PjDvq7O8FQPWO1cyN8rCt+FcUYdopJcUxxWwAGjhz_YCpSA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131004/03665aec/attachment.pl>
+
+From rahmannorthampton at gmail.com  Fri Oct  4 18:14:06 2013
+From: rahmannorthampton at gmail.com (Lutfor)
+Date: Fri, 4 Oct 2013 09:14:06 -0700 (PDT)
+Subject: [R-sig-eco] Animal movement packages
+In-Reply-To: <52488FB8.1070803@gmail.com>
+References: <52488FB8.1070803@gmail.com>
+Message-ID: <1380903246900-7578439.post@n2.nabble.com>
+
+Following packages might help:
+
+Adehabitat, AdehabitatHR
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Animal-movement-packages-tp7578426p7578439.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From alexsouza at cb.ufrn.br  Mon Oct  7 15:52:58 2013
+From: alexsouza at cb.ufrn.br (Alexandre Fadigas de Souza)
+Date: Mon, 7 Oct 2013 10:52:58 -0300 (BRT)
+Subject: [R-sig-eco] Question on Quadratic and Cubic Parameters
+In-Reply-To: <mailman.1.1380967201.519.r-sig-ecology@r-project.org>
+References: <mailman.1.1380967201.519.r-sig-ecology@r-project.org>
+Message-ID: <653774736.882907.1381153978952.JavaMail.zimbra@cb.ufrn.br>
+
+Hi Scott, Hi Pedro,
+
+   Scott, thank you for the comments on the polynomials.
+
+   Regarding the NMDS axes, I was influenced by the ecological literature, in which nmds axes are taken as independent axes.
+
+   I replaced the nmds axes by PCA axes obtained on hellinger-transformed species abundances, since Legender and Gallagher argued that this transformation allowed the formerly inadequate pca to be used on compositional abundances.
+
+   Alexandre
+
+Dr. Alexandre F. Souza 
+Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia  Universidade Federal do Rio Grande do Norte (UFRN)  http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+ 
+
+----- Mensagem original -----
+De: r-sig-ecology-request at r-project.org
+Para: r-sig-ecology at r-project.org
+Enviadas: Sat, 05 Oct 2013 07:00:01 -0300 (BRT)
+Assunto: R-sig-ecology Digest, Vol 67, Issue 3
+
+Send R-sig-ecology mailing list submissions to
+	r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+	r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+	r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific
+than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. Re: Question on Quadratic and Cubic Parameters (Scott Foster)
+   2. Re: Question on Quadratic and Cubic Parameters (Pedro Pequeno)
+   3. Re: Animal movement packages (Lutfor)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Fri, 4 Oct 2013 20:27:21 +1000
+From: Scott Foster <scott.foster at csiro.au>
+To: <r-sig-ecology at r-project.org>
+Subject: Re: [R-sig-eco] Question on Quadratic and Cubic Parameters
+Message-ID: <524E9809.1060806 at csiro.au>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+
+Hi,
+
+Centring will help reduce the correlation amongst covariates -- it is a good (and old) trick.  A surer way is to use orthogonal polynomials.  They are
+slightly harder to interpret, but often this is immaterial.  Try poly(x,3) and ?poly.  Another option would be to ditch the idea of using a global 
+polynomial and use semi-parametric methods, such as B-splines (in library splines), or GAMMs (in library mgcv).
+
+I fear that this is all fairly academic though.  Cubics may be good enough -- check the model through diagnostics.  Even though this is not trivial 
+for mixed models.
+
+What concerns me a bit is the comment that the dependent variable is obtained from an NMDS.  How is the uncertainty in the original data propagated 
+through the NMDS and the mixed model?  At all?  Are there any comments / opinions about this?  Intrigued.
+
+Scott
+
+On 04/10/13 01:38, Zoltan Botta-Dukat wrote:
+> Dear Alexandre,
+>
+> If your variables have only positive values, there will be strong correlation between linear, quadratic and cubic terms that leads to high VIF. You
+> can avoid it by centering the variables before calculating quadratic and cubic terms:
+>
+> quadratic<-(x-mean(x))^2
+> cubic<-(x-mean(x))^3
+>
+> Regards,
+>
+> Zoltan
+>
+>
+> 2013.10.03. 14:49 keltez?ssel, Alexandre Fadigas de Souza ?rta:
+>> Dear colleagues,
+>>
+>>     I am working on a Linear Mixed Model with nested structure, based on the book of Zuur et al. 2009. Mixed Effects Models and Extensions in 
+>> Ecology with R, and have a question to ask to those of you more experienced with this model family.
+>>
+>>     I am using several topographic variables (elevation, slope, convexity, facing) and one light-related variable (canopy openness) to explain 
+>> species abundance variation in 85 plots placed on 17 transects dispersed through a coastal vegetation complex on sandy soils in northeastern 
+>> Brazil. The dependent variable is axes of a floristic ordination (e.g., NMDS), with one separate model adjusted for each axis.
+>>
+>>     I will use two levels of spatial aggregation as random factors: the transects (5 plots per transect) and broad transect clusters (transect 
+>> clusters were logistically conditioned).
+>>
+>>     In the ecological literature, I have seen the suggestion of including quadratic and even cubic versions of the fixed effects variables (in this
+>> case topographic and light) as a means to account for possible nonlinear effects of these variables on the dependent variable. One recent example is
+>>
+>> Brunbjerg, A.K., Ejrn?s, R., Svenning, J.-C., 2012. Species sorting dominates plant metacommunity structure in coastal dunes. Acta Oecologica 39,
+>> 33?42.
+>>
+>>     However, the inclusion of such quadratic and/or cubic terms in the model produces high colinearity levels (VIF > 25, sometimes even 38!).
+>>
+>>     Do you think this is a valid procedure, the inclusion of these polynomial terms?
+>>       Thank you in advance for any ideas,
+>>
+>>     Alexandre
+>>
+>> Dr. Alexandre F. Souza
+>> Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia  Universidade Federal do Rio Grande do Norte (UFRN) 
+>> http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+-- 
+Scott Foster
+Computational Informatics
+CSIRO
+E scott.foster at csiro.au T +61 3 6232 5178
+Postal address: CSIRO Computational Informatics, GPO Box 1538, Hobart TAS 7001
+Street Address: CSIRO Computational Informatics, Castray Esplanade, Hobart Tas 7001, Australia
+www.csiro.au
+
+
+
+------------------------------
+
+Message: 2
+Date: Fri, 4 Oct 2013 11:20:53 -0300
+From: Pedro Pequeno <pacolipe at gmail.com>
+To: scott.foster at csiro.au
+Cc: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Subject: Re: [R-sig-eco] Question on Quadratic and Cubic Parameters
+Message-ID:
+	<CAC4PjDvq7O8FQPWO1cyN8rCt+FcUYdopJcUxxWwAGjhz_YCpSA at mail.gmail.com>
+Content-Type: text/plain
+
+Hi all,
+
+besides the question of uncertainty propagation (which is not obvious to me
+either), I think there is another, more basic issue: NMDS "axes" actually
+represent a single, joint solution; they are not indepedent. Thus, modeling
+each separately is not a good idea (e.g.
+http://www.r-forge.r-project.org/forum/forum.php?thread_id=4213&forum_id=194&group_id=68).
+Still, you could use some other method that really accomplishes this such
+as PCoA.
+
+Pedro
+
+
+2013/10/4 Scott Foster <scott.foster at csiro.au>
+
+> Hi,
+>
+> Centring will help reduce the correlation amongst covariates -- it is a
+> good (and old) trick.  A surer way is to use orthogonal polynomials.  They
+> are slightly harder to interpret, but often this is immaterial.  Try
+> poly(x,3) and ?poly.  Another option would be to ditch the idea of using a
+> global polynomial and use semi-parametric methods, such as B-splines (in
+> library splines), or GAMMs (in library mgcv).
+>
+> I fear that this is all fairly academic though.  Cubics may be good enough
+> -- check the model through diagnostics.  Even though this is not trivial
+> for mixed models.
+>
+> What concerns me a bit is the comment that the dependent variable is
+> obtained from an NMDS.  How is the uncertainty in the original data
+> propagated through the NMDS and the mixed model?  At all?  Are there any
+> comments / opinions about this?  Intrigued.
+>
+> Scott
+>
+>
+> On 04/10/13 01:38, Zoltan Botta-Dukat wrote:
+>
+>> Dear Alexandre,
+>>
+>> If your variables have only positive values, there will be strong
+>> correlation between linear, quadratic and cubic terms that leads to high
+>> VIF. You can avoid it by centering the variables before calculating
+>> quadratic and cubic terms:
+>>
+>> quadratic<-(x-mean(x))^2
+>> cubic<-(x-mean(x))^3
+>>
+>> Regards,
+>>
+>> Zoltan
+>>
+>>
+>> 2013.10.03. 14:49 keltez?ssel, Alexandre Fadigas de Souza ?rta:
+>>
+>>> Dear colleagues,
+>>>
+>>>     I am working on a Linear Mixed Model with nested structure, based on
+>>> the book of Zuur et al. 2009. Mixed Effects Models and Extensions in
+>>> Ecology with R, and have a question to ask to those of you more experienced
+>>> with this model family.
+>>>
+>>>     I am using several topographic variables (elevation, slope,
+>>> convexity, facing) and one light-related variable (canopy openness) to
+>>> explain species abundance variation in 85 plots placed on 17 transects
+>>> dispersed through a coastal vegetation complex on sandy soils in
+>>> northeastern Brazil. The dependent variable is axes of a floristic
+>>> ordination (e.g., NMDS), with one separate model adjusted for each axis.
+>>>
+>>>     I will use two levels of spatial aggregation as random factors: the
+>>> transects (5 plots per transect) and broad transect clusters (transect
+>>> clusters were logistically conditioned).
+>>>
+>>>     In the ecological literature, I have seen the suggestion of
+>>> including quadratic and even cubic versions of the fixed effects variables
+>>> (in this case topographic and light) as a means to account for possible
+>>> nonlinear effects of these variables on the dependent variable. One recent
+>>> example is
+>>>
+>>> Brunbjerg, A.K., Ejrn?s, R., Svenning, J.-C., 2012. Species sorting
+>>> dominates plant metacommunity structure in coastal dunes. Acta Oecologica
+>>> 39, 33?42.
+>>>
+>>>     However, the inclusion of such quadratic and/or cubic terms in the
+>>> model produces high colinearity levels (VIF > 25, sometimes even 38!).
+>>>
+>>>     Do you think this is a valid procedure, the inclusion of these
+>>> polynomial terms?
+>>>       Thank you in advance for any ideas,
+>>>
+>>>     Alexandre
+>>>
+>>> Dr. Alexandre F. Souza
+>>> Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia
+>>>  Universidade Federal do Rio Grande do Norte (UFRN)
+>>> http://www.docente.ufrn.br/**alexsouza<http://www.docente.ufrn.br/alexsouza> Curriculo:
+>>> lattes.cnpq.br/**7844758818522706<http://lattes.cnpq.br/7844758818522706>
+>>>
+>>> ______________________________**_________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/**listinfo/r-sig-ecology<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+>>>
+>>
+>>
+>>
+> --
+> Scott Foster
+> Computational Informatics
+> CSIRO
+> E scott.foster at csiro.au T +61 3 6232 5178
+> Postal address: CSIRO Computational Informatics, GPO Box 1538, Hobart TAS
+> 7001
+> Street Address: CSIRO Computational Informatics, Castray Esplanade, Hobart
+> Tas 7001, Australia
+> www.csiro.au
+>
+>
+> ______________________________**_________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/**listinfo/r-sig-ecology<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+>
+
+	[[alternative HTML version deleted]]
+
+
+
+------------------------------
+
+Message: 3
+Date: Fri, 4 Oct 2013 09:14:06 -0700 (PDT)
+From: Lutfor <rahmannorthampton at gmail.com>
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Animal movement packages
+Message-ID: <1380903246900-7578439.post at n2.nabble.com>
+Content-Type: text/plain; charset=us-ascii
+
+Following packages might help:
+
+Adehabitat, AdehabitatHR
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Animal-movement-packages-tp7578426p7578439.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 67, Issue 3
+
+
+From b.markus.clarin at gmail.com  Mon Oct 14 10:13:57 2013
+From: b.markus.clarin at gmail.com (B.-Markus Clarin)
+Date: Mon, 14 Oct 2013 10:13:57 +0200
+Subject: [R-sig-eco] Post Hoc tests GLM
+In-Reply-To: <C21FD1E5422A1242B4594022DB0A3E190B68CC@ci011.cawthron.org.nz>
+References: <CANxP2S49jQG4ZCaQyzqaunc4-bqK=S9xwf2Ca-pU9aBjTz5quQ@mail.gmail.com>
+	<C21FD1E5422A1242B4594022DB0A3E190B68CC@ci011.cawthron.org.nz>
+Message-ID: <CA+r--qRK3kpHvtYT+RJCRH3LtTk6eHP9mWF8tgzbNQUaPxrbOw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131014/b8364413/attachment.pl>
+
+From highstat at highstat.com  Mon Oct 14 12:49:56 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Mon, 14 Oct 2013 12:49:56 +0200
+Subject: [R-sig-eco] Post Hoc tests GLM (B.-Markus Clarin)
+In-Reply-To: <mailman.1.1381744801.7807.r-sig-ecology@r-project.org>
+References: <mailman.1.1381744801.7807.r-sig-ecology@r-project.org>
+Message-ID: <525BCC54.4020606@highstat.com>
+
+
+
+>
+> Today's Topics:
+>
+>     1. Re: Post Hoc tests GLM (B.-Markus Clarin)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Mon, 14 Oct 2013 10:13:57 +0200
+> From: "B.-Markus Clarin" <b.markus.clarin at gmail.com>
+> To: Javier Atalah <Javier.Atalah at cawthron.org.nz>
+> Cc: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+> Subject: Re: [R-sig-eco] Post Hoc tests GLM
+> Message-ID:
+> 	<CA+r--qRK3kpHvtYT+RJCRH3LtTk6eHP9mWF8tgzbNQUaPxrbOw at mail.gmail.com>
+> Content-Type: text/plain
+>
+> Dear Luis and Javier,
+>
+> I am having a bit trouble understanding the model structure that was posted
+> in the original question:
+>
+> glm(formula = Frec ~ Group+ Hour:Category, family = poisson)
+>
+> I am an ecologist and I recall from all courses on statistical modelling,
+> that if I find an interaction term significant, I HAVE to retain the
+> related main effects as well, even if they have no significant effect by
+> themselves.
+
+Never say 'you have to..' in statistics. See:
+
+The Hierarchy Principle in Designed Industrial Experiments
+
+Douglas C. Montgomery, Raymond H. Myers, Walter H. Carter, Jr. and G. 
+Geoffrey Vining
+Qual. Reliab. Engng. Int. 2005; 21:197?201
+
+
+Alain Zuur
+
+>
+
+-- 
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007)
+2. Mixed effects models and extensions in ecology with R (2009)
+3. A Beginner's Guide to R (2009)
+4. Zero Inflated Models and GLMM with R (2012)
+5. A Beginner's Guide to GAM (2012)
+6. A Beginner's Guide to GLM and GLMM (2013)
+
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From highstat at highstat.com  Mon Oct 14 22:10:08 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Mon, 14 Oct 2013 22:10:08 +0200
+Subject: [R-sig-eco] Call of interest: mixed modelling course in Quebec City
+Message-ID: <525C4FA0.6030900@highstat.com>
+
+This is a call of interest for: "Introduction to linear mixed effects 
+modelling and GLMM course"
+
+Where: Quebec City, Canada
+When: 24 - 28 March 2014
+
+Flyer: http://www.highstat.com/Courses/Flyer2014_03Quebec.pdf
+General info: http://www.highstat.com/statscourse.htm
+
+
+Kind regards,
+
+Alain Zuur
+
+-- 
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007)
+2. Mixed effects models and extensions in ecology with R (2009)
+3. A Beginner's Guide to R (2009)
+4. Zero Inflated Models and GLMM with R (2012)
+5. A Beginner's Guide to GAM (2012)
+6. A Beginner's Guide to GLM and GLMM (2013)
+
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From pnelson at cfr-west.org  Tue Oct 15 18:59:38 2013
+From: pnelson at cfr-west.org (Peter Nelson)
+Date: Tue, 15 Oct 2013 09:59:38 -0700
+Subject: [R-sig-eco] angular statistics
+Message-ID: <0C3C26EA-5599-4570-B205-5FEECB70BCC5@cfr-west.org>
+
+I want to include the exposure (measured in degrees, for example, East-facing is 90) of various coastal sites in GLM and CCA analyses. Is there an appropriate transformation that I can apply to these measurements that will allow me to do this? I've found plenty of information on comparing headings, calculating means, etc, but nothing on how exposure might be used as a continuous independent variable. 
+
+Treating exposure as a categorical variable (East, Southwest, etc) seems like a fallback option, but then there is just as much of a 'difference' between SE and E sites as there is between SE and NW sites!
+
+Thanks, Pete
+
+From jdhollan at purdue.edu  Tue Oct 15 19:10:43 2013
+From: jdhollan at purdue.edu (Holland, Jeffrey D)
+Date: Tue, 15 Oct 2013 17:10:43 +0000
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <0C3C26EA-5599-4570-B205-5FEECB70BCC5@cfr-west.org>
+References: <0C3C26EA-5599-4570-B205-5FEECB70BCC5@cfr-west.org>
+Message-ID: <30A9CCE0A986F74C837D6F87F9C581861367E631@WPVEXCMBX01.purdue.lcl>
+
+Hello Pete,
+   You could include the sine and cosine of the angles.  A good book on this kind of analysis:
+Fisher, N.I. 1993. Statistical Analysis of Circular Data. Cambridge Univ. Press.
+To make this closer to exposure, perhaps you could first "rotate" the compass so that 360' is facing the direction of maximum exposure, and back-transform later?  Just a thought.
+Cheers,  Jeff
+
+____________________
+Jeffrey D. Holland                                  (765) 494-7739
+Assoc. Prof. of Landscape Ecology & Biodiversity    jdhollan #at# purdue.edu
+Dept. of Entomology, Purdue University              Smith Hall B17, 901 W. State St., West Lafayette, IN 47907
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Peter Nelson
+Sent: Tuesday, October 15, 2013 1:00 PM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] angular statistics
+
+I want to include the exposure (measured in degrees, for example, East-facing is 90) of various coastal sites in GLM and CCA analyses. Is there an appropriate transformation that I can apply to these measurements that will allow me to do this? I've found plenty of information on comparing headings, calculating means, etc, but nothing on how exposure might be used as a continuous independent variable. 
+
+Treating exposure as a categorical variable (East, Southwest, etc) seems like a fallback option, but then there is just as much of a 'difference' between SE and E sites as there is between SE and NW sites!
+
+Thanks, Pete
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From dmck at u.washington.edu  Tue Oct 15 20:45:14 2013
+From: dmck at u.washington.edu (Don McKenzie)
+Date: Tue, 15 Oct 2013 11:45:14 -0700
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <0C3C26EA-5599-4570-B205-5FEECB70BCC5@cfr-west.org>
+References: <0C3C26EA-5599-4570-B205-5FEECB70BCC5@cfr-west.org>
+Message-ID: <CD8BB4BE-0DB6-4863-B8AF-1D7443D79CF8@u.washington.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131015/dcbbfd82/attachment.pl>
+
+From pnelson at cfr-west.org  Tue Oct 15 23:19:54 2013
+From: pnelson at cfr-west.org (Peter Nelson)
+Date: Tue, 15 Oct 2013 14:19:54 -0700
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <CD8BB4BE-0DB6-4863-B8AF-1D7443D79CF8@u.washington.edu>
+References: <0C3C26EA-5599-4570-B205-5FEECB70BCC5@cfr-west.org>
+	<CD8BB4BE-0DB6-4863-B8AF-1D7443D79CF8@u.washington.edu>
+Message-ID: <13AB12EA-E808-4217-9E06-62AFC3A7C656@cfr-west.org>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131015/eb6d03ec/attachment.pl>
+
+From dmck at u.washington.edu  Tue Oct 15 23:53:21 2013
+From: dmck at u.washington.edu (Donald McKenzie)
+Date: Tue, 15 Oct 2013 14:53:21 -0700 (PDT)
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <13AB12EA-E808-4217-9E06-62AFC3A7C656@cfr-west.org>
+Message-ID: <alpine.LRH.2.01.1310151453210.15539@hymn03.u.washington.edu>
+
+Make sure you use consistent units. PI/2 in radians, 90 in degrees. cos(90-90) = 1, cos(270 - 90) = -1. So west (270) has the lowest value, east the highest.
+
+On Tue, 15 Oct 2013, Peter Nelson wrote:
+
+> Thanks Don.?I tried the transformation you suggested, but the results don't
+> appear promising (0 deg doesn't = 360 deg, intervals vary):
+> 0
+> 6.12574E-17
+> 10
+> -0.544021111
+> 20
+> 0.912945251
+> 30
+> -0.988031624
+> 40
+> 0.74511316
+> 50
+> -0.262374854
+> 60
+> -0.304810621
+> 70
+> 0.773890682
+> 80
+> -0.993888654
+> 90
+> 0.893996664
+> 
+> I tried?
+> 
+> east.exposure=cos(exposure*PI/180)?
+> 
+> This seems better (e.g., 0 degrees = 360 degrees) see below), but the
+> absolute values of the intervals aren't consistent. No surprise, I suppose,
+> but what to do? ?
+> 
+> Thanks, Peter
+> 
+> 0
+> 1
+> 10
+> 0.984807753
+> 20
+> 0.939692621
+> 30
+> 0.866025404
+> 40
+> 0.766044443
+> 50
+> 0.64278761
+> 60
+> 0.5
+> 70
+> 0.342020143
+> 80
+> 0.173648178
+> 90
+> 6.12574E-17
+> 100
+> -0.173648178
+> 110
+> -0.342020143
+> 120
+> -0.5
+> 130
+> -0.64278761
+> 140
+> -0.766044443
+> 150
+> -0.866025404
+> 160
+> -0.939692621
+> 170
+> -0.984807753
+> 180
+> -1
+> 190
+> -0.984807753
+> 200
+> -0.939692621
+> 210
+> -0.866025404
+> 220
+> -0.766044443
+> 230
+> -0.64278761
+> 240
+> -0.5
+> 250
+> -0.342020143
+> 260
+> -0.173648178
+> 270
+> -1.83772E-16
+> 280
+> 0.173648178
+> 290
+> 0.342020143
+> 300
+> 0.5
+> 310
+> 0.64278761
+> 320
+> 0.766044443
+> 330
+> 0.866025404
+> 340
+> 0.939692621
+> 350
+> 0.984807753
+> 360
+> 1 On Oct 15, 2013, at 11:45 AM, Don McKenzie <dmck at u.washington.edu> wrote:
+> 
+>       There is precedent in the ecological literature for using a
+>       cosine transformation IF you have reason to believe that your
+>       predictor varies continuously and symmetrically in its effects
+>       around a circle. ?For example, if due east were the "most"
+>       exposure, and due west the least, with due north and south
+>       being roughly equal, you could create a new predictor
+>       called?"east.exposure" with (most basically)
+> east.exposure = cos(exposure - PI/2)
+> 
+> Many more complicated extensions of this idea are possible,
+> associated with nonlinear or asymmetrical gradients, but I will leave
+> that to you or others on the list.
+> 
+> On Oct 15, 2013, at 9:59 AM, Peter Nelson wrote:
+> 
+>       I want to include the exposure (measured in degrees, for
+>       example, East-facing is 90) of various coastal sites in
+>       GLM and CCA analyses. Is there an appropriate
+>       transformation that I can apply to these measurements
+>       that will allow me to do this? I've found plenty of
+>       information on comparing headings, calculating means,
+>       etc, but nothing on how exposure might be used as a
+>       continuous independent variable.
+> 
+>       Treating exposure as a categorical variable (East,
+>       Southwest, etc) seems like a fallback option, but then
+>       there is just as much of a 'difference' between SE and E
+>       sites as there is between SE and NW sites!
+> 
+>       Thanks, Pete
+>       _______________________________________________
+>       R-sig-ecology mailing list
+>       R-sig-ecology at r-project.org
+>       https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> 
+> 
+> 
+> Don McKenzie
+> 
+> Affiliate Professor
+> School of Environmental and Forest Sciences
+> University of Washington
+> 
+> dmck at uw.edu
+> 
+> 
+> 
+> 
+> 
+> 
+>
+
+From v_coudrain at voila.fr  Wed Oct 16 12:41:46 2013
+From: v_coudrain at voila.fr (v_coudrain at voila.fr)
+Date: Wed, 16 Oct 2013 12:41:46 +0200 (CEST)
+Subject: [R-sig-eco] Unbalanced data and random effects
+Message-ID: <267401405.57851381920106325.JavaMail.www@wwinf7132>
+
+Dear all,
+
+I performed a census of insects at different sites and measured there size. I would like to know if size is related to an environmental factor. I modelled the size as a 
+fonction of the factor with site as a random variable to account for within-site variability. However I have strong unbalanced data with some sites having only two 
+individuals and others up to 100. Is having site as a random factor sufficient to deal with this strong data unbalance? The residual fit of the data is quite bad, 
+certainly because of the strong difference in variance among sites. Would anybody have some advice? Thank you!
+___________________________________________________________
+Les pr?visions m?t?o pour aujourd'hui, demain et jusqu'? 8 jours ! Voila.fr http://meteo.voila.fr/
+
+
+From david.warton at unsw.edu.au  Wed Oct 16 13:47:18 2013
+From: david.warton at unsw.edu.au (David Warton)
+Date: Wed, 16 Oct 2013 11:47:18 +0000
+Subject: [R-sig-eco] angular statistics
+Message-ID: <81BBAE3F09DD6941BC5CA30567F783756F38629B@INFPWXM008.ad.unsw.edu.au>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131016/3bdf7c5e/attachment.pl>
+
+From rob.robinson at bto.org  Wed Oct 16 14:04:06 2013
+From: rob.robinson at bto.org (Rob Robinson)
+Date: Wed, 16 Oct 2013 13:04:06 +0100
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <81BBAE3F09DD6941BC5CA30567F783756F38629B@INFPWXM008.ad.unsw.edu.au>
+References: <81BBAE3F09DD6941BC5CA30567F783756F38629B@INFPWXM008.ad.unsw.edu.au>
+Message-ID: <CAGcXcEZftTTg8tJORjzns5FNGQ+wTxE5Y6N2qZ4MAMASoQqV4Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131016/30189d28/attachment.pl>
+
+From jbrewer at olemiss.edu  Wed Oct 16 14:32:40 2013
+From: jbrewer at olemiss.edu (Steve Brewer)
+Date: Wed, 16 Oct 2013 07:32:40 -0500
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <0C3C26EA-5599-4570-B205-5FEECB70BCC5@cfr-west.org>
+Message-ID: <CE83ED70.2430C%jbrewer@olemiss.edu>
+
+Peter,
+
+For my purposes (I.e., estimating exposure and drying potential in
+northern hemisphere temperate forests), I simply subtract 45 degrees from
+the measured aspect in degrees, convert to radians, and then take the
+cosine of the adjusted angle. If I want to make exposure positive, I then
+reverse the sign. In this way, southwest-facing slopes get the maximum
+value (1) and northeast-facing slopes get the lowest (-1). As others have
+mentioned, this approach gives equal weight to east-west and north-south
+variation in exposure, which may or may not be valid for a given situation.
+
+In your case, it sounds like you want to assume the east-facing aspects
+are maximally exposed. In that case, I would just subtract 90 degrees from
+your degrees measurement, convert to radians, and then take the cosine,
+which I believe amounts to the same approach that Don suggested.
+East-facing slopes should end up with a value of 1 and west-facing slopes
+a value of -1 (due north and south will have values of 0). If you want to
+give north-facing aspects less exposure than south-facing aspects (I don't
+know whether you are in the northern or southern hemisphere), then you
+could subtract 135 degrees from your measurements, making southeast
+aspects the most exposed.
+
+Steve
+ 
+J. Stephen Brewer 
+Professor 
+Department of Biology
+PO Box 1848
+ University of Mississippi
+University, Mississippi 38677-1848
+ Brewer web page - http://home.olemiss.edu/~jbrewer/
+FAX - 662-915-5144
+Phone - 662-915-1077
+
+
+
+
+On 10/15/13 11:59 AM, "Peter Nelson" <pnelson at cfr-west.org> wrote:
+
+>I want to include the exposure (measured in degrees, for example,
+>East-facing is 90) of various coastal sites in GLM and CCA analyses. Is
+>there an appropriate transformation that I can apply to these
+>measurements that will allow me to do this? I've found plenty of
+>information on comparing headings, calculating means, etc, but nothing on
+>how exposure might be used as a continuous independent variable.
+>
+>Treating exposure as a categorical variable (East, Southwest, etc) seems
+>like a fallback option, but then there is just as much of a 'difference'
+>between SE and E sites as there is between SE and NW sites!
+>
+>Thanks, Pete
+>_______________________________________________
+>R-sig-ecology mailing list
+>R-sig-ecology at r-project.org
+>https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From krzysztof.sakrejda at gmail.com  Wed Oct 16 15:28:32 2013
+From: krzysztof.sakrejda at gmail.com (Krzysztof Sakrejda)
+Date: Wed, 16 Oct 2013 09:28:32 -0400
+Subject: [R-sig-eco] Unbalanced data and random effects
+In-Reply-To: <267401405.57851381920106325.JavaMail.www@wwinf7132>
+References: <267401405.57851381920106325.JavaMail.www@wwinf7132>
+Message-ID: <CAJCSVaAAypN_mCifqrdpJr2u+70tK=jDB5O_p-oOutvquJb-vQ@mail.gmail.com>
+
+On Wed, Oct 16, 2013 at 6:41 AM,  <v_coudrain at voila.fr> wrote:
+> Dear all,
+>
+> I performed a census of insects at different sites and measured there size. I would like to know if size is related to an environmental factor. I modelled the size as a
+> fonction of the factor with site as a random variable to account for within-site variability. However I have strong unbalanced data with some sites having only two
+> individuals and others up to 100. Is having site as a random factor sufficient to deal with this strong data unbalance?
+
+I'm not sure what you mean by "deal with", but reading about shrinkage
+in random effects models in any decent source would probably be a fine
+start for you, either here:
+
+http://www.amazon.com/Effects-Extensions-Ecology-Statistics-Biology/dp/0387874577/ref=la_B001JRWU88_1_2/192-3027843-3405263?s=books&ie=UTF8&qid=1381929893&sr=1-2
+
+or here:
+
+http://www.amazon.com/Analysis-Regression-Multilevel-Hierarchical-Models/dp/052168689X/ref=sr_1_3?s=books&ie=UTF8&qid=1381929942&sr=1-3&keywords=gelman+bayesian
+
+The short answer is that the site effect will shrink toward the
+average site effect for sites with few individuals.
+
+Krzysztof
+
+> The residual fit of the data is quite bad,
+> certainly because of the strong difference in variance among sites.
+
+> Would anybody have some advice? Thank you!
+> ___________________________________________________________
+> Les pr?visions m?t?o pour aujourd'hui, demain et jusqu'? 8 jours ! Voila.fr http://meteo.voila.fr/
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+
+Krzysztof Sakrejda
+
+Organismic and Evolutionary Biology
+University of Massachusetts, Amherst
+319 Morrill Science Center South
+611 N. Pleasant Street
+Amherst, MA 01003
+
+work #: 413-325-6555
+email: sakrejda at cns.umass.edu
+
+
+From chris at trickysolutions.com.au  Thu Oct 17 00:20:41 2013
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Thu, 17 Oct 2013 09:20:41 +1100
+Subject: [R-sig-eco] Unbalanced data and random effects
+In-Reply-To: <CAJCSVaAAypN_mCifqrdpJr2u+70tK=jDB5O_p-oOutvquJb-vQ@mail.gmail.com>
+References: <267401405.57851381920106325.JavaMail.www@wwinf7132>
+	<CAJCSVaAAypN_mCifqrdpJr2u+70tK=jDB5O_p-oOutvquJb-vQ@mail.gmail.com>
+Message-ID: <4db255b8c74ec48d7887b5c3dc86595b@mail.gmail.com>
+
+Hi Krysztof,
+
+Did you have a specific section of Zuur et als book in mind? I've pulled
+it off my shelf and tried looking up shrinkage, unbalanced design, design,
+etc in the index but couldn't find anything relevant. I'm sure it's in
+there, but it?s a rather large book to read in 1 go!!
+
+Chris Howden B.Sc. (Hons) GStat.
+Founding Partner
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(skype) chris.howden
+chris at trickysolutions.com.au
+
+
+
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Krzysztof
+Sakrejda
+Sent: Thursday, 17 October 2013 12:29 AM
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Unbalanced data and random effects
+
+On Wed, Oct 16, 2013 at 6:41 AM,  <v_coudrain at voila.fr> wrote:
+> Dear all,
+>
+> I performed a census of insects at different sites and measured there
+> size. I would like to know if size is related to an environmental
+> factor. I modelled the size as a fonction of the factor with site as a
+random variable to account for within-site variability. However I have
+strong unbalanced data with some sites having only two individuals and
+others up to 100. Is having site as a random factor sufficient to deal
+with this strong data unbalance?
+
+I'm not sure what you mean by "deal with", but reading about shrinkage in
+random effects models in any decent source would probably be a fine start
+for you, either here:
+
+http://www.amazon.com/Effects-Extensions-Ecology-Statistics-Biology/dp/038
+7874577/ref=la_B001JRWU88_1_2/192-3027843-3405263?s=books&ie=UTF8&qid=1381
+929893&sr=1-2
+
+or here:
+
+http://www.amazon.com/Analysis-Regression-Multilevel-Hierarchical-Models/d
+p/052168689X/ref=sr_1_3?s=books&ie=UTF8&qid=1381929942&sr=1-3&keywords=gel
+man+bayesian
+
+The short answer is that the site effect will shrink toward the average
+site effect for sites with few individuals.
+
+Krzysztof
+
+> The residual fit of the data is quite bad, certainly because of the
+> strong difference in variance among sites.
+
+> Would anybody have some advice? Thank you!
+> ___________________________________________________________
+> Les pr?visions m?t?o pour aujourd'hui, demain et jusqu'? 8 jours !
+> Voila.fr http://meteo.voila.fr/
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+--
+
+Krzysztof Sakrejda
+
+Organismic and Evolutionary Biology
+University of Massachusetts, Amherst
+319 Morrill Science Center South
+611 N. Pleasant Street
+Amherst, MA 01003
+
+work #: 413-325-6555
+email: sakrejda at cns.umass.edu
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From paolo.piras at uniroma3.it  Thu Oct 17 01:49:22 2013
+From: paolo.piras at uniroma3.it (Paolo Piras)
+Date: Wed, 16 Oct 2013 23:49:22 +0000
+Subject: [R-sig-eco] envfit() in vegan
+Message-ID: <7d3811796de440999282b84be7dba4dd@DBXPR04MB111.eurprd04.prod.outlook.com>
+
+Dear list,
+I write you because I do not understand the behavior of envfit() in vegan. 
+Basically, it takes a matrix coming from an ordination procedure and it fits on it another matrix  (often an environmental matrix).
+The projections of points onto vectors have maximum correlation with corresponding environmental variables.
+
+A permutation test is associated to this procedure and it basically performs a series of correlations between any column in the environmental matrix and the ordnation matrix.
+Maybe my question is trivial (or simply ...wrong) but..intuitively, this should return the same results found from a series of separate multivariate regressions between any single column in the environmental matrix and the entire ordination matrix.
+However it is not the case, being the envfit() results much more liberal when compared to regression (i.e. using rda) and the r2 are drastically larger than R-sq from rda.
+I suspect that the metric undergoing the permutation test of significance in envfit() that is squared correlation coefficient (r^2) does not correspond to the R-sq calculated using rda. 
+
+Thanks in advance for any advice
+best
+paolo
+
+
+
+
+
+
+
+From krzysztof.sakrejda at gmail.com  Thu Oct 17 02:56:38 2013
+From: krzysztof.sakrejda at gmail.com (Krzysztof Sakrejda)
+Date: Wed, 16 Oct 2013 20:56:38 -0400
+Subject: [R-sig-eco] Unbalanced data and random effects
+In-Reply-To: <4db255b8c74ec48d7887b5c3dc86595b@mail.gmail.com>
+References: <267401405.57851381920106325.JavaMail.www@wwinf7132>
+	<CAJCSVaAAypN_mCifqrdpJr2u+70tK=jDB5O_p-oOutvquJb-vQ@mail.gmail.com>
+	<4db255b8c74ec48d7887b5c3dc86595b@mail.gmail.com>
+Message-ID: <CAJCSVaANzSaYB-suJqDOZJjadBBhaJdbHtkjRDAf7Dn=W7mw9w@mail.gmail.com>
+
+On Wed, Oct 16, 2013 at 6:20 PM, Chris Howden
+<chris at trickysolutions.com.au> wrote:
+> Hi Krysztof,
+>
+> Did you have a specific section of Zuur et als book in mind? I've pulled
+> it off my shelf and tried looking up shrinkage, unbalanced design, design,
+> etc in the index but couldn't find anything relevant. I'm sure it's in
+> there, but it?s a rather large book to read in 1 go!!
+
+I was thinking "Mixed Effects Models and Extensions in Ecology with R", but now
+that I search through Zuur in Google books there appears to be no mention of
+either "partial pooling" or "shrinkage" (I don't have the book on
+hand).  It's not mentioned
+in the index either...  I recommended  Zuur because I know a lot of
+ecologists use it
+and shrinkage is such a basic and useful topic I expected it to be covered.
+
+It's page 477 in Gelman and Hill.  Since I stuck my foot in it by
+recommending Zuur
+without checking: the basic idea is that if you have a data set with
+unbalanced group sizes and you just call everything one group, you could get an
+estimated group mean, MU.  If you use fixed effects and you estimate
+one mean per
+group(mu_1, mu_2, ..., mu_k), and the means for the small groups will be poorly
+estimated (large standard errors).  If you use a random effects model,
+you estimate
+one mean per group but you also constrain the group means (mu*_1,
+mu*_2, ..., mu*_k)
+to come from a normal distribution (with an estimated mean, MU*, and
+variance) which has two
+effects important for interpretation: 1) groups with fewer
+observations will mostly be
+represented by the overall mean (mu*_1 is closer to MU* than mu_1 is
+to MU, and the
+effect is more extreme for groups with small sample size); and 2) this
+effect is even more pronounced
+in groups with large deviations from MU*.
+
+You can get a feel for how much this matters by simulating/fitting
+some data similar
+to your data in R (Kery's "Introduction to WinBUGS for ecologists"
+does a lot of this
+kind simulation).  The terms used to describe these effects are
+"shrinkage" and "partial pooling",
+since complete pooling is what you get when you disregard the
+divisions.  You can also
+calculate how much pooling is being done directly (Gelman and Hill, pg. 477):
+
+mu*_j = w_j x MU* + (1-w_j) * mean(observations in group j)
+
+w_j = 1- (estimated variance of random effect) / (estimated variance
+of random effect + within-group variance/group size)
+
+Where w_j tells you how much that groups estimate is pooled towards the mean.
+
+That's the short and sloppy version, but the discussion in Gelman is
+good, sorry for the confusion,
+maybe somebody else knows for sure where/if Zuur discusses this?
+
+Krzysztof
+
+>
+> Chris Howden B.Sc. (Hons) GStat.
+> Founding Partner
+> Evidence Based Strategic Development, IP Commercialisation and Innovation,
+> Data Analysis, Modelling and Training
+> (mobile) 0410 689 945
+> (skype) chris.howden
+> chris at trickysolutions.com.au
+>
+>
+>
+>
+> Disclaimer: The information in this email and any attachments to it are
+> confidential and may contain legally privileged information. If you are
+> not the named or intended recipient, please delete this communication and
+> contact us immediately. Please note you are not authorised to copy, use or
+> disclose this communication or any attachments without our consent.
+> Although this email has been checked by anti-virus software, there is a
+> risk that email messages may be corrupted or infected by viruses or other
+> interferences. No responsibility is accepted for such interference. Unless
+> expressly stated, the views of the writer are not those of the company.
+> Tricky Solutions always does our best to provide accurate forecasts and
+> analyses based on the data supplied, however it is possible that some
+> important predictors were not included in the data sent to us. Information
+> provided by us should not be solely relied upon when making decisions and
+> clients should use their own judgement.
+>
+>
+> -----Original Message-----
+> From: r-sig-ecology-bounces at r-project.org
+> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Krzysztof
+> Sakrejda
+> Sent: Thursday, 17 October 2013 12:29 AM
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] Unbalanced data and random effects
+>
+> On Wed, Oct 16, 2013 at 6:41 AM,  <v_coudrain at voila.fr> wrote:
+>> Dear all,
+>>
+>> I performed a census of insects at different sites and measured there
+>> size. I would like to know if size is related to an environmental
+>> factor. I modelled the size as a fonction of the factor with site as a
+> random variable to account for within-site variability. However I have
+> strong unbalanced data with some sites having only two individuals and
+> others up to 100. Is having site as a random factor sufficient to deal
+> with this strong data unbalance?
+>
+> I'm not sure what you mean by "deal with", but reading about shrinkage in
+> random effects models in any decent source would probably be a fine start
+> for you, either here:
+>
+> http://www.amazon.com/Effects-Extensions-Ecology-Statistics-Biology/dp/038
+> 7874577/ref=la_B001JRWU88_1_2/192-3027843-3405263?s=books&ie=UTF8&qid=1381
+> 929893&sr=1-2
+>
+> or here:
+>
+> http://www.amazon.com/Analysis-Regression-Multilevel-Hierarchical-Models/d
+> p/052168689X/ref=sr_1_3?s=books&ie=UTF8&qid=1381929942&sr=1-3&keywords=gel
+> man+bayesian
+>
+> The short answer is that the site effect will shrink toward the average
+> site effect for sites with few individuals.
+>
+> Krzysztof
+>
+>> The residual fit of the data is quite bad, certainly because of the
+>> strong difference in variance among sites.
+>
+>> Would anybody have some advice? Thank you!
+>> ___________________________________________________________
+>> Les pr?visions m?t?o pour aujourd'hui, demain et jusqu'? 8 jours !
+>> Voila.fr http://meteo.voila.fr/
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+> --
+>
+> Krzysztof Sakrejda
+>
+> Organismic and Evolutionary Biology
+> University of Massachusetts, Amherst
+> 319 Morrill Science Center South
+> 611 N. Pleasant Street
+> Amherst, MA 01003
+>
+> work #: 413-325-6555
+> email: sakrejda at cns.umass.edu
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+
+Krzysztof Sakrejda
+
+Organismic and Evolutionary Biology
+University of Massachusetts, Amherst
+319 Morrill Science Center South
+611 N. Pleasant Street
+Amherst, MA 01003
+
+work #: 413-325-6555
+email: sakrejda at cns.umass.edu
+
+
+From chris at trickysolutions.com.au  Thu Oct 17 03:00:25 2013
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Thu, 17 Oct 2013 12:00:25 +1100
+Subject: [R-sig-eco] Unbalanced data and random effects
+In-Reply-To: <CAJCSVaANzSaYB-suJqDOZJjadBBhaJdbHtkjRDAf7Dn=W7mw9w@mail.gmail.com>
+References: <267401405.57851381920106325.JavaMail.www@wwinf7132>
+	<CAJCSVaAAypN_mCifqrdpJr2u+70tK=jDB5O_p-oOutvquJb-vQ@mail.gmail.com>
+	<4db255b8c74ec48d7887b5c3dc86595b@mail.gmail.com>
+	<CAJCSVaANzSaYB-suJqDOZJjadBBhaJdbHtkjRDAf7Dn=W7mw9w@mail.gmail.com>
+Message-ID: <b188e1c134dd843410f3293c3bc2574d@mail.gmail.com>
+
+Thanks Krzysztof,
+
+Your explanation makes a lot of sense.
+
+Chris Howden B.Sc. (Hons) GStat.
+Founding Partner
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(skype) chris.howden
+chris at trickysolutions.com.au
+
+
+
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: Krzysztof Sakrejda [mailto:krzysztof.sakrejda at gmail.com]
+Sent: Thursday, 17 October 2013 11:57 AM
+To: Chris Howden
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Unbalanced data and random effects
+
+On Wed, Oct 16, 2013 at 6:20 PM, Chris Howden
+<chris at trickysolutions.com.au> wrote:
+> Hi Krysztof,
+>
+> Did you have a specific section of Zuur et als book in mind? I've
+> pulled it off my shelf and tried looking up shrinkage, unbalanced
+> design, design, etc in the index but couldn't find anything relevant.
+> I'm sure it's in there, but it?s a rather large book to read in 1 go!!
+
+I was thinking "Mixed Effects Models and Extensions in Ecology with R",
+but now that I search through Zuur in Google books there appears to be no
+mention of either "partial pooling" or "shrinkage" (I don't have the book
+on hand).  It's not mentioned in the index either...  I recommended  Zuur
+because I know a lot of ecologists use it and shrinkage is such a basic
+and useful topic I expected it to be covered.
+
+It's page 477 in Gelman and Hill.  Since I stuck my foot in it by
+recommending Zuur without checking: the basic idea is that if you have a
+data set with unbalanced group sizes and you just call everything one
+group, you could get an estimated group mean, MU.  If you use fixed
+effects and you estimate one mean per group(mu_1, mu_2, ..., mu_k), and
+the means for the small groups will be poorly estimated (large standard
+errors).  If you use a random effects model, you estimate one mean per
+group but you also constrain the group means (mu*_1, mu*_2, ..., mu*_k) to
+come from a normal distribution (with an estimated mean, MU*, and
+variance) which has two
+effects important for interpretation: 1) groups with fewer observations
+will mostly be represented by the overall mean (mu*_1 is closer to MU*
+than mu_1 is to MU, and the effect is more extreme for groups with small
+sample size); and 2) this effect is even more pronounced in groups with
+large deviations from MU*.
+
+You can get a feel for how much this matters by simulating/fitting some
+data similar to your data in R (Kery's "Introduction to WinBUGS for
+ecologists"
+does a lot of this
+kind simulation).  The terms used to describe these effects are
+"shrinkage" and "partial pooling", since complete pooling is what you get
+when you disregard the divisions.  You can also calculate how much pooling
+is being done directly (Gelman and Hill, pg. 477):
+
+mu*_j = w_j x MU* + (1-w_j) * mean(observations in group j)
+
+w_j = 1- (estimated variance of random effect) / (estimated variance of
+random effect + within-group variance/group size)
+
+Where w_j tells you how much that groups estimate is pooled towards the
+mean.
+
+That's the short and sloppy version, but the discussion in Gelman is good,
+sorry for the confusion, maybe somebody else knows for sure where/if Zuur
+discusses this?
+
+Krzysztof
+
+>
+> Chris Howden B.Sc. (Hons) GStat.
+> Founding Partner
+> Evidence Based Strategic Development, IP Commercialisation and
+> Innovation, Data Analysis, Modelling and Training
+> (mobile) 0410 689 945
+> (skype) chris.howden
+> chris at trickysolutions.com.au
+>
+>
+>
+>
+> Disclaimer: The information in this email and any attachments to it
+> are confidential and may contain legally privileged information. If
+> you are not the named or intended recipient, please delete this
+> communication and contact us immediately. Please note you are not
+> authorised to copy, use or disclose this communication or any
+attachments without our consent.
+> Although this email has been checked by anti-virus software, there is
+> a risk that email messages may be corrupted or infected by viruses or
+> other interferences. No responsibility is accepted for such
+> interference. Unless expressly stated, the views of the writer are not
+those of the company.
+> Tricky Solutions always does our best to provide accurate forecasts
+> and analyses based on the data supplied, however it is possible that
+> some important predictors were not included in the data sent to us.
+> Information provided by us should not be solely relied upon when
+> making decisions and clients should use their own judgement.
+>
+>
+> -----Original Message-----
+> From: r-sig-ecology-bounces at r-project.org
+> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Krzysztof
+> Sakrejda
+> Sent: Thursday, 17 October 2013 12:29 AM
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] Unbalanced data and random effects
+>
+> On Wed, Oct 16, 2013 at 6:41 AM,  <v_coudrain at voila.fr> wrote:
+>> Dear all,
+>>
+>> I performed a census of insects at different sites and measured there
+>> size. I would like to know if size is related to an environmental
+>> factor. I modelled the size as a fonction of the factor with site as
+>> a
+> random variable to account for within-site variability. However I have
+> strong unbalanced data with some sites having only two individuals and
+> others up to 100. Is having site as a random factor sufficient to deal
+> with this strong data unbalance?
+>
+> I'm not sure what you mean by "deal with", but reading about shrinkage
+> in random effects models in any decent source would probably be a fine
+> start for you, either here:
+>
+> http://www.amazon.com/Effects-Extensions-Ecology-Statistics-Biology/dp
+> /038
+> 7874577/ref=la_B001JRWU88_1_2/192-3027843-3405263?s=books&ie=UTF8&qid=
+> 1381
+> 929893&sr=1-2
+>
+> or here:
+>
+> http://www.amazon.com/Analysis-Regression-Multilevel-Hierarchical-Mode
+> ls/d
+> p/052168689X/ref=sr_1_3?s=books&ie=UTF8&qid=1381929942&sr=1-3&keywords
+> =gel
+> man+bayesian
+>
+> The short answer is that the site effect will shrink toward the
+> average site effect for sites with few individuals.
+>
+> Krzysztof
+>
+>> The residual fit of the data is quite bad, certainly because of the
+>> strong difference in variance among sites.
+>
+>> Would anybody have some advice? Thank you!
+>> ___________________________________________________________
+>> Les pr?visions m?t?o pour aujourd'hui, demain et jusqu'? 8 jours !
+>> Voila.fr http://meteo.voila.fr/
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+> --
+>
+> Krzysztof Sakrejda
+>
+> Organismic and Evolutionary Biology
+> University of Massachusetts, Amherst
+> 319 Morrill Science Center South
+> 611 N. Pleasant Street
+> Amherst, MA 01003
+>
+> work #: 413-325-6555
+> email: sakrejda at cns.umass.edu
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+--
+
+Krzysztof Sakrejda
+
+Organismic and Evolutionary Biology
+University of Massachusetts, Amherst
+319 Morrill Science Center South
+611 N. Pleasant Street
+Amherst, MA 01003
+
+work #: 413-325-6555
+email: sakrejda at cns.umass.edu
+
+
+From jari.oksanen at oulu.fi  Thu Oct 17 09:32:30 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 17 Oct 2013 07:32:30 +0000
+Subject: [R-sig-eco] envfit() in vegan
+In-Reply-To: <7d3811796de440999282b84be7dba4dd@DBXPR04MB111.eurprd04.prod.outlook.com>
+References: <7d3811796de440999282b84be7dba4dd@DBXPR04MB111.eurprd04.prod.outlook.com>
+Message-ID: <B3818B5F-4D5B-4CF3-83F5-35D9BD876DCC@oulu.fi>
+
+
+On 17/10/2013, at 02:49 AM, Paolo Piras wrote:
+
+> Dear list,
+> I write you because I do not understand the behavior of envfit() in vegan. 
+> Basically, it takes a matrix coming from an ordination procedure and it fits on it another matrix  (often an environmental matrix).
+> The projections of points onto vectors have maximum correlation with corresponding environmental variables.
+> 
+> A permutation test is associated to this procedure and it basically performs a series of correlations between any column in the environmental matrix and the ordnation matrix.
+> Maybe my question is trivial (or simply ...wrong) but..intuitively, this should return the same results found from a series of separate multivariate regressions between any single column in the environmental matrix and the entire ordination matrix.
+> However it is not the case, being the envfit() results much more liberal when compared to regression (i.e. using rda) and the r2 are drastically larger than R-sq from rda.
+> I suspect that the metric undergoing the permutation test of significance in envfit() that is squared correlation coefficient (r^2) does not correspond to the R-sq calculated using rda. 
+> 
+Paolo,
+
+I am afraid I cannot quite understand your problems. A reproducible example with some numbers could be useful.
+
+I did not quite catch your comparison of RDA and envfit. They are quite different methods, and their R2's really are for different things (but with special tricks these things can be made similar). In RDA, the R2 tells how well the ordination predicts the species abundances, and in envfit() the R2 tells how well the ordination predicts the environmental variables. For a basic and normal usage of RDA let us compare the following cases:
+
+library(vegan)
+data(varespec, varechem)
+mod <- rda(varespec ~ Al + P + K, varechem)
+## gives unadjusted R2=0.377
+envfit(mod ~ Al + P + K, varechem, display="lc", choices=1:3)
+## **should** give for all vars r2=1 because they were the constraints
+
+Cheers, Jari Oksanen
+
+
+From v_coudrain at voila.fr  Thu Oct 17 11:39:34 2013
+From: v_coudrain at voila.fr (v_coudrain at voila.fr)
+Date: Thu, 17 Oct 2013 11:39:34 +0200 (CEST)
+Subject: [R-sig-eco] Unbalanced data and random effects
+Message-ID: <1886004689.237441382002774497.JavaMail.www@wwinf7132>
+
+Thank you very much for these explanations. It is quite technical and I am not sure that I got it all, but I will try to find the book of Gelman&Hill to get more insight into 
+shrinkage. I read the book of Zuur and as you said the topic is not extensively covered.
+
+___________________________________________________________
+Les pr?visions m?t?o pour aujourd'hui, demain et jusqu'? 8 jours ! Voila.fr http://meteo.voila.fr/
+
+
+From paolo.piras at uniroma3.it  Thu Oct 17 14:03:53 2013
+From: paolo.piras at uniroma3.it (Paolo Piras)
+Date: Thu, 17 Oct 2013 12:03:53 +0000
+Subject: [R-sig-eco] envfit() in vegan
+In-Reply-To: <B3818B5F-4D5B-4CF3-83F5-35D9BD876DCC@oulu.fi>
+References: <7d3811796de440999282b84be7dba4dd@DBXPR04MB111.eurprd04.prod.outlook.com>,
+	<B3818B5F-4D5B-4CF3-83F5-35D9BD876DCC@oulu.fi>
+Message-ID: <6fbd278267af46e09a37607f097370da@DBXPR04MB111.eurprd04.prod.outlook.com>
+
+Thankyou very much Jari,
+actually this clarifies anything in my mind about this topic. 
+What I was looking for is plotting the correlation vectors of my environmental variables (that in my hypothesis are the independent variables) on to my ordination scores of my dependent table. 
+Graphically, envfit returns the plot I want but the orientation of these vectors are build under the opposite hypothesis that environmental variables are the dependent table.
+Maybe a manual solution for my need is to build a list of centered vectors each of which orientated upon the correlation between environmental variables and the ordination scores
+best
+paolo
+
+
+________________________________________
+Da: Jari Oksanen <jari.oksanen at oulu.fi>
+Inviato: gioved? 17 ottobre 2013 9.32
+A: Paolo Piras
+Cc: r-sig-ecology at r-project.org
+Oggetto: Re: [R-sig-eco] envfit() in vegan
+
+On 17/10/2013, at 02:49 AM, Paolo Piras wrote:
+
+> Dear list,
+> I write you because I do not understand the behavior of envfit() in vegan.
+> Basically, it takes a matrix coming from an ordination procedure and it fits on it another matrix  (often an environmental matrix).
+> The projections of points onto vectors have maximum correlation with corresponding environmental variables.
+>
+> A permutation test is associated to this procedure and it basically performs a series of correlations between any column in the environmental matrix and the ordnation matrix.
+> Maybe my question is trivial (or simply ...wrong) but..intuitively, this should return the same results found from a series of separate multivariate regressions between any single column in the environmental matrix and the entire ordination matrix.
+> However it is not the case, being the envfit() results much more liberal when compared to regression (i.e. using rda) and the r2 are drastically larger than R-sq from rda.
+> I suspect that the metric undergoing the permutation test of significance in envfit() that is squared correlation coefficient (r^2) does not correspond to the R-sq calculated using rda.
+>
+Paolo,
+
+I am afraid I cannot quite understand your problems. A reproducible example with some numbers could be useful.
+
+I did not quite catch your comparison of RDA and envfit. They are quite different methods, and their R2's really are for different things (but with special tricks these things can be made similar). In RDA, the R2 tells how well the ordination predicts the species abundances, and in envfit() the R2 tells how well the ordination predicts the environmental variables. For a basic and normal usage of RDA let us compare the following cases:
+
+library(vegan)
+data(varespec, varechem)
+mod <- rda(varespec ~ Al + P + K, varechem)
+## gives unadjusted R2=0.377
+envfit(mod ~ Al + P + K, varechem, display="lc", choices=1:3)
+## **should** give for all vars r2=1 because they were the constraints
+
+Cheers, Jari Oksanen
+
+
+
+
+From swamp at blarg.net  Fri Oct 18 05:16:09 2013
+From: swamp at blarg.net (Michael Marsh)
+Date: Thu, 17 Oct 2013 20:16:09 -0700
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <mailman.1.1381917602.4459.r-sig-ecology@r-project.org>
+References: <mailman.1.1381917602.4459.r-sig-ecology@r-project.org>
+Message-ID: <5260A7F9.9040103@blarg.net>
+
+If you want a measure of exposure, i. e., heat, I suggest using the 
+"heatload" transformation suggested by McCune and Grace (2002). Their 
+assumption is that mid-afternoon, when the sun is in the southwest, is 
+usually the warmest time of day. The formula at the end of Chapter 3 
+follows:
+
+heat load index=(1-cos(degrees-45))/2
+
+McCune, Bruce and James B. Grace. 2002. Analysis of ecological 
+communities. MJM Software Design. Gleneden Beach, Oregon. USA
+
+Mike Marsh
+
+
+On 10/16/2013 3:00 AM, r-sig-ecology-request at r-project.org wrote:
+> Send R-sig-ecology mailing list submissions to
+> 	r-sig-ecology at r-project.org
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+> 	r-sig-ecology-request at r-project.org
+>
+> You can reach the person managing the list at
+> 	r-sig-ecology-owner at r-project.org
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+>
+>
+> Today's Topics:
+>
+>     1. angular statistics (Peter Nelson)
+>     2. Re: angular statistics (Holland, Jeffrey D)
+>     3. Re: angular statistics (Don McKenzie)
+>     4. Re: angular statistics (Peter Nelson)
+>     5. Re: angular statistics (Donald McKenzie)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Tue, 15 Oct 2013 09:59:38 -0700
+> From: Peter Nelson <pnelson at cfr-west.org>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] angular statistics
+> Message-ID: <0C3C26EA-5599-4570-B205-5FEECB70BCC5 at cfr-west.org>
+> Content-Type: text/plain; charset=us-ascii
+>
+> I want to include the exposure (measured in degrees, for example, East-facing is 90) of various coastal sites in GLM and CCA analyses. Is there an appropriate transformation that I can apply to these measurements that will allow me to do this? I've found plenty of information on comparing headings, calculating means, etc, but nothing on how exposure might be used as a continuous independent variable.
+>
+> Treating exposure as a categorical variable (East, Southwest, etc) seems like a fallback option, but then there is just as much of a 'difference' between SE and E sites as there is between SE and NW sites!
+>
+> Thanks, Pete
+>
+>
+> ------------------------------
+>
+> Message: 2
+> Date: Tue, 15 Oct 2013 17:10:43 +0000
+> From: "Holland, Jeffrey D" <jdhollan at purdue.edu>
+> To: "R-sig-ecology at r-project.org" <R-sig-ecology at r-project.org>
+> Subject: Re: [R-sig-eco] angular statistics
+> Message-ID:
+> 	<30A9CCE0A986F74C837D6F87F9C581861367E631 at WPVEXCMBX01.purdue.lcl>
+> Content-Type: text/plain; charset="us-ascii"
+>
+> Hello Pete,
+>     You could include the sine and cosine of the angles.  A good book on this kind of analysis:
+> Fisher, N.I. 1993. Statistical Analysis of Circular Data. Cambridge Univ. Press.
+> To make this closer to exposure, perhaps you could first "rotate" the compass so that 360' is facing the direction of maximum exposure, and back-transform later?  Just a thought.
+> Cheers,  Jeff
+>
+> ____________________
+> Jeffrey D. Holland                                  (765) 494-7739
+> Assoc. Prof. of Landscape Ecology & Biodiversity    jdhollan #at# purdue.edu
+> Dept. of Entomology, Purdue University              Smith Hall B17, 901 W. State St., West Lafayette, IN 47907
+>
+>
+> -----Original Message-----
+> From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Peter Nelson
+> Sent: Tuesday, October 15, 2013 1:00 PM
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] angular statistics
+>
+> I want to include the exposure (measured in degrees, for example, East-facing is 90) of various coastal sites in GLM and CCA analyses. Is there an appropriate transformation that I can apply to these measurements that will allow me to do this? I've found plenty of information on comparing headings, calculating means, etc, but nothing on how exposure might be used as a continuous independent variable.
+>
+> Treating exposure as a categorical variable (East, Southwest, etc) seems like a fallback option, but then there is just as much of a 'difference' between SE and E sites as there is between SE and NW sites!
+>
+> Thanks, Pete
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+> ------------------------------
+>
+> Message: 3
+> Date: Tue, 15 Oct 2013 11:45:14 -0700
+> From: Don McKenzie <dmck at u.washington.edu>
+> To: Peter Nelson <pnelson at cfr-west.org>
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] angular statistics
+> Message-ID: <CD8BB4BE-0DB6-4863-B8AF-1D7443D79CF8 at u.washington.edu>
+> Content-Type: text/plain
+>
+> There is precedent in the ecological literature for using a cosine transformation IF you have reason to believe that your predictor varies continuously and symmetrically in its effects around a circle.  For example, if due east were the "most" exposure, and due west the least, with due north and south being roughly equal, you could create a new predictor called "east.exposure" with (most basically)
+>
+> east.exposure = cos(exposure - PI/2)
+>
+> Many more complicated extensions of this idea are possible, associated with nonlinear or asymmetrical gradients, but I will leave that to you or others on the list.
+>
+> On Oct 15, 2013, at 9:59 AM, Peter Nelson wrote:
+>
+>> I want to include the exposure (measured in degrees, for example, East-facing is 90) of various coastal sites in GLM and CCA analyses. Is there an appropriate transformation that I can apply to these measurements that will allow me to do this? I've found plenty of information on comparing headings, calculating means, etc, but nothing on how exposure might be used as a continuous independent variable.
+>>
+>> Treating exposure as a categorical variable (East, Southwest, etc) seems like a fallback option, but then there is just as much of a 'difference' between SE and E sites as there is between SE and NW sites!
+>>
+>> Thanks, Pete
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+> Don McKenzie
+>
+> Affiliate Professor
+> School of Environmental and Forest Sciences
+> University of Washington
+>
+> dmck at uw.edu
+>
+>
+>
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+>
+>
+> ------------------------------
+>
+> Message: 4
+> Date: Tue, 15 Oct 2013 14:19:54 -0700
+> From: Peter Nelson <pnelson at cfr-west.org>
+> To: Don McKenzie <dmck at u.washington.edu>
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] angular statistics
+> Message-ID: <13AB12EA-E808-4217-9E06-62AFC3A7C656 at cfr-west.org>
+> Content-Type: text/plain
+>
+> Thanks Don. I tried the transformation you suggested, but the results don't appear promising (0 deg doesn't = 360 deg, intervals vary):
+>
+> 0	6.12574E-17
+> 10	-0.544021111
+> 20	0.912945251
+> 30	-0.988031624
+> 40	0.74511316
+> 50	-0.262374854
+> 60	-0.304810621
+> 70	0.773890682
+> 80	-0.993888654
+> 90	0.893996664
+>
+> I tried
+>
+> east.exposure=cos(exposure*PI/180)
+>
+> This seems better (e.g., 0 degrees = 360 degrees) see below), but the absolute values of the intervals aren't consistent. No surprise, I suppose, but what to do?
+>
+> Thanks, Peter
+>
+> 0	1
+> 10	0.984807753
+> 20	0.939692621
+> 30	0.866025404
+> 40	0.766044443
+> 50	0.64278761
+> 60	0.5
+> 70	0.342020143
+> 80	0.173648178
+> 90	6.12574E-17
+> 100	-0.173648178
+> 110	-0.342020143
+> 120	-0.5
+> 130	-0.64278761
+> 140	-0.766044443
+> 150	-0.866025404
+> 160	-0.939692621
+> 170	-0.984807753
+> 180	-1
+> 190	-0.984807753
+> 200	-0.939692621
+> 210	-0.866025404
+> 220	-0.766044443
+> 230	-0.64278761
+> 240	-0.5
+> 250	-0.342020143
+> 260	-0.173648178
+> 270	-1.83772E-16
+> 280	0.173648178
+> 290	0.342020143
+> 300	0.5
+> 310	0.64278761
+> 320	0.766044443
+> 330	0.866025404
+> 340	0.939692621
+> 350	0.984807753
+> 360	1
+> On Oct 15, 2013, at 11:45 AM, Don McKenzie <dmck at u.washington.edu> wrote:
+>
+>> There is precedent in the ecological literature for using a cosine transformation IF you have reason to believe that your predictor varies continuously and symmetrically in its effects around a circle.  For example, if due east were the "most" exposure, and due west the least, with due north and south being roughly equal, you could create a new predictor called "east.exposure" with (most basically)
+>>
+>> east.exposure = cos(exposure - PI/2)
+>>
+>> Many more complicated extensions of this idea are possible, associated with nonlinear or asymmetrical gradients, but I will leave that to you or others on the list.
+>>
+>> On Oct 15, 2013, at 9:59 AM, Peter Nelson wrote:
+>>
+>>> I want to include the exposure (measured in degrees, for example, East-facing is 90) of various coastal sites in GLM and CCA analyses. Is there an appropriate transformation that I can apply to these measurements that will allow me to do this? I've found plenty of information on comparing headings, calculating means, etc, but nothing on how exposure might be used as a continuous independent variable.
+>>>
+>>> Treating exposure as a categorical variable (East, Southwest, etc) seems like a fallback option, but then there is just as much of a 'difference' between SE and E sites as there is between SE and NW sites!
+>>>
+>>> Thanks, Pete
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>>
+>> Don McKenzie
+>>
+>> Affiliate Professor
+>> School of Environmental and Forest Sciences
+>> University of Washington
+>>
+>> dmck at uw.edu
+>>
+>>
+>>
+>>
+>
+> 	[[alternative HTML version deleted]]
+>
+>
+>
+> ------------------------------
+>
+> Message: 5
+> Date: Tue, 15 Oct 2013 14:53:21 -0700 (PDT)
+> From: Donald McKenzie <dmck at u.washington.edu>
+> To: Peter Nelson <pnelson at cfr-west.org>
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] angular statistics
+> Message-ID:
+> 	<alpine.LRH.2.01.1310151453210.15539 at hymn03.u.washington.edu>
+> Content-Type: text/plain; charset="iso-8859-15"; Format="flowed"
+>
+> Make sure you use consistent units. PI/2 in radians, 90 in degrees. cos(90-90) = 1, cos(270 - 90) = -1. So west (270) has the lowest value, east the highest.
+>
+> On Tue, 15 Oct 2013, Peter Nelson wrote:
+>
+>> Thanks Don.?I tried the transformation you suggested, but the results don't
+>> appear promising (0 deg doesn't = 360 deg, intervals vary):
+>> 0
+>> 6.12574E-17
+>> 10
+>> -0.544021111
+>> 20
+>> 0.912945251
+>> 30
+>> -0.988031624
+>> 40
+>> 0.74511316
+>> 50
+>> -0.262374854
+>> 60
+>> -0.304810621
+>> 70
+>> 0.773890682
+>> 80
+>> -0.993888654
+>> 90
+>> 0.893996664
+>>
+>> I tried?
+>>
+>> east.exposure=cos(exposure*PI/180)?
+>>
+>> This seems better (e.g., 0 degrees = 360 degrees) see below), but the
+>> absolute values of the intervals aren't consistent. No surprise, I suppose,
+>> but what to do? ?
+>>
+>> Thanks, Peter
+>>
+>> 0
+>> 1
+>> 10
+>> 0.984807753
+>> 20
+>> 0.939692621
+>> 30
+>> 0.866025404
+>> 40
+>> 0.766044443
+>> 50
+>> 0.64278761
+>> 60
+>> 0.5
+>> 70
+>> 0.342020143
+>> 80
+>> 0.173648178
+>> 90
+>> 6.12574E-17
+>> 100
+>> -0.173648178
+>> 110
+>> -0.342020143
+>> 120
+>> -0.5
+>> 130
+>> -0.64278761
+>> 140
+>> -0.766044443
+>> 150
+>> -0.866025404
+>> 160
+>> -0.939692621
+>> 170
+>> -0.984807753
+>> 180
+>> -1
+>> 190
+>> -0.984807753
+>> 200
+>> -0.939692621
+>> 210
+>> -0.866025404
+>> 220
+>> -0.766044443
+>> 230
+>> -0.64278761
+>> 240
+>> -0.5
+>> 250
+>> -0.342020143
+>> 260
+>> -0.173648178
+>> 270
+>> -1.83772E-16
+>> 280
+>> 0.173648178
+>> 290
+>> 0.342020143
+>> 300
+>> 0.5
+>> 310
+>> 0.64278761
+>> 320
+>> 0.766044443
+>> 330
+>> 0.866025404
+>> 340
+>> 0.939692621
+>> 350
+>> 0.984807753
+>> 360
+>> 1 On Oct 15, 2013, at 11:45 AM, Don McKenzie <dmck at u.washington.edu> wrote:
+>>
+>>        There is precedent in the ecological literature for using a
+>>        cosine transformation IF you have reason to believe that your
+>>        predictor varies continuously and symmetrically in its effects
+>>        around a circle. ?For example, if due east were the "most"
+>>        exposure, and due west the least, with due north and south
+>>        being roughly equal, you could create a new predictor
+>>        called?"east.exposure" with (most basically)
+>> east.exposure = cos(exposure - PI/2)
+>>
+>> Many more complicated extensions of this idea are possible,
+>> associated with nonlinear or asymmetrical gradients, but I will leave
+>> that to you or others on the list.
+>>
+>> On Oct 15, 2013, at 9:59 AM, Peter Nelson wrote:
+>>
+>>        I want to include the exposure (measured in degrees, for
+>>        example, East-facing is 90) of various coastal sites in
+>>        GLM and CCA analyses. Is there an appropriate
+>>        transformation that I can apply to these measurements
+>>        that will allow me to do this? I've found plenty of
+>>        information on comparing headings, calculating means,
+>>        etc, but nothing on how exposure might be used as a
+>>        continuous independent variable.
+>>
+>>        Treating exposure as a categorical variable (East,
+>>        Southwest, etc) seems like a fallback option, but then
+>>        there is just as much of a 'difference' between SE and E
+>>        sites as there is between SE and NW sites!
+>>
+>>        Thanks, Pete
+>>        _______________________________________________
+>>        R-sig-ecology mailing list
+>>        R-sig-ecology at r-project.org
+>>        https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>>
+>>
+>>
+>> Don McKenzie
+>>
+>> Affiliate Professor
+>> School of Environmental and Forest Sciences
+>> University of Washington
+>>
+>> dmck at uw.edu
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+> ------------------------------
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> End of R-sig-ecology Digest, Vol 67, Issue 7
+> ********************************************
+>
+>
+
+
+From ubuntero.9161 at gmail.com  Fri Oct 18 07:38:25 2013
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Fri, 18 Oct 2013 08:38:25 +0300
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <5260A7F9.9040103@blarg.net>
+References: <mailman.1.1381917602.4459.r-sig-ecology@r-project.org>
+	<5260A7F9.9040103@blarg.net>
+Message-ID: <CAAVnHstvFFLB8nVVVHo+xbxoC3J26sErwMuGMg=aehJEZ_v5uQ@mail.gmail.com>
+
+On Fri, Oct 18, 2013 at 6:16 AM, Michael Marsh <swamp at blarg.net> wrote:
+>
+> If you want a measure of exposure, i. e., heat, I suggest using the "heatload" transformation suggested by McCune and Grace (2002). Their assumption is that mid-afternoon, when the sun is in the southwest, is usually the warmest time of day. The formula at the end of Chapter 3 follows:
+>
+> heat load index=(1-cos(degrees-45))/2
+>
+> McCune, Bruce and James B. Grace. 2002. Analysis of ecological communities. MJM Software Design. Gleneden Beach, Oregon. USA
+
+Thanks for the interesting discussion!
+
+I'd like to add that although I don't have the book, I found the
+radiation measures presented in the following paper:
+McCune, B. and D. Keon. 2002. Equations for potential annual direct
+incident radiation and heat load. Journal of Vegetation Science
+13:603?606.
+
+Cheers,
+Ivailo
+-- 
+UBUNTU: a person is a person through other persons.
+
+
+From jari.oksanen at oulu.fi  Fri Oct 18 08:19:25 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 18 Oct 2013 06:19:25 +0000
+Subject: [R-sig-eco] angular statistics
+In-Reply-To: <CAAVnHstvFFLB8nVVVHo+xbxoC3J26sErwMuGMg=aehJEZ_v5uQ@mail.gmail.com>
+References: <mailman.1.1381917602.4459.r-sig-ecology@r-project.org>
+	<5260A7F9.9040103@blarg.net>,
+	<CAAVnHstvFFLB8nVVVHo+xbxoC3J26sErwMuGMg=aehJEZ_v5uQ@mail.gmail.com>
+Message-ID: <D86F13D8-0D46-4FA4-A931-A960E9A4A93D@oulu.fi>
+
+If you use these, remember that R cos() needs argument in radians.
+
+Cheers, Jari Oksanen
+
+Sent from my iPad
+
+> On 18.10.2013, at 8.40, "Ivailo" <ubuntero.9161 at gmail.com> wrote:
+> 
+>> On Fri, Oct 18, 2013 at 6:16 AM, Michael Marsh <swamp at blarg.net> wrote:
+>> 
+>> If you want a measure of exposure, i. e., heat, I suggest using the "heatload" transformation suggested by McCune and Grace (2002). Their assumption is that mid-afternoon, when the sun is in the southwest, is usually the warmest time of day. The formula at the end of Chapter 3 follows:
+>> 
+>> heat load index=(1-cos(degrees-45))/2
+>> 
+>> McCune, Bruce and James B. Grace. 2002. Analysis of ecological communities. MJM Software Design. Gleneden Beach, Oregon. USA
+> 
+> Thanks for the interesting discussion!
+> 
+> I'd like to add that although I don't have the book, I found the
+> radiation measures presented in the following paper:
+> McCune, B. and D. Keon. 2002. Equations for potential annual direct
+> incident radiation and heat load. Journal of Vegetation Science
+> 13:603?606.
+> 
+> Cheers,
+> Ivailo
+> -- 
+> UBUNTU: a person is a person through other persons.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From rab.mahnaz at gmail.com  Wed Oct 23 11:49:13 2013
+From: rab.mahnaz at gmail.com (Mahnaz Rabbaniha)
+Date: Wed, 23 Oct 2013 13:19:13 +0330
+Subject: [R-sig-eco] neural net work
+Message-ID: <CANLCanVbfHSL8meYAKErheOfK-doscd0Wj=Fakj21+1LCRM3aQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131023/93160dab/attachment.pl>
+
+From highstat at highstat.com  Thu Oct 24 10:34:38 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Thu, 24 Oct 2013 09:34:38 +0100
+Subject: [R-sig-eco] Course: Mixed modelling  (with intro MCMC)
+Message-ID: <5268DB9E.1010705@highstat.com>
+
+We would like to announce the following stats course;
+
+Course: Introduction to MCMC, Linear mixed effects models and GLMM with R
+When: 20-24 January, 2014
+Where: Bangor University, UK
+Info: http://www.highstat.com/statscourse.htm
+Flyer: http://www.highstat.com/Courses/Flyer2014_02Bangor.pdf
+
+Kind regards,
+
+Alain
+
+-- 
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007)
+2. Mixed effects models and extensions in ecology with R (2009)
+3. A Beginner's Guide to R (2009)
+4. Zero Inflated Models and GLMM with R (2012)
+5. A Beginner's Guide to GAM (2012)
+6. A Beginner's Guide to GLM and GLMM (2013)
+
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From hilasegre at gmail.com  Thu Oct 24 15:07:47 2013
+From: hilasegre at gmail.com (hilasegre)
+Date: Thu, 24 Oct 2013 06:07:47 -0700 (PDT)
+Subject: [R-sig-eco] Missing species names in metaMDS object
+Message-ID: <1382620067023-7578473.post@n2.nabble.com>
+
+Hello,
+I'm trying to run a nMDS on presence/absence data.
+I have a species over sites matrix with 450 sites and 186 species, in
+similar structure to the matrix varespec shown in this tutorial
+http://cc.oulu.fi/~jarioksa/opetus/metodi/vegantutor.pdf.
+The only difference is the data is 0/1 and not frequncy.
+
+metaMDS runs fine and i am able to show the sites scores using ordiplot, but
+as for species - i can plot the scores but not the labels. This might be
+because the item spcies is missing these values. This is my metaMDS object
+species item:
+$ species   : num [1:186, 1:2] -0.0249 -0.11 -0.4334 -0.6566 0.4679 ...
+  ..- attr(*, "dimnames")=List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:2] "MDS1" "MDS2"
+  ..- attr(*, "shrinkage")= Named num [1:2] 0.413 0.24
+  .. ..- attr(*, "names")= chr [1:2] "MDS1" "MDS2"
+  ..- attr(*, "centre")= Named num [1:2] -0.1466 0.0388
+  .. ..- attr(*, "names")= chr [1:2] "MDS1" "MDS2"
+
+This is code i ran:
+Sps.mds=metaMDS(spp_sites_mat, distance="jaccard", k=2,autotransform=F)
+
+and this is the data matrix:
+str(spp_sites_mat)
+List of 186
+ $ ADON.CUPA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ AEGI.GENI: num [1:450] 0 0 0 0 0 1 1 0 1 0 ...
+ $ AINS.TRAC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ AJUG.CHAM: num [1:450] 0 1 0 0 0 0 0 0 0 0 ...
+ $ ALCE.ACAU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ALKA.STRI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ALLI.STAM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ALOP.UTRI: num [1:450] 0 1 1 0 0 0 0 0 1 0 ...
+ $ ALYS.MINU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ANAG.ARVE: num [1:450] 0 0 0 1 0 0 0 0 0 0 ...
+ $ ANCH.AEGY: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ANDR.TELE: num [1:450] 1 1 0 0 0 0 0 0 1 0 ...
+ $ ANEM.CORO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ANTH.HEBR: num [1:450] 1 0 0 1 1 0 0 0 0 0 ...
+ $ ANTH.PSEU: num [1:450] 0 1 1 0 0 0 0 0 0 0 ...
+ $ ANTI.ORON: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ AREN.LEPT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ARTE.SQUA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ASPH.RAMO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ASTR.ASTE: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ASTR.CALL: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ASTR.HAMO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ASTR.PELE: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ASTR.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ASTR.TRIB: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ATRA.CANC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ AVEN.BARB: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ AVEN.STER: num [1:450] 1 1 1 1 0 0 0 0 0 1 ...
+ $ BELL.FLEX: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ BISC.DIDY: num [1:450] 0 0 0 0 0 0 0 0 0 1 ...
+ $ BORA.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ BROM.ALOP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ BROM.FASC: num [1:450] 0 0 0 0 1 1 1 1 1 0 ...
+ $ BROM.LANC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ BROM.SCOP: num [1:450] 0 1 0 1 1 0 0 0 0 0 ...
+ $ CALE.ARVE: num [1:450] 0 0 1 1 0 0 0 0 0 0 ...
+ $ CALE.PALA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CAMP.ERIN: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CAMP.HIER: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CAMP.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CART.TENU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CATA.LUTE: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CATA.RIGI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CENT.CROC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CHAE.TRIC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CHIL.IPHI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CHRY.CORO: num [1:450] 0 0 0 0 0 0 0 1 0 0 ...
+ $ CLYP.JONT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ COMP.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CONV.ALTH: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CORO.SCOR: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CRAS.ALAT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CREP.ASPE: num [1:450] 1 0 0 1 1 0 0 0 0 0 ...
+ $ CREP.SANC: num [1:450] 0 1 1 0 0 0 0 0 0 0 ...
+ $ CRUP.CRUP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CUSC.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ CYNO.DACT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ DAUC.CARO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ DIAN.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ECHI.ADEN: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ECHI.JUDA: num [1:450] 0 0 0 0 0 1 0 1 0 1 ...
+ $ EROD.GRUI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ EROD.MALA: num [1:450] 0 0 0 0 0 1 0 0 0 0 ...
+ $ EROD.MOSC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ERUC.HISP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ERYN.CRET: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ EUPH.AULA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ EUPH.CHAM: num [1:450] 0 1 0 0 0 0 0 0 1 0 ...
+ $ EUPH.HELI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ EUPH.OXYO: num [1:450] 0 0 0 1 0 1 0 0 0 0 ...
+ $ EUPH.PEPL: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ FACT.ASCH: num [1:450] 0 0 0 0 0 0 1 0 0 0 ...
+ $ FERU.COMM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ FILA.CONT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ FILA.PALA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ FILA.PYRA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ GAGE.COMM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ GALI.DIVA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ GALI.JUDA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ GALI.SETA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ GERA.MOLL: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ GERA.ROTU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ GERO.HYBR: num [1:450] 0 1 0 1 1 0 0 0 0 0 ...
+ $ HEDY.RHAG: num [1:450] 1 0 0 0 0 0 0 0 0 0 ...
+ $ HELI.ROTU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ HELI.SALI: num [1:450] 0 0 0 0 1 1 0 0 1 0 ...
+ $ HIPP.UNIS: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ HIRS.INCA: num [1:450] 0 0 0 1 0 0 0 0 1 1 ...
+ $ HORD.BULB: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ HORD.SPON: num [1:450] 0 0 0 1 1 0 0 0 0 0 ...
+ $ HYME.CIRC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ HYPA.HIRT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ IRIS.PALA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ ISAT.LUSI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ LAGO.CUMI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ LATH.APHA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ LATH.BLEP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ LATH.HIER: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ LATH.MARM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+  [list output truncated]
+ - attr(*, "row.names")= int [1:450] 1 2 3 4 5 6 7 8 9 10 ...
+
+I have no idea why are the species names missing, there are no warning. I
+only found questions regarding missing species scores, but that doesn't seem
+to be the problem here.
+
+Any idea?
+Thank's!
+Hila
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Missing-species-names-in-metaMDS-object-tp7578473.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From p.v.stefanoudis at soton.ac.uk  Thu Oct 24 20:45:48 2013
+From: p.v.stefanoudis at soton.ac.uk (Paris)
+Date: Thu, 24 Oct 2013 11:45:48 -0700 (PDT)
+Subject: [R-sig-eco] Diversity on standardised densities in R
+Message-ID: <1382640348081-7578474.post@n2.nabble.com>
+
+Hello all,
+
+I want to calculate classic diversity indexes from my zooplankton samples.
+The problem is that the number of individuals is not the same in all cases
+(some samples were semi-empty) and that is the case for the amount of sample
+I analysed. In order to standardise for effort, I want to do the following:
+a) randomly sample e.g. 50 individuals from each of my sample, so that I
+standardise for effort (that's the difficult part)
+b) then calculate on this newly created matrix all the typical indexes
+(that's the easy part)
+I ll give an example of a dataset in R, where samples are rows and species
+are columns:
+
+0	0	0	0	0	2	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	85	0	0
+0	0	0	0	0	45	5	57	0	0
+0	0	0	0	0	13	0	3	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	7	0	0
+0	3	0	0	12	8	0	57	0	0
+0	0	0	0	0	0	0	1	0	0
+0	0	0	0	0	59	0	0	0	0
+0	0	0	0	4	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	105	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0
+0	0	0	0	1	0	0	100	0	0
+0	35	0	55	0	0	0	0	0	0
+1	4	0	0	0	0	0	0	0	0
+0	0	0	0	0	34	21	0	0	0
+0	0	0	0	0	9	17	0	0	0
+0	54	0	0	0	27	5	0	0	0
+0	1	0	0	0	1	0	0	0	0
+0	17	0	0	0	54	3	0	0	0
+1	0	0	1	0	6	10	0	0	0
+1	18	0	0	0	1	2	0	6	2
+0	5	0	0	0	35	57	0	0	0
+0	3	0	0	0	4	3	0	0	0
+0	0	0	0	0	6	5	0	0	0
+0	0	0	0	0	5	4	0	0	0
+10	5	8	10	0	25	19	0	0	0
+0	2	7	0	0	6	11	0	0	0
+15	0	0	0	0	8	7	0	0	0
+13	2	0	0	0	20	11	0	0	0
+13	0	0	0	0	0	11	0	0	0
+8	0	0	0	0	15	10	0	0	0
+0	1	0	32	1	13	12	0	0	0
+
+Anybody any ideas how to do this in R?
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Diversity-on-standardised-densities-in-R-tp7578474.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From p.v.stefanoudis at soton.ac.uk  Thu Oct 24 21:08:11 2013
+From: p.v.stefanoudis at soton.ac.uk (Paris)
+Date: Thu, 24 Oct 2013 12:08:11 -0700 (PDT)
+Subject: [R-sig-eco] Diversity on standardised densities in R
+In-Reply-To: <1382640348081-7578474.post@n2.nabble.com>
+References: <1382640348081-7578474.post@n2.nabble.com>
+Message-ID: <1382641691701-7578475.post@n2.nabble.com>
+
+By the way, I think I could use (if Zoop tha name of the dataset)
+rrarefy(Zoop, sample=50).
+However, in this case it will not allow me since there are samples with zero
+individuals.
+Even if I delete those, there will be some with less than 50 indiv. But I
+would prefer to standardise effort for 50 individuals. This function, or at
+least in this form, does not allow that.
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Diversity-on-standardised-densities-in-R-tp7578474p7578475.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From syrovat at sci.muni.cz  Fri Oct 25 09:10:41 2013
+From: syrovat at sci.muni.cz (=?UTF-8?Q?V=C3=ADt_Syrov=C3=A1tka?=)
+Date: Fri, 25 Oct 2013 09:10:41 +0200
+Subject: [R-sig-eco] Diversity on standardised densities in R
+In-Reply-To: <1382641691701-7578475.post@n2.nabble.com>
+References: <1382640348081-7578474.post@n2.nabble.com>
+	<1382641691701-7578475.post@n2.nabble.com>
+Message-ID: <427318b3a98d69adb1bdd6c9263f6940@sci.muni.cz>
+
+Hi,
+
+vegan::rrarefy() is the right way to do this.
+
+However, I can't imagine, how to take 50 random individuals from a 
+sample with less then 50 individuals.
+One doesn't know, what species would be collected in case of a larger 
+sampling effort, R doesn't know either.
+I would suggest doing this only for samples with more individuals, or 
+taking a smaller number of individuals.
+
+Hope that helps,
+Vit
+
+Dne 2013-10-24 21:08, Paris napsal:
+> By the way, I think I could use (if Zoop tha name of the dataset)
+> rrarefy(Zoop, sample=50).
+> However, in this case it will not allow me since there are samples 
+> with zero
+> individuals.
+> Even if I delete those, there will be some with less than 50 indiv. 
+> But I
+> would prefer to standardise effort for 50 individuals. This function, 
+> or at
+> least in this form, does not allow that.
+> 
+> 
+> 
+> --
+> View this message in context:
+> http://r-sig-ecology.471788.n2.nabble.com/Diversity-on-standardised-densities-in-R-tp7578474p7578475.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From mariojosebr at yahoo.com.br  Fri Oct 25 14:40:31 2013
+From: mariojosebr at yahoo.com.br (=?ISO-8859-1?Q?Mario_Jos=E9_Marques?=)
+Date: Fri, 25 Oct 2013 10:40:31 -0200
+Subject: [R-sig-eco] Diversity on standardised densities in R
+In-Reply-To: <1382640348081-7578474.post@n2.nabble.com>
+References: <1382640348081-7578474.post@n2.nabble.com>
+Message-ID: <526A66BF.3080108@yahoo.com.br>
+
+Hi Paris,
+
+excuse-me if I do not understand you. I think that or you standardize 
+you effort to less individual in your samples or you extrapolation your 
+sample to that more abundant. If you have sample with less individual, 
+like you say, it is not recomended to do extrapolation.
+
+If your accumulation curves, for each sample, reaches asymptote, I think 
+that you can compare communities without standardize. For zooplancton, 
+maybe is possible to reaches asymptote.
+
+I hope have helped you.
+
+Best regards,
+
+Mario
+
+...................................................
+Doctoral student in Ecology
+Institute of Biology, Dept. Plant Biology, Ecology Lab.
+State University of Campinas - UNICAMP
+Campinas, S?o Paulo, Brazil
+
+On 24-10-2013 16:45, Paris wrote:
+> Hello all,
+>
+> I want to calculate classic diversity indexes from my zooplankton samples.
+> The problem is that the number of individuals is not the same in all cases
+> (some samples were semi-empty) and that is the case for the amount of sample
+> I analysed. In order to standardise for effort, I want to do the following:
+> a) randomly sample e.g. 50 individuals from each of my sample, so that I
+> standardise for effort (that's the difficult part)
+> b) then calculate on this newly created matrix all the typical indexes
+> (that's the easy part)
+> I ll give an example of a dataset in R, where samples are rows and species
+> are columns:
+>
+> 0	0	0	0	0	2	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	85	0	0
+> 0	0	0	0	0	45	5	57	0	0
+> 0	0	0	0	0	13	0	3	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	7	0	0
+> 0	3	0	0	12	8	0	57	0	0
+> 0	0	0	0	0	0	0	1	0	0
+> 0	0	0	0	0	59	0	0	0	0
+> 0	0	0	0	4	0	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	105	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	0	0	0	0	0
+> 0	0	0	0	1	0	0	100	0	0
+> 0	35	0	55	0	0	0	0	0	0
+> 1	4	0	0	0	0	0	0	0	0
+> 0	0	0	0	0	34	21	0	0	0
+> 0	0	0	0	0	9	17	0	0	0
+> 0	54	0	0	0	27	5	0	0	0
+> 0	1	0	0	0	1	0	0	0	0
+> 0	17	0	0	0	54	3	0	0	0
+> 1	0	0	1	0	6	10	0	0	0
+> 1	18	0	0	0	1	2	0	6	2
+> 0	5	0	0	0	35	57	0	0	0
+> 0	3	0	0	0	4	3	0	0	0
+> 0	0	0	0	0	6	5	0	0	0
+> 0	0	0	0	0	5	4	0	0	0
+> 10	5	8	10	0	25	19	0	0	0
+> 0	2	7	0	0	6	11	0	0	0
+> 15	0	0	0	0	8	7	0	0	0
+> 13	2	0	0	0	20	11	0	0	0
+> 13	0	0	0	0	0	11	0	0	0
+> 8	0	0	0	0	15	10	0	0	0
+> 0	1	0	32	1	13	12	0	0	0
+>
+> Anybody any ideas how to do this in R?
+>
+>
+>
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Diversity-on-standardised-densities-in-R-tp7578474.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From solymos at ualberta.ca  Fri Oct 25 18:40:35 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Fri, 25 Oct 2013 10:40:35 -0600
+Subject: [R-sig-eco] Diversity on standardised densities in R
+In-Reply-To: <427318b3a98d69adb1bdd6c9263f6940@sci.muni.cz>
+References: <1382640348081-7578474.post@n2.nabble.com>
+	<1382641691701-7578475.post@n2.nabble.com>
+	<427318b3a98d69adb1bdd6c9263f6940@sci.muni.cz>
+Message-ID: <CAH9coKZwUPXBaSQ8jghnd4=TJP7EOJQj-MU01GW1SKY=6gOXVQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131025/48156fb2/attachment.pl>
+
+From ucfagls at gmail.com  Fri Oct 25 18:52:22 2013
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Fri, 25 Oct 2013 10:52:22 -0600
+Subject: [R-sig-eco] Missing species names in metaMDS object
+In-Reply-To: <1382620067023-7578473.post@n2.nabble.com>
+References: <1382620067023-7578473.post@n2.nabble.com>
+Message-ID: <CAAHES9wSjyeLzss4=tBiVwfQKza0apRjyx8rLGB+7Y_83Ez4rw@mail.gmail.com>
+
+As your output *clearly* tells you, `spp_sites_mat` is a *list*:
+
+str(spp_sites_mat)
+List of 186  <------------------------------------------------------------------------------------
+HERE!
+ $ ADON.CUPA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+ $ AEGI.GENI: num [1:450] 0 0 0 0 0 1 1 0 1 0 ...
+ $ AINS.TRAC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+
+not a matrix or data frame. I suspect that is your problem.
+
+HTH
+
+G
+
+2013/10/24 hilasegre <hilasegre at gmail.com>:
+> Hello,
+> I'm trying to run a nMDS on presence/absence data.
+> I have a species over sites matrix with 450 sites and 186 species, in
+> similar structure to the matrix varespec shown in this tutorial
+> http://cc.oulu.fi/~jarioksa/opetus/metodi/vegantutor.pdf.
+> The only difference is the data is 0/1 and not frequncy.
+>
+> metaMDS runs fine and i am able to show the sites scores using ordiplot, but
+> as for species - i can plot the scores but not the labels. This might be
+> because the item spcies is missing these values. This is my metaMDS object
+> species item:
+> $ species   : num [1:186, 1:2] -0.0249 -0.11 -0.4334 -0.6566 0.4679 ...
+>   ..- attr(*, "dimnames")=List of 2
+>   .. ..$ : NULL
+>   .. ..$ : chr [1:2] "MDS1" "MDS2"
+>   ..- attr(*, "shrinkage")= Named num [1:2] 0.413 0.24
+>   .. ..- attr(*, "names")= chr [1:2] "MDS1" "MDS2"
+>   ..- attr(*, "centre")= Named num [1:2] -0.1466 0.0388
+>   .. ..- attr(*, "names")= chr [1:2] "MDS1" "MDS2"
+>
+> This is code i ran:
+> Sps.mds=metaMDS(spp_sites_mat, distance="jaccard", k=2,autotransform=F)
+>
+> and this is the data matrix:
+> str(spp_sites_mat)
+> List of 186
+>  $ ADON.CUPA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ AEGI.GENI: num [1:450] 0 0 0 0 0 1 1 0 1 0 ...
+>  $ AINS.TRAC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ AJUG.CHAM: num [1:450] 0 1 0 0 0 0 0 0 0 0 ...
+>  $ ALCE.ACAU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ALKA.STRI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ALLI.STAM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ALOP.UTRI: num [1:450] 0 1 1 0 0 0 0 0 1 0 ...
+>  $ ALYS.MINU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ANAG.ARVE: num [1:450] 0 0 0 1 0 0 0 0 0 0 ...
+>  $ ANCH.AEGY: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ANDR.TELE: num [1:450] 1 1 0 0 0 0 0 0 1 0 ...
+>  $ ANEM.CORO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ANTH.HEBR: num [1:450] 1 0 0 1 1 0 0 0 0 0 ...
+>  $ ANTH.PSEU: num [1:450] 0 1 1 0 0 0 0 0 0 0 ...
+>  $ ANTI.ORON: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ AREN.LEPT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ARTE.SQUA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ASPH.RAMO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ASTR.ASTE: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ASTR.CALL: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ASTR.HAMO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ASTR.PELE: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ASTR.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ASTR.TRIB: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ATRA.CANC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ AVEN.BARB: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ AVEN.STER: num [1:450] 1 1 1 1 0 0 0 0 0 1 ...
+>  $ BELL.FLEX: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ BISC.DIDY: num [1:450] 0 0 0 0 0 0 0 0 0 1 ...
+>  $ BORA.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ BROM.ALOP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ BROM.FASC: num [1:450] 0 0 0 0 1 1 1 1 1 0 ...
+>  $ BROM.LANC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ BROM.SCOP: num [1:450] 0 1 0 1 1 0 0 0 0 0 ...
+>  $ CALE.ARVE: num [1:450] 0 0 1 1 0 0 0 0 0 0 ...
+>  $ CALE.PALA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CAMP.ERIN: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CAMP.HIER: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CAMP.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CART.TENU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CATA.LUTE: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CATA.RIGI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CENT.CROC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CHAE.TRIC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CHIL.IPHI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CHRY.CORO: num [1:450] 0 0 0 0 0 0 0 1 0 0 ...
+>  $ CLYP.JONT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ COMP.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CONV.ALTH: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CORO.SCOR: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CRAS.ALAT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CREP.ASPE: num [1:450] 1 0 0 1 1 0 0 0 0 0 ...
+>  $ CREP.SANC: num [1:450] 0 1 1 0 0 0 0 0 0 0 ...
+>  $ CRUP.CRUP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CUSC.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ CYNO.DACT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ DAUC.CARO: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ DIAN.SP. : num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ECHI.ADEN: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ECHI.JUDA: num [1:450] 0 0 0 0 0 1 0 1 0 1 ...
+>  $ EROD.GRUI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ EROD.MALA: num [1:450] 0 0 0 0 0 1 0 0 0 0 ...
+>  $ EROD.MOSC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ERUC.HISP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ERYN.CRET: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ EUPH.AULA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ EUPH.CHAM: num [1:450] 0 1 0 0 0 0 0 0 1 0 ...
+>  $ EUPH.HELI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ EUPH.OXYO: num [1:450] 0 0 0 1 0 1 0 0 0 0 ...
+>  $ EUPH.PEPL: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ FACT.ASCH: num [1:450] 0 0 0 0 0 0 1 0 0 0 ...
+>  $ FERU.COMM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ FILA.CONT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ FILA.PALA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ FILA.PYRA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ GAGE.COMM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ GALI.DIVA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ GALI.JUDA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ GALI.SETA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ GERA.MOLL: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ GERA.ROTU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ GERO.HYBR: num [1:450] 0 1 0 1 1 0 0 0 0 0 ...
+>  $ HEDY.RHAG: num [1:450] 1 0 0 0 0 0 0 0 0 0 ...
+>  $ HELI.ROTU: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ HELI.SALI: num [1:450] 0 0 0 0 1 1 0 0 1 0 ...
+>  $ HIPP.UNIS: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ HIRS.INCA: num [1:450] 0 0 0 1 0 0 0 0 1 1 ...
+>  $ HORD.BULB: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ HORD.SPON: num [1:450] 0 0 0 1 1 0 0 0 0 0 ...
+>  $ HYME.CIRC: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ HYPA.HIRT: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ IRIS.PALA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ ISAT.LUSI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ LAGO.CUMI: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ LATH.APHA: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ LATH.BLEP: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ LATH.HIER: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>  $ LATH.MARM: num [1:450] 0 0 0 0 0 0 0 0 0 0 ...
+>   [list output truncated]
+>  - attr(*, "row.names")= int [1:450] 1 2 3 4 5 6 7 8 9 10 ...
+>
+> I have no idea why are the species names missing, there are no warning. I
+> only found questions regarding missing species scores, but that doesn't seem
+> to be the problem here.
+>
+> Any idea?
+> Thank's!
+> Hila
+>
+>
+>
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Missing-species-names-in-metaMDS-object-tp7578473.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+Gavin Simpson, PhD
+
+
+From p.v.stefanoudis at soton.ac.uk  Mon Oct 28 09:56:21 2013
+From: p.v.stefanoudis at soton.ac.uk (Paris)
+Date: Mon, 28 Oct 2013 01:56:21 -0700 (PDT)
+Subject: [R-sig-eco] Diversity on standardised densities in R
+In-Reply-To: <427318b3a98d69adb1bdd6c9263f6940@sci.muni.cz>
+References: <1382640348081-7578474.post@n2.nabble.com>
+	<1382641691701-7578475.post@n2.nabble.com>
+	<427318b3a98d69adb1bdd6c9263f6940@sci.muni.cz>
+Message-ID: <1382950581426-7578480.post@n2.nabble.com>
+
+Hi thanks for your comment. Thought the same, but was worth trying if there
+is an alternative!
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Diversity-on-standardised-densities-in-R-tp7578474p7578480.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From p.v.stefanoudis at soton.ac.uk  Mon Oct 28 09:59:33 2013
+From: p.v.stefanoudis at soton.ac.uk (Paris)
+Date: Mon, 28 Oct 2013 01:59:33 -0700 (PDT)
+Subject: [R-sig-eco] Diversity on standardised densities in R
+In-Reply-To: <526A66BF.3080108@yahoo.com.br>
+References: <1382640348081-7578474.post@n2.nabble.com>
+	<526A66BF.3080108@yahoo.com.br>
+Message-ID: <1382950773098-7578481.post@n2.nabble.com>
+
+Hello Mario,
+
+the only reason I was trying to do this unorthodox method, is because I know
+that the abundances I have will give more or less biased diversity
+calculations and I was trying to get around that. However, it might be good
+to mention that in the discussion anyway, and compare the extrapolated
+diversity as suggested.
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Diversity-on-standardised-densities-in-R-tp7578474p7578481.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From p.v.stefanoudis at soton.ac.uk  Mon Oct 28 10:00:29 2013
+From: p.v.stefanoudis at soton.ac.uk (Paris)
+Date: Mon, 28 Oct 2013 02:00:29 -0700 (PDT)
+Subject: [R-sig-eco] Diversity on standardised densities in R
+In-Reply-To: <CAH9coKZwUPXBaSQ8jghnd4=TJP7EOJQj-MU01GW1SKY=6gOXVQ@mail.gmail.com>
+References: <1382640348081-7578474.post@n2.nabble.com>
+	<1382641691701-7578475.post@n2.nabble.com>
+	<427318b3a98d69adb1bdd6c9263f6940@sci.muni.cz>
+	<CAH9coKZwUPXBaSQ8jghnd4=TJP7EOJQj-MU01GW1SKY=6gOXVQ@mail.gmail.com>
+Message-ID: <1382950829048-7578482.post@n2.nabble.com>
+
+Hello Peter, 
+
+will try it your way in R and see what results I ll get. Thanks
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Diversity-on-standardised-densities-in-R-tp7578474p7578482.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From kendrami at mail.ubc.ca  Mon Oct 28 22:27:47 2013
+From: kendrami at mail.ubc.ca (Mitchell, Kendra)
+Date: Mon, 28 Oct 2013 21:27:47 +0000
+Subject: [R-sig-eco] manipulating species matrices
+Message-ID: <CC055ABE91B74741AB0ADA913A0061AFFC9E42D4@s-itsv-mbx03p.ead.ubc.ca>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131028/e52b4a52/attachment.pl>
+
+From syrovat at sci.muni.cz  Tue Oct 29 15:29:54 2013
+From: syrovat at sci.muni.cz (=?UTF-8?Q?V=C3=ADt_Syrov=C3=A1tka?=)
+Date: Tue, 29 Oct 2013 15:29:54 +0100
+Subject: [R-sig-eco] manipulating species matrices
+In-Reply-To: <CC055ABE91B74741AB0ADA913A0061AFFC9E42D4@s-itsv-mbx03p.ead.ubc.ca>
+References: <CC055ABE91B74741AB0ADA913A0061AFFC9E42D4@s-itsv-mbx03p.ead.ubc.ca>
+Message-ID: <0271ec00a70279e1f6e3bea13a2d5f37@sci.muni.cz>
+
+Dear Kendra,
+I am not sure I understand your question exactly. Maybe the R code you 
+already have would help.
+
+Below is a sample of the data as returned by dput() so that anyone can 
+follow or extend this reply.
+
+First, I would create a variable distinguishing all levels, for which 
+the mean is to be calculated:
+env$site.horizon<- paste(env$site, env$horizon, sep= '.')
+
+Now, aggregate(), as you write, may be used to calculate mean 
+abundances for every site/horizon category (level). Note that only 
+samples where om == 0 are used for the calculation:
+Means<- aggregate(spe[env$om == 0,], by= list(env$site.horizon[env$om 
+== 0]), FUN= mean)
+
+The following just makes rownames from the first column, so that one 
+may use them in a name subscript to select desired rows.
+Means.dtf<- data.frame(Means, row.names=1)
+
+This dataframe now contains the mean values for every species and every 
+site/horizon combination,
+and may be extended by the name subscript to the dimensions of the 
+original species dataframe:
+Means.extended<- Means.dtf[env$site.horizon,]
+
+This is probably what you want to divide the species counts with:
+spe.divided<- spe / Means.extended
+
+NaN (0/0) and Inf (0/anything) values will emerge, these can be changed 
+to something meaningful:
+
+spe.div[is.na(spe.div)]<- 0 # or anything you want
+spe.div[spe.div==Inf]<- 0 # or anything you want
+
+Hope that helps,
+Vit
+
+... and the data:
+env<- structure(list(site = structure(c(1L, 1L, 1L, 1L, 1L, 1L, 1L,
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L
+), .Label = "A7", class = "factor"), om = c(2L, 2L, 3L, 3L, 1L,
+1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 0L, 0L, 0L,
+0L, 0L), horizon = c(1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L,
+1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 2L, 1L, 2L, 1L, 2L), site.horizon = 
+c("A7.1",
+"A7.2", "A7.1", "A7.2", "A7.1", "A7.2", "A7.1", "A7.2", "A7.1",
+"A7.2", "A7.1", "A7.2", "A7.1", "A7.2", "A7.1", "A7.2", "A7.1",
+"A7.2", "A7.2", "A7.1", "A7.2", "A7.1", "A7.2")), .Names = c("site",
+"om", "horizon", "site.horizon"), row.names = c("A7001", "A7002",
+"A7003", "A7004", "A7007", "A7008", "A7009", "A7010", "A7011",
+"A7012", "A7015", "A7016", "A7019", "A7020", "A7021", "A7022",
+"A7023", "A7024", "A7026", "A7027", "A7028", "A7029", "A7030"
+), class = "data.frame")
+
+
+spe<- structure(list(Otu00209 = c(4L, 0L, 8L, 1L, 9L, 1L, 31L, 3L,
+3L, 6L, 13L, 1L, 7L, 3L, 13L, 0L, 23L, 4L, 0L, 0L, 2L, 17L, 13L
+), Otu00358 = c(95L, 8L, 156L, 34L, 9L, 8L, 9L, 1L, 1L, 1L, 4L,
+0L, 0L, 2L, 3L, 8L, 3L, 10L, 0L, 0L, 1L, 8L, 0L), Otu00359 = c(1L,
+0L, 0L, 0L, 6L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L,
+0L, 0L, 1L, 0L, 1L, 0L), Otu00388 = c(0L, 0L, 4L, 1L, 3L, 0L,
+0L, 1L, 0L, 3L, 9L, 1L, 2L, 27L, 0L, 1L, 0L, 1L, 1L, 0L, 6L,
+2L, 0L), Otu00389 = c(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L,
+1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), Otu00533 = c(7L,
+0L, 3L, 0L, 21L, 3L, 0L, 1L, 6L, 13L, 0L, 1L, 2L, 2L, 1L, 0L,
+2L, 2L, 5L, 0L, 0L, 2L, 1L), Otu00608 = c(1L, 1L, 3L, 4L, 0L,
+0L, 9L, 1L, 2L, 0L, 0L, 32L, 13L, 1L, 58L, 3L, 27L, 6L, 0L, 0L,
+0L, 3L, 0L), Otu00618 = c(0L, 0L, 0L, 91L, 0L, 10L, 0L, 0L, 0L,
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), Otu00669 = 
+c(1L,
+0L, 0L, 0L, 8L, 0L, 4L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L,
+0L, 0L, 0L, 0L, 0L, 0L), Otu00695 = c(0L, 0L, 0L, 0L, 0L, 0L,
+0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L,
+0L), Otu00696 = c(4L, 0L, 3L, 1L, 1L, 0L, 1L, 2L, 0L, 2L, 3L,
+0L, 2L, 0L, 0L, 0L, 1L, 3L, 1L, 7L, 1L, 19L, 0L), Otu00706 = c(0L,
+0L, 0L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L,
+0L, 0L, 0L, 0L, 2L, 0L), Otu00725 = c(0L, 0L, 0L, 3L, 1L, 0L,
+0L, 0L, 0L, 0L, 1L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L,
+0L), Otu00761 = c(0L, 4L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 1L,
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L)), .Names = 
+c("Otu00209",
+"Otu00358", "Otu00359", "Otu00388", "Otu00389", "Otu00533", "Otu00608",
+"Otu00618", "Otu00669", "Otu00695", "Otu00696", "Otu00706", "Otu00725",
+"Otu00761"), class = "data.frame", row.names = c("A7001", "A7002",
+"A7003", "A7004", "A7007", "A7008", "A7009", "A7010", "A7011",
+"A7012", "A7015", "A7016", "A7019", "A7020", "A7021", "A7022",
+"A7023", "A7024", "A7026", "A7027", "A7028", "A7029", "A7030"
+))
+
+
+Dne 2013-10-28 22:27, Mitchell, Kendra napsal:
+> I have a large species matrix with counts that I want to express as
+> ratio to the reference plots.  I want to use a heatmap to display
+> change in species as a ratio to the reference
+> 
+> the layout is samples by rows and species by columns, it's currently
+> a data.frame with row.name=sample name, header=species name, here's
+> part of the table for one site (I have 36 sites).
+> 
+> 
+>         Otu00209        Otu00358        Otu00359        Otu00388
+>  Otu00389        Otu00533        Otu00608        Otu00618
+> Otu00669        Otu00695        Otu00696        Otu00706
+> Otu00725        Otu00761
+> A7001   4       95      1       0       0       7       1       0
+>  1       0       4       0       0       0
+> A7002   0       8       0       0       0       0       1       0
+>  0       0       0       0       0       4
+> A7003   8       156     0       4       0       3       3       0
+>  0       0       3       0       0       0
+> A7004   1       34      0       1       0       0       4       91
+>  0       0       1       0       3       1
+> A7007   9       9       6       3       0       21      0       0
+>  8       0       1       2       1       0
+> A7008   1       8       0       0       0       3       0       10
+>  0       0       0       0       0       1
+> A7009   31      9       0       0       0       0       9       0
+>  4       0       1       0       0       0
+> A7010   3       1       1       1       0       1       1       0
+>  0       0       2       0       0       0
+> A7011   3       1       1       0       0       6       2       0
+>  1       0       0       0       0       0
+> A7012   6       1       0       3       0       13      0       0
+>  0       0       2       0       0       0
+> A7015   13      4       0       9       1       0       0       0
+>  0       1       3       1       1       1
+> A7016   1       0       0       1       0       1       32      0
+>  0       0       0       0       0       0
+> A7019   7       0       0       2       0       2       13      0
+>  0       0       2       0       2       0
+> A7020   3       2       0       27      0       2       1       0
+>  0       0       0       0       0       0
+> A7021   13      3       0       0       0       1       58      0
+>  0       0       0       0       0       0
+> A7022   0       8       0       1       0       0       3       0
+>  0       0       0       0       0       0
+> A7023   23      3       0       0       0       2       27      0
+>  1       0       1       0       0       0
+> A7024   4       10      0       1       0       2       6       0
+>  0       0       3       0       0       0
+> A7026   0       0       0       1       0       5       0       0
+>  0       0       1       0       0       0
+> A7027   0       0       1       0       0       0       0       0
+>  0       0       7       0       0       0
+> A7028   2       1       0       6       0       0       0       0
+>  0       0       1       0       0       0
+> A7029   17      8       1       2       0       2       3       0
+>  0       0       19      2       0       0
+> A7030   13      0       0       0       0       1       0       0
+>  0       0       0       0       0       1
+> 
+> 
+> Environmental data is in a separate dataframe, here is one site as an 
+> example:
+> 
+> fung_sample     site    om      horizon
+> A7001   A7      2       1
+> A7002   A7      2       2
+> A7003   A7      3       1
+> A7004   A7      3       2
+> A7007   A7      1       1
+> A7008   A7      1       2
+> A7009   A7      2       1
+> A7010   A7      2       2
+> A7011   A7      3       1
+> A7012   A7      3       2
+> A7015   A7      1       1
+> A7016   A7      1       2
+> A7019   A7      2       1
+> A7020   A7      2       2
+> A7021   A7      3       1
+> A7022   A7      3       2
+> A7023   A7      1       1
+> A7024   A7      1       2
+> A7026   A7      0       2
+> A7027   A7      0       1
+> A7028   A7      0       2
+> A7029   A7      0       1
+> A7030   A7      0       2
+> 
+> 
+> So I need to accomplish a few of things,
+>     1. average the species counts for each horizon for the reference
+> samples (om=0)  ## I was able to do this by subsetting the reference
+> into their own matrix then using reshape to get the mean per
+> site/horizon, but don't know if a separate matrix is really what I
+> want
+>     2. add a constant to each species to prevent errors from dividing 
+> by zero
+>     3. divide species counts in horizon 1 by the average reference for 
+> horizon 1
+> 
+> I've looked at tapply which seems to be the direction that I need to
+> go, but I'm not getting how.
+> 
+> Thanks
+> 
+> Kendra
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Vit Syrovatka
+Department of Botany and Zoology
+Masaryk University
+Kotlarska 2
+CZ-611 37 Brno, Czech Republic
+
+Tel.: +420-532146342
+E-mail: syrovat at sci.muni.cz
+
+
+From syrovat at sci.muni.cz  Wed Oct 30 08:59:32 2013
+From: syrovat at sci.muni.cz (=?UTF-8?Q?V=C3=ADt_Syrov=C3=A1tka?=)
+Date: Wed, 30 Oct 2013 08:59:32 +0100
+Subject: [R-sig-eco] manipulating species matrices
+In-Reply-To: <CC055ABE91B74741AB0ADA913A0061AFFC9E4365@s-itsv-mbx03p.ead.ubc.ca>
+References: <CC055ABE91B74741AB0ADA913A0061AFFC9E42D4@s-itsv-mbx03p.ead.ubc.ca>,
+	<0271ec00a70279e1f6e3bea13a2d5f37@sci.muni.cz>
+	<CC055ABE91B74741AB0ADA913A0061AFFC9E4365@s-itsv-mbx03p.ead.ubc.ca>
+Message-ID: <f556ad0e8089faf3c044dfd77b39d130@sci.muni.cz>
+
+Hi Kendra,
+I am just forwarding your message to the list so that it is clear the 
+problem is solved.
+You are welcome :)
+Vit
+
+Dne 2013-10-29 19:59, Mitchell, Kendra napsal:
+> Thank you.  that is exactly what I wanted to do.
+> 
+> Kendra
+> 
+> --
+> Kendra Maas Mitchell, Ph.D.
+> Post Doctoral Research Fellow
+> University of British Columbia
+> 604-822-5646
+
+

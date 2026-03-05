@@ -1,0 +1,1161 @@
+From i@io m@iii@g oii phys@ii@-courses@org  Tue Jun  1 16:31:56 2021
+From: i@io m@iii@g oii phys@ii@-courses@org (i@io m@iii@g oii phys@ii@-courses@org)
+Date: Tue, 1 Jun 2021 16:31:56 +0200 (CEST)
+Subject: [R-sig-eco] Online training - Generalised Linear Models in R
+Message-ID: <1622557916.77440684@webmail.jimdo.com>
+
+
+ 
+Online training - Generalised Linear Models as a unified framework for data analysis in R
+
+
+Dates: 6-10 September 2021
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Course website: [ https://www.physalia-courses.org/courses-workshops/glm-in-r/ ]( https://www.physalia-courses.org/courses-workshops/glm-in-r/ )
+ 
+
+
+
+In this course, we will introduce Generalised Linear Models as a unified, coherent, and easily extendable framework for the analysis of many different types of data, including Normal (Gaussian), binary, and discrete (count) responses, and both categorical (factors) and continuous predictors.
+
+
+
+The course is aimed at at graduate students and researchers with little statistical knowledge but willing to learn how to extract knowledge from data using statistical models, how to use statistical models to increase our understanding and make predictions about natural phenomena, and acquiring a toolbox to analyse many different types of data (beyond the typical Gaussian responses) using R.
+
+
+
+Learning outcomes
+
+
+ 
+ 
+ 
+    Being able to fit, understand, and use statistical models to make predictions and extract knowledge from data
+ 
+ 
+ 
+    Learn how to analyse data with different statistical distributions, estimating the effects of both categorical (factors) and continuous predictors
+ 
+ 
+ 
+    Visualise data and fitted models to check assumptions, communicate results, and increase understanding
+ 
+ 
+ 
+    Practise R programming, particularly applied to data visualisation and analysis (statistical modelling)
+ 
+ 
+ 
+    Acquire the statistical knowledge required to move on to more complex models (e.g. Generalised Linear Mixed Models, Generalised Additive Models, Bayesian modelling) in the future.
+ 
+ 
+ 
+ 
+ 
+Our other online courses: [ https://www.physalia-courses.org/courses-workshops/ ]( https://www.physalia-courses.org/courses-workshops/ )
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+All the best,
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Carlo
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+--------------------
+
+Carlo Pecoraro, Ph.D
+
+
+Physalia-courses DIRECTOR
+
+info at physalia-courses.org
+
+mobile: +49 17645230846
+
+Follow us on [ Twitter ]( https://twitter.com/Physacourses )
+ 
+ 
+ 
+	[[alternative HTML version deleted]]
+
+
+From |uy@g@rc|@ @end|ng |rom gm@||@com  Thu Jun  3 10:10:00 2021
+From: |uy@g@rc|@ @end|ng |rom gm@||@com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Thu, 3 Jun 2021 05:10:00 -0300
+Subject: [R-sig-eco] change axis scale plot R
+Message-ID: <CANxP2S7Bn12ujuwQuGvMMO6L4cpZnGw0P+XN+323hPPJYtMvHA@mail.gmail.com>
+
+  Dear all,
+
+I am wanting to improve a plot made with the package sjPlot.
+
+When plotting this model
+
+
+Plot produced looks like this
+https://docs.google.com/presentation/d/1Pqm6BcJXdSQ6U1zmv5FV7gBcn1afHHv7rlQHe6j59_c/edit?usp=sharing,
+especially red and green lines.
+
+I just have two concerns with this, the first one is that lines seem a bit
+pixelated, and I would like to improve it, I have tried some approaches but
+it has not been possible.
+
+Dataset in this link:
+https://docs.google.com/spreadsheets/d/1nXerN91Iehe9OM1VGDMS3jnbvvF1tWcuS9bGtlrj_Ss/edit?usp=sharing
+
+library(geepack)
+library(ggplot2)
+library(sjPlot)
+library(ggeffects)
+#Copy dataset before following the code
+dat <- read.delim("clipboard", dec=","); attach(dat)
+
+dat$Id <- as.integer(factor(dat$Esp))
+str(dat)
+m5 <- geeglm(
+  formula = tim ~ Pa*Pt,
+  family = Gamma(link = log),
+  data = dat,
+  id = Id,
+  corstr = "exchangeable"
+)
+
+anova(m5,test="chisq")
+
+p=  plot_model(m5, type = "pred", terms = c("Pt[n=100]", "Pa"),
+digits=1,line.size=0.5,show.data=T,colors=c("green","#00a0c9","red"))
+
+p
+
+The second one, is I would like to remove the decimal values (i.e. in the x
+axis), however I?m not very sure if it is possible to do this in sjPlot or
+if you know a similar alternative in ggplot2. I tried this approach but it
+did not work.
+
+p=p+ scale_x_discrete(limits=c(1,2,3))
+p
+
+When making this plot, there is a space before 1 and after 3 I would like
+to erase.
+
+Best
+
+	[[alternative HTML version deleted]]
+
+
+From tor@ten@h@u||e @end|ng |rom gm@||@com  Thu Jun  3 12:23:58 2021
+From: tor@ten@h@u||e @end|ng |rom gm@||@com (Torsten Hauffe)
+Date: Thu, 3 Jun 2021 12:23:58 +0200
+Subject: [R-sig-eco] change axis scale plot R
+In-Reply-To: <CANxP2S7Bn12ujuwQuGvMMO6L4cpZnGw0P+XN+323hPPJYtMvHA@mail.gmail.com>
+References: <CANxP2S7Bn12ujuwQuGvMMO6L4cpZnGw0P+XN+323hPPJYtMvHA@mail.gmail.com>
+Message-ID: <CAGCrCxag90E4G5WBA2ajSLJ_-0kWXUedKQZOCe3B=Kjf+s+Epw@mail.gmail.com>
+
+Hi Luis,
+
+You can avoid the pixelation by exporting your plot as vector graphics
+(e.g. functions pdf() or svg()) instead of pixel formats (i.e. png(),
+tiff() etc). There is also ggsave("MyPlot.pdf") but I don't know about
+ggplot very well.
+
+pdf("MyPlot.pdf")
+p=  plot_model(m5, type = "pred", terms = c("Pt[n=100]", "Pa"),
+digits=1,line.size=0.5,show.data=T,colors=c("green","#00a0c9","red"))
+dev.off()
+
+On Thu, Jun 3, 2021 at 10:10 AM Luis Fernando Garc?a <luysgarcia at gmail.com>
+wrote:
+
+>   Dear all,
+>
+> I am wanting to improve a plot made with the package sjPlot.
+>
+> When plotting this model
+>
+>
+> Plot produced looks like this
+>
+> https://docs.google.com/presentation/d/1Pqm6BcJXdSQ6U1zmv5FV7gBcn1afHHv7rlQHe6j59_c/edit?usp=sharing
+> ,
+> especially red and green lines.
+>
+> I just have two concerns with this, the first one is that lines seem a bit
+> pixelated, and I would like to improve it, I have tried some approaches but
+> it has not been possible.
+>
+> Dataset in this link:
+>
+> https://docs.google.com/spreadsheets/d/1nXerN91Iehe9OM1VGDMS3jnbvvF1tWcuS9bGtlrj_Ss/edit?usp=sharing
+>
+> library(geepack)
+> library(ggplot2)
+> library(sjPlot)
+> library(ggeffects)
+> #Copy dataset before following the code
+> dat <- read.delim("clipboard", dec=","); attach(dat)
+>
+> dat$Id <- as.integer(factor(dat$Esp))
+> str(dat)
+> m5 <- geeglm(
+>   formula = tim ~ Pa*Pt,
+>   family = Gamma(link = log),
+>   data = dat,
+>   id = Id,
+>   corstr = "exchangeable"
+> )
+>
+> anova(m5,test="chisq")
+>
+> p=  plot_model(m5, type = "pred", terms = c("Pt[n=100]", "Pa"),
+> digits=1,line.size=0.5,show.data=T,colors=c("green","#00a0c9","red"))
+>
+> p
+>
+> The second one, is I would like to remove the decimal values (i.e. in the x
+> axis), however I?m not very sure if it is possible to do this in sjPlot or
+> if you know a similar alternative in ggplot2. I tried this approach but it
+> did not work.
+>
+> p=p+ scale_x_discrete(limits=c(1,2,3))
+> p
+>
+> When making this plot, there is a space before 1 and after 3 I would like
+> to erase.
+>
+> Best
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From br|@nk@||@t@ @end|ng |rom gm@||@com  Thu Jun  3 18:15:36 2021
+From: br|@nk@||@t@ @end|ng |rom gm@||@com (brian knaus)
+Date: Thu, 3 Jun 2021 09:15:36 -0700
+Subject: [R-sig-eco] change axis scale plot R
+In-Reply-To: <CAGCrCxag90E4G5WBA2ajSLJ_-0kWXUedKQZOCe3B=Kjf+s+Epw@mail.gmail.com>
+References: <CANxP2S7Bn12ujuwQuGvMMO6L4cpZnGw0P+XN+323hPPJYtMvHA@mail.gmail.com>
+ <CAGCrCxag90E4G5WBA2ajSLJ_-0kWXUedKQZOCe3B=Kjf+s+Epw@mail.gmail.com>
+Message-ID: <CAEp5mpBGZWJ_n_82vfe9170G0LPs+WPOKUt_KHrU1uJYVJs2kw@mail.gmail.com>
+
+Hi Luis, my suggestion follows.
+
+```
+library(geepack)
+library(ggplot2)
+library(sjPlot)
+library(ggeffects)
+# #Copy dataset before following the code
+# dat <- read.delim("clipboard", dec=","); attach(dat)
+# I orefer to read from file.
+dat <- readr::read_csv("Data - Hoja 1.csv")
+dat
+
+dat$Id <- as.integer(factor(dat$Esp))
+str(dat)
+m5 <- geeglm(
+  formula = tim ~ Pa*Pt,
+  family = Gamma(link = log),
+  data = dat,
+  id = Id,
+  corstr = "exchangeable"
+)
+
+anova(m5,test="chisq")
+
+p <- plot_model(m5, type = "pred", terms = c("Pt[n=100]", "Pa"),
+                digits=1, line.size=0.5, show.data=T,
+                #colors=c("green","#00a0c9","red")
+                colors = viridisLite::magma(begin = 0.2, end = 0.8, n = 3)
+# Color blind friendly.
+                )
+p <- p + scale_x_continuous(breaks=c(1, 2, 3))
+p <- p + ylab("Descriptive ylab (tim)")
+p <- p + xlab("Descriptive xlab (Pt)")
+p <- p + theme_bw() # My preference.
+
+p
+
+ggsave(filename = "my_plot.tiff", device = "tiff", dpi = 300,
+       width = 3.25, height = 3.25, units = "in", compression = "lzw")
+ggsave(filename = "my_plot.png", device = "png", dpi = 300,
+       width = 3.25, height = 3.25, units = "in")
+```
+
+I believe the pixelation issue you've mentioned can be addressed by
+increasing the resolution(dpi=300). Although a vector graphic, as suggested
+by Torsten, is another alternative.
+
+You appear to be treating your data as continuous (lm) but are trying to
+assign discrete x-axis tick labels. I think I have had more success by
+treating your data as continuous. (But, your data do look
+rather categorical.)
+
+Note that `ggsave()` includes the ellipsis (`...`) which allow you to pass
+parameters to functions called by `ggsave()`.
+
+Hope that helps!
+Brian
+
+On Thu, Jun 3, 2021 at 1:23 AM Torsten Hauffe <torsten.hauffe at gmail.com>
+wrote:
+
+> Hi Luis,
+>
+> You can avoid the pixelation by exporting your plot as vector graphics
+> (e.g. functions pdf() or svg()) instead of pixel formats (i.e. png(),
+> tiff() etc). There is also ggsave("MyPlot.pdf") but I don't know about
+> ggplot very well.
+>
+> pdf("MyPlot.pdf")
+> p=  plot_model(m5, type = "pred", terms = c("Pt[n=100]", "Pa"),
+> digits=1,line.size=0.5,show.data=T,colors=c("green","#00a0c9","red"))
+> dev.off()
+>
+> On Thu, Jun 3, 2021 at 10:10 AM Luis Fernando Garc?a <luysgarcia at gmail.com
+> >
+> wrote:
+>
+> >   Dear all,
+> >
+> > I am wanting to improve a plot made with the package sjPlot.
+> >
+> > When plotting this model
+> >
+> >
+> > Plot produced looks like this
+> >
+> >
+> https://docs.google.com/presentation/d/1Pqm6BcJXdSQ6U1zmv5FV7gBcn1afHHv7rlQHe6j59_c/edit?usp=sharing
+> > ,
+> > especially red and green lines.
+> >
+> > I just have two concerns with this, the first one is that lines seem a
+> bit
+> > pixelated, and I would like to improve it, I have tried some approaches
+> but
+> > it has not been possible.
+> >
+> > Dataset in this link:
+> >
+> >
+> https://docs.google.com/spreadsheets/d/1nXerN91Iehe9OM1VGDMS3jnbvvF1tWcuS9bGtlrj_Ss/edit?usp=sharing
+> >
+> > library(geepack)
+> > library(ggplot2)
+> > library(sjPlot)
+> > library(ggeffects)
+> > #Copy dataset before following the code
+> > dat <- read.delim("clipboard", dec=","); attach(dat)
+> >
+> > dat$Id <- as.integer(factor(dat$Esp))
+> > str(dat)
+> > m5 <- geeglm(
+> >   formula = tim ~ Pa*Pt,
+> >   family = Gamma(link = log),
+> >   data = dat,
+> >   id = Id,
+> >   corstr = "exchangeable"
+> > )
+> >
+> > anova(m5,test="chisq")
+> >
+> > p=  plot_model(m5, type = "pred", terms = c("Pt[n=100]", "Pa"),
+> > digits=1,line.size=0.5,show.data=T,colors=c("green","#00a0c9","red"))
+> >
+> > p
+> >
+> > The second one, is I would like to remove the decimal values (i.e. in
+> the x
+> > axis), however I?m not very sure if it is possible to do this in sjPlot
+> or
+> > if you know a similar alternative in ggplot2. I tried this approach but
+> it
+> > did not work.
+> >
+> > p=p+ scale_x_discrete(limits=c(1,2,3))
+> > p
+> >
+> > When making this plot, there is a space before 1 and after 3 I would like
+> > to erase.
+> >
+> > Best
+> >
+> >         [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com  Sat Jun  5 09:32:56 2021
+From: enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com (Enrico Gabrielli)
+Date: Sat, 05 Jun 2021 09:32:56 +0200
+Subject: [R-sig-eco] Halyomorpha halys;
+ observation time-series irregular: regularized weekly capture rates
+Message-ID: <b5e86a94b464dbc62f8d6411042e5687522b00a7.camel@gmail.com>
+
+Hello
+I just registered on the list.
+I am an agricultural technician and I am collaborating on a research
+project on agroforestry and Brown Marmorated Stink Bug (Halyomorpha
+halys, abbreviated BMSB).
+The project will also address, at least as a draft (it is a very
+difficult topic), the modeling of the movements of the BMSB and its
+parasitoids.
+I am trying to activate an ongoing collaboration with a group of
+computer scientists I know.
+However for now, to approach the R mailing lists, I have a question
+that I would like to post on r-help, but unfortunately there is an
+error in the subscription.
+I think this mailing list could also be included.
+Through kobotoolbox we are collecting data of catches in traps on
+farms. Farms register inconsistently.
+I am trying to use packages for irregular time series, but I cannot
+figure out how to sum the weekly data correctly.
+To give an example: if a farmer enters the data on Thursday and Tuesday
+of the following week, on Tuesday in the trap he will find individuals
+who were also captured on Friday and Saturday, which formally are to be
+considered in the previous week. I know it's trivial, but maybe there
+is an appropriate statistical method inside some package.
+Thank you
+-- 
+Enrico Gabrielli
+
+
+From t@v|b@r @end|ng |rom gm@||@com  Sat Jun  5 10:59:32 2021
+From: t@v|b@r @end|ng |rom gm@||@com (Micha Silver)
+Date: Sat, 5 Jun 2021 11:59:32 +0300
+Subject: [R-sig-eco] Halyomorpha halys;
+ observation time-series irregular: regularized weekly capture rates
+In-Reply-To: <b5e86a94b464dbc62f8d6411042e5687522b00a7.camel@gmail.com>
+References: <b5e86a94b464dbc62f8d6411042e5687522b00a7.camel@gmail.com>
+Message-ID: <7da72453-fdf9-5961-1d9b-84310d46d978@gmail.com>
+
+
+On 6/5/21 10:32 AM, Enrico Gabrielli wrote:
+> Hello
+> I just registered on the list.
+> I am an agricultural technician and I am collaborating on a research
+> project on agroforestry and Brown Marmorated Stink Bug (Halyomorpha
+> halys, abbreviated BMSB).
+> The project will also address, at least as a draft (it is a very
+> difficult topic), the modeling of the movements of the BMSB and its
+> parasitoids.
+> I am trying to activate an ongoing collaboration with a group of
+> computer scientists I know.
+> However for now, to approach the R mailing lists, I have a question
+> that I would like to post on r-help, but unfortunately there is an
+> error in the subscription.
+> I think this mailing list could also be included.
+> Through kobotoolbox we are collecting data of catches in traps on
+> farms. Farms register inconsistently.
+> I am trying to use packages for irregular time series, but I cannot
+> figure out how to sum the weekly data correctly.
+
+
+You can do this by using the group_by() function in dplyr. Here's an 
+example:
+
+
+library(dplyr)
+
+# First some fictitious data
+
+# number of capture data points
+
+n = 30
+
+# random integer values for capture counts
+
+captures = as.integer(runif(n)*10)
+
+# 30 random dates from the period between jan 1 and the following 60 days
+dates = sort(as.Date("2021-01-01") + sample(1:60, n))
+
+week_nums = strftime(dates, "$U")
+
+captures_df = data.frame("Date" = dates,
+
+ ??? ??? ??? ??? ??? ??? "Captures" = captures,
+
+ ??? ??? ??? ??? ??? ??? "Week_num" = week_nums)
+
+ > head(captures_df)
+ ??????? Date Captures Week_num
+1 2021-01-06??????? 2?????? 01
+2 2021-01-07??????? 2?????? 01
+3 2021-01-08??????? 6?????? 01
+4 2021-01-09??????? 3?????? 01
+5 2021-01-12??????? 9?????? 02
+6 2021-01-13??????? 8?????? 02
+
+
+# Now we can group_by the Week_sum column and sum captures for each week:
+
+captures_weekly = captures_df %>%
+
+ ??? ??? group_by(Week_num) %>%
+
+ ??? ??? summarize(Weekly_sum = sum(Captures))
+captures_weekly
+# A tibble: 9 x 2
+ ? Week_num Weekly_sum
+ ? <chr>???????? <int>
+1 01?????????????? 13
+2 02?????????????? 17
+3 03??????????????? 9
+4 04?????????????? 25
+5 05?????????????? 11
+6 06?????????????? 19
+7 07??????????????? 8
+8 08?????????????? 26
+9 09??????????????? 4
+
+
+The above is for a single year. If you need do weekly sums for 
+multi-year data, then specify also the year in the "Weekly_sum" column, 
+i.e.:
+
+week_nums = strftime(dates, "%Y-%U")
+
+
+HTH,
+
+Micha
+
+
+> To give an example: if a farmer enters the data on Thursday and Tuesday
+> of the following week, on Tuesday in the trap he will find individuals
+> who were also captured on Friday and Saturday, which formally are to be
+> considered in the previous week. I know it's trivial, but maybe there
+> is an appropriate statistical method inside some package.
+> Thank you
+
+-- 
+Micha Silver
+Ben Gurion Univ.
+Sde Boker, Remote Sensing Lab
+cell: +972-523-665918
+
+
+From enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com  Sun Jun  6 10:43:35 2021
+From: enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com (Enrico Gabrielli)
+Date: Sun, 06 Jun 2021 10:43:35 +0200
+Subject: [R-sig-eco] Halyomorpha halys;
+ observation time-series irregular: regularized weekly capture rates
+In-Reply-To: <7da72453-fdf9-5961-1d9b-84310d46d978@gmail.com>
+References: <b5e86a94b464dbc62f8d6411042e5687522b00a7.camel@gmail.com>
+ <7da72453-fdf9-5961-1d9b-84310d46d978@gmail.com>
+Message-ID: <e577b241d8e85d3662a74a11a7ba3239929ce1fe.camel@gmail.com>
+
+Thanks micha
+Why have a quick answer!
+Unfortunately in great lines this more or less I know to do it.
+The problem is that my observations are not only a datetime, but they
+are to be considered as deftime, with a start and an end.
+So I have to use a class derived from a distribution.
+I'm trying to use XTS: I like it but there is a trivial thing I can't
+do: I have associated attributes, but I can't do graphics with the
+aggregation for attributes.
+
+Il giorno sab, 05/06/2021 alle 11.59 +0300, Micha Silver ha scritto:
+> On 6/5/21 10:32 AM, Enrico Gabrielli wrote:
+> > Hello
+> > I just registered on the list.
+> > I am an agricultural technician and I am collaborating on a
+> > research
+> > project on agroforestry and Brown Marmorated Stink Bug (Halyomorpha
+> > halys, abbreviated BMSB).
+> > The project will also address, at least as a draft (it is a very
+> > difficult topic), the modeling of the movements of the BMSB and its
+> > parasitoids.
+> > I am trying to activate an ongoing collaboration with a group of
+> > computer scientists I know.
+> > However for now, to approach the R mailing lists, I have a question
+> > that I would like to post on r-help, but unfortunately there is an
+> > error in the subscription.
+> > I think this mailing list could also be included.
+> > Through kobotoolbox we are collecting data of catches in traps on
+> > farms. Farms register inconsistently.
+> > I am trying to use packages for irregular time series, but I cannot
+> > figure out how to sum the weekly data correctly.
+> 
+> You can do this by using the group_by() function in dplyr. Here's an 
+> example:
+> 
+> 
+> library(dplyr)
+> 
+> # First some fictitious data
+> 
+> # number of capture data points
+> 
+> n = 30
+> 
+> # random integer values for capture counts
+> 
+> captures = as.integer(runif(n)*10)
+> 
+> # 30 random dates from the period between jan 1 and the following 60
+> days
+> dates = sort(as.Date("2021-01-01") + sample(1:60, n))
+> 
+> week_nums = strftime(dates, "$U")
+> 
+> captures_df = data.frame("Date" = dates,
+> 
+>                          "Captures" = captures,
+> 
+>                          "Week_num" = week_nums)
+> 
+>  > head(captures_df)
+>          Date Captures Week_num
+> 1 2021-01-06        2       01
+> 2 2021-01-07        2       01
+> 3 2021-01-08        6       01
+> 4 2021-01-09        3       01
+> 5 2021-01-12        9       02
+> 6 2021-01-13        8       02
+> 
+> 
+> # Now we can group_by the Week_sum column and sum captures for each
+> week:
+> 
+> captures_weekly = captures_df %>%
+> 
+>          group_by(Week_num) %>%
+> 
+>          summarize(Weekly_sum = sum(Captures))
+> captures_weekly
+> # A tibble: 9 x 2
+>    Week_num Weekly_sum
+>    <chr>         <int>
+> 1 01               13
+> 2 02               17
+> 3 03                9
+> 4 04               25
+> 5 05               11
+> 6 06               19
+> 7 07                8
+> 8 08               26
+> 9 09                4
+> 
+> 
+> The above is for a single year. If you need do weekly sums for 
+> multi-year data, then specify also the year in the "Weekly_sum"
+> column, 
+> i.e.:
+> 
+> week_nums = strftime(dates, "%Y-%U")
+> 
+> 
+> HTH,
+> 
+> Micha
+> 
+> 
+> > To give an example: if a farmer enters the data on Thursday and
+> > Tuesday
+> > of the following week, on Tuesday in the trap he will find
+> > individuals
+> > who were also captured on Friday and Saturday, which formally are
+> > to be
+> > considered in the previous week. I know it's trivial, but maybe
+> > there
+> > is an appropriate statistical method inside some package.
+> > Thank you
+
+
+From enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com  Mon Jun  7 10:44:49 2021
+From: enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com (Enrico Gabrielli)
+Date: Mon, 07 Jun 2021 10:44:49 +0200
+Subject: [R-sig-eco] Halyomorpha halys;
+ observation time-series irregular: regularized weekly capture rates
+In-Reply-To: <e577b241d8e85d3662a74a11a7ba3239929ce1fe.camel@gmail.com>
+References: <b5e86a94b464dbc62f8d6411042e5687522b00a7.camel@gmail.com>
+ <7da72453-fdf9-5961-1d9b-84310d46d978@gmail.com>
+ <e577b241d8e85d3662a74a11a7ba3239929ce1fe.camel@gmail.com>
+Message-ID: <4a7c233e8e4a4a910be6acfc1e5dff69e975a9a8.camel@gmail.com>
+
+Hello
+I'm looking at if and how to find support with paid computer scientists
+because it is not possible for an agricultural technician in the midst
+of activities in the field, who does not know how to use R
+solve this problem also through a mailing-list.
+However it is right to complete the description of the problem, maybe
+you have ideas that I will give to the computer scientists that we will
+pay with the project
+so I am not asking here for the solution, but only for ideas.
+
+This is an data example (really)
+datetime	capture
+2021-05-15 14:09:00	15
+2021-05-16 10:34:00	2
+2021-05-20 15:00:00	3
+2021-05-23 08:30:00	23
+2021-05-29 07:30:00	30
+2021-05-29 19:00:00	25
+2021-06-01 19:00:00	23
+2021-06-05 12:52:00	92
+2021-06-05 19:00:00	5
+
+This is the results of two possibile solution
+week		simple SUM week 	right SUM week
+19	17	19,44027778
+20	26	52,91388889
+21	55	46,4375
+22	120	99,20833333
+
+simple is done with a simple sum by aggregate with weeknum
+right is done with a it is done with the calculation of the ratio
+between catches and time interval
+but this is done with a spreadsheet, but in order to automate the
+generation of an html graph on the project server page, I need to do
+this with R
+
+I tested the xts package, and then I found lubridate and padr
+interesting, but I stopped due to lack of time
+
+-- 
+Perito agrario Enrico Gabrielli
+Tessera n. 633 Collegio Periti agrari prov. Di Modena
+Biblioteca agricoltura: https://www.zotero.org/groups/aplomb/
+https://it.linkedin.com/pub/enrico-gabrielli/9a/186/159
+https://enricogabrielli76.wordpress.com/
+https://www.inaturalist.org/observations/bonushenricus
+
+
+From t@v|b@r @end|ng |rom gm@||@com  Mon Jun  7 12:37:37 2021
+From: t@v|b@r @end|ng |rom gm@||@com (Micha Silver)
+Date: Mon, 7 Jun 2021 13:37:37 +0300
+Subject: [R-sig-eco] Halyomorpha halys;
+ observation time-series irregular: regularized weekly capture rates
+In-Reply-To: <4a7c233e8e4a4a910be6acfc1e5dff69e975a9a8.camel@gmail.com>
+References: <b5e86a94b464dbc62f8d6411042e5687522b00a7.camel@gmail.com>
+ <7da72453-fdf9-5961-1d9b-84310d46d978@gmail.com>
+ <e577b241d8e85d3662a74a11a7ba3239929ce1fe.camel@gmail.com>
+ <4a7c233e8e4a4a910be6acfc1e5dff69e975a9a8.camel@gmail.com>
+Message-ID: <6f28db0e-527b-6e79-bf2c-be9dc09fd426@gmail.com>
+
+Hi:
+
+
+On 6/7/21 11:44 AM, Enrico Gabrielli wrote:
+> Hello
+> I'm looking at if and how to find support with paid computer scientists
+> because it is not possible for an agricultural technician in the midst
+> of activities in the field, who does not know how to use R
+> solve this problem also through a mailing-list.
+> However it is right to complete the description of the problem, maybe
+> you have ideas that I will give to the computer scientists that we will
+> pay with the project
+> so I am not asking here for the solution, but only for ideas.
+>
+> This is an data example (really)
+> datetime	capture
+> 2021-05-15 14:09:00	15
+> 2021-05-16 10:34:00	2
+> 2021-05-20 15:00:00	3
+> 2021-05-23 08:30:00	23
+> 2021-05-29 07:30:00	30
+> 2021-05-29 19:00:00	25
+> 2021-06-01 19:00:00	23
+> 2021-06-05 12:52:00	92
+> 2021-06-05 19:00:00	5
+>
+> This is the results of two possibile solution
+> week		simple SUM week 	right SUM week
+> 19	17	19,44027778
+> 20	26	52,91388889
+> 21	55	46,4375
+> 22	120	99,20833333
+>
+> simple is done with a simple sum by aggregate with weeknum
+> right is done with a it is done with the calculation of the ratio
+> between catches and time interval
+
+It's still not clear. time interval in hours? or days?
+
+
+Have a look at this code, using your example data:
+
+
+library(dplyr)
+
+
+Hh <- read.table(header = FALSE, text="2021-05-15 14:09:00??? 15
+2021-05-16 10:34:00??? 2
+2021-05-20 15:00:00??? 3
+2021-05-23 08:30:00??? 23
+2021-05-29 07:30:00??? 30
+2021-05-29 19:00:00??? 25
+2021-06-01 19:00:00??? 23
+2021-06-05 12:52:00??? 92
+2021-06-05 19:00:00??? 5")
+colnames(Hh) <- c("Date", "Time", "Captures")
+
+Hh$DateTime <- as.POSIXct(paste(Hh$Date, Hh$Time),
+ ???????????????????????? format = "%Y-%m-%d %H:%M:%S",
+ ???????????????????????? tz = "UTC") ??? ??? # What time zone??
+
+# I assume time interval in days
+
+# The first row must have timediff=0, since there is no previous DateTime
+
+Hh$Timediff <- c(0, diff(Hh$DateTime)/24)
+# Captures per hour
+Hh$Capt.per.Day <- ifelse(Hh$Timediff == 0, 0, Hh$Captures/Hh$Timediff)
+
+# Week number:
+Hh$Weeknum <- strftime(Hh$DateTime, "%Y%W")
+Hh
+ ??????? Date???? Time Captures??????????? DateTime? Timediff 
+Capt.per.Day Weeknum
+1 2021-05-15 14:09:00?????? 15 2021-05-15 14:09:00 0.0000000 0.0000000? 
+202119
+2 2021-05-16 10:34:00??????? 2 2021-05-16 10:34:00 0.8506944 2.3510204? 
+202119
+3 2021-05-20 15:00:00??????? 3 2021-05-20 15:00:00 4.1847222 0.7168935? 
+202120
+4 2021-05-23 08:30:00?????? 23 2021-05-23 08:30:00 2.7291667 8.4274809? 
+202120
+5 2021-05-29 07:30:00?????? 30 2021-05-29 07:30:00 5.9583333 5.0349650? 
+202121
+6 2021-05-29 19:00:00?????? 25 2021-05-29 19:00:00 0.4791667 52.1739130? 
+202121
+7 2021-06-01 19:00:00?????? 23 2021-06-01 19:00:00 3.0000000 7.6666667? 
+202122
+8 2021-06-05 12:52:00?????? 92 2021-06-05 12:52:00 3.7444444 24.5697329? 
+202122
+9 2021-06-05 19:00:00??????? 5 2021-06-05 19:00:00 0.2555556 19.5652174? 
+202122
+
+
+# Now sum by wekknum
+
+Hh_weekly <- Hh %>%
+
+ ? group_by(Weeknum) %>%
+ ? summarise(Hourly.Capt.per.Week = sum(Capt.per.Day)) %>%
+ ? ungroup()
+
+Hh_weekly
+# A tibble: 4 x 2
+ ? Weeknum Hourly.Capt.per.Week
+ ? <chr>????????????????? <dbl>
+1 202119????????????????? 2.35
+2 202120????????????????? 9.14
+3 202121???????????????? 57.2
+4 202122???????????????? 51.8
+
+
+
+Does that bring you any closer??
+
+
+
+> but this is done with a spreadsheet, but in order to automate the
+> generation of an html graph on the project server page, I need to do
+> this with R
+>
+> I tested the xts package, and then I found lubridate and padr
+> interesting, but I stopped due to lack of time
+>
+-- 
+Micha Silver
+Ben Gurion Univ.
+Sde Boker, Remote Sensing Lab
+cell: +972-523-665918
+
+
+From enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com  Wed Jun  9 11:16:07 2021
+From: enr|cog@br|e|||76@per@gr @end|ng |rom gm@||@com (Enrico Gabrielli)
+Date: Wed, 09 Jun 2021 11:16:07 +0200
+Subject: [R-sig-eco] Halyomorpha halys;
+ observation time-series irregular: regularized weekly capture rates
+In-Reply-To: <6f28db0e-527b-6e79-bf2c-be9dc09fd426@gmail.com>
+References: <b5e86a94b464dbc62f8d6411042e5687522b00a7.camel@gmail.com>
+ <7da72453-fdf9-5961-1d9b-84310d46d978@gmail.com>
+ <e577b241d8e85d3662a74a11a7ba3239929ce1fe.camel@gmail.com>
+ <4a7c233e8e4a4a910be6acfc1e5dff69e975a9a8.camel@gmail.com>
+ <6f28db0e-527b-6e79-bf2c-be9dc09fd426@gmail.com>
+Message-ID: <461fe4f3a0b68ca81a105a055f5edf8a6b8d1581.camel@gmail.com>
+
+Hi Micha
+thanks to you I understood so many things!
+But the result doesn't work.
+So I tried padr
+Here's how I worked, but unfortunately the pad function has problems,
+it gives me an error:
+> # variable monitoring time
+> tempo <- as.POSIXct(c("2021-05-29 17:00:00 UTC","2021-06-05 10:52:00
+> UTC","2021-06-01 17:00:00 UTC","2021-05-16 08:34:00 UTC","2021-06-05
+> 17:00:00 UTC","2021-05-29 05:30:00 UTC","2021-05-23 06:30:00
+> UTC","2021-05-20 13:00:00 UTC","2021-05-15 12:09:00 UTC","2021-06-06
+> 19:18:00 UTC"))
+> # variable capture of BMSB
+> catture <- c(25,92,23,2,5,30,23,3,15,21,15,40,22)
+> 
+> # resulting table
+> library(data.table)
+> arvaia_catture <- data.table(tempo,catture)
+> # order by time
+> arvaia_catture_order <- arvaia_catture[order(arvaia_catture$tempo)]
+> # calculate the rate per hour of capture
+> arvaia_catture_order$difftime_ora <-
+> c(0,diff(arvaia_catture_order$tempo))
+> arvaia_catture_order$catture_ora <-
+> arvaia_catture_order$catture/arvaia_catture_order$difftime_ora
+> 
+> # use of padr to fill the gap
+> library(padr)
+> arvaia_catture_ora <- thicken(arvaia_catture_order,interval = "hour")
+> pad(arvaia_catture_ora,by=arvaia_catture_ora$tempo_hour)
+
+I wrote to Edwin, the developer of padr.
+He knows that in the end I will learn R! Since the money in the project
+is scarce! Maybe I keep them for when more complex spatial-ecology
+things have to be done
+
+Il giorno lun, 07/06/2021 alle 13.37 +0300, Micha Silver ha scritto:
+> Hi:
+> 
+> 
+> On 6/7/21 11:44 AM, Enrico Gabrielli wrote:
+> > Hello
+> > I'm looking at if and how to find support with paid computer
+> > scientists
+> > because it is not possible for an agricultural technician in the
+> > midst
+> > of activities in the field, who does not know how to use R
+> > solve this problem also through a mailing-list.
+> > However it is right to complete the description of the problem,
+> > maybe
+> > you have ideas that I will give to the computer scientists that we
+> > will
+> > pay with the project
+> > so I am not asking here for the solution, but only for ideas.
+> > 
+> > This is an data example (really)
+> > datetime	capture
+> > 2021-05-15 14:09:00	15
+> > 2021-05-16 10:34:00	2
+> > 2021-05-20 15:00:00	3
+> > 2021-05-23 08:30:00	23
+> > 2021-05-29 07:30:00	30
+> > 2021-05-29 19:00:00	25
+> > 2021-06-01 19:00:00	23
+> > 2021-06-05 12:52:00	92
+> > 2021-06-05 19:00:00	5
+> > 
+> > This is the results of two possibile solution
+> > week		simple SUM week 	right SUM week
+> > 19	17	19,44027778
+> > 20	26	52,91388889
+> > 21	55	46,4375
+> > 22	120	99,20833333
+> > 
+> > simple is done with a simple sum by aggregate with weeknum
+> > right is done with a it is done with the calculation of the ratio
+> > between catches and time interval
+> 
+> It's still not clear. time interval in hours? or days?
+> 
+> 
+> Have a look at this code, using your example data:
+> 
+> 
+> library(dplyr)
+> 
+> 
+> Hh <- read.table(header = FALSE, text="2021-05-15 14:09:00    15
+> 2021-05-16 10:34:00    2
+> 2021-05-20 15:00:00    3
+> 2021-05-23 08:30:00    23
+> 2021-05-29 07:30:00    30
+> 2021-05-29 19:00:00    25
+> 2021-06-01 19:00:00    23
+> 2021-06-05 12:52:00    92
+> 2021-06-05 19:00:00    5")
+> colnames(Hh) <- c("Date", "Time", "Captures")
+> 
+> Hh$DateTime <- as.POSIXct(paste(Hh$Date, Hh$Time),
+>                           format = "%Y-%m-%d %H:%M:%S",
+>                           tz = "UTC")         # What time zone??
+> 
+> # I assume time interval in days
+> 
+> # The first row must have timediff=0, since there is no previous
+> DateTime
+> 
+> Hh$Timediff <- c(0, diff(Hh$DateTime)/24)
+> # Captures per hour
+> Hh$Capt.per.Day <- ifelse(Hh$Timediff == 0, 0,
+> Hh$Captures/Hh$Timediff)
+> 
+> # Week number:
+> Hh$Weeknum <- strftime(Hh$DateTime, "%Y%W")
+> Hh
+>          Date     Time Captures            DateTime  Timediff 
+> Capt.per.Day Weeknum
+> 1 2021-05-15 14:09:00       15 2021-05-15 14:09:00 0.0000000
+> 0.0000000  
+> 202119
+> 2 2021-05-16 10:34:00        2 2021-05-16 10:34:00 0.8506944
+> 2.3510204  
+> 202119
+> 3 2021-05-20 15:00:00        3 2021-05-20 15:00:00 4.1847222
+> 0.7168935  
+> 202120
+> 4 2021-05-23 08:30:00       23 2021-05-23 08:30:00 2.7291667
+> 8.4274809  
+> 202120
+> 5 2021-05-29 07:30:00       30 2021-05-29 07:30:00 5.9583333
+> 5.0349650  
+> 202121
+> 6 2021-05-29 19:00:00       25 2021-05-29 19:00:00 0.4791667
+> 52.1739130  
+> 202121
+> 7 2021-06-01 19:00:00       23 2021-06-01 19:00:00 3.0000000
+> 7.6666667  
+> 202122
+> 8 2021-06-05 12:52:00       92 2021-06-05 12:52:00 3.7444444
+> 24.5697329  
+> 202122
+> 9 2021-06-05 19:00:00        5 2021-06-05 19:00:00 0.2555556
+> 19.5652174  
+> 202122
+> 
+> 
+> # Now sum by wekknum
+> 
+> Hh_weekly <- Hh %>%
+> 
+>    group_by(Weeknum) %>%
+>    summarise(Hourly.Capt.per.Week = sum(Capt.per.Day)) %>%
+>    ungroup()
+> 
+> Hh_weekly
+> # A tibble: 4 x 2
+>    Weeknum Hourly.Capt.per.Week
+>    <chr>                  <dbl>
+> 1 202119                  2.35
+> 2 202120                  9.14
+> 3 202121                 57.2
+> 4 202122                 51.8
+> 
+> 
+> 
+> Does that bring you any closer??
+> 
+> 
+> 
+> > but this is done with a spreadsheet, but in order to automate the
+> > generation of an html graph on the project server page, I need to
+> > do
+> > this with R
+> > 
+> > I tested the xts package, and then I found lubridate and padr
+> > interesting, but I stopped due to lack of time
+> >
+
+
+From |uy@g@rc|@ @end|ng |rom gm@||@com  Sat Jun 19 09:40:50 2021
+From: |uy@g@rc|@ @end|ng |rom gm@||@com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Sat, 19 Jun 2021 04:40:50 -0300
+Subject: [R-sig-eco] Question when plotting a model with sjplot
+Message-ID: <CANxP2S6aqt1=_=g31qfv4LR9R0=YdiPX5jN5+y4qRA6C=Ve9iQ@mail.gmail.com>
+
+Dear all,
+
+I am trying to plot a model using sjPlot. however when doing it, error bars
+are non-centered.    I  wanted  to  know  if somebody knows how to plot it.
+
+Many thanks!!
+
+###Script
+
+Copy data from here
+https://docs.google.com/spreadsheets/d/1VixfgDWql7BOOPxqw2ElOLmfVcXP1soKR8-FmLlkgOU/edit?usp=sharing
+
+
+dat <- read.delim("clipboard", dec=","); attach(dat)# Copy data before
+library(sjPlot)
+library(geepack)
+library(ggplot2)
+
+m1 <- geeglm(
+  formula = Consumo~Presa+Sexo,
+  family = binomial,
+  data = dat,
+  id = Id1,
+  corstr = "exchangeable"
+)
+
+plot_model(m1, type = "pred", terms = c("Presa","Sexo"),
+           colors = c("blue", "magenta3","red"),) +
+  geom_bar (position=position_dodge(), stat = "identity", width=0.5, alpha
+= 0.3) +
+  coord_cartesian(ylim=c(0,2))
+
+	[[alternative HTML version deleted]]
+
+

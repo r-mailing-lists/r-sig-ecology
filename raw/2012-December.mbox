@@ -1,0 +1,3898 @@
+From pdixon at iastate.edu  Sat Dec  1 18:03:13 2012
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Sat, 1 Dec 2012 17:03:13 +0000
+Subject: [R-sig-eco] Hurdle model: singular variance-covariance matrix
+Message-ID: <70BE37C808A96042AD67E77340C4D46308CB0537@ITSDAG3D.its.iastate.edu>
+
+Yaiza,
+
+The problem is that two coefficients are perfectly correlated with each other.  Since this happens in the models with interactions but not additive effects, my hunch is that the cross-product variable is very highly correlated with one of the original variables.  This can happen if one variable has a large mean and large variability and the second has a large mean and small variability.  If so, this is a numerical issue, not a conceptual, statistical or ecological issue.
+
+I suggest you center all X variables to mean 0.  That often clears up numerical issues.  If it doesn't standardizing each to unit variance can also help.  Centering the X variables also has the statistical advantage that the intercept is directly interpretable.
+
+Best wishes,
+Philip Dixon
+
+
+From tgoncalves.souza at gmail.com  Sun Dec  2 14:40:33 2012
+From: tgoncalves.souza at gmail.com (=?UTF-8?Q?Thiago_Gon=C3=A7alves=2DSouza?=)
+Date: Sun, 2 Dec 2012 11:40:33 -0200
+Subject: [R-sig-eco] About spatial dependence in experiment
+Message-ID: <CACHAJhNFcj-30G73mX=-FKdSxdurC=RHVuQn37+fHwjJVd2pUg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121202/74f5a74d/attachment.pl>
+
+From vesna.gagic at bio.bg.ac.rs  Mon Dec  3 10:18:09 2012
+From: vesna.gagic at bio.bg.ac.rs (Vesna Gagic)
+Date: Mon, 03 Dec 2012 10:18:09 +0100
+Subject: [R-sig-eco] Simper analysis with Morisita-Horn
+Message-ID: <20121203091809.01b5812d@bio.bg.ac.rs>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121203/755444d1/attachment.pl>
+
+From szoe8822 at uni-landau.de  Mon Dec  3 14:08:22 2012
+From: szoe8822 at uni-landau.de (=?ISO-8859-1?Q?Eduard_Sz=F6cs?=)
+Date: Mon, 03 Dec 2012 14:08:22 +0100
+Subject: [R-sig-eco] Simper analysis with Morisita-Horn
+In-Reply-To: <20121203091809.01b5812d@bio.bg.ac.rs>
+References: <20121203091809.01b5812d@bio.bg.ac.rs>
+Message-ID: <50BCA446.6000104@uni-landau.de>
+
+Hai Vesna,
+
+
+your code looks reasonable.
+
+However it will fail, when you try running the permutations:
+
+'Error: object 'gpa' not found'
+
+This comes from your second inserted code block (should be 'ga' ect).
+
+However in the current version it is not intended that the 'normal' user 
+knows about the permutations. And one must modify the function (change 
+the second line) in order to get the permutations running.
+
+So you can skip your second code block when you don't want to run the 
+permutations (and leave the function as is).
+
+Also have a look at the development-version of vegan at github:
+https://github.com/jarioksa/vegan/blob/master/R/simper.R
+for a slightly changed version.
+
+
+Hope this helps,
+
+Eduard
+
+
+
+
+On 12/03/2012 10:18 AM, Vesna Gagic wrote:
+> Dear ecology fellows,
+>
+> I tried to implement Morisita-Horn distance (instead of Bray that is in the current version)  in the code for the Simper analysis in vegan. I would be very grateful if someone can check if the code  is right.
+>
+> function (comm, group, ...)
+> {
+>      if (any(rowSums(comm, na.rm = TRUE) == 0))
+>          warning("you have empty rows: results may be meaningless")
+>      permutations <- 0
+>      trace <- FALSE
+>      comm <- as.matrix(comm)
+>      comp <- t(combn(unique(as.character(group)), 2))
+>      outlist <- NULL
+>      P <- ncol(comm)
+>      nobs <- nrow(comm)
+>      if (length(permutations) == 1) {
+>          perm <- shuffleSet(nobs, permutations, ...)
+>      }
+>      else {
+>          perm <- permutations
+>      }
+>      if (ncol(perm) != nobs)
+>          stop(gettextf("'permutations' have %d columns, but data have %d rows",
+>              ncol(perm), nobs))
+>      nperm <- nrow(perm)
+>      if (nperm > 0)
+>          perm.contr <- matrix(nrow = P, ncol = nperm)
+>      for (i in 1:nrow(comp)) {
+>          group.a <- comm[group == comp[i, 1], ]
+>          group.b <- comm[group == comp[i, 2], ]
+>          n.a <- nrow(group.a)
+>          n.b <- nrow(group.b)
+>          contr <- matrix(ncol = P, nrow = n.a * n.b)
+>          for (j in 1:n.b) {
+>              for (k in 1:n.a) {
+>
+>   ########### Morisita-Horn
+>                 
+>      aN <- sum(group.a[k, ])
+>      bN <- sum(group.b[j, ])
+>      da <- sum(group.a[k, ]^2)/aN^2
+>      db <- sum(group.b[j, ]^2)/bN^2
+>      top <- (group.a[k, ] * group.b[j, ])
+>      contr[(j - 1) * n.a + k, ] <- 2 * top/((da + db) * aN * bN)
+> #############
+>              }
+>          }
+>          average <- colMeans(contr)
+>          if (nperm > 0) {
+>              if (trace)
+>                  cat("Permuting", paste(comp[i, 1], comp[i, 2],
+>                    sep = "_"), "\n")
+>              contrp <- matrix(ncol = P, nrow = n.a * n.b)
+>              for (p in 1:nperm) {
+>                  groupp <- group[perm[p, ]]
+>                  ga <- comm[groupp == comp[i, 1], ]
+>                  gb <- comm[groupp == comp[i, 2], ]
+>                  for (j in 1:n.b) {
+>                    for (k in 1:n.a) {
+>   
+>   ########### Morisita-Horn
+>
+>      aNp <- sum(gpa[k, ])
+>      bNp <- sum(gpb[j, ])
+>      dap <- sum(gpa[k, ]^2)/aNp^2
+>      dbp <- sum(gpb[j, ]^2)/bNp^2
+>      topp <- (gpa[k, ] * gpb[j, ])
+>      contrp[(j - 1) * n.a + k, ] <- 2 * topp/((dap + dbp) * aNp * bNp)
+> #############
+>                    }
+>                  }
+>                  perm.contr[, p] <- colMeans(contrp)
+>              }
+>              p <- (apply(apply(perm.contr, 2, function(x) x >=
+>                  average), 1, sum) + 1)/(nperm + 1)
+>          }
+>          else {
+>              p <- NULL
+>          }
+>          overall <- sum(average)
+>          sdi <- apply(contr, 2, sd)
+>          ratio <- average/sdi
+>          ava <- colMeans(group.a)
+>          avb <- colMeans(group.b)
+>          ord <- order(average, decreasing = TRUE)
+>          cusum <- cumsum(average[ord]/overall)
+>          out <- list(species = colnames(comm), average = average,
+>              overall = overall, sd = sdi, ratio = ratio, ava = ava,
+>              avb = avb, ord = ord, cusum = cusum, p = p)
+>          outlist[[paste(comp[i, 1], "_", comp[i, 2], sep = "")]] <- out
+>      }
+>      attr(outlist, "permutations") <- nperm
+>      class(outlist) <- "simper"
+>      outlist
+> }
+>
+> Regards,
+> Vesna
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From jmaggs at ori.org.za  Tue Dec  4 06:19:08 2012
+From: jmaggs at ori.org.za (Jade Maggs)
+Date: Tue, 04 Dec 2012 07:19:08 +0200
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 57, Issue 1
+In-Reply-To: <mailman.1.1354359601.23898.r-sig-ecology@r-project.org>
+References: <mailman.1.1354359601.23898.r-sig-ecology@r-project.org>
+Message-ID: <50BD87CC.2060709@ori.org.za>
+
+Thank you Tim and Martin for your advice. It is much appreciated.
+
+Jade
+
+
+On 01/12/2012 13:00, r-sig-ecology-request at r-project.org wrote:
+> Send R-sig-ecology mailing list submissions to
+> 	r-sig-ecology at r-project.org
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+> 	r-sig-ecology-request at r-project.org
+>
+> You can reach the person managing the list at
+> 	r-sig-ecology-owner at r-project.org
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+>
+>
+> Today's Topics:
+>
+>     1. Hurdle Models: Error in	solve.default(as.matrix(fit$hessian))
+>        (Yaiza Iglesias)
+>     2. patterns in weather data that could relate to pathogen
+>        prevalence (Anto Raja)
+>     3. Re: GLM: calculate percentage deviance of factor (Martin Weiser)
+>     4. Re: patterns in weather data that could relate to pathogen
+>        prevalence (Bob O'Hara)
+>     5. Re: GLM: calculate percentage deviance of factor (Tim Meehan)
+>     6. Re: Zuur / Pinierho / Faraway (Dave Roberts)
+>     7. Re: Zuur / Pinierho / Faraway (Philippi, Tom)
+>     8. Re: summing F stats and permutation (Eduard Sz?cs)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Fri, 30 Nov 2012 12:40:52 +0100
+> From: Yaiza Iglesias <yaiza.iglesias.ba at gmail.com>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] Hurdle Models: Error in
+> 	solve.default(as.matrix(fit$hessian))
+> Message-ID:
+> 	<CAOR0OSjDB-GDG_Uq0vmRwANZyTLihU1xxG_U_NXwc9iMtEZapA at mail.gmail.com>
+> Content-Type: text/plain
+>
+> Hello list,
+>
+> I want to model the abundance of a aquatic bird using three predictors and
+> I am trying to fit a Hurdle model using the R package ?pscl?.
+>
+> When I try to fit a model with interaction between predictors, R give me an
+> error:
+>
+> hurdle(formula = carbototal ~ anchomedio:distdormidero, data =
+> ModHurdle300, dist = "negbin")
+> Error en solve.default(as.matrix(fit_count$hessian)) :
+>    system is computationally singular: reciprocal condition number = 0
+>
+>
+> The error is the same for all models with interaction between predictors:
+>
+>    formula = carbototal ~ anchomedio:distdormidero
+>    formula = carbototal ~ anchomedio:distpistacar
+>    formula = carbototal ~ anchomedio:distdormidero:distpistacar
+>
+>    Being: anchomedio, river width; distdormidero, distance to the nearest
+> roost and      distpistcar, distance to nearest road.
+>
+>
+> and for the three data sets of increasing sampling size: ModHurdle100,
+> where N=100; ModHurdle200, where N=200; ModHurdle300, where N=300. With the
+> exception of "formula = carbototal ~ anchomedio:distpistacar" for
+> ModHurdle100 data set, which the program seems able to handle without error.
+>
+> Is there anything I can do to solve this error? O maybe those models cannot
+> be fitted?
+>
+> Greetings and thanks in advance for your attention.
+>
+
+-- 
+_____________________________________________________________
+Jade Maggs MSc
+Assistant Scientist
+Linefish Research
+Oceanographic Research Institute
+Direct Tel: +27 (31) 328 8171 Fax: +27 (31) 328 8188
+Cell: +27 83 515 1079 e-mail: jmaggs at ori.org.za
+1 King Shaka Avenue, Point, Durban 4001 KwaZulu-Natal South Africa
+PO Box 10712, Marine Parade 4056 KwaZulu-Natal South Africa
+http://www.ori.org.za/staff.html#Jade
+http://www.linkedin.com/pub/jade-maggs/29/917/5a0
+
+
+From ptitle at umich.edu  Wed Dec  5 15:16:04 2012
+From: ptitle at umich.edu (Pascal Title)
+Date: Wed, 5 Dec 2012 09:16:04 -0500
+Subject: [R-sig-eco] clamping in R dismo package
+Message-ID: <CAPSA=yfhniNcjHBg1hWcX0Zxc_xsjhRg9_GqocSux7TP07FZkA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121205/6f56b5b1/attachment.pl>
+
+From beth.atkinson at bristol.ac.uk  Wed Dec  5 17:04:54 2012
+From: beth.atkinson at bristol.ac.uk (Beth Atkinson)
+Date: Wed, 05 Dec 2012 16:04:54 +0000
+Subject: [R-sig-eco] Permanova with nested data
+Message-ID: <83149A4DE563E57537C09C95@BIO-BZJXM-0803.bio.bris.ac.uk>
+
+Hi,
+
+Apologies if this has been asked before, I looked looked through the 
+archives and couldn't find a solution.
+
+
+I have plant community data from 32 woodland plots. Plots are grouped into 
+sites (8 sites in total). Half the sites (4) are on one soil type, and half 
+on another. At each site there are 4 plots, each under a different 
+management regime .  I want to know if the plant communities under 
+different management regimes and on different soil types differ.
+
+My data is as follows:
+
+
+veg <- a data frame containg the community data (abundances of each species 
+at each plot)
+
+
+environ<-read.csv(file.choose(),header=TRUE)
+
+> str(environ)
+'data.frame':   32 obs. of  4 variables:
+ $ code: Factor w/ 32 levels "cf.1","cf.3",..: 1 9 17 25 2 10 18 26 3 11 ...
+ $ site: Factor w/ 8 levels "eight","five",..: 5 5 5 5 8 8 8 8 3 3 ...
+ $ type: Factor w/ 4 levels "clearfell","plantation",..: 1 2 3 4 1 2 3 4 1 
+2 ...
+ $ nvc : Factor w/ 2 levels "W10","W8": 2 2 2 2 2 2 2 2 1 1 ...
+
+# site is the name of each site
+# type refers to the management regime
+# nvc refers to the soil type (actually the NVC classification)
+
+Prior to PERMANOVA I used betadisper() to test for homogeneity of 
+multivariate dispersion.  No difference in dispersion was found either 
+between plots on different site types, or plots on different NVC types.
+
+
+I carried out a PERMANOVA using adonis on this data as follows:
+
+adon.mod1.bray<-adonis(veg~ type*nvc, data=environ,strata=environ$site,
+	method = "bray", permutations=999)
+
+I used strata=environ$site as management regime is nested within site.
+
+> adon.mod1.bray
+
+Call:
+adonis(formula = veg ~ type * nvc, data = environ, permutations = 999,
+	 method = "bray", strata = environ$site)
+
+Terms added sequentially (first to last)
+
+          Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+type       3    2.2358 0.74528  3.5742 0.24662  0.001 ***
+nvc        1    1.0905 1.09045  5.2296 0.12028  0.001 ***
+type:nvc   3    0.7353 0.24509  1.1754 0.08110  0.208
+Residuals 24    5.0044 0.20852         0.55200
+Total     31    9.0659                 1.00000
+
+
+Is this acceptable. Is the strata=environ$site part correct?
+
+If data points are only being permutted within sites, and each site only 
+occurs on one soil type, is there no permutation between NVC/soil types?
+
+I've also heard that adonis does not give the correct p values when data is 
+nested. Is this correct, and a problem in the above example? If so is there 
+a more suitable analysis? Would a db-RDA as follows be ok?:
+
+
+dbRDA<-capscale(veg~type*nvc+Condition(site), data=environ, 
+distance="bray", add=TRUE)
+
+anova.cca(dbRDA, stop=999)
+
+anova.cca(dbRDA, by="terms", step=999)
+
+> anova.cca(dbRDA, by="terms", step=999)
+Permutation test for capscale under reduced model
+Terms added sequentially (first to last)
+
+Model: capscale(formula = veg ~ type + nvc + Condition(site) + type:nvc, 
+data = environ, distance = "bray", add = TRUE)
+         Df    Var      F N.Perm Pr(>F)
+type      3 2.9615 3.3215    999 <2e-16 ***
+type:nvc  3 1.1299 1.2673    999 0.1141
+Residual 18 5.3496
+
+
+However, this doesn't show a result for nvc. Why?
+
+I've also been looking into the manyglm() function in mvabund, but I don't 
+think this can accept random effects.
+
+Any help would be greatly appreciated,
+
+Thanks,
+
+Beth
+
+--------------------------------------------------------
+Beth Atkinson
+
+PhD student
+Community Ecology Group
+School of Biological Sciences
+University of Bristol
+Woodland Road
+Bristol
+BS8 1UG
+
+
+From ewan.isherwood at gmail.com  Wed Dec  5 20:15:01 2012
+From: ewan.isherwood at gmail.com (Ewan Isherwood)
+Date: Wed, 5 Dec 2012 14:15:01 -0500
+Subject: [R-sig-eco] Vegan metaMDS: unusual first run stress values with
+	large data set
+Message-ID: <CAEsJQ7hWvGacLMiia1JgqJCg+KZ8PzeJxenfXBwu=nT_d4qRmw@mail.gmail.com>
+
+Hello, R-Community! This is the first time writing to this group and
+indeed the first time using a mailing list, so please bear with me if
+I?ve done something wrong.
+
+I have a large species x site matrix (89 x 4831) that I want to
+ordinate using metaMDS in the Vegan (2.0-5) package in R (2.15.2). If
+I run this data frame using the Jaccard index in two or more
+dimensions (k>1), the first run (run=0) has a relatively low stress
+value and the other 20 runs are much higher and have very low
+deviation. However, k=1 seems to work fine. Furthermore, a
+stress/scree plot reveals a pyramid-like shape, where the k=1 lowest
+stress value is low, increases rapidly for k=2 then decreases slowly
+as k increases.
+
+Dimensions	Stress
+1	0.1382185
+2	0.1939509
+3	0.1695375
+4	0.155221
+5	0.1406408
+6	0.1294149
+
+I?ve tried this with a small iteration of this data and this issue
+arises at k>2 rather than at k>1 as it is here. Anyway, this is the
+input and output:
+
+library(vegan)
+library(MASS)
+PSU <- read.table("PSU.txt", header = TRUE, sep = "")
+PSU.sp <- PSU[, 22:110]
+PSU.NMDS <- metaMDS(PSU.sp, k=4, zerodist = "add", distance = "jaccard")
+
+Square root transformation
+Wisconsin double standardization
+Zero dissimilarities changed into  0.0006657301
+Run 0 stress 0.155221
+Run 1 stress 0.2548103
+Run 2 stress 0.255434
+Run 3 stress 0.2551382
+? (Up to run 20 where run 1 through run 20 have all very similar stress values.)
+
+Call:
+metaMDS(comm = PSU.sp, distance = "jaccard", k = 4, zerodist = "add")
+
+global Multidimensional Scaling using monoMDS
+
+Data:     wisconsin(sqrt(PSU.sp))
+Distance: jaccard
+
+Dimensions: 4
+Stress:     0.155221
+Stress type 1, weak ties
+No convergent solutions - best solution after 20 tries
+Scaling: centring, PC rotation, halfchange scaling
+Species: expanded scores based on ?wisconsin(sqrt(PSU.sp))?
+
+Now, again, with k=1 this does not happen ? the solution looks like
+any other regular NMDS run. There are no blank values in the data as
+they are all numbers between 0 and 100 corresponding to % cover, and
+every row and column sum is greater than 0. There are many sites with
+the same species configurations, hence the zerodist, but omitting this
+makes no difference to the problem at hand. The NMDS works fine if I
+use a subset of the data, but I have not subsetted and tested all of
+it. Other metric (Euclidean) and nonmetric (Bray) dissimilarity
+indices result in the same effect. I?ve chosen k=4 here because of the
+(marginal) elbow in the stress plot, but the data itself actually
+looks pretty good at any k value. Even though the output is
+reasonable, I am concerned that hitting the best solution by a large
+amount on the first run means something is messing up, and this
+concern is amplified by the strange pyramid shaped stress plot.
+Because metaMDS uses random starts, I don't see how this output is
+possible. I've scoured the help files and archives of this list and I
+am really now at a loss to explain this.
+
+Thank you in advance for your time and consideration!
+
+Ewan
+
+
+From rshepard at appl-ecosys.com  Thu Dec  6 02:26:20 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Wed, 5 Dec 2012 17:26:20 -0800 (PST)
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water Chemistry
+	and Biota
+Message-ID: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+
+   I left academia and basic ecological research decades ago and now work
+with environmental data collected by companies in compliance with regulatory
+permit requirements. I've bought and read (mostly) all the books I could
+find on ecological analyses using R (all but one of Alain Zuur's books,
+Legendre & Legendre's 2nd English edition, Mike McCarthy's Bayesian methods
+book, and Ben Bolker's book) but cannot find any references to 'communities'
+in the indices. I'd greatly appreciate pointers to sources appropriate for
+environmental data (which is much sloppier than ecological research data).
+
+   The last time I addressed community analyses was my post-doc research
+which I published in Freshwater Biology in 1984. Only within the past year
+have my clients needed to address issues using benthic macroinvertebrate
+assemblages (and fish) in streams. And, since I work by myself, I've no one
+with whom to share ideas and discuss approaches; perhaps there's a better
+forum than this mail list for this.
+
+   The available benthic data has little taxonomic consistency below the
+family level. I want to use functional feeding groups rather than taxa as
+the basis of comparison because those better reflect conditions in each
+stream (collections of biota are made only once per year), and I want to
+examine correlations and cause-and-effect relations between biotic
+assemblages and water chemistry. There are only a few fish collections,
+tool, in the available data.
+
+   All ideas are certainly welcome!
+
+TIA,
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |   Integrity - Credibility - Innovation
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From alfredotello at gmail.com  Thu Dec  6 04:59:34 2012
+From: alfredotello at gmail.com (alfredo tello)
+Date: Thu, 6 Dec 2012 00:59:34 -0300
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+Message-ID: <CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121206/de8d6d38/attachment.pl>
+
+From aghaynes at gmail.com  Thu Dec  6 08:25:46 2012
+From: aghaynes at gmail.com (Alan Haynes)
+Date: Thu, 6 Dec 2012 08:25:46 +0100
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+	<CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+Message-ID: <CAPdSD+7KyepyDyuApYYjQZob-VDtq+6KHGOoBERQU2dZACWTSA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121206/28a97699/attachment.pl>
+
+From szoe8822 at uni-landau.de  Thu Dec  6 11:53:24 2012
+From: szoe8822 at uni-landau.de (=?ISO-8859-1?Q?Eduard_Sz=F6cs?=)
+Date: Thu, 06 Dec 2012 11:53:24 +0100
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+Message-ID: <50C07924.3080109@uni-landau.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121206/a9f3bd20/attachment.pl>
+
+From rshepard at appl-ecosys.com  Thu Dec  6 15:09:57 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Thu, 6 Dec 2012 06:09:57 -0800 (PST)
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+	<CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1212060606000.10755@salmo.appl-ecosys.com>
+
+On Thu, 6 Dec 2012, alfredo tello wrote:
+
+> Check out the R package Vegan tutorial by Jari Oksanen:
+> http://cc.oulu.fi/~jarioksa/opetus/metodi/vegantutor.pdf. Vegan has
+> several functions which I believe should allow you to address some of your
+> questions.
+
+Alfredo,
+
+   I will certainly do this.
+
+> I have not worked with functional groups, but I'm guessing you could treat
+> them as you would treat taxa for statistical purposes(?)
+
+   For benthic macroinvertebrates I'll strongly argue that functional feeding
+groups are better than the mixed taxonomic levels that are usually given
+equal weights. So yes, statistical models should work equally well,
+particularly if the methods will work with percentages (proportions) which
+normalize for different numbers of individuals in the different streams.
+
+> I think Vegan's function 'adonis' might be of interest to you. It allows
+> you to partition variation in a data/distance matrix according to
+> specified factors (e.g., water chemistry).
+>
+> Hopet this helps!
+
+   I'm sure it will.
+
+Thanks very much,
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |   Integrity - Credibility - Innovation
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From rshepard at appl-ecosys.com  Thu Dec  6 15:13:36 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Thu, 6 Dec 2012 06:13:36 -0800 (PST)
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <50C07924.3080109@uni-landau.de>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+	<50C07924.3080109@uni-landau.de>
+Message-ID: <alpine.LNX.2.00.1212060612460.10755@salmo.appl-ecosys.com>
+
+On Thu, 6 Dec 2012, Eduard Sz?cs wrote:
+
+> have a look at:
+>
+> Borcard, Daniel, Francois Gillet, and Pierre Legendre. /Numerical
+> Ecology with R (Use R)/. 1st Edition. Springer, 2011.
+>
+> which is the little brother to Legendre's Numerical Ecology, applying
+> these methods with R.
+
+Eduard,
+
+   I have both; looked at the indices rather than the tables of contents.
+
+Thanks,
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |   Integrity - Credibility - Innovation
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From rshepard at appl-ecosys.com  Thu Dec  6 15:12:15 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Thu, 6 Dec 2012 06:12:15 -0800 (PST)
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <CAPdSD+7KyepyDyuApYYjQZob-VDtq+6KHGOoBERQU2dZACWTSA@mail.gmail.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+	<CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+	<CAPdSD+7KyepyDyuApYYjQZob-VDtq+6KHGOoBERQU2dZACWTSA@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1212060610290.10755@salmo.appl-ecosys.com>
+
+On Thu, 6 Dec 2012, Alan Haynes wrote:
+
+> Theres a book coming out next May by Otto Wildi called "Data Analysis in
+> Vegetation Ecology" 2nd Edition which includes a lot of R code. While its
+> aimed at vegetation ecology, a lot of the principles in the book can be
+> generalised to community analysis in whatever form. It covers ordination,
+> cluster analysis, some basic GLM and numerous other topics.
+
+   Thanks, Alan. With care plant and terrestrial anaimal community measures
+can be applied to aquatic organisme. I'll keep watch on this book.
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |   Integrity - Credibility - Innovation
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From iwaite at usgs.gov  Thu Dec  6 18:33:07 2012
+From: iwaite at usgs.gov (Ian R Waite)
+Date: Thu, 6 Dec 2012 09:33:07 -0800
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <alpine.LNX.2.00.1212060606000.10755@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>	<CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+	<alpine.LNX.2.00.1212060606000.10755@salmo.appl-ecosys.com>
+Message-ID: <OF16DD2EB4.54A40CF2-ON88257ACC.005F1C87-88257ACC.00606A95@usgs.gov>
+
+Rich,
+
+I would suggest checking out the following book -- I find it very useful
+and well written, using good case studies and all with R.
+
+ Environmental and Ecological Statistics with R (Chapman & Hall/CRC Applied
+ Environmental Statistics) [Paperback]
+ Song S. Qian (Author)
+ ? Visit Amazon's Song S. Qian Page
+
+
+Not to start  a debate, but I would suggest considering using
+macroinvertebrate metrics such as EPT Richness or Ave. Tolerant Richness or
+NonInsect Richness, etc. as your response measures instead of functional
+feeding groups but this requires the user to come to a common taxonomic
+resolution level -- for each major group make sure all samples have data
+aligned at the same level if the taxa occur in those samples. Example, all
+Ephemeroptera are ID'd to Genus or Family level for all samples, higher
+level specimens are either removed or proportioned into their children.
+(See Cuffney's paper on this subject -- attached below).
+
+With the data resolved for taxonomic issues, you can then also use specie
+matrix methods of similarity indices such as Bray-Curtis and others that
+then allow you to try a variety of multivariate methods -- cluster
+analysis, ordinations, ANOSIM, etc.
+
+Just my two cents, HTH
+
+Ian
+
+
+(See attached file: Cuffney-2007_Ambiguous Taxa_JNABS.pdf)
+
+
+~^^~~^^^~~~^^~~~^^^^~~~^~~^~~^~~^^~~~^^^~~~^^^^~~^~~^~~^~~~~~^^^^~
+Ian R. Waite, Ph.D.
+Aquatic Ecologist
+USGS - OWSC
+2130 SW 5th Avenue
+Portland, OR 97201
+email: iwaite at usgs.gov
+
+                   "Sometimes your joy is the source of your smile, but
+                         sometimes your smile can be the source of your
+joy."
+Thich Nhat Hanh
+"We may search the world over for joy but
+  unless we carry it within us, we will not find it."
+                                                Ralph Waldo Emerson
+~^^^~~~^^^~~~~^^^~~^^^~~~~^^~~~^~^^^~~~^^^^~~~~~~^^^^^~~~~^^^^~~~~~~
+
+
+|------------>
+| From:      |
+|------------>
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+  |Rich Shepard <rshepard at appl-ecosys.com>                                                                                                           |
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------>
+| To:        |
+|------------>
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+  |r-sig-ecology at r-project.org                                                                                                                       |
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------>
+| Date:      |
+|------------>
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+  |12/06/2012 06:12 AM                                                                                                                               |
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------>
+| Subject:   |
+|------------>
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+  |Re: [R-sig-eco] Applied Environmental Data Analyses: Water Chemistry and Biota                                                                    |
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------>
+| Sent by:   |
+|------------>
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+  |r-sig-ecology-bounces at r-project.org                                                                                                               |
+  >--------------------------------------------------------------------------------------------------------------------------------------------------|
+
+
+
+
+
+On Thu, 6 Dec 2012, alfredo tello wrote:
+
+> Check out the R package Vegan tutorial by Jari Oksanen:
+> http://cc.oulu.fi/~jarioksa/opetus/metodi/vegantutor.pdf. Vegan has
+> several functions which I believe should allow you to address some of
+your
+> questions.
+
+Alfredo,
+
+   I will certainly do this.
+
+> I have not worked with functional groups, but I'm guessing you could
+treat
+> them as you would treat taxa for statistical purposes(?)
+
+   For benthic macroinvertebrates I'll strongly argue that functional
+feeding
+groups are better than the mixed taxonomic levels that are usually given
+equal weights. So yes, statistical models should work equally well,
+particularly if the methods will work with percentages (proportions) which
+normalize for different numbers of individuals in the different streams.
+
+> I think Vegan's function 'adonis' might be of interest to you. It allows
+> you to partition variation in a data/distance matrix according to
+> specified factors (e.g., water chemistry).
+>
+> Hopet this helps!
+
+   I'm sure it will.
+
+Thanks very much,
+
+Rich
+
+--
+Richard B. Shepard, Ph.D.          |   Integrity - Credibility - Innovation
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From bohara at unm.edu  Thu Dec  6 19:25:59 2012
+From: bohara at unm.edu (Alok K. Bohara)
+Date: Thu, 6 Dec 2012 18:25:59 +0000
+Subject: [R-sig-eco] error in layernames and RasterStack
+Message-ID: <26DA675B6786904E912DCE264169317101D1B8E7@CH1PRD0711MB406.namprd07.prod.outlook.com>
+
+Hi:  I am trying to replicate  some commands in maxlike. 
+
+
+#***
+library(raster)
+
+set.seed(131)
+x1 <- sort(rnorm(100))
+x1 <- raster(outer(x1, x1), xmn=0, xmx=100, ymn=0, ymx=100)
+x2 <- raster(matrix(runif(1e4), 100, 100), 0, 100, 0, 100)
+x3 <- raster(matrix(c(0,1), 100, 100), 0, 100, 0, 100)
+r <- stack(x1, x2, x3)
+r at layernames <- c("x1", "x2", "x3")
+
+#****
+
+Error #1:  After the last line, I get an Error:
+
+Error in checkSlotAssignment(object, name, value) : 
+  ?layernames? is not a slot in class ?RasterStack?
+> 
+
+
+
+Error # 2:  Later, I also get an error:
+
+In addition: Warning message:
+> fm2 <- maxlike(~x1 + x2 + x3, r, xy)
+Error in maxlike(~x1 + x2 + x3, r, xy) : 
+  at least 1 covariate in the formula is not in rasters.
+
+In layerNames(rasters) :
+  the layerNames function is obsolete. Use "names" instead
+
+
+
+I am using  R 2.15.2.  I do not know if the error #2 is the result of the error #1.    Thanks.
+
+
+
+Best,
+Alok K. Bohara, 
+UNM
+
+
+From jbaldwin at fs.fed.us  Thu Dec  6 19:46:00 2012
+From: jbaldwin at fs.fed.us (Baldwin, Jim -FS)
+Date: Thu, 6 Dec 2012 18:46:00 +0000
+Subject: [R-sig-eco] error in layernames and RasterStack
+In-Reply-To: <26DA675B6786904E912DCE264169317101D1B8E7@CH1PRD0711MB406.namprd07.prod.outlook.com>
+References: <26DA675B6786904E912DCE264169317101D1B8E7@CH1PRD0711MB406.namprd07.prod.outlook.com>
+Message-ID: <DDC5EC9B78340042B0D5A0C3789D456919989226@001FSN2MPN1-062.001f.mgd2.msft.net>
+
+I think you might want
+
+      names(r) <-  c("x1", "x2", "x3")
+
+rather than
+
+      r at layernames <- c("x1", "x2", "x3")
+
+Jim
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Alok K. Bohara
+Sent: Thursday, December 06, 2012 10:26 AM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] error in layernames and RasterStack
+
+Hi:  I am trying to replicate  some commands in maxlike.
+
+
+#***
+library(raster)
+
+set.seed(131)
+x1 <- sort(rnorm(100))
+x1 <- raster(outer(x1, x1), xmn=0, xmx=100, ymn=0, ymx=100)
+x2 <- raster(matrix(runif(1e4), 100, 100), 0, 100, 0, 100)
+x3 <- raster(matrix(c(0,1), 100, 100), 0, 100, 0, 100) r <- stack(x1, x2, x3) r at layernames <- c("x1", "x2", "x3")
+
+#****
+
+Error #1:  After the last line, I get an Error:
+
+Error in checkSlotAssignment(object, name, value) :
+  'layernames' is not a slot in class "RasterStack"
+>
+
+
+
+Error # 2:  Later, I also get an error:
+
+In addition: Warning message:
+> fm2 <- maxlike(~x1 + x2 + x3, r, xy)
+Error in maxlike(~x1 + x2 + x3, r, xy) :
+  at least 1 covariate in the formula is not in rasters.
+
+In layerNames(rasters) :
+  the layerNames function is obsolete. Use "names" instead
+
+
+
+I am using  R 2.15.2.  I do not know if the error #2 is the result of the error #1.    Thanks.
+
+
+
+Best,
+Alok K. Bohara,
+UNM
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+
+This electronic message contains information generated by the USDA solely for the intended recipients. Any unauthorized interception of this message or the use or disclosure of the information it contains may violate the law and subject the violator to civil or criminal penalties. If you believe you have received this message in error, please notify the sender and delete the email immediately.
+
+
+From rshepard at appl-ecosys.com  Thu Dec  6 19:29:05 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Thu, 6 Dec 2012 10:29:05 -0800 (PST)
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota [RESOLVED]
+In-Reply-To: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+Message-ID: <alpine.LNX.2.00.1212061026010.10755@salmo.appl-ecosys.com>
+
+On Wed, 5 Dec 2012, Rich Shepard wrote:
+
+>  The available benthic data has little taxonomic consistency below the
+> family level.
+
+   Looking at packages in CRAN brought me to Lester Yuan's bio.infer package
+described in the 2007 Journal of Statistical Software special issue on
+ecology/environmental data analyses. It is ideal for my needs and I will
+contact Lester with the questions I have (such as updating the ITIS database
+it uses).
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |   Integrity - Credibility - Innovation
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From tom_philippi at nps.gov  Thu Dec  6 20:04:19 2012
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Thu, 6 Dec 2012 11:04:19 -0800
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <OF16DD2EB4.54A40CF2-ON88257ACC.005F1C87-88257ACC.00606A95@usgs.gov>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+	<CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+	<alpine.LNX.2.00.1212060606000.10755@salmo.appl-ecosys.com>
+	<OF16DD2EB4.54A40CF2-ON88257ACC.005F1C87-88257ACC.00606A95@usgs.gov>
+Message-ID: <CAM9kYqhSAOC-gT5sihw0gr9DEsBPhEBLgsAsKBysnMhsODhO=A@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121206/dc7f00f0/attachment.pl>
+
+From ejburton at btinternet.com  Thu Dec  6 20:17:50 2012
+From: ejburton at btinternet.com (EJ BURTON)
+Date: Thu, 6 Dec 2012 19:17:50 +0000 (GMT)
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+	Chemistry and Biota [RESOLVED]
+In-Reply-To: <alpine.LNX.2.00.1212061026010.10755@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+	<alpine.LNX.2.00.1212061026010.10755@salmo.appl-ecosys.com>
+Message-ID: <1354821470.9304.YahooMailNeo@web87301.mail.ird.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121206/05c74bec/attachment.pl>
+
+From rshepard at appl-ecosys.com  Thu Dec  6 21:41:43 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Thu, 6 Dec 2012 12:41:43 -0800 (PST)
+Subject: [R-sig-eco] Applied Environmental Data Analyses: Water
+ Chemistry and Biota
+In-Reply-To: <OF16DD2EB4.54A40CF2-ON88257ACC.005F1C87-88257ACC.00606A95@usgs.gov>
+References: <alpine.LNX.2.00.1212051712550.5725@salmo.appl-ecosys.com>
+	<CAKw4z+NOFwfmWgWCXAfUdjvvmGesYn_HMmT2rx37+orYqnqjfw@mail.gmail.com>
+	<alpine.LNX.2.00.1212060606000.10755@salmo.appl-ecosys.com>
+	<OF16DD2EB4.54A40CF2-ON88257ACC.005F1C87-88257ACC.00606A95@usgs.gov>
+Message-ID: <alpine.LNX.2.00.1212061240550.10755@salmo.appl-ecosys.com>
+
+On Thu, 6 Dec 2012, Ian R Waite wrote:
+
+> Just my two cents, HTH
+
+Ian,
+
+   Thank you.
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |   Integrity - Credibility - Innovation
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From kgorman at sfu.ca  Fri Dec  7 06:43:39 2012
+From: kgorman at sfu.ca (Kristen Gorman)
+Date: Thu, 6 Dec 2012 21:43:39 -0800 (PST)
+Subject: [R-sig-eco] difftime in R
+In-Reply-To: <1560542015.508561674.1354858491235.JavaMail.root@jaguar8.sfu.ca>
+Message-ID: <1489092962.508587342.1354859019208.JavaMail.root@jaguar8.sfu.ca>
+
+Dear all, 
+I am trying to calculate the difference between 2 times, each expressed as a Date and associated Time, see the below test example:
+
+Event            T1            T2
+1        12-06-01 1:00 12-06-02 0:00
+2        12-06-01 1:00 12-06-02 0:00
+3        12-06-01 1:00 12-06-02 0:00
+4        12-06-01 1:00 12-06-02 0:00
+5        12-06-01 1:00 12-06-02 0:00
+
+when I run the difftime fxn I get the appropriate hours:
+
+T1<- as.POSIXlt(DataSetb$T1)
+T2<- as.POSIXlt(DataSetb$T2)
+
+T3<- difftime(T2,T1)
+T3
+
+Time differences in hours
+ [1] 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23
+
+But then when I write this to the dataframe, it looks like:
+
+DataSetb.2<- cbind(DataSetb,T3)
+
+write.table(DataSetb.2, file="DataSetb.2.csv", col.names=NA, sep=",")
+
+
+Event            T1            T2       T3
+1        12-06-01 1:00 12-06-02 0:00 23 hours
+2        12-06-01 1:00 12-06-02 0:00 23 hours
+3        12-06-01 1:00 12-06-02 0:00 23 hours
+4        12-06-01 1:00 12-06-02 0:00 23 hours
+5        12-06-01 1:00 12-06-02 0:00 23 hours
+
+I would like the T3 column to just have the values (23) and not (23 hours). Does anyone know how to remove the hours from being written to the dataframe? Maybe there is a better way to do this than using difftime?
+
+Thanks in advance for your help.
+
+Kristen
+
+
+From Thomas.Petzoldt at TU-Dresden.de  Fri Dec  7 07:52:15 2012
+From: Thomas.Petzoldt at TU-Dresden.de (Thomas Petzoldt)
+Date: Fri, 07 Dec 2012 07:52:15 +0100
+Subject: [R-sig-eco] difftime in R
+In-Reply-To: <1489092962.508587342.1354859019208.JavaMail.root@jaguar8.sfu.ca>
+References: <1489092962.508587342.1354859019208.JavaMail.root@jaguar8.sfu.ca>
+Message-ID: <50C1921F.5080405@TU-Dresden.de>
+
+try:
+
+as.numeric(T3)
+
+Note that this is a typical "r-help" question.
+
+Thomas Petzoldt
+
+------------------------------------------
+DataSetb <- data.frame(
+   T1 = rep("2012-06-01 1:00", 5),
+   T2 = rep("2012-06-02 0:00", 5)
+)
+
+
+T1<- as.POSIXlt(DataSetb$T1)
+T2<- as.POSIXlt(DataSetb$T2)
+
+T3<- as.numeric(difftime(T2, T1))
+T3
+
+
+DataSetb.2<- cbind(DataSetb,T3)
+write.table(DataSetb.2, file="DataSetb.2.csv", col.names=NA, sep=",")
+
+
+From d.pritchard at qub.ac.uk  Fri Dec  7 08:10:50 2012
+From: d.pritchard at qub.ac.uk (Daniel Pritchard)
+Date: Fri, 7 Dec 2012 07:10:50 +0000
+Subject: [R-sig-eco] difftime in R
+In-Reply-To: <50C1921F.5080405@TU-Dresden.de>
+References: <1489092962.508587342.1354859019208.JavaMail.root@jaguar8.sfu.ca>
+	<50C1921F.5080405@TU-Dresden.de>
+Message-ID: <D8F6C887-C5E5-403A-9332-0A8CD7701D94@qub.ac.uk>
+
+Hi Kristen,
+
+Thomas is right on both counts.  Though, as a further word of caution, it is not guaranteed that difftime() will return data in 'hours'.  This is probably the reason why it returns a special class whose format() method tries so very hard to include the units.  
+
+I'd suggest either specifying your intended units in the call to difftime() and/or storing the unit information alongside T3.
+
+~~~~~~~
+T3<- difftime(T2,T1, units='hours')
+## and/or
+DataSetb.2<- cbind(DataSetb,'T3'=as.numeric(T3), 'T3_units' = rep(units(T3), length(T3)))
+~~~~~~~
+
+Daniel Pritchard
+
+On 7 Dec 2012, at 16:52, Thomas Petzoldt <Thomas.Petzoldt at tu-dresden.de> wrote:
+
+> try:
+> 
+> as.numeric(T3)
+> 
+> Note that this is a typical "r-help" question.
+> 
+> Thomas Petzoldt
+> 
+> ------------------------------------------
+> DataSetb <- data.frame(
+>   T1 = rep("2012-06-01 1:00", 5),
+>   T2 = rep("2012-06-02 0:00", 5)
+> )
+> 
+> 
+> T1<- as.POSIXlt(DataSetb$T1)
+> T2<- as.POSIXlt(DataSetb$T2)
+> 
+> T3<- as.numeric(difftime(T2, T1))
+> T3
+> 
+> 
+> DataSetb.2<- cbind(DataSetb,T3)
+> write.table(DataSetb.2, file="DataSetb.2.csv", col.names=NA, sep=",")
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+Daniel Pritchard
+Research Fellow
+Marine Research Group
+School of Planning, Architecture and Civil Engineering (SPACE)
+Queens University Belfast
+
+
+From bohara at unm.edu  Fri Dec  7 16:03:16 2012
+From: bohara at unm.edu (Alok K. Bohara)
+Date: Fri, 7 Dec 2012 15:03:16 +0000
+Subject: [R-sig-eco] error in layernames and RasterStack
+In-Reply-To: <DDC5EC9B78340042B0D5A0C3789D456919989226@001FSN2MPN1-062.001f.mgd2.msft.net>
+References: <26DA675B6786904E912DCE264169317101D1B8E7@CH1PRD0711MB406.namprd07.prod.outlook.com>,
+	<DDC5EC9B78340042B0D5A0C3789D456919989226@001FSN2MPN1-062.001f.mgd2.msft.net>
+Message-ID: <26DA675B6786904E912DCE264169317102E89A09@CH1PRD0711MB406.namprd07.prod.outlook.com>
+
+Thanks Jim.  names(r) <--   command  worked...
+
+I still get this error  although I  get the estimates and their standard errors...
+
+> fm2 <- maxlike(~x1 + x2 + x3, r, xy)
+Warning message:
+In layerNames(rasters) :
+  the layerNames function is obsolete. Use "names" instead
+
+Coefficients:
+               Est    SE      z  P(>|z|)
+(Intercept) -0.817 0.221 -3.687 2.27e-04
+x1           1.157 0.129  8.987 2.54e-19
+x2           0.152 0.190  0.801 4.23e-01
+x3          -0.102 0.109 -0.933 3.51e-01
+
+
+
+
+Alok K. Bohara, Ph.D.
+UNM
+
+
+________________________________________
+From: Baldwin, Jim -FS [jbaldwin at fs.fed.us]
+Sent: Thursday, December 06, 2012 11:46 AM
+To: Alok K. Bohara; r-sig-ecology at r-project.org
+Subject: RE: error in layernames and RasterStack
+
+I think you might want
+
+      names(r) <-  c("x1", "x2", "x3")
+
+rather than
+
+      r at layernames <- c("x1", "x2", "x3")
+
+Jim
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Alok K. Bohara
+Sent: Thursday, December 06, 2012 10:26 AM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] error in layernames and RasterStack
+
+Hi:  I am trying to replicate  some commands in maxlike.
+
+
+#***
+library(raster)
+
+set.seed(131)
+x1 <- sort(rnorm(100))
+x1 <- raster(outer(x1, x1), xmn=0, xmx=100, ymn=0, ymx=100)
+x2 <- raster(matrix(runif(1e4), 100, 100), 0, 100, 0, 100)
+x3 <- raster(matrix(c(0,1), 100, 100), 0, 100, 0, 100) r <- stack(x1, x2, x3) r at layernames <- c("x1", "x2", "x3")
+
+#****
+
+Error #1:  After the last line, I get an Error:
+
+Error in checkSlotAssignment(object, name, value) :
+  'layernames' is not a slot in class "RasterStack"
+>
+
+
+
+Error # 2:  Later, I also get an error:
+
+In addition: Warning message:
+> fm2 <- maxlike(~x1 + x2 + x3, r, xy)
+Error in maxlike(~x1 + x2 + x3, r, xy) :
+  at least 1 covariate in the formula is not in rasters.
+
+In layerNames(rasters) :
+  the layerNames function is obsolete. Use "names" instead
+
+
+
+I am using  R 2.15.2.  I do not know if the error #2 is the result of the error #1.    Thanks.
+
+
+
+Best,
+Alok K. Bohara,
+UNM
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+
+This electronic message contains information generated by the USDA solely for the intended recipients. Any unauthorized interception of this message or the use or disclosure of the information it contains may violate the law and subject the violator to civil or criminal penalties. If you believe you have received this message in error, please notify the sender and delete the email immediately.
+
+
+
+
+From jbaldwin at fs.fed.us  Fri Dec  7 16:20:41 2012
+From: jbaldwin at fs.fed.us (Baldwin, Jim -FS)
+Date: Fri, 7 Dec 2012 15:20:41 +0000
+Subject: [R-sig-eco] error in layernames and RasterStack
+In-Reply-To: <26DA675B6786904E912DCE264169317102E89A09@CH1PRD0711MB406.namprd07.prod.outlook.com>
+References: <26DA675B6786904E912DCE264169317101D1B8E7@CH1PRD0711MB406.namprd07.prod.outlook.com>,
+	<DDC5EC9B78340042B0D5A0C3789D456919989226@001FSN2MPN1-062.001f.mgd2.msft.net>
+	<26DA675B6786904E912DCE264169317102E89A09@CH1PRD0711MB406.namprd07.prod.outlook.com>
+Message-ID: <DDC5EC9B78340042B0D5A0C3789D456919989473@001FSN2MPN1-062.001f.mgd2.msft.net>
+
+That's because the function maxlike explicitly calls "layerNames(rasters)" in
+
+     cd.names <- layerNames(rasters)
+
+By typing 
+
+   maxlike()
+
+you can see the code and find the statement mentioned above.  The two fixes are (1) make your own version of maxlike with the "names" fix and/or write the developer of maxlike and let him or her know about this issue.
+
+Jim
+
+-----Original Message-----
+From: Alok K. Bohara [mailto:bohara at unm.edu] 
+Sent: Friday, December 07, 2012 7:03 AM
+To: Baldwin, Jim -FS; r-sig-ecology at r-project.org
+Subject: RE: error in layernames and RasterStack
+
+Thanks Jim.  names(r) <--   command  worked...
+
+I still get this error  although I  get the estimates and their standard errors...
+
+> fm2 <- maxlike(~x1 + x2 + x3, r, xy)
+Warning message:
+In layerNames(rasters) :
+  the layerNames function is obsolete. Use "names" instead
+
+Coefficients:
+               Est    SE      z  P(>|z|)
+(Intercept) -0.817 0.221 -3.687 2.27e-04
+x1           1.157 0.129  8.987 2.54e-19
+x2           0.152 0.190  0.801 4.23e-01
+x3          -0.102 0.109 -0.933 3.51e-01
+
+
+
+
+Alok K. Bohara, Ph.D.
+UNM
+
+
+________________________________________
+From: Baldwin, Jim -FS [jbaldwin at fs.fed.us]
+Sent: Thursday, December 06, 2012 11:46 AM
+To: Alok K. Bohara; r-sig-ecology at r-project.org
+Subject: RE: error in layernames and RasterStack
+
+I think you might want
+
+      names(r) <-  c("x1", "x2", "x3")
+
+rather than
+
+      r at layernames <- c("x1", "x2", "x3")
+
+Jim
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Alok K. Bohara
+Sent: Thursday, December 06, 2012 10:26 AM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] error in layernames and RasterStack
+
+Hi:  I am trying to replicate  some commands in maxlike.
+
+
+#***
+library(raster)
+
+set.seed(131)
+x1 <- sort(rnorm(100))
+x1 <- raster(outer(x1, x1), xmn=0, xmx=100, ymn=0, ymx=100)
+x2 <- raster(matrix(runif(1e4), 100, 100), 0, 100, 0, 100)
+x3 <- raster(matrix(c(0,1), 100, 100), 0, 100, 0, 100) r <- stack(x1, x2, x3) r at layernames <- c("x1", "x2", "x3")
+
+#****
+
+Error #1:  After the last line, I get an Error:
+
+Error in checkSlotAssignment(object, name, value) :
+  'layernames' is not a slot in class "RasterStack"
+>
+
+
+
+Error # 2:  Later, I also get an error:
+
+In addition: Warning message:
+> fm2 <- maxlike(~x1 + x2 + x3, r, xy)
+Error in maxlike(~x1 + x2 + x3, r, xy) :
+  at least 1 covariate in the formula is not in rasters.
+
+In layerNames(rasters) :
+  the layerNames function is obsolete. Use "names" instead
+
+
+
+I am using  R 2.15.2.  I do not know if the error #2 is the result of the error #1.    Thanks.
+
+
+
+Best,
+Alok K. Bohara,
+UNM
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+
+This electronic message contains information generated by the USDA solely for the intended recipients. Any unauthorized interception of this message or the use or disclosure of the information it contains may violate the law and subject the violator to civil or criminal penalties. If you believe you have received this message in error, please notify the sender and delete the email immediately.
+
+
+From davidson at unm.edu  Fri Dec  7 20:58:51 2012
+From: davidson at unm.edu (Ana Davidson)
+Date: Fri, 07 Dec 2012 14:58:51 -0500
+Subject: [R-sig-eco] Conditional inference forest error: levels in factors
+	do not match
+Message-ID: <50C24A7B.1000203@gmail.com>
+
+#Conditional inference forest ("Party" package) error message states 
+that levels in factors of new data do not match original data, but they 
+do...
+
+#create conditional inference forest
+oc_listed.fit1 <- cforest(Listed~ 
+HabMode,controls=cforest_unbiased(ntree=500), data=oc.complete)
+
+#use predict function for subset of data
+#this works correctly
+predict(oc_listed.fit1,newdata=oc.complete[1:10,])
+
+#use predict on new set of data
+predict(oc_listed.fit1,newdata=DD_NOT)
+#produces this error message
+
+#Error in checkData(oldData, RET) :
+   #Levels in factors of new data do not match original data
+
+#We can show that all of the levels match
+table(DD_NOT$ORD %in% oc.complete$ORD)
+
+#same check
+sum(!levels(DD_NOT$ORD) %in% levels(oc.complete$ORD))
+
+#equals 0, all levels are the same.
+
+#Then why does it fail?
+
+Thanks,
+
+Ana
+
+
+From boristmr at gmail.com  Mon Dec 10 18:04:00 2012
+From: boristmr at gmail.com (Boris Tinoco)
+Date: Mon, 10 Dec 2012 12:04:00 -0500
+Subject: [R-sig-eco] temporal repeated samples abundance data
+Message-ID: <CA+UM9=C5zSyKnBnkQEJ8UyTyXSkuU0_mGJfVOHXVB6JqY-t=7Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121210/5403220d/attachment.pl>
+
+From ehanna23 at uwo.ca  Tue Dec 11 00:19:47 2012
+From: ehanna23 at uwo.ca (Everett)
+Date: Mon, 10 Dec 2012 15:19:47 -0800 (PST)
+Subject: [R-sig-eco] Proper treatment of Proportion Response Data with Two
+ Categorical Predictors
+Message-ID: <1355181587005-7577742.post@n2.nabble.com>
+
+Hello,
+
+I believe I have exhausted my online resources (and eyes) in trying to
+determine the appropriate method of analysis for the following
+investigation.
+
+I wish to determine if the efficiencies (% recovery) of two sampling units
+are significantly different. I sampled in three different fields. I
+attempted to collect 12 samples per unit per field (2 x 12 x 3 = 72);
+however, some sample sites had no seeds and resulting data were excluded (so
+as to not confuse with 'true' zero data; i.e., 0 seeds of x recovered).
+Working sample size = 24 and 27 (51), per unit.
+
+My dataset sets up like this:
+
+1) 51 observations 
+2) Response variable = percent seeds recovered; x = 0-1
+3) Predictor variable 1 = unit (K or L); fixed categorical
+4) Predictor variable 2 = field (1, 2, or 3); random categorical
+
+More than 50% of my data are zeros, therefore, the distribution is far from
+normal.
+
+Can someone provide guidance RE how best to proceed? Thank you kindly in
+advance.
+
+-Everett
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Proper-treatment-of-Proportion-Response-Data-with-Two-Categorical-Predictors-tp7577742.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From rshepard at appl-ecosys.com  Tue Dec 11 00:39:16 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 10 Dec 2012 15:39:16 -0800 (PST)
+Subject: [R-sig-eco] Package bio.infer: Error Matching Taxa to ITIS Table
+Message-ID: <alpine.LNX.2.00.1212101508510.9153@salmo.appl-ecosys.com>
+
+   Following the example in Lester Yuan's 2007 paper in the Journal of
+Statistical Software I've bumped into a fence and need help getting over it.
+
+   My data is in the same data frame format as his bcnt.OR data set:
+
+head(bioinfer)
+           SVN              Taxon CountValue
+1 WP220110711  Zaitzevia.parvula        484
+2 WP220110711           Tvetenia        109
+3 WP220110711        Tubificidae       1054
+4 WP220110711            Sweltsa         11
+5 WP220110711 Suwallia.pallidula         32
+6 WP220110711     Stempellinella         11
+
+and I implement the code on page 5 of this article:
+
+> library('bio.infer')
+Loading required package: tcltk
+Loading Tcl/Tk interface ... done
+> options(width = 60)
+> data('itis.ttable')
+> jercan <- get.taxonomic(bioinfer, itis.ttable, outputFile = 'sum.taxo.tbl.txt')
+Error in get.taxonomic(bioinfer, itis.ttable, outputFile =
+"sum.taxo.tbl.txt") :
+   unused argument(s) (itis.ttable, outputFile = "sum.taxo.tbl.txt")
+
+   I'd appreciate someone explaining the error message to me so I can fix it
+and continue learning how to apply this package to my data.
+
+Rich
+
+
+From sarah.goslee at gmail.com  Tue Dec 11 00:53:12 2012
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Mon, 10 Dec 2012 18:53:12 -0500
+Subject: [R-sig-eco] Package bio.infer: Error Matching Taxa to ITIS Table
+In-Reply-To: <alpine.LNX.2.00.1212101508510.9153@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212101508510.9153@salmo.appl-ecosys.com>
+Message-ID: <CAM_vju=c4+NREdux1RYW06RPsWO-g0ntDKQziBBWaPXTXcWWoQ@mail.gmail.com>
+
+Hi Rich,
+
+2007 is forever ago in software years: get.taxonomic() no longer has
+an outputFile argument. If you can't figure out how to adapt the code
+in the JSS article by reading the help files, then your best bet is
+likely contacting the package maintainer to see if an updated version
+of the article code might be available. Alternatively, you could try
+the obsolete version of the package archived with the JSS article, but
+that's not really recommended.
+
+Sarah
+
+On Mon, Dec 10, 2012 at 6:39 PM, Rich Shepard <rshepard at appl-ecosys.com> wrote:
+>   Following the example in Lester Yuan's 2007 paper in the Journal of
+> Statistical Software I've bumped into a fence and need help getting over it.
+>
+>   My data is in the same data frame format as his bcnt.OR data set:
+>
+> head(bioinfer)
+>           SVN              Taxon CountValue
+> 1 WP220110711  Zaitzevia.parvula        484
+> 2 WP220110711           Tvetenia        109
+> 3 WP220110711        Tubificidae       1054
+> 4 WP220110711            Sweltsa         11
+> 5 WP220110711 Suwallia.pallidula         32
+> 6 WP220110711     Stempellinella         11
+>
+> and I implement the code on page 5 of this article:
+>
+>> library('bio.infer')
+>
+> Loading required package: tcltk
+> Loading Tcl/Tk interface ... done
+>>
+>> options(width = 60)
+>> data('itis.ttable')
+>> jercan <- get.taxonomic(bioinfer, itis.ttable, outputFile =
+>> 'sum.taxo.tbl.txt')
+>
+> Error in get.taxonomic(bioinfer, itis.ttable, outputFile =
+> "sum.taxo.tbl.txt") :
+>   unused argument(s) (itis.ttable, outputFile = "sum.taxo.tbl.txt")
+>
+>   I'd appreciate someone explaining the error message to me so I can fix it
+> and continue learning how to apply this package to my data.
+>
+> Rich
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+Sarah Goslee
+http://www.stringpage.com
+http://www.sarahgoslee.com
+http://www.functionaldiversity.org
+
+
+From rshepard at appl-ecosys.com  Tue Dec 11 01:09:12 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 10 Dec 2012 16:09:12 -0800 (PST)
+Subject: [R-sig-eco] Package bio.infer: Error Matching Taxa to ITIS Table
+In-Reply-To: <CAM_vju=c4+NREdux1RYW06RPsWO-g0ntDKQziBBWaPXTXcWWoQ@mail.gmail.com>
+References: <alpine.LNX.2.00.1212101508510.9153@salmo.appl-ecosys.com>
+	<CAM_vju=c4+NREdux1RYW06RPsWO-g0ntDKQziBBWaPXTXcWWoQ@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1212101607460.9153@salmo.appl-ecosys.com>
+
+On Mon, 10 Dec 2012, Sarah Goslee wrote:
+
+> 2007 is forever ago in software years: get.taxonomic() no longer has
+> an outputFile argument.
+
+Sarah,
+
+   Ah, so!
+
+> If you can't figure out how to adapt the code in the JSS article by
+> reading the help files,
+
+   I've read the .pdf that comes with the package but used the article to
+learn the proper sequence of methods. I'll re-read the help files.
+
+Thanks,
+
+Rich
+
+
+From aitor.gaston at upm.es  Tue Dec 11 15:48:15 2012
+From: aitor.gaston at upm.es (=?iso-8859-1?Q?Aitor_Gast=F3n?=)
+Date: Tue, 11 Dec 2012 15:48:15 +0100
+Subject: [R-sig-eco] Proper treatment of Proportion Response Data with
+	Two Categorical Predictors
+In-Reply-To: <1355181587005-7577742.post@n2.nabble.com>
+References: <1355181587005-7577742.post@n2.nabble.com>
+Message-ID: <B6B07C37F78A406888954332406D5AB2@botanica1>
+
+Everett,
+
+If you have the original binary data that were used to calculate proportions 
+you can use generalized linear models with logit link (i.e. logistic 
+regression). You can find a simple explanation of this approach and some 
+examples with R code in 
+http://www.bio.ic.ac.uk/research/crawley/statistics/exercises/R10Proportiondata.pdf
+
+Aitor
+
+
+--------------------------------------------------
+From: "Everett" <ehanna23 at uwo.ca>
+Sent: Tuesday, December 11, 2012 12:19 AM
+To: <r-sig-ecology at r-project.org>
+Subject: [R-sig-eco] Proper treatment of Proportion Response Data with Two 
+Categorical Predictors
+
+> Hello,
+>
+> I believe I have exhausted my online resources (and eyes) in trying to
+> determine the appropriate method of analysis for the following
+> investigation.
+>
+> I wish to determine if the efficiencies (% recovery) of two sampling units
+> are significantly different. I sampled in three different fields. I
+> attempted to collect 12 samples per unit per field (2 x 12 x 3 = 72);
+> however, some sample sites had no seeds and resulting data were excluded 
+> (so
+> as to not confuse with 'true' zero data; i.e., 0 seeds of x recovered).
+> Working sample size = 24 and 27 (51), per unit.
+>
+> My dataset sets up like this:
+>
+> 1) 51 observations
+> 2) Response variable = percent seeds recovered; x = 0-1
+> 3) Predictor variable 1 = unit (K or L); fixed categorical
+> 4) Predictor variable 2 = field (1, 2, or 3); random categorical
+>
+> More than 50% of my data are zeros, therefore, the distribution is far 
+> from
+> normal.
+>
+> Can someone provide guidance RE how best to proceed? Thank you kindly in
+> advance.
+>
+> -Everett
+>
+>
+>
+>
+> --
+> View this message in context: 
+> http://r-sig-ecology.471788.n2.nabble.com/Proper-treatment-of-Proportion-Response-Data-with-Two-Categorical-Predictors-tp7577742.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From ehanna23 at uwo.ca  Tue Dec 11 20:46:09 2012
+From: ehanna23 at uwo.ca (Everett)
+Date: Tue, 11 Dec 2012 11:46:09 -0800 (PST)
+Subject: [R-sig-eco] Proper treatment of Proportion Response Data with
+ Two Categorical Predictors
+In-Reply-To: <B6B07C37F78A406888954332406D5AB2@botanica1>
+References: <1355181587005-7577742.post@n2.nabble.com>
+	<B6B07C37F78A406888954332406D5AB2@botanica1>
+Message-ID: <1355255169720-7577747.post@n2.nabble.com>
+
+Aitor,
+
+Perhaps I am missing something, but I do not think that my original data can
+take binary form. Each sampling point had a unique number of seeds (0 -
++infinity). I sampled at each site and collected a proportion of the seeds
+that were available, thus, I would have, for example, 10 seeds available of
+which 2 seeds were collected = 0.200 recovery (or 20% recovery). I do not
+think that logistic (binary) regression applies here but I am relatively
+novice with certain aspects of these topics.
+
+-Everett
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Proper-treatment-of-Proportion-Response-Data-with-Two-Categorical-Predictors-tp7577742p7577747.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From aitor.gaston at upm.es  Tue Dec 11 23:36:57 2012
+From: aitor.gaston at upm.es (=?iso-8859-1?Q?Aitor_Gast=F3n?=)
+Date: Tue, 11 Dec 2012 23:36:57 +0100
+Subject: [R-sig-eco] Proper treatment of Proportion Response Data with
+	Two Categorical Predictors
+In-Reply-To: <1355255169720-7577747.post@n2.nabble.com>
+References: <1355181587005-7577742.post@n2.nabble.com><B6B07C37F78A406888954332406D5AB2@botanica1>
+	<1355255169720-7577747.post@n2.nabble.com>
+Message-ID: <700864EE489B41FCA8AC07C89B8B193F@botanica1>
+
+Following your example, you have 2 positive cases and 8 negative cases, i.e. 
+a binary response as you can code the data as 0 (not recovered) and 1 
+(recovered).
+
+An example of the GLM approach using simulated data:
+
+set.seed(100)#set random number generator  to get reproducible results
+N<-round(runif(51,1,10))#simulate number of available seeds
+rp<-runif(51,0,1)#simulate proportion of recovered seeds
+r<-round(N*rp)#simulate numer of recovered seeds
+u<-factor(sample(c("K","L"),51,replace=T)) #simulate units
+f<-factor(sample(c("f1","f2","f3"),51,replace=T)) #simulate fields
+mod<-glm(cbind(r,N-r)~u + f, family="binomial") #fit a GLM
+anova (mod,test="Chisq") #anova test
+summary(mod) #summary of the model with "treatment contrasts"
+
+This is a fixed effects model, but it can be adapted to mixed models using 
+the glmer function of the lme4 package. An example available in ?glmer
+
+  ## generalized linear mixed model
+     (gm1 <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
+                   family = binomial, data = cbpp))
+
+Hope this helps
+
+Aitor
+
+
+--------------------------------------------------
+From: "Everett" <ehanna23 at uwo.ca>
+Sent: Tuesday, December 11, 2012 8:46 PM
+To: <r-sig-ecology at r-project.org>
+Subject: Re: [R-sig-eco] Proper treatment of Proportion Response Data with 
+Two Categorical Predictors
+
+> Aitor,
+>
+> Perhaps I am missing something, but I do not think that my original data 
+> can
+> take binary form. Each sampling point had a unique number of seeds (0 -
+> +infinity). I sampled at each site and collected a proportion of the seeds
+> that were available, thus, I would have, for example, 10 seeds available 
+> of
+> which 2 seeds were collected = 0.200 recovery (or 20% recovery). I do not
+> think that logistic (binary) regression applies here but I am relatively
+> novice with certain aspects of these topics.
+>
+> -Everett
+>
+>
+>
+> --
+> View this message in context: 
+> http://r-sig-ecology.471788.n2.nabble.com/Proper-treatment-of-Proportion-Response-Data-with-Two-Categorical-Predictors-tp7577742p7577747.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From rshepard at appl-ecosys.com  Tue Dec 11 23:08:11 2012
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Tue, 11 Dec 2012 14:08:11 -0800 (PST)
+Subject: [R-sig-eco] Package bio.infer: get.taxonomic() hangs R after
+	editing taxa list
+In-Reply-To: <CAM_vju=c4+NREdux1RYW06RPsWO-g0ntDKQziBBWaPXTXcWWoQ@mail.gmail.com>
+References: <alpine.LNX.2.00.1212101508510.9153@salmo.appl-ecosys.com>
+	<CAM_vju=c4+NREdux1RYW06RPsWO-g0ntDKQziBBWaPXTXcWWoQ@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1212111358370.21376@salmo.appl-ecosys.com>
+
+On Mon, 10 Dec 2012, Sarah Goslee wrote:
+
+> ... get.taxonomic() no longer has an outputFile argument.
+
+   I've read the get.taxonomic() description in bio.infer.pdf and it works
+... to a point. There are 3 taxa currently not in the ITIS database (a
+freshwater worm, a midge, and one chironomid for which I can't track down
+the genus). The first two are going through the validation process and will
+be added to ITIS Real Soon Now. In the meantime, I don't know how to
+proceed. So I've copied Lester Yuan on this message.
+
+   I tell get.taxonomic() that I'm finished editing and it flashes a Tcl/Tk
+window then ists the taxa not in the data base, but does not return the R
+prompt:
+
+> jerall <- get.taxonomic(bioinfer)
+The following taxa are not in ITIS:
+EISENIELLA
+RADOTANYPUS
+ZIATZEVIA
+
+   I've not found a key combination that lets me gracefully exit R (or emacs
+for that matter); I can only kill the process. Nothing I've seen in the help
+files appears relevant.
+
+   Any suggestions?
+
+Rich
+
+
+From kay.cichini at gmail.com  Wed Dec 12 00:43:50 2012
+From: kay.cichini at gmail.com (Kay Cichini)
+Date: Wed, 12 Dec 2012 00:43:50 +0100
+Subject: [R-sig-eco] Package bio.infer: get.taxonomic() hangs R after
+ editing taxa list
+In-Reply-To: <alpine.LNX.2.00.1212111358370.21376@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212101508510.9153@salmo.appl-ecosys.com>
+	<CAM_vju=c4+NREdux1RYW06RPsWO-g0ntDKQziBBWaPXTXcWWoQ@mail.gmail.com>
+	<alpine.LNX.2.00.1212111358370.21376@salmo.appl-ecosys.com>
+Message-ID: <CADcQ+RpGJoXC2WiBUmZ8Pyc206TS-j3ZUMBzmGTPBEx67XYAmA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121212/d6f7314b/attachment.pl>
+
+From szoe8822 at uni-landau.de  Wed Dec 12 15:25:32 2012
+From: szoe8822 at uni-landau.de (=?ISO-8859-1?Q?Eduard_Sz=F6cs?=)
+Date: Wed, 12 Dec 2012 15:25:32 +0100
+Subject: [R-sig-eco] Package bio.infer: get.taxonomic() hangs R after
+ editing taxa list
+In-Reply-To: <alpine.LNX.2.00.1212111358370.21376@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1212101508510.9153@salmo.appl-ecosys.com>
+	<CAM_vju=c4+NREdux1RYW06RPsWO-g0ntDKQziBBWaPXTXcWWoQ@mail.gmail.com>
+	<alpine.LNX.2.00.1212111358370.21376@salmo.appl-ecosys.com>
+Message-ID: <50C893DC.4080107@uni-landau.de>
+
+Hai Rich,
+
+Have a look at our recently released taxize-package.
+However we some some problems with the ITIS-API, too. (Maybe some server 
+issues?)
+See https://github.com/ropensci/taxize_/issues/72
+
+However with taxize you can also query the NCBI taxonomy browser as 
+alternative:
+
+df <- read.table(header = TRUE, as.is = TRUE, text = 'SVN              
+Taxon CountValue
+1 WP220110711  Zaitzevia.parvula        484
+2 WP220110711           Tvetenia        109
+3 WP220110711        Tubificidae       1054
+4 WP220110711            Sweltsa         11
+5 WP220110711 Suwallia.pallidula         32
+6 WP220110711     Stempellinella         11 ')
+df$Taxon <- gsub("\\.", " ", df$Taxon)
+
+require(taxize)
+
+#query itis
+classification(get_tsn(df$Taxon))
+### This may fail sometimes. 'Connection reset by peer'
+### we are working at it:
+### see https://github.com/ropensci/taxize_/issues/72
+
+# query ncbi taxonomy-browser instead
+classification(get_uid(df$Taxon))
+
+
+Hope this helps,
+
+Eduard
+
+
+
+On 12/11/2012 11:08 PM, Rich Shepard wrote:
+> On Mon, 10 Dec 2012, Sarah Goslee wrote:
+>
+>> ... get.taxonomic() no longer has an outputFile argument.
+>
+>   I've read the get.taxonomic() description in bio.infer.pdf and it works
+> ... to a point. There are 3 taxa currently not in the ITIS database (a
+> freshwater worm, a midge, and one chironomid for which I can't track down
+> the genus). The first two are going through the validation process and 
+> will
+> be added to ITIS Real Soon Now. In the meantime, I don't know how to
+> proceed. So I've copied Lester Yuan on this message.
+>
+>   I tell get.taxonomic() that I'm finished editing and it flashes a 
+> Tcl/Tk
+> window then ists the taxa not in the data base, but does not return the R
+> prompt:
+>
+>> jerall <- get.taxonomic(bioinfer)
+> The following taxa are not in ITIS:
+> EISENIELLA
+> RADOTANYPUS
+> ZIATZEVIA
+>
+>   I've not found a key combination that lets me gracefully exit R (or 
+> emacs
+> for that matter); I can only kill the process. Nothing I've seen in 
+> the help
+> files appears relevant.
+>
+>   Any suggestions?
+>
+> Rich
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From jari.oksanen at oulu.fi  Wed Dec 12 19:04:37 2012
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 12 Dec 2012 18:04:37 +0000
+Subject: [R-sig-eco] Vegan metaMDS: unusual first run stress values
+	with	large data set
+In-Reply-To: <CAEsJQ7hWvGacLMiia1JgqJCg+KZ8PzeJxenfXBwu=nT_d4qRmw@mail.gmail.com>
+References: <CAEsJQ7hWvGacLMiia1JgqJCg+KZ8PzeJxenfXBwu=nT_d4qRmw@mail.gmail.com>
+Message-ID: <66C03CD1145C95448A4D73676DD9C2ED3A2D21@nippu1.univ.yo.oulu.fi>
+
+Hello R-Community,
+
+First my thanks to Ewan Isherwood who turned our attention to this issue and sent his data file to us for analysing the situation. 
+
+It seems that the default convergence criteria are too slack in monoMDS() that was the ordination engine of metaMDS() in this case. Good news are that you can change those criteria by adding argument 'sfgrmin' to the metaMDS() call (this is documented in ?monoMDS). The following command seems to work:
+
+> PSU.NMDS <- metaMDS(PSU.sp, k=2, sfgrmin = 1e-7, distance = "jaccard")
+
+
+The default was 'sfgrmin = 1e-5' which was so slack the iteration stopped early and did not really converge close to the solution. With this option you can find that the correct stress is of magnitude 0.029 which is much lower than reported below. Moreover, the stresses of one-dimensional and two-dimensional solutions are very close to each other. (There was one outlier (P1763E) which only had one species (CHICRA) that occurred only in four other sites and distorted the results.)
+
+I advice *against* using 'zerodist = "add"': it is not needed with monoMDS. Identical (distance = 0) sites will have identical scores if you do not use this argument. Using 'zerodist = "add"' is only necessary with MASS::isoMDS() that is unable to handle zero distances.
+
+We have changed the default of 'sfgrmin' in http://www.r-forge.r-project.org/ so that you should not see this problem in the next vegan releases.
+
+Cheers, Jari Oksanen
+
+On 05/12/2012, at 21:15 PM, Ewan Isherwood wrote:
+
+> Hello, R-Community! This is the first time writing to this group and
+> indeed the first time using a mailing list, so please bear with me if
+> I?ve done something wrong.
+> 
+> I have a large species x site matrix (89 x 4831) that I want to
+> ordinate using metaMDS in the Vegan (2.0-5) package in R (2.15.2). If
+> I run this data frame using the Jaccard index in two or more
+> dimensions (k>1), the first run (run=0) has a relatively low stress
+> value and the other 20 runs are much higher and have very low
+> deviation. However, k=1 seems to work fine. Furthermore, a
+> stress/scree plot reveals a pyramid-like shape, where the k=1 lowest
+> stress value is low, increases rapidly for k=2 then decreases slowly
+> as k increases.
+> 
+> Dimensions	Stress
+> 1	0.1382185
+> 2	0.1939509
+> 3	0.1695375
+> 4	0.155221
+> 5	0.1406408
+> 6	0.1294149
+> 
+> I?ve tried this with a small iteration of this data and this issue
+> arises at k>2 rather than at k>1 as it is here. Anyway, this is the
+> input and output:
+> 
+> library(vegan)
+> library(MASS)
+> PSU <- read.table("PSU.txt", header = TRUE, sep = "")
+> PSU.sp <- PSU[, 22:110]
+> PSU.NMDS <- metaMDS(PSU.sp, k=4, zerodist = "add", distance = "jaccard")
+> 
+> Square root transformation
+> Wisconsin double standardization
+> Zero dissimilarities changed into  0.0006657301
+> Run 0 stress 0.155221
+> Run 1 stress 0.2548103
+> Run 2 stress 0.255434
+> Run 3 stress 0.2551382
+> ? (Up to run 20 where run 1 through run 20 have all very similar stress values.)
+> 
+> Call:
+> metaMDS(comm = PSU.sp, distance = "jaccard", k = 4, zerodist = "add")
+> 
+> global Multidimensional Scaling using monoMDS
+> 
+> Data:     wisconsin(sqrt(PSU.sp))
+> Distance: jaccard
+> 
+> Dimensions: 4
+> Stress:     0.155221
+> Stress type 1, weak ties
+> No convergent solutions - best solution after 20 tries
+> Scaling: centring, PC rotation, halfchange scaling
+> Species: expanded scores based on ?wisconsin(sqrt(PSU.sp))?
+> 
+> Now, again, with k=1 this does not happen ? the solution looks like
+> any other regular NMDS run. There are no blank values in the data as
+> they are all numbers between 0 and 100 corresponding to % cover, and
+> every row and column sum is greater than 0. There are many sites with
+> the same species configurations, hence the zerodist, but omitting this
+> makes no difference to the problem at hand. The NMDS works fine if I
+> use a subset of the data, but I have not subsetted and tested all of
+> it. Other metric (Euclidean) and nonmetric (Bray) dissimilarity
+> indices result in the same effect. I?ve chosen k=4 here because of the
+> (marginal) elbow in the stress plot, but the data itself actually
+> looks pretty good at any k value. Even though the output is
+> reasonable, I am concerned that hitting the best solution by a large
+> amount on the first run means something is messing up, and this
+> concern is amplified by the strange pyramid shaped stress plot.
+> Because metaMDS uses random starts, I don't see how this output is
+> possible. I've scoured the help files and archives of this list and I
+> am really now at a loss to explain this.
+> 
+> Thank you in advance for your time and consideration!
+> 
+> Ewan
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+From claire.della-vedova at magelisgroup.com  Thu Dec 13 16:24:41 2012
+From: claire.della-vedova at magelisgroup.com (claire della vedova)
+Date: Thu, 13 Dec 2012 16:24:41 +0100
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance )
+	for abundance data ?
+Message-ID: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121213/8b5a5c9f/attachment.pl>
+
+From lisas at salford-systems.com  Thu Dec 13 16:45:33 2012
+From: lisas at salford-systems.com (Lisa Solomon)
+Date: Thu, 13 Dec 2012 09:45:33 -0600
+Subject: [R-sig-eco] Webinar: Advances in Gradient Boosting: the Power of
+ Post-Processing. TOMORROW, 10-11 a.m., PST
+Message-ID: <2732C804E2DBB04AA90A678D76FAF2CC047E0D5857@DFW1MBX02.mex07a.mlsrvr.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121213/b19007f6/attachment.pl>
+
+From sas0025 at auburn.edu  Thu Dec 13 21:03:47 2012
+From: sas0025 at auburn.edu (Stephen Sefick)
+Date: Thu, 13 Dec 2012 14:03:47 -0600
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ ) for abundance data ?
+In-Reply-To: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+Message-ID: <50CA34A3.2070401@auburn.edu>
+
+
+
+On Thu 13 Dec 2012 09:24:41 AM CST, claire della vedova wrote:
+>
+> Dear all,
+>
+> I?m a biostatistician working for a French institute involved in
+> environmental risk assessment, and I would need help to understand the
+> results I obtained from several ordination analyses.
+>
+> I have a dataset of 25 sites. For these 25 sites I have abundance data 
+> of 38
+> species and also the measurement of 5 environmental variables.
+>
+> Here an extract of my abundance data for the 5 first sites:
+>
+> Anguinidae.ditylenchus Aphelenchidae Aphelenchoididae Aporcelaimidae
+>
+> 12 18 184 0
+>
+> 0 14 154 0
+>
+> 45 0 101 6
+>
+> 20 0 148 0
+>
+> 0 0 118 0
+>
+>
+>
+> Here the environmental data for the 5 first sites:
+>
+> ExtPond moist Corg pH DV50
+>
+> 0.946 9.086 4.269 5.24 171.33
+>
+> 0.682 27.139 23.813 3.82 75.45
+>
+> 2.480 14.322 7.191 4.48 230.90
+>
+> 3.069 18.380 11.404 3.58 211.19
+>
+> 2.615 16.693 7.128 4.12 224.45
+>
+>
+>
+> My aim was to study how the distribution of species is linked with
+> environmental data.
+>
+> Firstly, I did a PCA (with vegan library), using a Hellinger 
+> transformation,
+> with commands like this :
+>
+> acp1<-rda(decostand(myDataSpec[,c(25:62)], "hellinger"))
+>
+>
+
+Is the Hellinger transform done on relative proportions?
+
+
+
+
+
+
+
+
+
+>
+> The first axe represent 19.5% the second one 16.3%. A colleague of me said
+> it is not so bad with abundance data, but it seems to me quite poor. 
+> What do
+> you think about ?
+>
+>
+
+You could use something like the broken stick model or others to access 
+how many axes are necessary, but two axes explaining <40% of the 
+variation seems low.
+
+>
+> Then, I fitted environmental vectors with the envfit function (of vegan
+> library), with commands like this :
+>
+> physCInd.fit3<-envfit(acp1,MyDataEnv[,c(13,18,20,21,23)], permut=4999,
+> na.rm=T)
+>
+> It appeared that pH variable is significantly linked with the ordination,
+> and the pval of ExtPond is 0.1.
+>
+> Next I did a RDA which is not significant.
+>
+> To finish I did two NMDS. For the first one I used the Hellinger
+> normalization and the Bray-Curtis distance. The stress obtained value is
+> 0.22, Non metric fit R? is 0.952 and Linear fit R2 =0.777. When I 
+> fitted the
+> environmental vectors , ExtPond was correlated with the ordination (pval
+> =0.02) and p-val of pH = 0.23
+>
+> But then I read in ?numerical ecology? page 449 that it?s better to
+> standardize the data by dividing each value by maximum abundance for 
+> species
+> and then use Kulcynski distance. The stress value was 0.23 , Non 
+> metric fit
+> R? was 0.948 and Linear fit R2 =0.69. These values are a little less good
+> than those of the first NMDS, but the stressplot seems to me more
+> homogenous.
+>
+> Nevertheless, the results I obtained are very different... When I fitted
+> the environmental data it appeared that ExtPond was not correlated 
+> with this
+> ordination (p-val=0.82) and p-val of pH=0.06. And obviously ExtPond is the
+> most important variable for us ;-)
+>
+> With all these results, I?m quite confused, and I don?t know what to 
+> think.
+> So, if someone can help me, I would appreciate it very much. Be sure that
+> all comments will be welcome.
+>
+> To summarize my questions are :
+>
+> a) Which ordination method would be better for my data : PCA knowing
+> that the represented inertia is 35.62% or NMDS with a stress value about
+> 0.22?
+>
+My opinion is PCA on hellinger transformed relative proportions "means" 
+more than an NMDS
+
+> b) If NMDS is more adapted which one is the better? with Hellinger
+> normalization and Bray-Curtis distance, or with the normalization
+> recommended by Legendre and Legendre and Kulcynski distance ?
+>
+I sounds like the normalization you are referring to is relative 
+proportion which is si/sum(s); s is a vector of taxon at a site.
+
+> c) Is there other method to apply? I?m going to try co-inertia with
+> ade4 package
+>
+>
+>
+I am reading about co-inertia analysis now as it may be useful for some 
+of the things that I am planning on doing.  This method looks promising.
+
+You are going to have to decide on what type of ordination to use with 
+COIA...
+
+HTH,
+
+Stephen
+
+> Thanks in advance.
+>
+> Cheers.
+>
+> Claire Della Vedova
+>
+>
+>
+>
+> [[alternative HTML version deleted]]
+>
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> -- 
+> Stephen Sefick
+> **************************************************
+> Auburn University
+> Biological Sciences
+> 331 Funchess Hall
+> Auburn, Alabama
+> 36849
+> **************************************************
+> sas0025 at auburn.edu
+> http://www.auburn.edu/~sas0025
+> **************************************************
+>
+> Let's not spend our time and resources thinking about things that are so little or so large that all they really do for us is puff us up and make us feel like gods.  We are mammals, and have not exhausted the annoying little problems of being mammals.
+>
+>                                  -K. Mullis
+>
+> "A big computer, a complex algorithm and a long time does not equal science."
+>
+>                                -Robert Gentleman
+>
+
+
+From aghaynes at gmail.com  Fri Dec 14 08:53:27 2012
+From: aghaynes at gmail.com (Alan Haynes)
+Date: Fri, 14 Dec 2012 08:53:27 +0100
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ ) for abundance data ?
+In-Reply-To: <50CA34A3.2070401@auburn.edu>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+	<50CA34A3.2070401@auburn.edu>
+Message-ID: <CAPdSD+5fr_+g6wXC81tUQ3g2ZKRdZLixvUMcKJ=ONZX3NkCU7w@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121214/4997cd4a/attachment.asc>
+
+From jari.oksanen at oulu.fi  Fri Dec 14 10:24:23 2012
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 14 Dec 2012 09:24:23 +0000
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ ) for abundance data ?
+In-Reply-To: <CAPdSD+5fr_+g6wXC81tUQ3g2ZKRdZLixvUMcKJ=ONZX3NkCU7w@mail.gmail.com>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+	<50CA34A3.2070401@auburn.edu>,
+	<CAPdSD+5fr_+g6wXC81tUQ3g2ZKRdZLixvUMcKJ=ONZX3NkCU7w@mail.gmail.com>
+Message-ID: <66C03CD1145C95448A4D73676DD9C2ED3B07F2@nippu2.univ.yo.oulu.fi>
+
+Hello Folks,
+
+Kruskal's "rule of thumb" really is a rule of thumb. That is, it is intended for a rough guideline. In that sense, there is no difference to Clarke's rules. However, I wouldn't judge usability simply by stress: solutions with very low stress can be useless and solutions with fairly high stress can be usable. In stress it is a question about many things, but a large portion of stress is similar as signal/noise ratios. The signal is more difficult to detect with high noise, but if you detect the signal, the amount of noise does not matter. I have quite often seen pretty usable solutions with stress around or above 0.20 (20%), at least when using external explanatory variables. There are limits, though. If you trace single runs, you may see that random starting configurations start typically start with stress 0.4 (40%) or a bit higher. If you cannot improve from that, the solution probably is pretty useless (and metaMDS you will probably have no convergent solutions). However, instead of discarding the results, you may first start with stricter convergence criteria for monoMDS (if you use monoMDS). See its help pages (next version of vegan will have stricter limit for "scale factor of gradient", sfgrmin). 
+
+There is also a limit for low stress. In fact, the current vegan warns of too low stress (Kruskal's "perfect" fit). This is usually a symptom of insufficient data (too many dimensions for too few points, dissimilarities found from too few variables).
+
+In my opinion, ecologists are often too much obsessed with goodness of fit values. This is true in general, but also very manifest with multivariate method. I do think that if you, say, in PCA or RDA "explain" something like >50%, there is something suspect in your analysis. Typical reasons are insufficient data (too few rows or columns) or not really multivariate data. Sometimes there are some very dominant species (high variance) so that the analysis need not care but about a couple of species, and that is an easy task. If you transform your data so that high abundances are squashed down and variances equalized, or even made equal, the data become more multivariate (= all species count). Typically this means that lower proportion of variance is "explained", but often the results are more interpretable. This also happens when you change models: Unscaled PCA/RDA using variances "explains" much of the variance, scaled PCA/RDA using correlations "explains" much less, and CA/CCA studying deviations from expectations "explains" the least. Typically the usability and interpretability of the results improves as "explanatory power" decreases. The same also often holds for NMDS: Euclidean distances often give lower stress and pooorer results athn dissimilarities that treat all species more equally.
+
+Not really R, but perhaps I'm forgiven (this time),
+
+Cheers, Jari Oksanen  
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] on behalf of Alan Haynes [aghaynes at gmail.com]
+Sent: 14 December 2012 09:53
+To: sas0025 at auburn.edu
+Cc: claire della vedova; r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] pca or nmds (with which normalization and distance ) for abundance data ?
+
+Hi Claire,
+
+Im not sure if it helps, but it might be interesting to hear other list
+readers views on the subject, but McCune and Grace, the authors of PCOrd
+and "Analysis of Ecological Communities" have a couple of rules of thumb
+for NMDS stress.
+They use Kruskal stress*100, while i believe monoMDS (and thus metaMDS)
+uses simple Kruskal stress. (values in brackets below are thus the values
+vegan could report)
+
+"Kruskal's rules of thumb"
+2.5 (or 0.025) = excellent
+5 (0.05) = good
+10 (0.1) = fair
+20 (0.2) = poor
+
+"Clarke's rules of thumb"
+<5 (0.05) - excellent, cannot be misinterpreted, but incredibly rare in
+practice
+5-10 (0.05 - 0.1) - good no real risk of false inference
+10-20 (0.1 - 0.2) - can be usable, but upper values could be misleading.
+plot details should not be used
+>20 (0.2) - plots likely to be dangerous to interpret. Stresses of >~35,
+samples are more or less randomly placed with little regard for ranking.
+
+
+Correspondingly, McCune and Grace would probably err on the side of caution
+as 0.22 is getting into the poor fit, dangerous to interpret areas.
+
+It would be interesting to hear other NMDS users views on this...what
+stress do you consider too high, when does an ordination become
+(essentially) useless etc.
+
+
+HTH
+
+Cheers,
+
+Alan
+
+
+
+
+
+
+
+--------------------------------------------------
+Email: aghaynes at gmail.com
+Mobile: +41794385586
+Skype: aghaynes
+
+
+
+On 13 December 2012 21:03, Stephen Sefick <sas0025 at auburn.edu> wrote:
+
+>
+>
+> On Thu 13 Dec 2012 09:24:41 AM CST, claire della vedova wrote:
+>
+>>
+>> Dear all,
+>>
+>> I?m a biostatistician working for a French institute involved in
+>> environmental risk assessment, and I would need help to understand the
+>> results I obtained from several ordination analyses.
+>>
+>> I have a dataset of 25 sites. For these 25 sites I have abundance data of
+>> 38
+>> species and also the measurement of 5 environmental variables.
+>>
+>> Here an extract of my abundance data for the 5 first sites:
+>>
+>> Anguinidae.ditylenchus Aphelenchidae Aphelenchoididae Aporcelaimidae
+>>
+>> 12 18 184 0
+>>
+>> 0 14 154 0
+>>
+>> 45 0 101 6
+>>
+>> 20 0 148 0
+>>
+>> 0 0 118 0
+>>
+>>
+>>
+>> Here the environmental data for the 5 first sites:
+>>
+>> ExtPond moist Corg pH DV50
+>>
+>> 0.946 9.086 4.269 5.24 171.33
+>>
+>> 0.682 27.139 23.813 3.82 75.45
+>>
+>> 2.480 14.322 7.191 4.48 230.90
+>>
+>> 3.069 18.380 11.404 3.58 211.19
+>>
+>> 2.615 16.693 7.128 4.12 224.45
+>>
+>>
+>>
+>> My aim was to study how the distribution of species is linked with
+>> environmental data.
+>>
+>> Firstly, I did a PCA (with vegan library), using a Hellinger
+>> transformation,
+>> with commands like this :
+>>
+>> acp1<-rda(decostand(**myDataSpec[,c(25:62)], "hellinger"))
+>>
+>>
+>>
+> Is the Hellinger transform done on relative proportions?
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>> The first axe represent 19.5% the second one 16.3%. A colleague of me said
+>> it is not so bad with abundance data, but it seems to me quite poor. What
+>> do
+>> you think about ?
+>>
+>>
+>>
+> You could use something like the broken stick model or others to access
+> how many axes are necessary, but two axes explaining <40% of the variation
+> seems low.
+>
+>
+>
+>> Then, I fitted environmental vectors with the envfit function (of vegan
+>> library), with commands like this :
+>>
+>> physCInd.fit3<-envfit(acp1,**MyDataEnv[,c(13,18,20,21,23)], permut=4999,
+>> na.rm=T)
+>>
+>> It appeared that pH variable is significantly linked with the ordination,
+>> and the pval of ExtPond is 0.1.
+>>
+>> Next I did a RDA which is not significant.
+>>
+>> To finish I did two NMDS. For the first one I used the Hellinger
+>> normalization and the Bray-Curtis distance. The stress obtained value is
+>> 0.22, Non metric fit R? is 0.952 and Linear fit R2 =0.777. When I fitted
+>> the
+>> environmental vectors , ExtPond was correlated with the ordination (pval
+>> =0.02) and p-val of pH = 0.23
+>>
+>> But then I read in ?numerical ecology? page 449 that it?s better to
+>> standardize the data by dividing each value by maximum abundance for
+>> species
+>> and then use Kulcynski distance. The stress value was 0.23 , Non metric
+>> fit
+>> R? was 0.948 and Linear fit R2 =0.69. These values are a little less good
+>> than those of the first NMDS, but the stressplot seems to me more
+>> homogenous.
+>>
+>> Nevertheless, the results I obtained are very different... When I fitted
+>> the environmental data it appeared that ExtPond was not correlated with
+>> this
+>> ordination (p-val=0.82) and p-val of pH=0.06. And obviously ExtPond is the
+>> most important variable for us ;-)
+>>
+>> With all these results, I?m quite confused, and I don?t know what to
+>> think.
+>> So, if someone can help me, I would appreciate it very much. Be sure that
+>> all comments will be welcome.
+>>
+>> To summarize my questions are :
+>>
+>> a) Which ordination method would be better for my data : PCA knowing
+>> that the represented inertia is 35.62% or NMDS with a stress value about
+>> 0.22?
+>>
+>>  My opinion is PCA on hellinger transformed relative proportions "means"
+> more than an NMDS
+>
+>
+>  b) If NMDS is more adapted which one is the better? with Hellinger
+>> normalization and Bray-Curtis distance, or with the normalization
+>> recommended by Legendre and Legendre and Kulcynski distance ?
+>>
+>>  I sounds like the normalization you are referring to is relative
+> proportion which is si/sum(s); s is a vector of taxon at a site.
+>
+>
+>  c) Is there other method to apply? I?m going to try co-inertia with
+>> ade4 package
+>>
+>>
+>>
+>>  I am reading about co-inertia analysis now as it may be useful for some
+> of the things that I am planning on doing.  This method looks promising.
+>
+> You are going to have to decide on what type of ordination to use with
+> COIA...
+>
+> HTH,
+>
+> Stephen
+>
+>  Thanks in advance.
+>>
+>> Cheers.
+>>
+>> Claire Della Vedova
+>>
+>>
+>>
+>>
+>> [[alternative HTML version deleted]]
+>>
+>>
+>>
+>> ______________________________**_________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/**listinfo/r-sig-ecology<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+>> --
+>> Stephen Sefick
+>> ****************************************************
+>> Auburn University
+>> Biological Sciences
+>> 331 Funchess Hall
+>> Auburn, Alabama
+>> 36849
+>> ****************************************************
+>> sas0025 at auburn.edu
+>> http://www.auburn.edu/~sas0025
+>> ****************************************************
+>>
+>> Let's not spend our time and resources thinking about things that are so
+>> little or so large that all they really do for us is puff us up and make us
+>> feel like gods.  We are mammals, and have not exhausted the annoying little
+>> problems of being mammals.
+>>
+>>                                  -K. Mullis
+>>
+>> "A big computer, a complex algorithm and a long time does not equal
+>> science."
+>>
+>>                                -Robert Gentleman
+>>
+>>
+> ______________________________**_________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/**listinfo/r-sig-ecology<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+>
+
+        [[alternative HTML version deleted]]
+
+
+
+From jari.oksanen at oulu.fi  Fri Dec 14 10:42:22 2012
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 14 Dec 2012 09:42:22 +0000
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ )	for abundance data ?
+In-Reply-To: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+Message-ID: <66C03CD1145C95448A4D73676DD9C2ED3B0A10@nippu2.univ.yo.oulu.fi>
+
+Claire, Here some small comments
+On 13/12/2012, at 17:24 PM, claire della vedova wrote:
+
+> Dear all,
+> 
+> 
+> 
+> a)      Which ordination method would be better for my data : PCA knowing
+> that the represented inertia is 35.62% or NMDS  with a stress value about
+> 0.22? 
+
+These numbers cannot be used to say which of these methods is better. You need other criteria. Some people may have strong opinions on the choice here, but these opinions cannot be based on these numbers -- they are based on something else (I do have such an opinion, but I abstain from expressing my opinion).
+
+> 
+> b)      If NMDS is more adapted which one is the better? with Hellinger
+> normalization and Bray-Curtis distance, or with the normalization
+> recommended by Legendre and Legendre  and Kulcynski distance ?
+> 
+Hellinger transformation was suggested for Euclidean metric, and normally it is used in PCA/RDA (which are based on Euclidean metric although they do not explicitly calculate Euclidean distances). I haven't heard of any advantages of Hellinger transformation with Bray-Curtis dissimilarity. I suggest you don't use it with Bray-Curtis. I don't know if Kulczy?ski dissimilarity is any better than, say, S?rensen dissimilarity (and both seem to be difficult to spell), but certainly it belongs to the same group of usually well behaving dissimilarities as variants of Bray-Curtis or Jaccard.
+
+> c)       Is there other method to apply? I?m going to try co-inertia with
+> ade4 package
+> 
+> 
+Certainly there is a high number of methods you can apply, but why? What you try to analyse? What are your questions?
+
+Cheers, Jari Oksanen
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+
+
+From gavin.simpson at ucl.ac.uk  Fri Dec 14 12:08:32 2012
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Fri, 14 Dec 2012 11:08:32 +0000
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ ) for abundance data ?
+In-Reply-To: <50CA34A3.2070401@auburn.edu>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+	<50CA34A3.2070401@auburn.edu>
+Message-ID: <1355483312.8041.16.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Thu, 2012-12-13 at 14:03 -0600, Stephen Sefick wrote:
+<snip />
+> > My aim was to study how the distribution of species is linked with
+> > environmental data.
+> >
+> > Firstly, I did a PCA (with vegan library), using a Hellinger 
+> > transformation,
+> > with commands like this :
+> >
+> > acp1<-rda(decostand(myDataSpec[,c(25:62)], "hellinger"))
+> >
+> >
+> 
+> Is the Hellinger transform done on relative proportions?
+
+The transformation includes division by by the row sum and hence
+conversion to proportions. As such it can be applied to count data or
+relative abundance data; with the latter the division by row sum will
+have no effect and then the transformation collapses to a simple square
+root transformation of the proportional abundance data.
+
+This is one of the reasons for the apparent contradictions over the
+utility of the chord distance in ecological and palaeoecological
+disciplines. In the latter we commonly use proportional data whilst
+count abundances are common in the former. Directly applying the chord
+distance to count abundances carries with it the baggage of the
+Euclidean distance (squared differences emphasise the big things). But
+chord distance applied to proportional data *is* the Hellinger distance
+and hence palaeoecologists have found the chord distance a useful
+dissimilarity coefficients in their field.
+
+<snip />
+> >
+> > a) Which ordination method would be better for my data : PCA knowing
+> > that the represented inertia is 35.62% or NMDS with a stress value about
+> > 0.22?
+> >
+> My opinion is PCA on hellinger transformed relative proportions "means" 
+> more than an NMDS
+
+?? NMDS with Hellinger distances could optimise a k-D PCA with Hellinger
+transform.
+
+Given that NMDS essentially subsumes PCA I'm not sure what you are
+getting at.
+
+G
+
+> > b) If NMDS is more adapted which one is the better? with Hellinger
+> > normalization and Bray-Curtis distance, or with the normalization
+> > recommended by Legendre and Legendre and Kulcynski distance ?
+> >
+> I sounds like the normalization you are referring to is relative 
+> proportion which is si/sum(s); s is a vector of taxon at a site.
+> 
+> > c) Is there other method to apply? I?m going to try co-inertia with
+> > ade4 package
+> >
+> >
+> >
+> I am reading about co-inertia analysis now as it may be useful for some 
+> of the things that I am planning on doing.  This method looks promising.
+> 
+> You are going to have to decide on what type of ordination to use with 
+> COIA...
+> 
+> HTH,
+> 
+> Stephen
+> 
+> > Thanks in advance.
+> >
+> > Cheers.
+> >
+> > Claire Della Vedova
+> >
+> >
+> >
+> >
+> > [[alternative HTML version deleted]]
+> >
+> >
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> > -- 
+> > Stephen Sefick
+> > **************************************************
+> > Auburn University
+> > Biological Sciences
+> > 331 Funchess Hall
+> > Auburn, Alabama
+> > 36849
+> > **************************************************
+> > sas0025 at auburn.edu
+> > http://www.auburn.edu/~sas0025
+> > **************************************************
+> >
+> > Let's not spend our time and resources thinking about things that are so little or so large that all they really do for us is puff us up and make us feel like gods.  We are mammals, and have not exhausted the annoying little problems of being mammals.
+> >
+> >                                  -K. Mullis
+> >
+> > "A big computer, a complex algorithm and a long time does not equal science."
+> >
+> >                                -Robert Gentleman
+> >
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From sas0025 at auburn.edu  Fri Dec 14 13:22:45 2012
+From: sas0025 at auburn.edu (Stephen Sefick)
+Date: Fri, 14 Dec 2012 06:22:45 -0600
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ ) for abundance data ?
+In-Reply-To: <1355483312.8041.16.camel@chrysothemis.geog.ucl.ac.uk>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+	<50CA34A3.2070401@auburn.edu>
+	<1355483312.8041.16.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <50CB1A15.5040008@auburn.edu>
+
+On Fri 14 Dec 2012 05:08:32 AM CST, Gavin Simpson wrote:
+> On Thu, 2012-12-13 at 14:03 -0600, Stephen Sefick wrote:
+> <snip />
+>>> My aim was to study how the distribution of species is linked with
+>>> environmental data.
+>>>
+>>> Firstly, I did a PCA (with vegan library), using a Hellinger
+>>> transformation,
+>>> with commands like this :
+>>>
+>>> acp1<-rda(decostand(myDataSpec[,c(25:62)], "hellinger"))
+>>>
+>>>
+>>
+>> Is the Hellinger transform done on relative proportions?
+>
+> The transformation includes division by by the row sum and hence
+> conversion to proportions. As such it can be applied to count data or
+> relative abundance data; with the latter the division by row sum will
+> have no effect and then the transformation collapses to a simple square
+> root transformation of the proportional abundance data.
+>
+> This is one of the reasons for the apparent contradictions over the
+> utility of the chord distance in ecological and palaeoecological
+> disciplines. In the latter we commonly use proportional data whilst
+> count abundances are common in the former. Directly applying the chord
+> distance to count abundances carries with it the baggage of the
+> Euclidean distance (squared differences emphasise the big things). But
+> chord distance applied to proportional data *is* the Hellinger distance
+> and hence palaeoecologists have found the chord distance a useful
+> dissimilarity coefficients in their field.
+>
+> <snip />
+>>>
+>>> a) Which ordination method would be better for my data : PCA knowing
+>>> that the represented inertia is 35.62% or NMDS with a stress value about
+>>> 0.22?
+>>>
+>> My opinion is PCA on hellinger transformed relative proportions "means"
+>> more than an NMDS
+>
+> ?? NMDS with Hellinger distances could optimise a k-D PCA with Hellinger
+> transform.
+
+Gavin, maybe I have spoken beyond my knowledge.  My though was that a 
+PCA has a unique solution and is therefore "better" (as long as an 
+appropriate distance is used that deals with the double zero problem 
+effectively).  I am sure that this is too simple for the reality of the 
+situation.  I don't know what a k-D PCA is.  Would you mind explaining 
+or directing me to some reading material?
+
+>
+> Given that NMDS essentially subsumes PCA I'm not sure what you are
+> getting at.
+
+I don't understand.  Would you mind explaining this?
+many thanks,
+
+Stephen
+
+>
+> G
+>
+>>> b) If NMDS is more adapted which one is the better? with Hellinger
+>>> normalization and Bray-Curtis distance, or with the normalization
+>>> recommended by Legendre and Legendre and Kulcynski distance ?
+>>>
+>> I sounds like the normalization you are referring to is relative
+>> proportion which is si/sum(s); s is a vector of taxon at a site.
+>>
+>>> c) Is there other method to apply? I?m going to try co-inertia with
+>>> ade4 package
+>>>
+>>>
+>>>
+>> I am reading about co-inertia analysis now as it may be useful for some
+>> of the things that I am planning on doing.  This method looks promising.
+>>
+>> You are going to have to decide on what type of ordination to use with
+>> COIA...
+>>
+>> HTH,
+>>
+>> Stephen
+>>
+>>> Thanks in advance.
+>>>
+>>> Cheers.
+>>>
+>>> Claire Della Vedova
+>>>
+>>>
+>>>
+>>>
+>>> [[alternative HTML version deleted]]
+>>>
+>>>
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>> -- 
+>>> Stephen Sefick
+>>> **************************************************
+>>> Auburn University
+>>> Biological Sciences
+>>> 331 Funchess Hall
+>>> Auburn, Alabama
+>>> 36849
+>>> **************************************************
+>>> sas0025 at auburn.edu
+>>> http://www.auburn.edu/~sas0025
+>>> **************************************************
+>>>
+>>> Let's not spend our time and resources thinking about things that are so little or so large that all they really do for us is puff us up and make us feel like gods.  We are mammals, and have not exhausted the annoying little problems of being mammals.
+>>>
+>>>                                   -K. Mullis
+>>>
+>>> "A big computer, a complex algorithm and a long time does not equal science."
+>>>
+>>>                                 -Robert Gentleman
+>>>
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Stephen Sefick
+**************************************************
+Auburn University                                         
+Biological Sciences                                      
+331 Funchess Hall                                       
+Auburn, Alabama                                        
+36849                                                           
+**************************************************
+sas0025 at auburn.edu                                  
+http://www.auburn.edu/~sas0025                 
+**************************************************
+
+Let's not spend our time and resources thinking about things that are 
+so little or so large that all they really do for us is puff us up and 
+make us feel like gods.  We are mammals, and have not exhausted the 
+annoying little problems of being mammals.
+
+                                -K. Mullis
+
+"A big computer, a complex algorithm and a long time does not equal 
+science."
+
+                              -Robert Gentleman
+
+
+From gavin.simpson at ucl.ac.uk  Fri Dec 14 13:51:56 2012
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Fri, 14 Dec 2012 12:51:56 +0000
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ ) for abundance data ?
+In-Reply-To: <50CB1A15.5040008@auburn.edu>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+	<50CA34A3.2070401@auburn.edu>
+	<1355483312.8041.16.camel@chrysothemis.geog.ucl.ac.uk>
+	<50CB1A15.5040008@auburn.edu>
+Message-ID: <1355489516.8041.26.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Fri, 2012-12-14 at 06:22 -0600, Stephen Sefick wrote:
+<snip />
+> >>> a) Which ordination method would be better for my data : PCA knowing
+> >>> that the represented inertia is 35.62% or NMDS with a stress value about
+> >>> 0.22?
+> >>>
+> >> My opinion is PCA on hellinger transformed relative proportions "means"
+> >> more than an NMDS
+> >
+> > ?? NMDS with Hellinger distances could optimise a k-D PCA with Hellinger
+> > transform.
+> 
+> Gavin, maybe I have spoken beyond my knowledge.  My though was that a 
+> PCA has a unique solution and is therefore "better" (as long as an 
+> appropriate distance is used that deals with the double zero problem 
+> effectively).  I am sure that this is too simple for the reality of the 
+> situation.  I don't know what a k-D PCA is.  Would you mind explaining 
+> or directing me to some reading material?
+
+By k-D PCA I meant that in nMDS you need to state the dimensionality; in
+metaMDS() we start the process from a Principal Coordinates of the data
+(PCoA == PCA when Euclidean distances used). I meant that nMDS for say
+2d solutions can optimise the configuration arising from the first two
+PCA axes.
+
+I don't see the unique solution of PCA as an implicit advantage of that
+method. It has a unique solution because the possible solutions are
+constrained by the approach; linear combinations of the variables which
+best approximate the Euclidean distances between samples. NMDS
+generalises this idea extensively into a problem of best preserving the
+mapping of the dissimilarities. As such it can do a better job of
+drawing the map but that comes at a price.
+
+Again though; horses for courses.
+
+> >
+> > Given that NMDS essentially subsumes PCA I'm not sure what you are
+> > getting at.
+> 
+> I don't understand.  Would you mind explaining this?
+> many thanks,
+
+I meant in the sense that PCA is special case of Principal Coordinates
+and that nMDS generalises Principal coordinates.
+
+I don't get the point of saying one method is "better" than any other.
+Each has uses etc. I certainly don't think any one method "means" more
+than the other.
+
+G
+
+> Stephen
+> 
+> >
+> > G
+> >
+> >>> b) If NMDS is more adapted which one is the better? with Hellinger
+> >>> normalization and Bray-Curtis distance, or with the normalization
+> >>> recommended by Legendre and Legendre and Kulcynski distance ?
+> >>>
+> >> I sounds like the normalization you are referring to is relative
+> >> proportion which is si/sum(s); s is a vector of taxon at a site.
+> >>
+> >>> c) Is there other method to apply? I?m going to try co-inertia with
+> >>> ade4 package
+> >>>
+> >>>
+> >>>
+> >> I am reading about co-inertia analysis now as it may be useful for some
+> >> of the things that I am planning on doing.  This method looks promising.
+> >>
+> >> You are going to have to decide on what type of ordination to use with
+> >> COIA...
+> >>
+> >> HTH,
+> >>
+> >> Stephen
+> >>
+> >>> Thanks in advance.
+> >>>
+> >>> Cheers.
+> >>>
+> >>> Claire Della Vedova
+> >>>
+> >>>
+> >>>
+> >>>
+> >>> [[alternative HTML version deleted]]
+> >>>
+> >>>
+> >>>
+> >>> _______________________________________________
+> >>> R-sig-ecology mailing list
+> >>> R-sig-ecology at r-project.org
+> >>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >>> -- 
+> >>> Stephen Sefick
+> >>> **************************************************
+> >>> Auburn University
+> >>> Biological Sciences
+> >>> 331 Funchess Hall
+> >>> Auburn, Alabama
+> >>> 36849
+> >>> **************************************************
+> >>> sas0025 at auburn.edu
+> >>> http://www.auburn.edu/~sas0025
+> >>> **************************************************
+> >>>
+> >>> Let's not spend our time and resources thinking about things that are so little or so large that all they really do for us is puff us up and make us feel like gods.  We are mammals, and have not exhausted the annoying little problems of being mammals.
+> >>>
+> >>>                                   -K. Mullis
+> >>>
+> >>> "A big computer, a complex algorithm and a long time does not equal science."
+> >>>
+> >>>                                 -Robert Gentleman
+> >>>
+> >>
+> >> _______________________________________________
+> >> R-sig-ecology mailing list
+> >> R-sig-ecology at r-project.org
+> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+From sas0025 at auburn.edu  Fri Dec 14 14:39:47 2012
+From: sas0025 at auburn.edu (Stephen Sefick)
+Date: Fri, 14 Dec 2012 07:39:47 -0600
+Subject: [R-sig-eco] pca or nmds (with which normalization and distance
+ ) for abundance data ?
+In-Reply-To: <1355489516.8041.26.camel@chrysothemis.geog.ucl.ac.uk>
+References: <001401cdd945$f9a0d3d0$ece27b70$@magelisgroup.com>
+	<50CA34A3.2070401@auburn.edu>
+	<1355483312.8041.16.camel@chrysothemis.geog.ucl.ac.uk>
+	<50CB1A15.5040008@auburn.edu>
+	<1355489516.8041.26.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <50CB2C23.8000902@auburn.edu>
+
+
+
+On Fri 14 Dec 2012 06:51:56 AM CST, Gavin Simpson wrote:
+> On Fri, 2012-12-14 at 06:22 -0600, Stephen Sefick wrote:
+> <snip />
+>>>>> a) Which ordination method would be better for my data : PCA knowing
+>>>>> that the represented inertia is 35.62% or NMDS with a stress value about
+>>>>> 0.22?
+>>>>>
+>>>> My opinion is PCA on hellinger transformed relative proportions "means"
+>>>> more than an NMDS
+>>>
+>>> ?? NMDS with Hellinger distances could optimise a k-D PCA with Hellinger
+>>> transform.
+>>
+>> Gavin, maybe I have spoken beyond my knowledge.  My though was that a
+>> PCA has a unique solution and is therefore "better" (as long as an
+>> appropriate distance is used that deals with the double zero problem
+>> effectively).  I am sure that this is too simple for the reality of the
+>> situation.  I don't know what a k-D PCA is.  Would you mind explaining
+>> or directing me to some reading material?
+>
+> By k-D PCA I meant that in nMDS you need to state the dimensionality; in
+> metaMDS() we start the process from a Principal Coordinates of the data
+> (PCoA == PCA when Euclidean distances used). I meant that nMDS for say
+> 2d solutions can optimise the configuration arising from the first two
+> PCA axes.
+>
+> I don't see the unique solution of PCA as an implicit advantage of that
+> method. It has a unique solution because the possible solutions are
+> constrained by the approach; linear combinations of the variables which
+> best approximate the Euclidean distances between samples. NMDS
+> generalises this idea extensively into a problem of best preserving the
+> mapping of the dissimilarities. As such it can do a better job of
+> drawing the map but that comes at a price.
+>
+> Again though; horses for courses.
+>
+>>>
+>>> Given that NMDS essentially subsumes PCA I'm not sure what you are
+>>> getting at.
+>>
+>> I don't understand.  Would you mind explaining this?
+>> many thanks,
+>
+> I meant in the sense that PCA is special case of Principal Coordinates
+> and that nMDS generalises Principal coordinates.
+>
+> I don't get the point of saying one method is "better" than any other.
+> Each has uses etc. I certainly don't think any one method "means" more
+> than the other.
+
+Point taken.  As always, it depends on the question that you are trying 
+to answer.  Thank you for the discussion and clarification.
+
+>
+> G
+>
+>> Stephen
+>>
+>>>
+>>> G
+>>>
+>>>>> b) If NMDS is more adapted which one is the better? with Hellinger
+>>>>> normalization and Bray-Curtis distance, or with the normalization
+>>>>> recommended by Legendre and Legendre and Kulcynski distance ?
+>>>>>
+>>>> I sounds like the normalization you are referring to is relative
+>>>> proportion which is si/sum(s); s is a vector of taxon at a site.
+>>>>
+>>>>> c) Is there other method to apply? I?m going to try co-inertia with
+>>>>> ade4 package
+>>>>>
+>>>>>
+>>>>>
+>>>> I am reading about co-inertia analysis now as it may be useful for some
+>>>> of the things that I am planning on doing.  This method looks promising.
+>>>>
+>>>> You are going to have to decide on what type of ordination to use with
+>>>> COIA...
+>>>>
+>>>> HTH,
+>>>>
+>>>> Stephen
+>>>>
+>>>>> Thanks in advance.
+>>>>>
+>>>>> Cheers.
+>>>>>
+>>>>> Claire Della Vedova
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>> [[alternative HTML version deleted]]
+>>>>>
+>>>>>
+>>>>>
+>>>>> _______________________________________________
+>>>>> R-sig-ecology mailing list
+>>>>> R-sig-ecology at r-project.org
+>>>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>>> -- 
+>>>>> Stephen Sefick
+>>>>> **************************************************
+>>>>> Auburn University
+>>>>> Biological Sciences
+>>>>> 331 Funchess Hall
+>>>>> Auburn, Alabama
+>>>>> 36849
+>>>>> **************************************************
+>>>>> sas0025 at auburn.edu
+>>>>> http://www.auburn.edu/~sas0025
+>>>>> **************************************************
+>>>>>
+>>>>> Let's not spend our time and resources thinking about things that are so little or so large that all they really do for us is puff us up and make us feel like gods.  We are mammals, and have not exhausted the annoying little problems of being mammals.
+>>>>>
+>>>>>                                    -K. Mullis
+>>>>>
+>>>>> "A big computer, a complex algorithm and a long time does not equal science."
+>>>>>
+>>>>>                                  -Robert Gentleman
+>>>>>
+>>>>
+>>>> _______________________________________________
+>>>> R-sig-ecology mailing list
+>>>> R-sig-ecology at r-project.org
+>>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Stephen Sefick
+**************************************************
+Auburn University                                         
+Biological Sciences                                      
+331 Funchess Hall                                       
+Auburn, Alabama                                        
+36849                                                           
+**************************************************
+sas0025 at auburn.edu                                  
+http://www.auburn.edu/~sas0025                 
+**************************************************
+
+Let's not spend our time and resources thinking about things that are 
+so little or so large that all they really do for us is puff us up and 
+make us feel like gods.  We are mammals, and have not exhausted the 
+annoying little problems of being mammals.
+
+                                -K. Mullis
+
+"A big computer, a complex algorithm and a long time does not equal 
+science."
+
+                              -Robert Gentleman
+
+
+From kate.boersma at science.oregonstate.edu  Tue Dec 18 01:22:41 2012
+From: kate.boersma at science.oregonstate.edu (Kate Boersma)
+Date: Mon, 17 Dec 2012 16:22:41 -0800
+Subject: [R-sig-eco] removing singleton taxa
+Message-ID: <50CFB751.8090100@science.oregonstate.edu>
+
+Hi list. I am new to R and stuck on a very simple problem. Forgive me if 
+this is not the right forum for my question - feel free to refer me 
+elsewhere.
+
+I have a community matrix of sites*species, and I want to remove species 
+that only occur in a single site (singleton taxa). It sounds so simple, 
+but I have spent hours (no joke) with google and my reference books and 
+am still stuck.
+
+Here's some example code:
+Species1 = sample(0:20, 10, replace=TRUE)
+Species2 = sample(0:20, 10, replace=TRUE)
+Species3 = c(0,0,0,0,0,0,0,4,0,0)
+df1 = data.frame(Species1, Species2, Species3)
+df1
+
+I want to remove Species 3. Basically, I want R to count the number of 
+non-zero cells in a column and remove the column if that number is 1 or 0.
+
+I have tried messing around with rowsums(), length(), table() and 
+specnumber() in the vegan package and can't figure it out.
+
+Thanks,
+Kate
+
+-- 
+Kate Boersma
+PhD Candidate
+Oregon State University
+Department of Zoology
+Cordley 3029
+Corvallis, OR 97331
+kate.boersma at science.oregonstate.edu
+
+
+From scott.foster at csiro.au  Tue Dec 18 01:36:34 2012
+From: scott.foster at csiro.au (Scott Foster)
+Date: Tue, 18 Dec 2012 11:36:34 +1100
+Subject: [R-sig-eco] removing singleton taxa
+In-Reply-To: <50CFB751.8090100@science.oregonstate.edu>
+References: <50CFB751.8090100@science.oregonstate.edu>
+Message-ID: <50CFBA92.7050000@csiro.au>
+
+Hi Kate,
+
+This is pretty terse, but try
+
+df2 <- df1[,apply( df1, 2, function(x) sum( x>0)) > 1]
+
+This subsets the columns of df1 to those that have more than 1 presence.
+
+You may want to have a look at ?apply to see how it works.
+
+Good luck,
+
+Scott
+
+PS  There are many ways to skin this cat.  For example, you could look 
+at colSums( df1>0), for example.  This would do exactly the same thing 
+as the apply() in the above.
+
+On 18/12/12 11:22, Kate Boersma wrote:
+> Hi list. I am new to R and stuck on a very simple problem. Forgive me if
+> this is not the right forum for my question - feel free to refer me
+> elsewhere.
+>
+> I have a community matrix of sites*species, and I want to remove species
+> that only occur in a single site (singleton taxa). It sounds so simple,
+> but I have spent hours (no joke) with google and my reference books and
+> am still stuck.
+>
+> Here's some example code:
+> Species1 = sample(0:20, 10, replace=TRUE)
+> Species2 = sample(0:20, 10, replace=TRUE)
+> Species3 = c(0,0,0,0,0,0,0,4,0,0)
+> df1 = data.frame(Species1, Species2, Species3)
+> df1
+>
+> I want to remove Species 3. Basically, I want R to count the number of
+> non-zero cells in a column and remove the column if that number is 1 or 0.
+>
+> I have tried messing around with rowsums(), length(), table() and
+> specnumber() in the vegan package and can't figure it out.
+>
+> Thanks,
+> Kate
+>
+
+-- 
+Scott Foster
+CSIRO Mathematics, Informatics and Statistics
+GPO Box 1538
+Castray Esplanade
+Hobart 7001
+Tasmania
+Australia
+
+Phone:     (03) 6232 5178
+Fax:       (03) 6232 5000
+Email:     scott.foster at csiro.au
+
+
+From chris at trickysolutions.com.au  Tue Dec 18 01:43:48 2012
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Tue, 18 Dec 2012 11:43:48 +1100
+Subject: [R-sig-eco] removing singleton taxa
+In-Reply-To: <50CFB751.8090100@science.oregonstate.edu>
+References: <50CFB751.8090100@science.oregonstate.edu>
+Message-ID: <aa9f80b9ef8e9dab3952a35c456a81a3@mail.gmail.com>
+
+I'm not sure if I've got the syntax quite right ((m about to rush out the
+door), but how about something like.
+
+check <- colSums(df1>0)  ~ gives U a vector of the number of sites with
+abundance > 0 for each species
+check2 <- [check>1]          ~ gives U a logical vector which is FALSE  if
+a species occurs in 0 or 1 site, TRUE otherwise
+
+df2 <- df1[,check2]            ~ subset those columns that are TRUE i.e.
+have a species in more than 1 site.
+
+
+
+Chris Howden B.Sc. (Hons) GStat.
+Founding Partner
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(fax) +612 4782 9023
+chris at trickysolutions.com.au
+
+
+
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Kate Boersma
+Sent: Tuesday, 18 December 2012 11:23 AM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] removing singleton taxa
+
+Hi list. I am new to R and stuck on a very simple problem. Forgive me if
+this is not the right forum for my question - feel free to refer me
+elsewhere.
+
+I have a community matrix of sites*species, and I want to remove species
+that only occur in a single site (singleton taxa). It sounds so simple,
+but I have spent hours (no joke) with google and my reference books and am
+still stuck.
+
+Here's some example code:
+Species1 = sample(0:20, 10, replace=TRUE)
+Species2 = sample(0:20, 10, replace=TRUE)
+Species3 = c(0,0,0,0,0,0,0,4,0,0)
+df1 = data.frame(Species1, Species2, Species3)
+df1
+
+I want to remove Species 3. Basically, I want R to count the number of
+non-zero cells in a column and remove the column if that number is 1 or 0.
+
+I have tried messing around with rowsums(), length(), table() and
+specnumber() in the vegan package and can't figure it out.
+
+Thanks,
+Kate
+
+--
+Kate Boersma
+PhD Candidate
+Oregon State University
+Department of Zoology
+Cordley 3029
+Corvallis, OR 97331
+kate.boersma at science.oregonstate.edu
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From solymos at ualberta.ca  Tue Dec 18 02:06:30 2012
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Mon, 17 Dec 2012 18:06:30 -0700
+Subject: [R-sig-eco] removing singleton taxa
+In-Reply-To: <aa9f80b9ef8e9dab3952a35c456a81a3@mail.gmail.com>
+References: <50CFB751.8090100@science.oregonstate.edu>
+	<aa9f80b9ef8e9dab3952a35c456a81a3@mail.gmail.com>
+Message-ID: <CAH9coKa1MtFF7uvKABHPQybLAcwPxhNFyF3tAu7jF3moqzH50w@mail.gmail.com>
+
+Kate,
+
+To get what you want the simplest way try:
+
+df1[,colSums(df1>0)>1,drop=FALSE]
+
+Note the drop=FALSE argument, which makes sure that you still get a
+matrix if only one species occurs in more than one sites (i.e. no
+surprising vector results in the end).
+
+Cheers,
+
+Peter
+
+--
+P?ter S?lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB
+solymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com
+Alberta Biodiversity Monitoring Institute, http://www.abmi.ca
+Boreal Avian Modelling Project, http://www.borealbirds.ca
+
+
+On Mon, Dec 17, 2012 at 5:43 PM, Chris Howden
+<chris at trickysolutions.com.au> wrote:
+> I'm not sure if I've got the syntax quite right ((m about to rush out the
+> door), but how about something like.
+>
+> check <- colSums(df1>0)  ~ gives U a vector of the number of sites with
+> abundance > 0 for each species
+> check2 <- [check>1]          ~ gives U a logical vector which is FALSE  if
+> a species occurs in 0 or 1 site, TRUE otherwise
+>
+> df2 <- df1[,check2]            ~ subset those columns that are TRUE i.e.
+> have a species in more than 1 site.
+>
+>
+>
+> Chris Howden B.Sc. (Hons) GStat.
+> Founding Partner
+> Evidence Based Strategic Development, IP Commercialisation and Innovation,
+> Data Analysis, Modelling and Training
+> (mobile) 0410 689 945
+> (fax) +612 4782 9023
+> chris at trickysolutions.com.au
+>
+>
+>
+>
+> Disclaimer: The information in this email and any attachments to it are
+> confidential and may contain legally privileged information. If you are
+> not the named or intended recipient, please delete this communication and
+> contact us immediately. Please note you are not authorised to copy, use or
+> disclose this communication or any attachments without our consent.
+> Although this email has been checked by anti-virus software, there is a
+> risk that email messages may be corrupted or infected by viruses or other
+> interferences. No responsibility is accepted for such interference. Unless
+> expressly stated, the views of the writer are not those of the company.
+> Tricky Solutions always does our best to provide accurate forecasts and
+> analyses based on the data supplied, however it is possible that some
+> important predictors were not included in the data sent to us. Information
+> provided by us should not be solely relied upon when making decisions and
+> clients should use their own judgement.
+>
+>
+> -----Original Message-----
+> From: r-sig-ecology-bounces at r-project.org
+> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Kate Boersma
+> Sent: Tuesday, 18 December 2012 11:23 AM
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] removing singleton taxa
+>
+> Hi list. I am new to R and stuck on a very simple problem. Forgive me if
+> this is not the right forum for my question - feel free to refer me
+> elsewhere.
+>
+> I have a community matrix of sites*species, and I want to remove species
+> that only occur in a single site (singleton taxa). It sounds so simple,
+> but I have spent hours (no joke) with google and my reference books and am
+> still stuck.
+>
+> Here's some example code:
+> Species1 = sample(0:20, 10, replace=TRUE)
+> Species2 = sample(0:20, 10, replace=TRUE)
+> Species3 = c(0,0,0,0,0,0,0,4,0,0)
+> df1 = data.frame(Species1, Species2, Species3)
+> df1
+>
+> I want to remove Species 3. Basically, I want R to count the number of
+> non-zero cells in a column and remove the column if that number is 1 or 0.
+>
+> I have tried messing around with rowsums(), length(), table() and
+> specnumber() in the vegan package and can't figure it out.
+>
+> Thanks,
+> Kate
+>
+> --
+> Kate Boersma
+> PhD Candidate
+> Oregon State University
+> Department of Zoology
+> Cordley 3029
+> Corvallis, OR 97331
+> kate.boersma at science.oregonstate.edu
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From asus4 at uw.edu  Wed Dec 19 04:17:15 2012
+From: asus4 at uw.edu (Alex Thomas)
+Date: Tue, 18 Dec 2012 19:17:15 -0800
+Subject: [R-sig-eco] removing singleton taxa
+Message-ID: <CANV3hXsaw7iXVq=zn829idFnHquJkcBvGt093Tt2XeKUrJz2xA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121218/785d0983/attachment.pl>
+
+From ribas.aca at gmail.com  Wed Dec 19 20:15:18 2012
+From: ribas.aca at gmail.com (Augusto Ribas)
+Date: Wed, 19 Dec 2012 16:15:18 -0300
+Subject: [R-sig-eco] Problem with function iucn_summary() of taxize package,
+ returning error in strsplit()
+Message-ID: <CACMkfRwEno9BPavo5UfWNfk=wLM0k0rbu-DTgL4mcdspF6awPg@mail.gmail.com>
+
+Hello
+
+I'm using the package taxize and was trying to use the function
+iucn_summary() but it work perfectly  with the examples, but when i
+try another name i receive the error msg:
+
+#####
+> iucn_summary("Molossus currentium")
+Erro em strsplit(pop, split = ":") : argumento modo n?o caractere
+######
+
+My r is in Portuguese, but it say argument mode not a character.
+
+I checked this specie on iucn site and its there, dunno what is the problem.
+
+
+the examples i cite are:
+
+#
+library(taxize)
+
+iucn_summary("Lynx lynx")
+
+iucn_summary("aaaa")
+
+iucn_summary("Molossus currentium")
+#
+
+first two work properly, but the third give an error.. i have no idea
+of what i'm doing wrong.
+
+I'm using ubunto here, with R 2.15.2 from emacs.
+
+Thanks for the attention.
+
+-- 
+Grato
+Augusto C. A. Ribas
+
+Site Pessoal: http://recologia.wordpress.com/
+Lattes: http://lattes.cnpq.br/7355685961127056
+
+
+From sarah.goslee at gmail.com  Wed Dec 19 20:29:32 2012
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Wed, 19 Dec 2012 14:29:32 -0500
+Subject: [R-sig-eco] Problem with function iucn_summary() of taxize
+ package, returning error in strsplit()
+In-Reply-To: <CACMkfRwEno9BPavo5UfWNfk=wLM0k0rbu-DTgL4mcdspF6awPg@mail.gmail.com>
+References: <CACMkfRwEno9BPavo5UfWNfk=wLM0k0rbu-DTgL4mcdspF6awPg@mail.gmail.com>
+Message-ID: <CAM_vjun76eN388dOxt33feGJxG-fd7YqSTZA3Gy4a36G37eFhw@mail.gmail.com>
+
+Hi Augusto,
+
+I took a quick look at the code for iucn_summary, and it looks like a bug to me.
+
+I copied the package maintainer on this reply, as is appropriate for
+problems with a particular package.
+
+It looks like:
+pop <- xpathSApply(h, "//div[@id=\"population\"]/text()[preceding-sibling::br]",
+                xmlValue)
+
+is returning an empty list, which then throws an error in the next line:
+pop <- do.call(rbind, lapply(strsplit(pop, split = ":"),
+                rbind))
+
+
+It looks like the function works well for complete cases, but has
+problems with certain missing/different data (easy mistake I've
+committed myself a time or two). You've hit on one of those fringe
+cases by accident, and it should be an easy update to the package.
+
+Sarah
+
+On Wed, Dec 19, 2012 at 2:15 PM, Augusto Ribas <ribas.aca at gmail.com> wrote:
+> Hello
+>
+> I'm using the package taxize and was trying to use the function
+> iucn_summary() but it work perfectly  with the examples, but when i
+> try another name i receive the error msg:
+>
+> #####
+>> iucn_summary("Molossus currentium")
+> Erro em strsplit(pop, split = ":") : argumento modo n?o caractere
+> ######
+>
+> My r is in Portuguese, but it say argument mode not a character.
+>
+> I checked this specie on iucn site and its there, dunno what is the problem.
+>
+>
+> the examples i cite are:
+>
+> #
+> library(taxize)
+>
+> iucn_summary("Lynx lynx")
+>
+> iucn_summary("aaaa")
+>
+> iucn_summary("Molossus currentium")
+> #
+>
+> first two work properly, but the third give an error.. i have no idea
+> of what i'm doing wrong.
+>
+> I'm using ubunto here, with R 2.15.2 from emacs.
+>
+> Thanks for the attention.
+>
+> --
+> Grato
+> Augusto C. A. Ribas
+>
+
+--
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From szoe8822 at uni-landau.de  Thu Dec 20 15:25:25 2012
+From: szoe8822 at uni-landau.de (=?ISO-8859-1?Q?Eduard_Sz=F6cs?=)
+Date: Thu, 20 Dec 2012 15:25:25 +0100
+Subject: [R-sig-eco] Problem with function iucn_summary() of taxize
+ package, returning error in strsplit()
+In-Reply-To: <CAM_vjun76eN388dOxt33feGJxG-fd7YqSTZA3Gy4a36G37eFhw@mail.gmail.com>
+References: <CACMkfRwEno9BPavo5UfWNfk=wLM0k0rbu-DTgL4mcdspF6awPg@mail.gmail.com>
+	<CAM_vjun76eN388dOxt33feGJxG-fd7YqSTZA3Gy4a36G37eFhw@mail.gmail.com>
+Message-ID: <50D31FD5.5070602@uni-landau.de>
+
+Hai Augusto,
+
+thanks for reporting this bug!
+
+I just pushed a fixed version, where NA is returned when the IUCN-API 
+does not return anything.
+You can install the newest version from github via:
+
+install.packages("devtools")
+require(devtools)
+install_github("taxize_",  "ropensci")
+require(taxize)
+
+
+Happy holidays,
+
+Eduard
+
+
+On 12/19/2012 08:29 PM, Sarah Goslee wrote:
+> Hi Augusto,
+>
+> I took a quick look at the code for iucn_summary, and it looks like a bug to me.
+>
+> I copied the package maintainer on this reply, as is appropriate for
+> problems with a particular package.
+>
+> It looks like:
+> pop <- xpathSApply(h, "//div[@id=\"population\"]/text()[preceding-sibling::br]",
+>                  xmlValue)
+>
+> is returning an empty list, which then throws an error in the next line:
+> pop <- do.call(rbind, lapply(strsplit(pop, split = ":"),
+>                  rbind))
+>
+>
+> It looks like the function works well for complete cases, but has
+> problems with certain missing/different data (easy mistake I've
+> committed myself a time or two). You've hit on one of those fringe
+> cases by accident, and it should be an easy update to the package.
+>
+> Sarah
+>
+> On Wed, Dec 19, 2012 at 2:15 PM, Augusto Ribas <ribas.aca at gmail.com> wrote:
+>> Hello
+>>
+>> I'm using the package taxize and was trying to use the function
+>> iucn_summary() but it work perfectly  with the examples, but when i
+>> try another name i receive the error msg:
+>>
+>> #####
+>>> iucn_summary("Molossus currentium")
+>> Erro em strsplit(pop, split = ":") : argumento modo n?o caractere
+>> ######
+>>
+>> My r is in Portuguese, but it say argument mode not a character.
+>>
+>> I checked this specie on iucn site and its there, dunno what is the problem.
+>>
+>>
+>> the examples i cite are:
+>>
+>> #
+>> library(taxize)
+>>
+>> iucn_summary("Lynx lynx")
+>>
+>> iucn_summary("aaaa")
+>>
+>> iucn_summary("Molossus currentium")
+>> #
+>>
+>> first two work properly, but the third give an error.. i have no idea
+>> of what i'm doing wrong.
+>>
+>> I'm using ubunto here, with R 2.15.2 from emacs.
+>>
+>> Thanks for the attention.
+>>
+>> --
+>> Grato
+>> Augusto C. A. Ribas
+>>
+> --
+> Sarah Goslee
+> http://www.functionaldiversity.org
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From marchtaylor at gmail.com  Sat Dec 22 12:53:48 2012
+From: marchtaylor at gmail.com (Marc Taylor)
+Date: Sat, 22 Dec 2012 12:53:48 +0100
+Subject: [R-sig-eco] log transformed response GLM versus LM
+Message-ID: <CACg2Sf3zVbKVcq6=a0cFLJwbTbOqdyDct3TfGJorJ1BqfrNMVA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121222/81d9983c/attachment.pl>
+
+From atyre2 at unl.edu  Wed Dec 26 06:35:03 2012
+From: atyre2 at unl.edu (Drew Tyre)
+Date: Tue, 25 Dec 2012 23:35:03 -0600
+Subject: [R-sig-eco] Fwd:  log transformed response GLM versus LM
+In-Reply-To: <CAE-6tvzne0va36fAJgwNv+fOAcXiaF-cCUCo645U=qr-goR4hw@mail.gmail.com>
+References: <24760_1356177300_qBMBsxgJ027752_CACg2Sf3zVbKVcq6=a0cFLJwbTbOqdyDct3TfGJorJ1BqfrNMVA@mail.gmail.com>
+	<CAE-6tvzne0va36fAJgwNv+fOAcXiaF-cCUCo645U=qr-goR4hw@mail.gmail.com>
+Message-ID: <CAE-6tvwxQ5A80Y__KOeC3QSWMBRaDOhXd=mEY62A8oKq+aNgnw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121225/dd9b1457/attachment.pl>
+
+From elizabethpryde at gmail.com  Wed Dec 26 13:55:39 2012
+From: elizabethpryde at gmail.com (Liz Pryde)
+Date: Wed, 26 Dec 2012 23:55:39 +1100
+Subject: [R-sig-eco] Fwd:  log transformed response GLM versus LM
+In-Reply-To: <CAE-6tvwxQ5A80Y__KOeC3QSWMBRaDOhXd=mEY62A8oKq+aNgnw@mail.gmail.com>
+References: <24760_1356177300_qBMBsxgJ027752_CACg2Sf3zVbKVcq6=a0cFLJwbTbOqdyDct3TfGJorJ1BqfrNMVA@mail.gmail.com>
+	<CAE-6tvzne0va36fAJgwNv+fOAcXiaF-cCUCo645U=qr-goR4hw@mail.gmail.com>
+	<CAE-6tvwxQ5A80Y__KOeC3QSWMBRaDOhXd=mEY62A8oKq+aNgnw@mail.gmail.com>
+Message-ID: <19206F3C-90E6-4BFF-8C88-310048953CE6@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20121226/6ace8fdd/attachment.pl>
+

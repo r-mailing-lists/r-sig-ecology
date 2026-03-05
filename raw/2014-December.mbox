@@ -1,0 +1,1849 @@
+From chris at trickysolutions.com.au  Mon Dec  1 07:44:09 2014
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Mon, 1 Dec 2014 17:44:09 +1100
+Subject: [R-sig-eco] Can I weight LS means estimates by elevation in
+	lme4/lmerTest packages?
+In-Reply-To: <CALx9ERWyBsWqQsr5zGhspxnSYxK4kTrXpd4oZm5wfggrbOXC8Q@mail.gmail.com>
+References: <CALx9ERWyBsWqQsr5zGhspxnSYxK4kTrXpd4oZm5wfggrbOXC8Q@mail.gmail.com>
+Message-ID: <1C1568BE-B113-41B5-92FE-9D9F64FAE6BB@trickysolutions.com.au>
+
+Hi Mathew,
+
+Are you sure you want to 'weight' by elevation? That would imply higher elevations have a greater weight on the analysis?
+
+I think you actually want to know if elevation changes the effect of your other predictors? In which case you need to include it as an interaction with those other predictors. That said you may need to convert elevation into a categorical predictor first. This would basically give you different predictor parameters for different elevations, you could then look to see if they differ. 
+
+Chris Howden
+Founding Partner
+Tricky Solutions
+Tricky Solutions 4 Tricky Problems
+Evidence Based Strategic Development, IP Commercialisation and Innovation, Data Analysis, Modelling and Training
+
+(mobile) 0410 689 945
+(fax / office)
+chris at trickysolutions.com.au
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information. If you are not
+the named or intended recipient, please delete this communication and
+contact us immediately. Please note you are not authorised to copy, use or disclose this communication or any attachments without our consent. Although this email has been checked by anti-virus software, there is a risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company. Tricky Solutions always does our best to provide accurate forecasts and analyses based on the data supplied, however it is possible that some important predictors were not included in the data sent to us. Information provided by us should not be solely relied upon when making decisions and clients should use their own judgement.
+
+> On 29 Nov 2014, at 12:35, Matthew Van Scoyoc <scoyoc at gmail.com> wrote:
+> 
+> Good afternoon r-sig-ecology,
+> 
+> I'm running linear mixed models using the lme4 and lmerTest packages to
+> examine ecosystem structure in grasslands and shrublands. The grasslands
+> are located at lower elevations than the shrublands, and I would like to
+> weight the estimates from LS means to reflect the differences in
+> elevations. My colleague says there is an easy way to do it in SAS, but I
+> haven't found a way to do it in R.
+> 
+> There is an example dataset and workflow. Here I would be examining grass
+> cover differences between the two ecosystems, the quality of the
+> ecosystems, and examining the interaction between ecosystem and quality. I
+> am also interested in systematic changes throughout the study area (not
+> represented in this example) so I don't want to run separate analyses on
+> for each ecosystem. I just want to adjust the LS means estimates to reflect
+> the differences in elevation and not a mean elevation of the sampled plots.
+> 
+>> library("lme4")
+>> library("lmerTest")
+>> 
+>> df = data.frame(PlotID = rep(c(paste0("G", 1:30), paste0("S", 1:30)), 2),
+> +                 SamplePeriod = as.factor(c(rep(2012, 30), rep(2014,
+> 30))),
+> +                 Ecosystem = rep(c(rep("Grassland", 30), rep("Shrubland",
+> 30)), 2),
+> +                 Quality = rep(rep(c(rep("Good", 10), rep("Moderate", 10),
+> rep("Poor", 10)), 2), 2),
+> +                 GrassCover = c(runif(10, min = 0.50, max = 0.85), # 2012
+> Grassland Good
+> +                                runif(10, min = 0.50, max = 0.60), # 2012
+> Grassland Moderate
+> +                                runif(10, min = 0.30, max = 0.40), # 2012
+> Grassland Poor
+> +                                runif(10, min = 0.25, max = 0.60), # 2012
+> Shrubland Good
+> +                                runif(10, min = 0.20, max = 0.45), # 2012
+> Shrubland Moderate
+> +                                runif(10, min = 0.05, max = 0.25), # 2012
+> Shrubland Poor
+> +                                runif(10, min = 0.50, max = 0.90), # 2014
+> Grassland Good
+> +                                runif(10, min = 0.50, max = 0.55), # 2014
+> Grassland Moderate
+> +                                runif(10, min = 0.30, max = 0.30), # 2014
+> Grassland Poor
+> +                                runif(10, min = 0.25, max = 0.60), # 2014
+> Shrubland Good
+> +                                runif(10, min = 0.20, max = 0.30), # 2014
+> Shrubland Moderate
+> +                                runif(10, min = 0.05, max = 0.15))) # 2014
+> Shrubland Poor
+>> Elevation = c(sample(1200:1700, size = 30, replace = T),
+> sample(1800:3000, size = 30,
+>>                   replace = T))
+>> df$Elevation = c(Elevation, Elevation); rm(Elevation)
+>> 
+>> lmm = lmer(GrassCover ~ Ecosystem*Quality + Elevation + (1|PlotID), data
+> = df, REML = T)
+>> anova(lmm,  ddf = "Satterthwaite", type = 3, method.grad = "Richardson")
+> Analysis of Variance Table of type 3  with  Satterthwaite
+> approximation for degrees of freedom
+>                         Sum Sq      Mean Sq      NumDF      DenDF
+> F.value    Pr(>F)
+> Ecosystem           1.68172     1.68172     1              113
+> 51.239    8.79e-11 ***
+> Quality               1.97119     0.98560     2               113
+> 152.611   < 2.2e-16 ***
+> Elevation             0.00311     0.00311     1              113
+> 0.016      0.89978
+> Ecosystem:Quality 0.04201    0.02101     2              113          3.604
+>     0.03039 *
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>> lsms = lsmeans(lmm, method.grad = "Richardson")
+>> estimates = lsms[[1]]$Estimate
+> 
+> At this point I would be plotting the estimates of the significant response
+> variables and interactions to look at the differences. As I understand, the
+> ecosystem effect and the interaction between ecosystem and quality are with
+> an average elevation for all plots, and this could exaggerate LS means
+> estimate.  Correcting for elevation would provide more accurate
+> estimations. Right?
+> 
+> Okay, thanks for you help.
+> Cheers,
+> MVS
+> =====
+> Matthew Van Scoyoc
+> 
+> <https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=mvanscoyoc at aggiemail.usu.edu>
+> https://sites.google.com/site/scoyoc/
+> =====
+> Think SNOW!
+> 
+>    [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From scoyoc at gmail.com  Mon Dec  1 21:47:46 2014
+From: scoyoc at gmail.com (Matthew Van Scoyoc)
+Date: Mon, 1 Dec 2014 13:47:46 -0700
+Subject: [R-sig-eco] Can I weight LS means estimates by elevation in
+ lme4/lmerTest packages?
+In-Reply-To: <1C1568BE-B113-41B5-92FE-9D9F64FAE6BB@trickysolutions.com.au>
+References: <CALx9ERWyBsWqQsr5zGhspxnSYxK4kTrXpd4oZm5wfggrbOXC8Q@mail.gmail.com>
+	<1C1568BE-B113-41B5-92FE-9D9F64FAE6BB@trickysolutions.com.au>
+Message-ID: <CALx9ERWE0BEpqcjmCpujz8zAeTa+7BMiocdj_kjFz4vDA0zyrA@mail.gmail.com>
+
+Tom & Chris,
+
+Thanks for your advice. I have spent the morning examining elevational
+distributions, loess lines of grass and elevation, and comparing different
+models using AIC values. One of the first things I did was relativeize
+elevation by subtracting the plot elevation from the mean elevation of the
+ecosystem it belonged to. Interestingly, the AIC for that model was the
+same as the AIC for the not relativized elevation, suggesting my model was
+taking the elevational differences of the ecosystems into account and not
+an averaging elevation for the study area them as I thought.
+
+In my original sampling design I used elevation classes (low and high) for
+each ecosystem separately. When I used these categorical elevation classes
+instead of elevation as a continuous variable, the AIC was much lower than
+any other model. This was another good exercise on model selection.
+
+Cheers,
+MVS
+=====
+Matthew Van Scoyoc
+
+<mvanscoyoc at aggiemail.usu.edu>https://sites.google.com/site/scoyoc/
+=====
+Think SNOW!
+
+On Sun, Nov 30, 2014 at 11:44 PM, Chris Howden <chris at trickysolutions.com.au
+> wrote:
+
+> Hi Mathew,
+>
+> Are you sure you want to 'weight' by elevation? That would imply higher
+> elevations have a greater weight on the analysis?
+>
+> I think you actually want to know if elevation changes the effect of your
+> other predictors? In which case you need to include it as an interaction
+> with those other predictors. That said you may need to convert elevation
+> into a categorical predictor first. This would basically give you different
+> predictor parameters for different elevations, you could then look to see
+> if they differ.
+>
+> Chris Howden
+> Founding Partner
+> Tricky Solutions
+> Tricky Solutions 4 Tricky Problems
+> Evidence Based Strategic Development, IP Commercialisation and Innovation,
+> Data Analysis, Modelling and Training
+>
+> (mobile) 0410 689 945
+> (fax / office)
+> chris at trickysolutions.com.au
+>
+> Disclaimer: The information in this email and any attachments to it are
+> confidential and may contain legally privileged information. If you are not
+> the named or intended recipient, please delete this communication and
+> contact us immediately. Please note you are not authorised to copy, use or
+> disclose this communication or any attachments without our consent.
+> Although this email has been checked by anti-virus software, there is a
+> risk that email messages may be corrupted or infected by viruses or other
+> interferences. No responsibility is accepted for such interference. Unless
+> expressly stated, the views of the writer are not those of the company.
+> Tricky Solutions always does our best to provide accurate forecasts and
+> analyses based on the data supplied, however it is possible that some
+> important predictors were not included in the data sent to us. Information
+> provided by us should not be solely relied upon when making decisions and
+> clients should use their own judgement.
+>
+> > On 29 Nov 2014, at 12:35, Matthew Van Scoyoc <scoyoc at gmail.com> wrote:
+> >
+> > Good afternoon r-sig-ecology,
+> >
+> > I'm running linear mixed models using the lme4 and lmerTest packages to
+> > examine ecosystem structure in grasslands and shrublands. The grasslands
+> > are located at lower elevations than the shrublands, and I would like to
+> > weight the estimates from LS means to reflect the differences in
+> > elevations. My colleague says there is an easy way to do it in SAS, but I
+> > haven't found a way to do it in R.
+> >
+> > There is an example dataset and workflow. Here I would be examining grass
+> > cover differences between the two ecosystems, the quality of the
+> > ecosystems, and examining the interaction between ecosystem and quality.
+> I
+> > am also interested in systematic changes throughout the study area (not
+> > represented in this example) so I don't want to run separate analyses on
+> > for each ecosystem. I just want to adjust the LS means estimates to
+> reflect
+> > the differences in elevation and not a mean elevation of the sampled
+> plots.
+> >
+> >> library("lme4")
+> >> library("lmerTest")
+> >>
+> >> df = data.frame(PlotID = rep(c(paste0("G", 1:30), paste0("S", 1:30)),
+> 2),
+> > +                 SamplePeriod = as.factor(c(rep(2012, 30), rep(2014,
+> > 30))),
+> > +                 Ecosystem = rep(c(rep("Grassland", 30),
+> rep("Shrubland",
+> > 30)), 2),
+> > +                 Quality = rep(rep(c(rep("Good", 10), rep("Moderate",
+> 10),
+> > rep("Poor", 10)), 2), 2),
+> > +                 GrassCover = c(runif(10, min = 0.50, max = 0.85), #
+> 2012
+> > Grassland Good
+> > +                                runif(10, min = 0.50, max = 0.60), #
+> 2012
+> > Grassland Moderate
+> > +                                runif(10, min = 0.30, max = 0.40), #
+> 2012
+> > Grassland Poor
+> > +                                runif(10, min = 0.25, max = 0.60), #
+> 2012
+> > Shrubland Good
+> > +                                runif(10, min = 0.20, max = 0.45), #
+> 2012
+> > Shrubland Moderate
+> > +                                runif(10, min = 0.05, max = 0.25), #
+> 2012
+> > Shrubland Poor
+> > +                                runif(10, min = 0.50, max = 0.90), #
+> 2014
+> > Grassland Good
+> > +                                runif(10, min = 0.50, max = 0.55), #
+> 2014
+> > Grassland Moderate
+> > +                                runif(10, min = 0.30, max = 0.30), #
+> 2014
+> > Grassland Poor
+> > +                                runif(10, min = 0.25, max = 0.60), #
+> 2014
+> > Shrubland Good
+> > +                                runif(10, min = 0.20, max = 0.30), #
+> 2014
+> > Shrubland Moderate
+> > +                                runif(10, min = 0.05, max = 0.15))) #
+> 2014
+> > Shrubland Poor
+> >> Elevation = c(sample(1200:1700, size = 30, replace = T),
+> > sample(1800:3000, size = 30,
+> >>                   replace = T))
+> >> df$Elevation = c(Elevation, Elevation); rm(Elevation)
+> >>
+> >> lmm = lmer(GrassCover ~ Ecosystem*Quality + Elevation + (1|PlotID), data
+> > = df, REML = T)
+> >> anova(lmm,  ddf = "Satterthwaite", type = 3, method.grad = "Richardson")
+> > Analysis of Variance Table of type 3  with  Satterthwaite
+> > approximation for degrees of freedom
+> >                         Sum Sq      Mean Sq      NumDF      DenDF
+> > F.value    Pr(>F)
+> > Ecosystem           1.68172     1.68172     1              113
+> > 51.239    8.79e-11 ***
+> > Quality               1.97119     0.98560     2               113
+> > 152.611   < 2.2e-16 ***
+> > Elevation             0.00311     0.00311     1              113
+> > 0.016      0.89978
+> > Ecosystem:Quality 0.04201    0.02101     2              113
+> 3.604
+> >     0.03039 *
+> > ---
+> > Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+> >> lsms = lsmeans(lmm, method.grad = "Richardson")
+> >> estimates = lsms[[1]]$Estimate
+> >
+> > At this point I would be plotting the estimates of the significant
+> response
+> > variables and interactions to look at the differences. As I understand,
+> the
+> > ecosystem effect and the interaction between ecosystem and quality are
+> with
+> > an average elevation for all plots, and this could exaggerate LS means
+> > estimate.  Correcting for elevation would provide more accurate
+> > estimations. Right?
+> >
+> > Okay, thanks for you help.
+> > Cheers,
+> > MVS
+> > =====
+> > Matthew Van Scoyoc
+> >
+> > <
+> https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=mvanscoyoc at aggiemail.usu.edu
+> >
+> > https://sites.google.com/site/scoyoc/
+> > =====
+> > Think SNOW!
+> >
+> >    [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From sonja.fagervold at obs-banyuls.fr  Wed Dec  3 14:05:39 2014
+From: sonja.fagervold at obs-banyuls.fr (Sonja Fagervold)
+Date: Wed, 3 Dec 2014 14:05:39 +0100
+Subject: [R-sig-eco] R-sig-eco] How to label arrows in Ordiplot 3d graphs
+Message-ID: <41F6B837-6B3C-4182-845C-8E6C93716D62@obs-banyuls.fr>
+
+I  have a similar question, but I could not find the text Gavin Simpson was referring to.
+
+I have done RDA and CCA plots earlier, using vegan (and Rstudio). However, it seems like something has changed when I updated the versions. The same script I used before now gives me RDA or CCA with arrow, BUT NO LABELS ON THE ARROWS. very strange 
+
+PLEASE help! I have tried and tried but obviously my R knowledge is not good enough. It probably something obvious, but I cannot see it.
+
+rdares = rda(spec ~ Water_temp + Mg + COT, chem, na.action = na.omit)
+#the chem1 file I unly use to color the points, the environmental data is in "chem" file
+chem1<-read.csv("Names.csv", header=T)
+plot(rdares, display = c ("sites", "bp"), cex=0.3)
+points(rdares, display = "sites", col = chem1$Season, pch = 16, cex=1.7)
+text(rdares, dis = "bp", col = chem1, cex=0.3)
+
+Best Regards, Sonja
+
+Sonja K. Fagervold, Researcher
+Observatoire Oc?anologique 
+Laboratoire de Biodiversit? et Biotechnologies Microbiennes-LBBM
+66650 Banyuls-sur-Mer- France
+
+Sonja K. Fagervold, Researcher
+Observatoire Oc?anologique 
+Laboratoire de Biodiversit? et Biotechnologies Microbiennes-LBBM
+USR 3579 - UPMC- CNRS
+66650 Banyuls-sur-Mer- France
+Tel: +33 (0) 4 30 19 24 03
+
+
+
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From highstat at highstat.com  Thu Dec  4 15:47:50 2014
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Thu, 04 Dec 2014 14:47:50 +0000
+Subject: [R-sig-eco] 8 statistics course; January - June 2015
+Message-ID: <54807416.4060404@highstat.com>
+
+Apologies for cross-posting
+
+We would like to announce the following 8 statistics course covering 
+topics such as R, data exploration (using lattice and ggplot2), multiple 
+linear regression, GLM, GAM, mixed modelling, GLMM, GAMM, Bayesian 
+analysis and MCMC. For further information, registration, prices, course 
+flyers, etc., see:
+
+http://www.highstat.com/statscourse.htm
+
+
+
+List of open courses in January - June 2015:
+
+Data exploration, regression, GLM & GAM with introduction to R.
+2 - 6 February 2015. Coimbra, Portugal
+
+Introduction to Linear mixed effects models,  GLMM and MCMC with R
+9-13 February 2015. Lisbon
+
+Data exploration, regression, GLM & GAM with introduction to R.
+23-27 March 2015. University of Southampton, Southampton, UK
+
+Introduction to Bayesian statistics and MCMC
+8-10 April 2015. University of Southampton, Southampton, UK
+
+Introduction to Linear Mixed Effects Models and GLMM with R
+3-17 April 2015. University of Southampton, Southampton, UK
+
+Data exploration, regression, GLM & GAM with introduction to R.
+4-8 May 2015. University of Palermo, Italy
+
+Introduction to GAM and GAMM with R
+1-15 May 2015. University of Genua, Italy
+
+Data exploration, regression, GLM & GAM with introduction to R
+6-10 July 2015. Leamington, Ontario, Canada
+
+
+
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From chandratr at gmail.com  Sat Dec  6 06:22:08 2014
+From: chandratr at gmail.com (Chandrasekhar Rudrappa)
+Date: Sat, 6 Dec 2014 10:52:08 +0530
+Subject: [R-sig-eco] help with a suitable code to fit a complicated
+	non-linear model in R
+Message-ID: <CAMSabZQWpX3d=pzx6V42of-ysESF6_c-=9VJzWNGsRaBFUv=fQ@mail.gmail.com>
+
+Dear All,
+
+
+I have to fit the following model to growth data of Hevea (rubber) trees:
+
+*a=a-(a-b)exp(-(2/p)(F(t)-F(t0))).*  Where *F(t)=t+(A/2pi)(sin 2pi(t-t1))*,
+
+*F(t0)=t0+(A/2pi)(sin 2pi(t0-t1)), t1* signifies the maximum point of
+*f(t)*. Thus the equation becomes:
+
+*a=a-(a-b)exp(-(2/p)(t+(A/2pi)(sin 2pi(t-t1)))- (t0+(A/2pi)(sin
+2pi(t0-t1))))*
+
+Up to this step, I have succeeded very well.
+
+
+
+*My problem is with the following model for which I need help. *
+
+
+
+The same equation is further developed into a seasonal cessation model by
+deriving equivalent equations to replace *F(t)*. For the purpose of
+seasonal cessation model *F(t)* is derived as:
+
+
+
+*            n(1-T)+S(t-n)               (n<=t<n+t2),  *
+
+*F(t) =  n(1-T)+S(t2)                 (n+t2<=t<n+t3),         *
+
+*            n(1-T)+S(t-n-T)           (n+t3<=t<n+1),*
+
+
+
+where *S(t)=t+((1-T)/(2pi))(sin 2pi((t-t1)/(1-T))),* n=integral part of t,
+
+
+
+*t2=t1+(1-T)/2,  t3=t1+(1+T)/2  , T=no growth period. *Similarly the above
+equations have to be modified *for F(to).* These have to be integrated in
+to:
+
+
+
+*a=a-(a-b)exp(-(2/p)(F(t)-F(t0))).*
+
+
+
+Kindly help with a suitable code to fit the above model to my data.
+
+
+
+References: 1. Akamine, T (1993). A New Standard Formula for Seasonal
+Growth of Fish in Population Dynamics. Nippon Suisan Gakkaishi
+59(11):1857-1863.
+
+2.  Akamine, T (2009). Non-linear and graphical methods for fish stock
+analysis with statistical modelling. Aqua-BioScience Monographs VOL. 2 NO. 3
+:1-45.
+
+
+-- 
+Dr. TR Chandrasekhar, M.Sc., M. Tech., Ph. D.,
+Sr. Scientist
+Rubber Research Institute of India
+Hevea Breeding Sub Station
+Kadaba - 574 221
+DK Dt., Karnataka
+Phone-Land: 08251-214336
+Mobile: 9448780118
+
+	[[alternative HTML version deleted]]
+
+
+From mbrooks at ufl.edu  Sun Dec  7 18:55:29 2014
+From: mbrooks at ufl.edu (Mollie Brooks)
+Date: Sun, 7 Dec 2014 18:55:29 +0100
+Subject: [R-sig-eco] help with a suitable code to fit a complicated
+	non-linear model in R
+In-Reply-To: <CAMSabZQWpX3d=pzx6V42of-ysESF6_c-=9VJzWNGsRaBFUv=fQ@mail.gmail.com>
+References: <CAMSabZQWpX3d=pzx6V42of-ysESF6_c-=9VJzWNGsRaBFUv=fQ@mail.gmail.com>
+Message-ID: <523E8CF4-75C9-4AB3-B7DF-DCAD3BC4D85B@ufl.edu>
+
+Dear Dr. Chandrasekhar,
+
+Writing code for that model looks like a non-trivial undertaking. Maybe someone else has more time to invest.
+
+I would check to see if code was published with the 2009 paper. If not, I would recommend contacting the authors to ask for code. The paper would get more citations if they provide code. 
+ 
+You can find general advice on fitting non-linear models in the following paper (let me know if you need a copy)
+Bolker, B. M., B. Gardner, M. Maunder, C. W. Berg, M. Brooks, L. Comita, E. Crone, S. Cubaynes, T. Davies, P. de Valpine, J. Ford, O. Gimenez, M. Kery, E. J. Kim, C. Lennert-Cody, A. Magnusson, S. Martell, J. Nash, A. Nielsen, J. Regetz, H. Skaug, and E. Zipkin. 2013. Strategies for fitting nonlinear ecological models in R, AD Model Builder, and BUGS. Methods in Ecology and Evolution:1?12.
+
+Cheers,
+Mollie
+
+
+------------------------
+Mollie Brooks, PhD
+Postdoctoral Researcher, Population Ecology Research Group
+Institute of Evolutionary Biology & Environmental Studies, University of Z?rich
+http://www.popecol.org/team/mollie-brooks/
+
+
+> On 6Dec 2014, at 6:22, Chandrasekhar Rudrappa <chandratr at gmail.com> wrote:
+> 
+> Dear All,
+> 
+> 
+> I have to fit the following model to growth data of Hevea (rubber) trees:
+> 
+> *a=a-(a-b)exp(-(2/p)(F(t)-F(t0))).*  Where *F(t)=t+(A/2pi)(sin 2pi(t-t1))*,
+> 
+> *F(t0)=t0+(A/2pi)(sin 2pi(t0-t1)), t1* signifies the maximum point of
+> *f(t)*. Thus the equation becomes:
+> 
+> *a=a-(a-b)exp(-(2/p)(t+(A/2pi)(sin 2pi(t-t1)))- (t0+(A/2pi)(sin
+> 2pi(t0-t1))))*
+> 
+> Up to this step, I have succeeded very well.
+> 
+> 
+> 
+> *My problem is with the following model for which I need help. *
+> 
+> 
+> 
+> The same equation is further developed into a seasonal cessation model by
+> deriving equivalent equations to replace *F(t)*. For the purpose of
+> seasonal cessation model *F(t)* is derived as:
+> 
+> 
+> 
+> *            n(1-T)+S(t-n)               (n<=t<n+t2),  *
+> 
+> *F(t) =  n(1-T)+S(t2)                 (n+t2<=t<n+t3),         *
+> 
+> *            n(1-T)+S(t-n-T)           (n+t3<=t<n+1),*
+> 
+> 
+> 
+> where *S(t)=t+((1-T)/(2pi))(sin 2pi((t-t1)/(1-T))),* n=integral part of t,
+> 
+> 
+> 
+> *t2=t1+(1-T)/2,  t3=t1+(1+T)/2  , T=no growth period. *Similarly the above
+> equations have to be modified *for F(to).* These have to be integrated in
+> to:
+> 
+> 
+> 
+> *a=a-(a-b)exp(-(2/p)(F(t)-F(t0))).*
+> 
+> 
+> 
+> Kindly help with a suitable code to fit the above model to my data.
+> 
+> 
+> 
+> References: 1. Akamine, T (1993). A New Standard Formula for Seasonal
+> Growth of Fish in Population Dynamics. Nippon Suisan Gakkaishi
+> 59(11):1857-1863.
+> 
+> 2.  Akamine, T (2009). Non-linear and graphical methods for fish stock
+> analysis with statistical modelling. Aqua-BioScience Monographs VOL. 2 NO. 3
+> :1-45.
+> 
+> 
+> -- 
+> Dr. TR Chandrasekhar, M.Sc., M. Tech., Ph. D.,
+> Sr. Scientist
+> Rubber Research Institute of India
+> Hevea Breeding Sub Station
+> Kadaba - 574 221
+> DK Dt., Karnataka
+> Phone-Land: 08251-214336
+> Mobile: 9448780118
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+	[[alternative HTML version deleted]]
+
+
+From scoyoc at gmail.com  Fri Dec 12 00:07:41 2014
+From: scoyoc at gmail.com (Matthew Van Scoyoc)
+Date: Thu, 11 Dec 2014 16:07:41 -0700
+Subject: [R-sig-eco] How do I interpret linear mixed model contrast
+	estimates from multcomp::glht()?
+Message-ID: <CALx9ERX+CV0vfmcdhz+VQzoDfCKr5cMOo6xGpDjjYur9Ewb+zA@mail.gmail.com>
+
+So, what do the rows correspond to in the summary (e.g. "1 == 0")? I was
+thinking the answer was buried *cc*, but I can't figure it out. Consider
+this modified example I stole from here
+<https://stat.ethz.ch/pipermail/r-sig-mixed-models/2009q4/003061.html>...
+
+> options(contrasts = c(factor = "contr.SAS", ordered = "contr.poly"))
+> library("mlmRev")
+> library("lme4")
+> library("lmerTest")
+> library("contrast")
+> library("multcomp")
+>
+> data("egsingle")
+> # Linear mixed model
+> math.lmm <- lmer(math ~ year * size + female + (1|childid) +
+(1|schoolid), egsingle)
+> # Linear model
+> math.lm <- lm(math ~ year * size + female, data = egsingle)
+> # Calculate contrast matrix
+> cc<-contrast(math.lm, a = list(year = c(.5, 1.5, 2.5), size = 380, female
+= levels(egsingle$female)), +
+                                                b = list(year = c(.5, 1.5,
+2.5), size = 800, female = levels(egsingle$female)))
+> # Calculate estimates
+> summary(glht(math.lmm, linfct = cc$X))
+
+ Simultaneous Tests for General Linear Hypotheses
+
+Fit: lme4::lmer(formula = math ~ year * size + female + (1 | childid) +
+    (1 | schoolid), data = egsingle)
+
+Linear Hypotheses:
+              Estimate   Std. Error   z value   Pr(>|z|)
+1 == 0  0.12774    0.08020     1.593     0.1272
+2 == 0  0.15322    0.08066     1.900    0.0669 .
+3 == 0  0.17870    0.08178     2.185    0.0341 *
+4 == 0  0.12774    0.08020     1.593    0.1273
+5 == 0  0.15322    0.08066     1.900    0.0669 .
+6 == 0  0.17870    0.08178     2.185    0.0342 *
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+(Adjusted p values reported -- single-step method)
+
+Ultimately I would like to create a dataframe so I can plot the contrasts,
+something like this...
+
+> x = summary(glht(math.lmm, linfct = cc$X))
+> # Contrast data frame
+> math.contr = data.frame(Effect.Interaction = ..., Estimate =
+x[["test"]]$coefficients, Std.Error = x[["test"]]$sigma)
+
+Thanks for the help!
+Cheers,
+MVS
+=====
+Matthew Van Scoyoc
+
+<https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=mvanscoyoc at aggiemail.usu.edu>
+https://sites.google.com/site/scoyoc/
+=====
+Think SNOW!
+
+	[[alternative HTML version deleted]]
+
+
+From Thierry.ONKELINX at inbo.be  Fri Dec 12 09:44:41 2014
+From: Thierry.ONKELINX at inbo.be (ONKELINX, Thierry)
+Date: Fri, 12 Dec 2014 08:44:41 +0000
+Subject: [R-sig-eco] How do I interpret linear mixed model
+	contrast	estimates from multcomp::glht()?
+In-Reply-To: <CALx9ERX+CV0vfmcdhz+VQzoDfCKr5cMOo6xGpDjjYur9Ewb+zA@mail.gmail.com>
+References: <CALx9ERX+CV0vfmcdhz+VQzoDfCKr5cMOo6xGpDjjYur9Ewb+zA@mail.gmail.com>
+Message-ID: <AA818EAD2576BC488B4F623941DA7427F3C864B6@inbomail.inbo.be>
+
+Dear Matthew,
+
+The part before "== 0" are the rownames of the matrix passed to linfct. When the rownames are missing, the rownumbers are used.
+
+Best regards,
+
+ir. Thierry Onkelinx
+Instituut voor natuur- en bosonderzoek / Research Institute for Nature and Forest
+team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+Kliniekstraat 25
+1070 Anderlecht
+Belgium
++ 32 2 525 02 51
++ 32 54 43 61 85
+Thierry.Onkelinx at inbo.be
+www.inbo.be
+
+To call in the statistician after the experiment is done may be no more than asking him to perform a post-mortem examination: he may be able to say what the experiment died of.
+~ Sir Ronald Aylmer Fisher
+
+The plural of anecdote is not data.
+~ Roger Brinner
+
+The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data.
+~ John Tukey
+
+
+-----Oorspronkelijk bericht-----
+Van: R-sig-ecology [mailto:r-sig-ecology-bounces at r-project.org] Namens Matthew Van Scoyoc
+Verzonden: vrijdag 12 december 2014 0:08
+Aan: r-sig-ecology at r-project.org
+Onderwerp: [R-sig-eco] How do I interpret linear mixed model contrast estimates from multcomp::glht()?
+
+So, what do the rows correspond to in the summary (e.g. "1 == 0")? I was thinking the answer was buried *cc*, but I can't figure it out. Consider this modified example I stole from here <https://stat.ethz.ch/pipermail/r-sig-mixed-models/2009q4/003061.html>...
+
+> options(contrasts = c(factor = "contr.SAS", ordered = "contr.poly"))
+> library("mlmRev")
+> library("lme4")
+> library("lmerTest")
+> library("contrast")
+> library("multcomp")
+>
+> data("egsingle")
+> # Linear mixed model
+> math.lmm <- lmer(math ~ year * size + female + (1|childid) +
+(1|schoolid), egsingle)
+> # Linear model
+> math.lm <- lm(math ~ year * size + female, data = egsingle) #
+> Calculate contrast matrix cc<-contrast(math.lm, a = list(year = c(.5,
+> 1.5, 2.5), size = 380, female
+= levels(egsingle$female)), +
+                                                b = list(year = c(.5, 1.5, 2.5), size = 800, female = levels(egsingle$female)))
+> # Calculate estimates
+> summary(glht(math.lmm, linfct = cc$X))
+
+ Simultaneous Tests for General Linear Hypotheses
+
+Fit: lme4::lmer(formula = math ~ year * size + female + (1 | childid) +
+    (1 | schoolid), data = egsingle)
+
+Linear Hypotheses:
+              Estimate   Std. Error   z value   Pr(>|z|)
+1 == 0  0.12774    0.08020     1.593     0.1272
+2 == 0  0.15322    0.08066     1.900    0.0669 .
+3 == 0  0.17870    0.08178     2.185    0.0341 *
+4 == 0  0.12774    0.08020     1.593    0.1273
+5 == 0  0.15322    0.08066     1.900    0.0669 .
+6 == 0  0.17870    0.08178     2.185    0.0342 *
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 (Adjusted p values reported -- single-step method)
+
+Ultimately I would like to create a dataframe so I can plot the contrasts, something like this...
+
+> x = summary(glht(math.lmm, linfct = cc$X)) # Contrast data frame
+> math.contr = data.frame(Effect.Interaction = ..., Estimate =
+x[["test"]]$coefficients, Std.Error = x[["test"]]$sigma)
+
+Thanks for the help!
+Cheers,
+MVS
+=====
+Matthew Van Scoyoc
+
+<https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=mvanscoyoc at aggiemail.usu.edu>
+https://sites.google.com/site/scoyoc/
+=====
+Think SNOW!
+
+        [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+Disclaimer Bezoek onze website / Visit our website<https://drupal.inbo.be/nl/disclaimer-mailberichten-van-het-inbo>
+
+From scoyoc at gmail.com  Fri Dec 12 17:52:43 2014
+From: scoyoc at gmail.com (Matthew Van Scoyoc)
+Date: Fri, 12 Dec 2014 09:52:43 -0700
+Subject: [R-sig-eco] How do I interpret linear mixed model contrast
+ estimates from multcomp::glht()?
+In-Reply-To: <AA818EAD2576BC488B4F623941DA7427F3C864B6@inbomail.inbo.be>
+References: <CALx9ERX+CV0vfmcdhz+VQzoDfCKr5cMOo6xGpDjjYur9Ewb+zA@mail.gmail.com>
+	<AA818EAD2576BC488B4F623941DA7427F3C864B6@inbomail.inbo.be>
+Message-ID: <CALx9ERXmObN3Q6Zf=37KAVCv5zC6LO1HYQCpb0-Wmw-XxVASTA@mail.gmail.com>
+
+?As I was suspecting, the answer is in contrast::contrast(). I'm going to
+take this over to r-sig-mixed-models since that mailing list might be more
+appropriate than ecology.? Thanks Thierry, I appreciate the help.
+
+Cheers
+
+MVS
+=====
+Matthew Van Scoyoc
+
+<mvanscoyoc at aggiemail.usu.edu>https://sites.google.com/site/scoyoc/
+=====
+Think SNOW!
+
+On Fri, Dec 12, 2014 at 1:44 AM, ONKELINX, Thierry <Thierry.ONKELINX at inbo.be
+> wrote:
+
+> Dear Matthew,
+>
+> The part before "== 0" are the rownames of the matrix passed to linfct.
+> When the rownames are missing, the rownumbers are used.
+>
+> Best regards,
+>
+> ir. Thierry Onkelinx
+> Instituut voor natuur- en bosonderzoek / Research Institute for Nature and
+> Forest
+> team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+> Kliniekstraat 25
+> 1070 Anderlecht
+> Belgium
+> + 32 2 525 02 51
+> + 32 54 43 61 85
+> Thierry.Onkelinx at inbo.be
+> www.inbo.be
+>
+> To call in the statistician after the experiment is done may be no more
+> than asking him to perform a post-mortem examination: he may be able to say
+> what the experiment died of.
+> ~ Sir Ronald Aylmer Fisher
+>
+> The plural of anecdote is not data.
+> ~ Roger Brinner
+>
+> The combination of some data and an aching desire for an answer does not
+> ensure that a reasonable answer can be extracted from a given body of data.
+> ~ John Tukey
+>
+>
+> -----Oorspronkelijk bericht-----
+> Van: R-sig-ecology [mailto:r-sig-ecology-bounces at r-project.org] Namens
+> Matthew Van Scoyoc
+> Verzonden: vrijdag 12 december 2014 0:08
+> Aan: r-sig-ecology at r-project.org
+> Onderwerp: [R-sig-eco] How do I interpret linear mixed model contrast
+> estimates from multcomp::glht()?
+>
+> So, what do the rows correspond to in the summary (e.g. "1 == 0")? I was
+> thinking the answer was buried *cc*, but I can't figure it out. Consider
+> this modified example I stole from here <
+> https://stat.ethz.ch/pipermail/r-sig-mixed-models/2009q4/003061.html>...
+>
+> > options(contrasts = c(factor = "contr.SAS", ordered = "contr.poly"))
+> > library("mlmRev")
+> > library("lme4")
+> > library("lmerTest")
+> > library("contrast")
+> > library("multcomp")
+> >
+> > data("egsingle")
+> > # Linear mixed model
+> > math.lmm <- lmer(math ~ year * size + female + (1|childid) +
+> (1|schoolid), egsingle)
+> > # Linear model
+> > math.lm <- lm(math ~ year * size + female, data = egsingle) #
+> > Calculate contrast matrix cc<-contrast(math.lm, a = list(year = c(.5,
+> > 1.5, 2.5), size = 380, female
+> = levels(egsingle$female)), +
+>                                                 b = list(year = c(.5, 1.5,
+> 2.5), size = 800, female = levels(egsingle$female)))
+> > # Calculate estimates
+> > summary(glht(math.lmm, linfct = cc$X))
+>
+>  Simultaneous Tests for General Linear Hypotheses
+>
+> Fit: lme4::lmer(formula = math ~ year * size + female + (1 | childid) +
+>     (1 | schoolid), data = egsingle)
+>
+> Linear Hypotheses:
+>               Estimate   Std. Error   z value   Pr(>|z|)
+> 1 == 0  0.12774    0.08020     1.593     0.1272
+> 2 == 0  0.15322    0.08066     1.900    0.0669 .
+> 3 == 0  0.17870    0.08178     2.185    0.0341 *
+> 4 == 0  0.12774    0.08020     1.593    0.1273
+> 5 == 0  0.15322    0.08066     1.900    0.0669 .
+> 6 == 0  0.17870    0.08178     2.185    0.0342 *
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 (Adjusted p
+> values reported -- single-step method)
+>
+> Ultimately I would like to create a dataframe so I can plot the contrasts,
+> something like this...
+>
+> > x = summary(glht(math.lmm, linfct = cc$X)) # Contrast data frame
+> > math.contr = data.frame(Effect.Interaction = ..., Estimate =
+> x[["test"]]$coefficients, Std.Error = x[["test"]]$sigma)
+>
+> Thanks for the help!
+> Cheers,
+> MVS
+> =====
+> Matthew Van Scoyoc
+>
+> <
+> https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=mvanscoyoc at aggiemail.usu.edu
+> >
+> https://sites.google.com/site/scoyoc/
+> =====
+> Think SNOW!
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> Disclaimer Bezoek onze website / Visit our website<
+> https://drupal.inbo.be/nl/disclaimer-mailberichten-van-het-inbo>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From kateboersma at gmail.com  Sat Dec 13 01:17:34 2014
+From: kateboersma at gmail.com (Kate Boersma)
+Date: Fri, 12 Dec 2014 16:17:34 -0800
+Subject: [R-sig-eco] Community distance matrix deconstruction
+Message-ID: <36B43E5F-8ABE-4D97-99A1-43C2E0F0BEF1@gmail.com>
+
+Hi all.
+
+I have a community analysis data manipulation puzzle for you... hopefully someone can help. Please let me know if this question needs clarification, has previously been answered, or would be better sent to a different list.
+
+Details follow.
+
+Thank you,
+
+Kate
+
+---
+
+Here is a simplified version of my problem:
+
+I ran a community manipulation experiment with 7 reps of 2 treatments, for a total of 14 communities. Communities 1-7 are in Treatment 1 and 8-14 are in Treatment 2. I identified 5 taxa in the 14 communities and calculated a community dissimilarity matrix (14*14). Now I would like to decompose the distance matrix into a dataframe with the following column headings: community1s, community2s, withinORbetweenTRT, and distance. ?Within or between treatment? indicates if the distance is between two communities within the same treatment or between the two treatments (values of 0 or 1).
+
+I did it by hand below to demonstrate, but my actual dataset has 100 communities so I need to figure out how to automate it...
+
+df<-data.frame(cbind(1:14, 18:5, 3:16, 14:1, 16:3)) #random values
+
+dist<-dist(df)
+
+distance<-as.vector(dist)
+
+community1s<-c(1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,
+
+4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,
+
+8,8,8,8,8,8,9,9,9,9,9,10,10,10,10,11,11,11,12,12,13)
+
+community2s<-c(2,3,4,5,6,7,8,9,10,11,12,13,14,3,4,5,6,7,8,9,10,11,12,13,14,
+
+4,5,6,7,8,9,10,11,12,13,14,5,6,7,8,9,10,11,12,13,14,
+
+6,7,8,9,10,11,12,13,14,7,8,9,10,11,12,13,14,
+
+8,9,10,11,12,13,14,9,10,11,12,13,14,10,11,12,13,14,
+
+11,12,13,14,12,13,14,13,14,14)
+
+#now I need a column for whether or not the comparison is within treatment or
+
+#between treatments. I ordered the sites by treatment so sites 1-7 are in treatment1
+
+#and 8-14 are in treatment2. 0 is within and 1 is between.
+
+withinORbetweenTRT<-c(0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,
+
+1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,
+
+1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,
+
+0,0)
+
+#now I can assemble the dataframe:
+
+final.df<-cbind(community1s, community2s, withinORbetweenTRT, distance)
+
+final.df
+
+I would appreciate any ideas!
+
+-- 
+Kate Boersma, PhD
+Department of Biology
+University of San Diego
+5998 Alcala Park
+San Diego CA 92110
+kateboersma at gmail.com
+http://www.oregonstate.edu/~boersmak/
+
+Kate S. Boersma, Ph.D.
+kateboersma at gmail.com
+http://people.oregonstate.edu/~boersmak/
+
+Department of Biology
+University of San Diego
+5998 Alcala Park
+San Diego, CA 92110
+
+
+	[[alternative HTML version deleted]]
+
+
+From jari.oksanen at oulu.fi  Sat Dec 13 07:10:23 2014
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Sat, 13 Dec 2014 06:10:23 +0000
+Subject: [R-sig-eco] Community distance matrix deconstruction
+In-Reply-To: <36B43E5F-8ABE-4D97-99A1-43C2E0F0BEF1@gmail.com>
+References: <36B43E5F-8ABE-4D97-99A1-43C2E0F0BEF1@gmail.com>
+Message-ID: <93A6E97D-338B-4931-A086-E4A4D40F563D@oulu.fi>
+
+Kate,
+
+Your question really may need some clarification, but at the moment it looks to me that you want to have row indices and column indices for your dissimilarities, and information about within/between dissimilarities. If this is what you want to have, it is an easy task.
+
+In the following I use a real data set from vegan to make this task a bit more general:
+
+library(vegan)
+data(mite, mite.env)
+## dissimilarities
+d <- dist(mite)
+## row and column indices
+row <- as.dist(row(as.matrix(d)))
+col <- as.dist(col(as.matrix(d)))
+## within same class: 1 = within, 0 = between
+within <- with(mite.env, as.dist(outer(Shrub, Shrub, "==")))
+## data frame -- the pedestrian way: snappier alternatives possible 
+df = data.frame(row=as.vector(row), col=as.vector(col), within=as.vector(within), dist=as.vector(d))
+## see it
+tail(df)
+> tail(df)
+#     row col within      dist
+#2410  68  67      1 691.69502
+#2411  69  67      0 716.93863
+#2412  70  67      0 700.60973
+#2413  69  68      0  78.08329
+#2414  70  68      0  24.24871
+#2415  70  69      1  67.86015
+
+I don't think you really want to have this: you only believe that you want to have this (mauvaise foi, like they used to say).
+
+If you only want to get summaries, check function meandist in vegan.
+
+Cheers, Jari Oksanen
+
+
+
+On 13/12/2014, at 02:17 AM, Kate Boersma wrote:
+
+> Hi all.
+> 
+> I have a community analysis data manipulation puzzle for you... hopefully someone can help. Please let me know if this question needs clarification, has previously been answered, or would be better sent to a different list.
+> 
+> Details follow.
+> 
+> Thank you,
+> 
+> Kate
+> 
+> ---
+> 
+> Here is a simplified version of my problem:
+> 
+> I ran a community manipulation experiment with 7 reps of 2 treatments, for a total of 14 communities. Communities 1-7 are in Treatment 1 and 8-14 are in Treatment 2. I identified 5 taxa in the 14 communities and calculated a community dissimilarity matrix (14*14). Now I would like to decompose the distance matrix into a dataframe with the following column headings: community1s, community2s, withinORbetweenTRT, and distance. ?Within or between treatment? indicates if the distance is between two communities within the same treatment or between the two treatments (values of 0 or 1).
+> 
+> I did it by hand below to demonstrate, but my actual dataset has 100 communities so I need to figure out how to automate it...
+> 
+> df<-data.frame(cbind(1:14, 18:5, 3:16, 14:1, 16:3)) #random values
+> 
+> dist<-dist(df)
+> 
+> distance<-as.vector(dist)
+> 
+> community1s<-c(1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,
+> 
+> 4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,
+> 
+> 8,8,8,8,8,8,9,9,9,9,9,10,10,10,10,11,11,11,12,12,13)
+> 
+> community2s<-c(2,3,4,5,6,7,8,9,10,11,12,13,14,3,4,5,6,7,8,9,10,11,12,13,14,
+> 
+> 4,5,6,7,8,9,10,11,12,13,14,5,6,7,8,9,10,11,12,13,14,
+> 
+> 6,7,8,9,10,11,12,13,14,7,8,9,10,11,12,13,14,
+> 
+> 8,9,10,11,12,13,14,9,10,11,12,13,14,10,11,12,13,14,
+> 
+> 11,12,13,14,12,13,14,13,14,14)
+> 
+> #now I need a column for whether or not the comparison is within treatment or
+> 
+> #between treatments. I ordered the sites by treatment so sites 1-7 are in treatment1
+> 
+> #and 8-14 are in treatment2. 0 is within and 1 is between.
+> 
+> withinORbetweenTRT<-c(0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,
+> 
+> 1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,
+> 
+> 1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,
+> 
+> 0,0)
+> 
+> #now I can assemble the dataframe:
+> 
+> final.df<-cbind(community1s, community2s, withinORbetweenTRT, distance)
+> 
+> final.df
+> 
+> I would appreciate any ideas!
+> 
+> -- 
+> Kate Boersma, PhD
+> Department of Biology
+> University of San Diego
+> 5998 Alcala Park
+> San Diego CA 92110
+> kateboersma at gmail.com
+> http://www.oregonstate.edu/~boersmak/
+> 
+> Kate S. Boersma, Ph.D.
+> kateboersma at gmail.com
+> http://people.oregonstate.edu/~boersmak/
+> 
+> Department of Biology
+> University of San Diego
+> 5998 Alcala Park
+> San Diego, CA 92110
+> 
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From kateboersma at gmail.com  Sat Dec 13 17:24:39 2014
+From: kateboersma at gmail.com (Kate Boersma)
+Date: Sat, 13 Dec 2014 08:24:39 -0800
+Subject: [R-sig-eco] Community distance matrix deconstruction
+In-Reply-To: <93A6E97D-338B-4931-A086-E4A4D40F563D@oulu.fi>
+References: <36B43E5F-8ABE-4D97-99A1-43C2E0F0BEF1@gmail.com>
+	<93A6E97D-338B-4931-A086-E4A4D40F563D@oulu.fi>
+Message-ID: <5A891F48-1804-4287-B05B-94ABB55305ED@gmail.com>
+
+Thanks Jari. As usual, you made this happen in a few short lines of code.
+
+As for your second bit of advice (which made me laugh out loud), I will seriously consider if this is a mauvaise foi. You may be right.
+
+Cheers,
+Kate
+
+Kate S. Boersma, Ph.D.
+kateboersma at gmail.com
+http://people.oregonstate.edu/~boersmak/
+
+Department of Biology
+University of San Diego
+5998 Alcala Park
+San Diego, CA 92110
+
+
+> On Dec 12, 2014, at 10:10 PM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+> 
+> Kate,
+> 
+> Your question really may need some clarification, but at the moment it looks to me that you want to have row indices and column indices for your dissimilarities, and information about within/between dissimilarities. If this is what you want to have, it is an easy task.
+> 
+> In the following I use a real data set from vegan to make this task a bit more general:
+> 
+> library(vegan)
+> data(mite, mite.env)
+> ## dissimilarities
+> d <- dist(mite)
+> ## row and column indices
+> row <- as.dist(row(as.matrix(d)))
+> col <- as.dist(col(as.matrix(d)))
+> ## within same class: 1 = within, 0 = between
+> within <- with(mite.env, as.dist(outer(Shrub, Shrub, "==")))
+> ## data frame -- the pedestrian way: snappier alternatives possible 
+> df = data.frame(row=as.vector(row), col=as.vector(col), within=as.vector(within), dist=as.vector(d))
+> ## see it
+> tail(df)
+>> tail(df)
+> #     row col within      dist
+> #2410  68  67      1 691.69502
+> #2411  69  67      0 716.93863
+> #2412  70  67      0 700.60973
+> #2413  69  68      0  78.08329
+> #2414  70  68      0  24.24871
+> #2415  70  69      1  67.86015
+> 
+> I don't think you really want to have this: you only believe that you want to have this (mauvaise foi, like they used to say).
+> 
+> If you only want to get summaries, check function meandist in vegan.
+> 
+> Cheers, Jari Oksanen
+> 
+> 
+> 
+>> On 13/12/2014, at 02:17 AM, Kate Boersma wrote:
+>> 
+>> Hi all.
+>> 
+>> I have a community analysis data manipulation puzzle for you... hopefully someone can help. Please let me know if this question needs clarification, has previously been answered, or would be better sent to a different list.
+>> 
+>> Details follow.
+>> 
+>> Thank you,
+>> 
+>> Kate
+>> 
+>> ---
+>> 
+>> Here is a simplified version of my problem:
+>> 
+>> I ran a community manipulation experiment with 7 reps of 2 treatments, for a total of 14 communities. Communities 1-7 are in Treatment 1 and 8-14 are in Treatment 2. I identified 5 taxa in the 14 communities and calculated a community dissimilarity matrix (14*14). Now I would like to decompose the distance matrix into a dataframe with the following column headings: community1s, community2s, withinORbetweenTRT, and distance. ?Within or between treatment? indicates if the distance is between two communities within the same treatment or between the two treatments (values of 0 or 1).
+>> 
+>> I did it by hand below to demonstrate, but my actual dataset has 100 communities so I need to figure out how to automate it...
+>> 
+>> df<-data.frame(cbind(1:14, 18:5, 3:16, 14:1, 16:3)) #random values
+>> 
+>> dist<-dist(df)
+>> 
+>> distance<-as.vector(dist)
+>> 
+>> community1s<-c(1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,
+>> 
+>> 4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,
+>> 
+>> 8,8,8,8,8,8,9,9,9,9,9,10,10,10,10,11,11,11,12,12,13)
+>> 
+>> community2s<-c(2,3,4,5,6,7,8,9,10,11,12,13,14,3,4,5,6,7,8,9,10,11,12,13,14,
+>> 
+>> 4,5,6,7,8,9,10,11,12,13,14,5,6,7,8,9,10,11,12,13,14,
+>> 
+>> 6,7,8,9,10,11,12,13,14,7,8,9,10,11,12,13,14,
+>> 
+>> 8,9,10,11,12,13,14,9,10,11,12,13,14,10,11,12,13,14,
+>> 
+>> 11,12,13,14,12,13,14,13,14,14)
+>> 
+>> #now I need a column for whether or not the comparison is within treatment or
+>> 
+>> #between treatments. I ordered the sites by treatment so sites 1-7 are in treatment1
+>> 
+>> #and 8-14 are in treatment2. 0 is within and 1 is between.
+>> 
+>> withinORbetweenTRT<-c(0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,
+>> 
+>> 1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,
+>> 
+>> 1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,
+>> 
+>> 0,0)
+>> 
+>> #now I can assemble the dataframe:
+>> 
+>> final.df<-cbind(community1s, community2s, withinORbetweenTRT, distance)
+>> 
+>> final.df
+>> 
+>> I would appreciate any ideas!
+>> 
+>> -- 
+>> Kate Boersma, PhD
+>> Department of Biology
+>> University of San Diego
+>> 5998 Alcala Park
+>> San Diego CA 92110
+>> kateboersma at gmail.com
+>> http://www.oregonstate.edu/~boersmak/
+>> 
+>> Kate S. Boersma, Ph.D.
+>> kateboersma at gmail.com
+>> http://people.oregonstate.edu/~boersmak/
+>> 
+>> Department of Biology
+>> University of San Diego
+>> 5998 Alcala Park
+>> San Diego, CA 92110
+>> 
+>> 
+>>    [[alternative HTML version deleted]]
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+	[[alternative HTML version deleted]]
+
+
+From batsncats at gmail.com  Sun Dec 14 12:52:31 2014
+From: batsncats at gmail.com (Bruce Miller)
+Date: Sun, 14 Dec 2014 06:52:31 -0500
+Subject: [R-sig-eco] What package and steps needed to emulate legacy NTSYS ?
+In-Reply-To: <mailman.11.1418554803.16878.r-sig-ecology@r-project.org>
+References: <mailman.11.1418554803.16878.r-sig-ecology@r-project.org>
+Message-ID: <548D79FF.5050008@gmail.com>
+
+Hi all,
+
+Especially Jari....
+
+There are now  a lot of clustering algorithm packages in R. What would 
+be the most usable package to run similar analyses as the older NTSYSpc?
+
+I was able to dig through an older backup image of one of my hard drives 
+and resurrected NTSYSpc v. 2.11 but would prefer to set up similar 
+analyses in R.
+
+To have similar results the starting matrix data frame would be OTUs 
+(critters) as rows and the columns are values of things needing to be 
+compared.  These are comprised of both 1/0 data for locations and 
+continuous variables for measurement data (critter sizes and in this 
+case echolocation call parameters).
+
+Running NTSYSpc the initial data matrix may or may not first be 
+standardized.
+Then a similarity coefficients are computed to generate a new matrix 
+which is used as input for a clustering SAHN (UPGMA using Euclidean 
+distance) then graphically the tree is displayed (GGPLOT2?)
+
+I am sure there is a way to do this, but have not found vignettes for 
+the various R packages to explain code to set this up.
+
+Thanks for any suggestions.
+
+Bruce
+
+
+From sarah.goslee at gmail.com  Mon Dec 15 00:21:09 2014
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Sun, 14 Dec 2014 18:21:09 -0500
+Subject: [R-sig-eco] What package and steps needed to emulate legacy
+	NTSYS ?
+In-Reply-To: <548D79FF.5050008@gmail.com>
+References: <mailman.11.1418554803.16878.r-sig-ecology@r-project.org>
+	<548D79FF.5050008@gmail.com>
+Message-ID: <CAM_vju=U+dMicbhFGjifehSAWasD86iLXdk246MTmqeygNCx5g@mail.gmail.com>
+
+That sounds simply like a job for the base hclust() function. The help
+for that function has a worked example.
+
+But Euclidean distance is probably the wrong choice for mixed binary
+and continuous variables. I'd suggest looking into other options, like
+maybe Gower, and also rethinking whether both types of variables
+should be in the same analysis.
+
+Sarah
+
+On Sun, Dec 14, 2014 at 6:52 AM, Bruce Miller <batsncats at gmail.com> wrote:
+> Hi all,
+>
+> Especially Jari....
+>
+> There are now  a lot of clustering algorithm packages in R. What would be
+> the most usable package to run similar analyses as the older NTSYSpc?
+>
+> I was able to dig through an older backup image of one of my hard drives and
+> resurrected NTSYSpc v. 2.11 but would prefer to set up similar analyses in
+> R.
+>
+> To have similar results the starting matrix data frame would be OTUs
+> (critters) as rows and the columns are values of things needing to be
+> compared.  These are comprised of both 1/0 data for locations and continuous
+> variables for measurement data (critter sizes and in this case echolocation
+> call parameters).
+>
+> Running NTSYSpc the initial data matrix may or may not first be
+> standardized.
+> Then a similarity coefficients are computed to generate a new matrix which
+> is used as input for a clustering SAHN (UPGMA using Euclidean distance) then
+> graphically the tree is displayed (GGPLOT2?)
+>
+> I am sure there is a way to do this, but have not found vignettes for the
+> various R packages to explain code to set this up.
+>
+> Thanks for any suggestions.
+>
+> Bruce
+>
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From Alexander.vandenBos at hutton.ac.uk  Wed Dec 17 12:02:47 2014
+From: Alexander.vandenBos at hutton.ac.uk (Alexander van den Bos)
+Date: Wed, 17 Dec 2014 11:02:47 +0000
+Subject: [R-sig-eco] CAPSCALE plot output
+Message-ID: <A5D2928F1C8C3B469C0FDFA94CDCA92F7B76C408@DUEXC02.ad.hutton.ac.uk>
+
+Hello,
+
+I have a quick question about the plot()function in capscale. This appears to plot the "site scores" from the output, but on closer inspection I've noticed that the values are not exactly the same as those produced by summary()
+Does anyone have an explanation for this? Perhaps there is some scaling performed on the data before plotting it
+
+Thanks
+Alex
+
+
+If you are not the intended recipient, you should not read, copy, disclose or rely on any information contained in this email, and we would ask you to contact the sender immediately and delete the email from your system.  
+Although the James Hutton Institute has taken reasonable precautions to ensure no viruses are present in this email, neither the Institute nor the sender accepts any responsibility for any viruses, and it is your 
+responsibility to scan the email and any attachments.
+
+The James Hutton Institute is a Scottish charitable company limited by guarantee.
+Registered in Scotland No. SC374831
+Registered Office: The James Hutton Institute, Invergowrie Dundee DD2 5DA.
+Charity No. SC041796
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From jari.oksanen at oulu.fi  Wed Dec 17 13:00:12 2014
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 17 Dec 2014 12:00:12 +0000
+Subject: [R-sig-eco] CAPSCALE plot output
+In-Reply-To: <A5D2928F1C8C3B469C0FDFA94CDCA92F7B76C408@DUEXC02.ad.hutton.ac.uk>
+References: <A5D2928F1C8C3B469C0FDFA94CDCA92F7B76C408@DUEXC02.ad.hutton.ac.uk>
+Message-ID: <92ce2b51e29740f0b0f19693cb7f1e0a@nippu12.univ.yo.oulu.fi>
+
+Alex, 
+
+It is possible that the documentation in vegan answers this. You can try vegandocs("decision") and go to chapter "Scaling in redundancy analysis" that also applies to capscale results.
+
+Cheers, Jari Oksanen
+________________________________________
+From: R-sig-ecology <r-sig-ecology-bounces at r-project.org> on behalf of Alexander van den Bos <Alexander.vandenBos at hutton.ac.uk>
+Sent: 17 December 2014 13:02
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] CAPSCALE plot output
+
+Hello,
+
+I have a quick question about the plot()function in capscale. This appears to plot the "site scores" from the output, but on closer inspection I've noticed that the values are not exactly the same as those produced by summary()
+Does anyone have an explanation for this? Perhaps there is some scaling performed on the data before plotting it
+
+Thanks
+Alex
+
+
+If you are not the intended recipient, you should not read, copy, disclose or rely on any information contained in this email, and we would ask you to contact the sender immediately and delete the email from your system.
+Although the James Hutton Institute has taken reasonable precautions to ensure no viruses are present in this email, neither the Institute nor the sender accepts any responsibility for any viruses, and it is your
+responsibility to scan the email and any attachments.
+
+The James Hutton Institute is a Scottish charitable company limited by guarantee.
+Registered in Scotland No. SC374831
+Registered Office: The James Hutton Institute, Invergowrie Dundee DD2 5DA.
+Charity No. SC041796
+
+
+
+        [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From ManuelEsteban.Lucas at uclm.es  Tue Dec 23 09:12:46 2014
+From: ManuelEsteban.Lucas at uclm.es (Manuel Esteban Lucas Borja)
+Date: Tue, 23 Dec 2014 09:12:46 +0100
+Subject: [R-sig-eco] SPEI index
+Message-ID: <4A05B900-AA0B-4E63-BB6F-8B8BDC3A8D87@uclm.es>
+
+Dear All, 
+
+I am starting to use R software in order to calculate an aridity index (SPEI). I have installed the spei package and the library. Then, I have created a .xls file with year, month, Precip and Temp variables. The xls file has been exported to txt format (separated by tabulations). Then to try, the only output I have obtained can be see below. Could anyone of you please help me? If you want, I can send you the txt file.
+
+All the best, 
+
+Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+1 NA NA NA NA NA NA NA NA NA NA NA NA
+2 NA NA NA NA NA NA NA NA NA NA NA NA
+
+Script:
+library(SPEI)
+SPEI <- read.table("/Users/PALAN.txt", header=TRUE, sep="")
+str(SPEI)
+PET <- thornthwaite(SPEI$Tm,40.00000) 
+spei(SPEI$PREC-PET,1)
+
+---
+Manuel Esteban Lucas Borja
+Universidad de Castilla La Mancha
+Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes 
+Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+Campus Universitario s/n,
+C.P. 02071, Albacete (Spain)
+T?lf.; 967599200 ext. 2818
+Mail: ManuelEsteban.Lucas at uclm.es
+Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+
+
+	[[alternative HTML version deleted]]
+
+
+From Thierry.ONKELINX at inbo.be  Tue Dec 23 09:57:29 2014
+From: Thierry.ONKELINX at inbo.be (ONKELINX, Thierry)
+Date: Tue, 23 Dec 2014 08:57:29 +0000
+Subject: [R-sig-eco] SPEI index
+In-Reply-To: <4A05B900-AA0B-4E63-BB6F-8B8BDC3A8D87@uclm.es>
+References: <4A05B900-AA0B-4E63-BB6F-8B8BDC3A8D87@uclm.es>
+Message-ID: <AA818EAD2576BC488B4F623941DA7427FD63C2B4@inbomail.inbo.be>
+
+If the file is tab delimited then you need to use read.table(sep = "\t") instead of read.table(sep = ""). read.delim() is another option.
+
+ir. Thierry Onkelinx
+Instituut voor natuur- en bosonderzoek / Research Institute for Nature and Forest
+team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+Kliniekstraat 25
+1070 Anderlecht
+Belgium
++ 32 2 525 02 51
++ 32 54 43 61 85
+Thierry.Onkelinx at inbo.be
+www.inbo.be
+
+To call in the statistician after the experiment is done may be no more than asking him to perform a post-mortem examination: he may be able to say what the experiment died of.
+~ Sir Ronald Aylmer Fisher
+
+The plural of anecdote is not data.
+~ Roger Brinner
+
+The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data.
+~ John Tukey
+
+Van: R-sig-ecology [mailto:r-sig-ecology-bounces at r-project.org] Namens Manuel Esteban Lucas Borja
+Verzonden: dinsdag 23 december 2014 9:13
+Aan: r-sig-ecology at r-project.org
+Onderwerp: [R-sig-eco] SPEI index
+
+Dear All,
+
+I am starting to use R software in order to calculate an aridity index (SPEI). I have installed the spei package and the library. Then, I have created a .xls file with year, month, Precip and Temp variables. The xls file has been exported to txt format (separated by tabulations). Then to try, the only output I have obtained can be see below. Could anyone of you please help me? If you want, I can send you the txt file.
+
+All the best,
+
+Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+1 NA NA NA NA NA NA NA NA NA NA NA NA
+2 NA NA NA NA NA NA NA NA NA NA NA NA
+
+Script:
+library(SPEI)
+SPEI <- read.table("/Users/PALAN.txt", header=TRUE, sep="")
+str(SPEI)
+PET <- thornthwaite(SPEI$Tm,40.00000)
+spei(SPEI$PREC-PET,1)
+
+---
+Manuel Esteban Lucas Borja
+Universidad de Castilla La Mancha
+Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+Campus Universitario s/n,
+C.P. 02071, Albacete (Spain)
+T?lf.; 967599200 ext. 2818
+Mail: ManuelEsteban.Lucas at uclm.es
+Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+
+
+        [[alternative HTML version deleted]]
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+Disclaimer Bezoek onze website / Visit our website<https://drupal.inbo.be/nl/disclaimer-mailberichten-van-het-inbo>
+
+From bohara at senckenberg.de  Tue Dec 23 10:05:58 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Tue, 23 Dec 2014 10:05:58 +0100
+Subject: [R-sig-eco] SPEI index
+In-Reply-To: <AA818EAD2576BC488B4F623941DA7427FD63C2B4@inbomail.inbo.be>
+References: <4A05B900-AA0B-4E63-BB6F-8B8BDC3A8D87@uclm.es>
+	<AA818EAD2576BC488B4F623941DA7427FD63C2B4@inbomail.inbo.be>
+Message-ID: <54993076.5040904@senckenberg.de>
+
+On 12/23/2014 09:57 AM, ONKELINX, Thierry wrote:
+> If the file is tab delimited then you need to use read.table(sep = "\t") instead of read.table(sep = ""). read.delim() is another option.
+Or save the file as a .csv and use read.csv (this makes the reading in 
+easier if you have things like spaces in the file).
+
+Also, it's worth checking that you don't have a header row and then some 
+empty rows. It's often worth opening up the .txt or .csv file as a text 
+file (e.g. in Notepad) to see if there are any problems.
+
+Oh, and the gdata package has a read.xls() function that is another 
+alternative.
+
+Bob
+
+> ir. Thierry Onkelinx
+> Instituut voor natuur- en bosonderzoek / Research Institute for Nature and Forest
+> team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+> Kliniekstraat 25
+> 1070 Anderlecht
+> Belgium
+> + 32 2 525 02 51
+> + 32 54 43 61 85
+> Thierry.Onkelinx at inbo.be
+> www.inbo.be
+>
+> To call in the statistician after the experiment is done may be no more than asking him to perform a post-mortem examination: he may be able to say what the experiment died of.
+> ~ Sir Ronald Aylmer Fisher
+>
+> The plural of anecdote is not data.
+> ~ Roger Brinner
+>
+> The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data.
+> ~ John Tukey
+>
+> Van: R-sig-ecology [mailto:r-sig-ecology-bounces at r-project.org] Namens Manuel Esteban Lucas Borja
+> Verzonden: dinsdag 23 december 2014 9:13
+> Aan: r-sig-ecology at r-project.org
+> Onderwerp: [R-sig-eco] SPEI index
+>
+> Dear All,
+>
+> I am starting to use R software in order to calculate an aridity index (SPEI). I have installed the spei package and the library. Then, I have created a .xls file with year, month, Precip and Temp variables. The xls file has been exported to txt format (separated by tabulations). Then to try, the only output I have obtained can be see below. Could anyone of you please help me? If you want, I can send you the txt file.
+>
+> All the best,
+>
+> Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+> 1 NA NA NA NA NA NA NA NA NA NA NA NA
+> 2 NA NA NA NA NA NA NA NA NA NA NA NA
+>
+> Script:
+> library(SPEI)
+> SPEI <- read.table("/Users/PALAN.txt", header=TRUE, sep="")
+> str(SPEI)
+> PET <- thornthwaite(SPEI$Tm,40.00000)
+> spei(SPEI$PREC-PET,1)
+>
+> ---
+> Manuel Esteban Lucas Borja
+> Universidad de Castilla La Mancha
+> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+> Campus Universitario s/n,
+> C.P. 02071, Albacete (Spain)
+> T?lf.; 967599200 ext. 2818
+> Mail: ManuelEsteban.Lucas at uclm.es
+> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+>
+>
+>          [[alternative HTML version deleted]]
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> Disclaimer Bezoek onze website / Visit our website<https://drupal.inbo.be/nl/disclaimer-mailberichten-van-het-inbo>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From villers.alexandre at gmail.com  Tue Dec 23 10:25:32 2014
+From: villers.alexandre at gmail.com (Alexandre Villers)
+Date: Tue, 23 Dec 2014 10:25:32 +0100
+Subject: [R-sig-eco] SPEI index
+In-Reply-To: <DE8CBBDC-2A87-43C5-84B1-E0393A36CA02@uclm.es>
+References: <4A05B900-AA0B-4E63-BB6F-8B8BDC3A8D87@uclm.es>
+	<CAFrtd2OTY2urucWfAtys_say7NC50ckrV1Wj11UAYu+yBZNHpw@mail.gmail.com>
+	<DE8CBBDC-2A87-43C5-84B1-E0393A36CA02@uclm.es>
+Message-ID: <CAFrtd2PXSMFptSVLx4Zjq5EmtXJdAVn_49Ymp3hV7xmJR1cwng@mail.gmail.com>
+
+Hello,
+
+Next time you post a message on a R list, try to be more specific
+because it's harder to answer your question if one has to guess it.
+So the issue is not with reading the file, this seems to be going ok,
+but with the use of the SPEI package. I wonder if it's not just
+because your time series is too short (but being in holidays, don't
+really have much time to search through the package and methods, I'll
+leave that to you).
+
+regards
+
+Alex
+
+
+
+2014-12-23 9:54 GMT+01:00 Manuel Esteban Lucas Borja
+<ManuelEsteban.Lucas at uclm.es>:
+> This is the .txt file. thank you for your time.
+> Best
+> ---
+> Manuel Esteban Lucas Borja
+> Universidad de Castilla La Mancha
+> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+> Campus Universitario s/n,
+> C.P. 02071, Albacete (Spain)
+> T?lf.; 967599200 ext. 2818
+> Mail: ManuelEsteban.Lucas at uclm.es
+> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+>
+>
+> El 23/12/2014, a las 09:31, Alexandre Villers <villers.alexandre at gmail.com>
+> escribi?:
+>
+> Hello
+>
+> There are some nice tutorial on the Internet which will help you with r
+> basics.  Do not expect people to answer any questions like yours and whose
+> answer are pretty ovious once read those documents.
+> The sep symbol for tabulation is sep="\t" in the read.table function
+>
+> Le 23 d?c. 2014 09:13, "Manuel Esteban Lucas Borja"
+> <ManuelEsteban.Lucas at uclm.es> a ?crit :
+>>
+>> Dear All,
+>>
+>> I am starting to use R software in order to calculate an aridity index
+>> (SPEI). I have installed the spei package and the library. Then, I have
+>> created a .xls file with year, month, Precip and Temp variables. The xls
+>> file has been exported to txt format (separated by tabulations). Then to
+>> try, the only output I have obtained can be see below. Could anyone of you
+>> please help me? If you want, I can send you the txt file.
+>>
+>> All the best,
+>>
+>> Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+>> 1 NA NA NA NA NA NA NA NA NA NA NA NA
+>> 2 NA NA NA NA NA NA NA NA NA NA NA NA
+>>
+>> Script:
+>> library(SPEI)
+>> SPEI <- read.table("/Users/PALAN.txt", header=TRUE, sep="")
+>> str(SPEI)
+>> PET <- thornthwaite(SPEI$Tm,40.00000)
+>> spei(SPEI$PREC-PET,1)
+>>
+>> ---
+>> Manuel Esteban Lucas Borja
+>> Universidad de Castilla La Mancha
+>> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+>> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+>> Campus Universitario s/n,
+>> C.P. 02071, Albacete (Spain)
+>> T?lf.; 967599200 ext. 2818
+>> Mail: ManuelEsteban.Lucas at uclm.es
+>> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+>>
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+
+
+
+-- 
+Alexandre Villers, PhD.
+Postdoctoral researcher
+Team Agripop
+Centre d'Etudes Biologiques de Chiz?
+UMR 7372
+CNRS - Universit? de la Rochelle
+79360 Beauvoir sur Niort, FR
+
+

@@ -1,0 +1,2695 @@
+From jbrewer @ending from olemi@@@edu  Thu Nov  1 16:06:16 2018
+From: jbrewer @ending from olemi@@@edu (Steve Brewer)
+Date: Thu, 1 Nov 2018 15:06:16 +0000
+Subject: [R-sig-eco] 
+ 2-way adonis (PERMANOVA) incl interaction - how to test
+ for main effects?
+In-Reply-To: <CAPxEaESwyCiUz3uegJiDEyPqEsc3q6hZpnGgWO4pKWea0NNOjQ@mail.gmail.com>
+References: <CANW5OGDds6ZawNN2XZ0HmrG1+29YhcDzw57TFxG4pn4-A7246A@mail.gmail.com>
+ <CAGCrCxZRP2+P7Y4o24j3s4oZEPJ9_zEjYoNja5__kdkpwPHy_g@mail.gmail.com>
+ <298ea195-ad2d-8d30-4a31-66a48d62ff78@oulu.fi>
+ <CAPxEaESdb9mtiE+oUwZrWhU5oZTaRqKAgfsqWu9eQwU84NBALA@mail.gmail.com>
+ <0F7DB426-53D0-453D-B60B-2D69A530A517@oulu.fi>
+ <CAPxEaESwyCiUz3uegJiDEyPqEsc3q6hZpnGgWO4pKWea0NNOjQ@mail.gmail.com>
+Message-ID: <54E98444-FD5B-411A-852B-1E9D06540851@olemiss.edu>
+
+Gian,
+
+I am bit confused by what your concern is. First, if the imbalance is not that severe, the approach you take to analyzing a two-way permanova (type I, type II, type III ss) is not going to matter that much. Indeed, if the design were balanced, they would give you identical results. Second, regardless of the lack of balance, for the models y ~ A + B + A:B  and y ~ B + A + A:B, the test for the interaction will be the same. So, I don?t understand why you would want to drop the main effects from the model, effectively combining them with interaction. That doesn?t make any sense to me. The problem is with the tests of the main effects.
+
+My advice is to run both models (i.e., A first, then B first) using type I ss. As mentioned, both models will give you the same interaction result. If the interaction is all that you?re interested in, problem solved. Interpret only the interaction and and ignore the main effects. If the interaction is not significant and low, then interpret only the main effects, focusing only on the second main effect in each of the differently-ordered models (which are equivalent to Type II ss tests). And these results will tell you pretty the same thing as type III tests if there is little or no interaction. I would not worry about trying to estimate the main effects while controlling for the interaction (Ellen?s question), which cannot be done using type I or type II SS in 2-way permanova using adonis. But why would you want to? The lack of a balanced design results in the main effects and the interaction not being independent of one another.  Forcing that independence by using type III ss can only work by essentially "throwing away" some of the information associated with the main effects, possibly resulting in an overly conservative test. The lower the interaction, however, the less is thrown away and the less it matters.
+
+
+Steve
+
+
+
+
+Stephen Brewer
+jbrewer at olemiss.edu<mailto:jbrewer at olemiss.edu>
+Professor
+Department of Biology
+PO Box 1848
+ University of Mississippi
+University, Mississippi 38677-1848
+ Brewer web page - https://jstephenbrewer.wordpress.com
+FAX - 662-915-5144 Phone - 662-202-5877
+
+
+
+
+
+On Oct 31, 2018, at 5:45 PM, Gian Maria Niccol? Benucci <gian.benucci at gmail.com<mailto:gian.benucci at gmail.com>> wrote:
+
+Thank you Jari,
+
+So to test if there are significant interaction I should use Stage:Growhouse
+i.e. A:B. This will test the interaction and main effects that are marginal
+and so removed. How matters then if I include by="margin" or not? The R2
+are the same (please see below) but the p-value changes. I assume the
+second way is most correct, is it?
+
+*> adonis2(t(otu_fungi_out) ~ Stage : Growhouse, data=metadata_fungi_out,
+permutations=9999)*
+Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+metadata_fungi_out, permutations = 9999)
+               Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  3   1.0812 0.23075 1.9998 0.0211 *
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+*> adonis2(t(otu_fungi_out) ~ Stage : Growhouse, data=metadata_fungi_out,
+by = "margin", permutations=9999)*
+Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+metadata_fungi_out, permutations = 9999, by = "margin")
+               Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  3   1.0812 0.23075 1.9998  0.006 **
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+Cheers,
+
+Gian
+
+On Tue, 30 Oct 2018 at 05:47, Jari Oksanen <jari.oksanen at oulu.fi<mailto:jari.oksanen at oulu.fi>> wrote:
+
+Hello Gian,
+
+These formulae expand into different models. Compare
+
+model.matrix(~ Stage:Growhouse, data=metadata_fungi_out)
+model.matrix(~ Stage*Growhouse, data=metadata_fungi_out)
+
+The first model (Stage:Growhouse) will also contain (implicitly) main
+effects and all these terms are marginal and can be removed, whereas the
+latter Stage*Growhouse expands to explicit main effects and interaction
+effects, and only the interaction effects are marginal and can be removed.
+This is also reflected in the degrees of freedom in your anova table: In
+the first case Stage:Growhouse has 3 df, and in the latter only 1 df (and
+the main effects ignored had 2 df).
+
+Ciao, Giari
+
+On 29 Oct 2018, at 19:11, Gian Maria Niccol? Benucci <
+gian.benucci at gmail.com<mailto:gian.benucci at gmail.com>> wrote:
+
+Hello Jari,
+
+It is a little bit confusing. If A*B unfolds in A+B+A:B then A:B is the
+real interaction component.
+So, which if the code below will test the variance for the interaction
+alone?
+
+adonis2(t(otu_fungi_out) ~ *Stage : Growhouse*, data=metadata_fungi_out,
+by = "margin", permutations=9999)
+Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+metadata_fungi_out, permutations = 9999, by = "margin")
+              Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  3   1.0812 0.23075 1.9998  1e-04 ***
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+adonis2(t(otu_fungi_out) ~ *Stage * Growhouse*, data=metadata_fungi_out,
+by = "margin", permutations=9999)
+Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage * Growhouse, data =
+metadata_fungi_out, permutations = 9999, by = "margin")
+              Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  1   0.2171 0.04633 1.2045 0.2443
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+
+
+The results is clearly very different. Also, in a normal adonis call I
+didn't have any significance for the interaction that I have instead if I
+use A:B. So ~ A*B will not test for interactions at all?
+
+*adonis*(t(otu_fungi_out) ~ Stage * Growhouse, data=metadata_fungi_out,
+permutations=9999)
+Call:
+adonis(formula = t(otu_fungi_out) ~ Stage * Growhouse, data =
+metadata_fungi_out,      permutations = 9999)
+
+Permutation: free
+Number of permutations: 9999
+
+Terms added sequentially (first to last)
+
+              Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Stage            1    0.4877 0.48769  2.7060 0.10408 0.0247 *
+Growhouse        1    0.3765 0.37647  2.0889 0.08034 0.0542 .
+Stage:Growhouse  1    0.2171 0.21708  1.2045 0.04633 0.2507
+Residuals       20    3.6045 0.18023         0.76925
+Total           23    4.6857                 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+Thank you!
+
+Gian
+
+
+
+
+
+On Tue, 16 Oct 2018 at 08:54, Jari Oksanen <jari.oksanen at oulu.fi<mailto:jari.oksanen at oulu.fi>> wrote:
+
+
+
+On 16/10/18 11:23, Torsten Hauffe wrote:
+"adonis2(speciesdataset~A*B, by="margin") but then only the effect of
+the
+interaction is tested."
+
+This is not entirely correct.
+adonis2(speciesdataset~A:B, by="margin") would test the interaction
+alone.
+~A*B unfolds to ~A+B+A:B
+
+Well, it was correct: the only **marginal** effect in ~A+B+A:B is A:B (A
+and B are not marginal), and by = "margin" will only analyse marginal
+effects.
+
+Cheers, Jari Oksanen
+
+On Tue, 16 Oct 2018 at 11:51, Ellen Pape <ellen.pape at gmail.com<mailto:ellen.pape at gmail.com>> wrote:
+
+Hi all,
+
+I don't know whether this is the correct mailing group to address this
+question:
+
+I would like to perform a 2-way permanova analysis in R (using adonis
+in
+vegan). By default you are performing sequential tests (by="terms"),
+so
+when you have 2 or more factors, the order of these factors matter.
+However, since I wanted to circumvent this, I chose for the option
+by="margin" (adonis2(speciesdataset~A*B, by="margin")) but then only
+the
+effect of the interaction is tested. On the "help page" of anova. cca
+it
+says: "if you select by="margin" -> the current function only
+evaluates
+marginal terms. It will, for instance, ignore main effects that are
+included in interaction terms."
+
+
+My question now is: can I somehow get the main effects tested anyhow,
+when
+the interaction term is not significant?
+
+Thanks,
+Ellen
+
+       [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+    [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+     [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+--
+Gian Maria Niccol? Benucci, Ph.D.
+Postdoctoral research associate
+Michigan State University
+Department of Plant, Soil and Microbial Sciences
+1066 Bogue Street
+48825 East Lansing, MI
+Lab: +1 (517) 844-6966
+Email: gian.benucci at gmail.com<mailto:gian.benucci at gmail.com>
+
+
+*----- Do not print this email unless you really need to. Save paper and
+protect the environment! -----*
+
+[[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From gi@n@benucci @ending from gm@il@com  Thu Nov  1 19:10:09 2018
+From: gi@n@benucci @ending from gm@il@com (=?UTF-8?Q?Gian_Maria_Niccol=C3=B2_Benucci?=)
+Date: Thu, 1 Nov 2018 14:10:09 -0400
+Subject: [R-sig-eco] 
+ 2-way adonis (PERMANOVA) incl interaction - how to test
+ for main effects?
+In-Reply-To: <54E98444-FD5B-411A-852B-1E9D06540851@olemiss.edu>
+References: <CANW5OGDds6ZawNN2XZ0HmrG1+29YhcDzw57TFxG4pn4-A7246A@mail.gmail.com>
+ <CAGCrCxZRP2+P7Y4o24j3s4oZEPJ9_zEjYoNja5__kdkpwPHy_g@mail.gmail.com>
+ <298ea195-ad2d-8d30-4a31-66a48d62ff78@oulu.fi>
+ <CAPxEaESdb9mtiE+oUwZrWhU5oZTaRqKAgfsqWu9eQwU84NBALA@mail.gmail.com>
+ <0F7DB426-53D0-453D-B60B-2D69A530A517@oulu.fi>
+ <CAPxEaESwyCiUz3uegJiDEyPqEsc3q6hZpnGgWO4pKWea0NNOjQ@mail.gmail.com>
+ <54E98444-FD5B-411A-852B-1E9D06540851@olemiss.edu>
+Message-ID: <CAPxEaER6D0vPsEZ+g0y8LeUjxOc5+5FQzfuseiS3zR3qe5BOtw@mail.gmail.com>
+
+Thank you very much Steve,
+
+I really appreciate you answer. I do not want to drop the main effects out
+form the model, I was just trying to understand how adonis works. I was
+more confused on how to use the adonis function correctly rather than on
+the theory that is behind it. I have an almost "fully crossed" design (that
+was the plan, the fact is that I have to remove 2 samples because of the
+poor sequencing results) with two factors "Growhouse" and "Stage" in this
+case. I am of course interested in the effect of the main factors, but I
+also wanted to see if there was a significant interaction and if my
+developmental stage (i.e. mature or young) was influenced by where my
+organism where growing (i.e. growhouse 1 or 2).
+
+Iif I do as you said, Type I SS for ~ A + B + A*B depends on order so... it
+is sequential SS(A) SS(B|A) SS(A*B|A B)
+
+The interaction is not significant, so maybe worth in this case perform a
+Type II test directly?
+
+> adonis(t(otu_fungi_out) ~ Stage + Growhouse + Stage : Growhouse,
+data=metadata_fungi_out, permutations=9999)
+
+Call:
+adonis(formula = t(otu_fungi_out) ~ Stage + Growhouse +
+Stage:Growhouse,      data = metadata_fungi_out, permutations = 9999)
+
+Permutation: free
+Number of permutations: 9999
+
+Terms added sequentially (first to last)
+
+                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Stage            1    0.4877 0.48769  2.7060 0.10408 0.0238 *
+Growhouse        1    0.3765 0.37647  2.0889 0.08034 0.0561 .
+Stage:Growhouse  1    0.2171 0.21708  1.2045 0.04633 0.2376
+Residuals       20    3.6045 0.18023         0.76925
+Total           23    4.6857                 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+> adonis(t(otu_fungi_out) ~ Growhouse + Stage + Stage : Growhouse,
+data=metadata_fungi_out, permutations=9999)
+
+Call:
+adonis(formula = t(otu_fungi_out) ~ Growhouse + Stage +
+Stage:Growhouse,      data = metadata_fungi_out, permutations = 9999)
+
+Permutation: free
+Number of permutations: 9999
+
+Terms added sequentially (first to last)
+
+                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Growhouse        1    0.3765 0.37647  2.0889 0.08034 0.0563 .
+Stage            1    0.4877 0.48769  2.7060 0.10408 0.0271 *
+Growhouse:Stage  1    0.2171 0.21708  1.2045 0.04633 0.2364
+Residuals       20    3.6045 0.18023         0.76925
+Total           23    4.6857                 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+Thank you,
+
+Gian
+
+
+
+
+On Thu, 1 Nov 2018 at 11:06, Steve Brewer <jbrewer at olemiss.edu> wrote:
+
+> Gian,
+>
+> I am bit confused by what your concern is. First, if the imbalance is not
+> that severe, the approach you take to analyzing a two-way permanova (type
+> I, type II, type III ss) is not going to matter that much. Indeed, if the
+> design were balanced, they would give you identical results. Second,
+> regardless of the lack of balance, for the models y ~ A + B + A:B  and y ~
+> B + A + A:B, the test for the interaction will be the same. So, I don?t
+> understand why you would want to drop the main effects from the model,
+> effectively combining them with interaction. That doesn?t make any sense to
+> me. The problem is with the tests of the main effects.
+>
+> My advice is to run both models (i.e., A first, then B first) using type I
+> ss. As mentioned, both models will give you the same interaction result. If
+> the interaction is all that you?re interested in, problem solved. Interpret
+> only the interaction and and ignore the main effects. If the interaction is
+> not significant and low, then interpret only the main effects, focusing
+> only on the second main effect in each of the differently-ordered models
+> (which are equivalent to Type II ss tests). And these results will tell you
+> pretty the same thing as type III tests if there is little or no
+> interaction. I would not worry about trying to estimate the main effects
+> while controlling for the interaction (Ellen?s question), which cannot be
+> done using type I or type II SS in 2-way permanova using adonis. But why
+> would you want to? The lack of a balanced design results in the main
+> effects and the interaction not being independent of one another.  Forcing
+> that independence by using type III ss can only work by essentially
+> "throwing away" some of the information associated with the main effects,
+> possibly resulting in an overly conservative test. The lower the
+> interaction, however, the less is thrown away and the less it matters.
+>
+>
+> Steve
+>
+>
+>
+>
+> Stephen Brewer
+> jbrewer at olemiss.edu
+> Professor
+> Department of Biology
+> PO Box 1848
+>  University of Mississippi
+> University, Mississippi 38677-1848
+>  Brewer web page - https://jstephenbrewer.wordpress.com
+> FAX - 662-915-5144 Phone - 662-202-5877
+>
+>
+>
+>
+>
+> On Oct 31, 2018, at 5:45 PM, Gian Maria Niccol? Benucci <
+> gian.benucci at gmail.com> wrote:
+>
+> Thank you Jari,
+>
+> So to test if there are significant interaction I should use
+> Stage:Growhouse
+> i.e. A:B. This will test the interaction and main effects that are marginal
+> and so removed. How matters then if I include by="margin" or not? The R2
+> are the same (please see below) but the p-value changes. I assume the
+> second way is most correct, is it?
+>
+> *> adonis2(t(otu_fungi_out) ~ Stage : Growhouse, data=metadata_fungi_out,
+> permutations=9999)*
+> Permutation test for adonis under reduced model
+> Terms added sequentially (first to last)
+> Permutation: free
+> Number of permutations: 9999
+>
+> adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+> metadata_fungi_out, permutations = 9999)
+>                Df SumOfSqs      R2      F Pr(>F)
+> Stage:Growhouse  3   1.0812 0.23075 1.9998 0.0211 *
+> Residual        20   3.6045 0.76925
+> Total           23   4.6857 1.00000
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>
+>
+> *> adonis2(t(otu_fungi_out) ~ Stage : Growhouse, data=metadata_fungi_out,
+> by = "margin", permutations=9999)*
+> Permutation test for adonis under reduced model
+> Marginal effects of terms
+> Permutation: free
+> Number of permutations: 9999
+>
+> adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+> metadata_fungi_out, permutations = 9999, by = "margin")
+>                Df SumOfSqs      R2      F Pr(>F)
+> Stage:Growhouse  3   1.0812 0.23075 1.9998  0.006 **
+> Residual        20   3.6045 0.76925
+> Total           23   4.6857 1.00000
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>
+>
+> Cheers,
+>
+> Gian
+>
+> On Tue, 30 Oct 2018 at 05:47, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+>
+> Hello Gian,
+>
+> These formulae expand into different models. Compare
+>
+> model.matrix(~ Stage:Growhouse, data=metadata_fungi_out)
+> model.matrix(~ Stage*Growhouse, data=metadata_fungi_out)
+>
+> The first model (Stage:Growhouse) will also contain (implicitly) main
+> effects and all these terms are marginal and can be removed, whereas the
+> latter Stage*Growhouse expands to explicit main effects and interaction
+> effects, and only the interaction effects are marginal and can be removed.
+> This is also reflected in the degrees of freedom in your anova table: In
+> the first case Stage:Growhouse has 3 df, and in the latter only 1 df (and
+> the main effects ignored had 2 df).
+>
+> Ciao, Giari
+>
+> On 29 Oct 2018, at 19:11, Gian Maria Niccol? Benucci <
+>
+> gian.benucci at gmail.com> wrote:
+>
+>
+> Hello Jari,
+>
+> It is a little bit confusing. If A*B unfolds in A+B+A:B then A:B is the
+> real interaction component.
+> So, which if the code below will test the variance for the interaction
+> alone?
+>
+> adonis2(t(otu_fungi_out) ~ *Stage : Growhouse*, data=metadata_fungi_out,
+>
+> by = "margin", permutations=9999)
+> Permutation test for adonis under reduced model
+> Marginal effects of terms
+> Permutation: free
+> Number of permutations: 9999
+>
+> adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+> metadata_fungi_out, permutations = 9999, by = "margin")
+>               Df SumOfSqs      R2      F Pr(>F)
+> Stage:Growhouse  3   1.0812 0.23075 1.9998  1e-04 ***
+> Residual        20   3.6045 0.76925
+> Total           23   4.6857 1.00000
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>
+>
+> adonis2(t(otu_fungi_out) ~ *Stage * Growhouse*, data=metadata_fungi_out,
+>
+> by = "margin", permutations=9999)
+> Permutation test for adonis under reduced model
+> Marginal effects of terms
+> Permutation: free
+> Number of permutations: 9999
+>
+> adonis2(formula = t(otu_fungi_out) ~ Stage * Growhouse, data =
+> metadata_fungi_out, permutations = 9999, by = "margin")
+>               Df SumOfSqs      R2      F Pr(>F)
+> Stage:Growhouse  1   0.2171 0.04633 1.2045 0.2443
+> Residual        20   3.6045 0.76925
+> Total           23   4.6857 1.00000
+>
+>
+>
+> The results is clearly very different. Also, in a normal adonis call I
+> didn't have any significance for the interaction that I have instead if I
+> use A:B. So ~ A*B will not test for interactions at all?
+>
+> *adonis*(t(otu_fungi_out) ~ Stage * Growhouse, data=metadata_fungi_out,
+>
+> permutations=9999)
+> Call:
+> adonis(formula = t(otu_fungi_out) ~ Stage * Growhouse, data =
+> metadata_fungi_out,      permutations = 9999)
+>
+> Permutation: free
+> Number of permutations: 9999
+>
+> Terms added sequentially (first to last)
+>
+>               Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+> Stage            1    0.4877 0.48769  2.7060 0.10408 0.0247 *
+> Growhouse        1    0.3765 0.37647  2.0889 0.08034 0.0542 .
+> Stage:Growhouse  1    0.2171 0.21708  1.2045 0.04633 0.2507
+> Residuals       20    3.6045 0.18023         0.76925
+> Total           23    4.6857                 1.00000
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>
+>
+>
+> Thank you!
+>
+> Gian
+>
+>
+>
+>
+>
+> On Tue, 16 Oct 2018 at 08:54, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+>
+>
+>
+> On 16/10/18 11:23, Torsten Hauffe wrote:
+>
+> "adonis2(speciesdataset~A*B, by="margin") but then only the effect of
+>
+> the
+>
+> interaction is tested."
+>
+> This is not entirely correct.
+> adonis2(speciesdataset~A:B, by="margin") would test the interaction
+>
+> alone.
+>
+> ~A*B unfolds to ~A+B+A:B
+>
+>
+> Well, it was correct: the only **marginal** effect in ~A+B+A:B is A:B (A
+> and B are not marginal), and by = "margin" will only analyse marginal
+> effects.
+>
+> Cheers, Jari Oksanen
+>
+>
+> On Tue, 16 Oct 2018 at 11:51, Ellen Pape <ellen.pape at gmail.com> wrote:
+>
+> Hi all,
+>
+> I don't know whether this is the correct mailing group to address this
+> question:
+>
+> I would like to perform a 2-way permanova analysis in R (using adonis
+>
+> in
+>
+> vegan). By default you are performing sequential tests (by="terms"),
+>
+> so
+>
+> when you have 2 or more factors, the order of these factors matter.
+> However, since I wanted to circumvent this, I chose for the option
+> by="margin" (adonis2(speciesdataset~A*B, by="margin")) but then only
+>
+> the
+>
+> effect of the interaction is tested. On the "help page" of anova. cca
+>
+> it
+>
+> says: "if you select by="margin" -> the current function only
+>
+> evaluates
+>
+> marginal terms. It will, for instance, ignore main effects that are
+> included in interaction terms."
+>
+>
+> My question now is: can I somehow get the main effects tested anyhow,
+>
+> when
+>
+> the interaction term is not significant?
+>
+> Thanks,
+> Ellen
+>
+>        [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>     [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>      [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+>
+>
+>
+>
+> *----- Do not print this email unless you really need to. Save paper and
+> protect the environment! -----*
+>
+> [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From j@ri@ok@@nen @ending from oulu@fi  Thu Nov  1 19:29:45 2018
+From: j@ri@ok@@nen @ending from oulu@fi (Jari Oksanen)
+Date: Thu, 1 Nov 2018 18:29:45 +0000
+Subject: [R-sig-eco] 
+ 2-way adonis (PERMANOVA) incl interaction - how to test
+ for main effects?
+In-Reply-To: <CAPxEaER6D0vPsEZ+g0y8LeUjxOc5+5FQzfuseiS3zR3qe5BOtw@mail.gmail.com>
+References: <CANW5OGDds6ZawNN2XZ0HmrG1+29YhcDzw57TFxG4pn4-A7246A@mail.gmail.com>
+ <CAGCrCxZRP2+P7Y4o24j3s4oZEPJ9_zEjYoNja5__kdkpwPHy_g@mail.gmail.com>
+ <298ea195-ad2d-8d30-4a31-66a48d62ff78@oulu.fi>
+ <CAPxEaESdb9mtiE+oUwZrWhU5oZTaRqKAgfsqWu9eQwU84NBALA@mail.gmail.com>
+ <0F7DB426-53D0-453D-B60B-2D69A530A517@oulu.fi>
+ <CAPxEaESwyCiUz3uegJiDEyPqEsc3q6hZpnGgWO4pKWea0NNOjQ@mail.gmail.com>
+ <54E98444-FD5B-411A-852B-1E9D06540851@olemiss.edu>
+ <CAPxEaER6D0vPsEZ+g0y8LeUjxOc5+5FQzfuseiS3zR3qe5BOtw@mail.gmail.com>
+Message-ID: <8356C409-9C6C-4040-8A58-22F26E4636CD@oulu.fi>
+
+Gian,
+
+The marginal tests for one-term models had a problem in vegan 2.5-1 and vegan 2.5-2. This is fixed in vegan 2.5-3, so please upgrade. (It never occurred to me that people would use marginal tests for one-term models where the fitted model is compared against the empty model, and that case was not handled correctly: any other test ? total or sequential ? should yield identical results in this case and marginal tests make no sense).
+
+I haven?t even considered implementing type-XXX tests in vegan::adonis. The function uses standard R stats functions which only allow sequential tests or tests of marginal terms (ignoring non-marginal main effects when there are interactions). However, if you are interested in interaction term A:B, your really should inspect the model A+B+A:B. It makes no sense in any sense to study model A:B without the main effects. That would give misleading results for A:B. The interpretation of ~A:B is based on standard R stats::model.matrix() in vegan, and these seem to expand a bit differently for factors A & B and continuous variables A & B. So beware, brother beware. Use stats::model.matrix() to see how they really unfold in your case.
+
+Cheers, Giari
+
+On 1 Nov 2018, at 20:10, Gian Maria Niccol? Benucci <gian.benucci at gmail.com<mailto:gian.benucci at gmail.com>> wrote:
+
+Thank you very much Steve,
+
+I really appreciate you answer. I do not want to drop the main effects out
+form the model, I was just trying to understand how adonis works. I was
+more confused on how to use the adonis function correctly rather than on
+the theory that is behind it. I have an almost "fully crossed" design (that
+was the plan, the fact is that I have to remove 2 samples because of the
+poor sequencing results) with two factors "Growhouse" and "Stage" in this
+case. I am of course interested in the effect of the main factors, but I
+also wanted to see if there was a significant interaction and if my
+developmental stage (i.e. mature or young) was influenced by where my
+organism where growing (i.e. growhouse 1 or 2).
+
+Iif I do as you said, Type I SS for ~ A + B + A*B depends on order so... it
+is sequential SS(A) SS(B|A) SS(A*B|A B)
+
+The interaction is not significant, so maybe worth in this case perform a
+Type II test directly?
+
+adonis(t(otu_fungi_out) ~ Stage + Growhouse + Stage : Growhouse,
+data=metadata_fungi_out, permutations=9999)
+
+Call:
+adonis(formula = t(otu_fungi_out) ~ Stage + Growhouse +
+Stage:Growhouse,      data = metadata_fungi_out, permutations = 9999)
+
+Permutation: free
+Number of permutations: 9999
+
+Terms added sequentially (first to last)
+
+               Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Stage            1    0.4877 0.48769  2.7060 0.10408 0.0238 *
+Growhouse        1    0.3765 0.37647  2.0889 0.08034 0.0561 .
+Stage:Growhouse  1    0.2171 0.21708  1.2045 0.04633 0.2376
+Residuals       20    3.6045 0.18023         0.76925
+Total           23    4.6857                 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+adonis(t(otu_fungi_out) ~ Growhouse + Stage + Stage : Growhouse,
+data=metadata_fungi_out, permutations=9999)
+
+Call:
+adonis(formula = t(otu_fungi_out) ~ Growhouse + Stage +
+Stage:Growhouse,      data = metadata_fungi_out, permutations = 9999)
+
+Permutation: free
+Number of permutations: 9999
+
+Terms added sequentially (first to last)
+
+               Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Growhouse        1    0.3765 0.37647  2.0889 0.08034 0.0563 .
+Stage            1    0.4877 0.48769  2.7060 0.10408 0.0271 *
+Growhouse:Stage  1    0.2171 0.21708  1.2045 0.04633 0.2364
+Residuals       20    3.6045 0.18023         0.76925
+Total           23    4.6857                 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+Thank you,
+
+Gian
+
+
+
+
+On Thu, 1 Nov 2018 at 11:06, Steve Brewer <jbrewer at olemiss.edu<mailto:jbrewer at olemiss.edu>> wrote:
+
+Gian,
+
+I am bit confused by what your concern is. First, if the imbalance is not
+that severe, the approach you take to analyzing a two-way permanova (type
+I, type II, type III ss) is not going to matter that much. Indeed, if the
+design were balanced, they would give you identical results. Second,
+regardless of the lack of balance, for the models y ~ A + B + A:B  and y ~
+B + A + A:B, the test for the interaction will be the same. So, I don?t
+understand why you would want to drop the main effects from the model,
+effectively combining them with interaction. That doesn?t make any sense to
+me. The problem is with the tests of the main effects.
+
+My advice is to run both models (i.e., A first, then B first) using type I
+ss. As mentioned, both models will give you the same interaction result. If
+the interaction is all that you?re interested in, problem solved. Interpret
+only the interaction and and ignore the main effects. If the interaction is
+not significant and low, then interpret only the main effects, focusing
+only on the second main effect in each of the differently-ordered models
+(which are equivalent to Type II ss tests). And these results will tell you
+pretty the same thing as type III tests if there is little or no
+interaction. I would not worry about trying to estimate the main effects
+while controlling for the interaction (Ellen?s question), which cannot be
+done using type I or type II SS in 2-way permanova using adonis. But why
+would you want to? The lack of a balanced design results in the main
+effects and the interaction not being independent of one another.  Forcing
+that independence by using type III ss can only work by essentially
+"throwing away" some of the information associated with the main effects,
+possibly resulting in an overly conservative test. The lower the
+interaction, however, the less is thrown away and the less it matters.
+
+
+Steve
+
+
+
+
+Stephen Brewer
+jbrewer at olemiss.edu<mailto:jbrewer at olemiss.edu>
+Professor
+Department of Biology
+PO Box 1848
+University of Mississippi
+University, Mississippi 38677-1848
+Brewer web page - https://jstephenbrewer.wordpress.com<https://jstephenbrewer.wordpress.com/>
+FAX - 662-915-5144<tel:662-915-5144> Phone - 662-202-5877<tel:662-202-5877>
+
+
+
+
+
+On Oct 31, 2018, at 5:45 PM, Gian Maria Niccol? Benucci <
+gian.benucci at gmail.com<mailto:gian.benucci at gmail.com>> wrote:
+
+Thank you Jari,
+
+So to test if there are significant interaction I should use
+Stage:Growhouse
+i.e. A:B. This will test the interaction and main effects that are marginal
+and so removed. How matters then if I include by="margin" or not? The R2
+are the same (please see below) but the p-value changes. I assume the
+second way is most correct, is it?
+
+*> adonis2(t(otu_fungi_out) ~ Stage : Growhouse, data=metadata_fungi_out,
+permutations=9999)*
+Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+metadata_fungi_out, permutations = 9999)
+              Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  3   1.0812 0.23075 1.9998 0.0211 *
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+*> adonis2(t(otu_fungi_out) ~ Stage : Growhouse, data=metadata_fungi_out,
+by = "margin", permutations=9999)*
+Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+metadata_fungi_out, permutations = 9999, by = "margin")
+              Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  3   1.0812 0.23075 1.9998  0.006 **
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+Cheers,
+
+Gian
+
+On Tue, 30 Oct 2018 at 05:47, Jari Oksanen <jari.oksanen at oulu.fi<mailto:jari.oksanen at oulu.fi>> wrote:
+
+Hello Gian,
+
+These formulae expand into different models. Compare
+
+model.matrix(~ Stage:Growhouse, data=metadata_fungi_out)
+model.matrix(~ Stage*Growhouse, data=metadata_fungi_out)
+
+The first model (Stage:Growhouse) will also contain (implicitly) main
+effects and all these terms are marginal and can be removed, whereas the
+latter Stage*Growhouse expands to explicit main effects and interaction
+effects, and only the interaction effects are marginal and can be removed.
+This is also reflected in the degrees of freedom in your anova table: In
+the first case Stage:Growhouse has 3 df, and in the latter only 1 df (and
+the main effects ignored had 2 df).
+
+Ciao, Giari
+
+On 29 Oct 2018, at 19:11, Gian Maria Niccol? Benucci <
+
+gian.benucci at gmail.com<mailto:gian.benucci at gmail.com>> wrote:
+
+
+Hello Jari,
+
+It is a little bit confusing. If A*B unfolds in A+B+A:B then A:B is the
+real interaction component.
+So, which if the code below will test the variance for the interaction
+alone?
+
+adonis2(t(otu_fungi_out) ~ *Stage : Growhouse*, data=metadata_fungi_out,
+
+by = "margin", permutations=9999)
+Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage:Growhouse, data =
+metadata_fungi_out, permutations = 9999, by = "margin")
+             Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  3   1.0812 0.23075 1.9998  1e-04 ***
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+adonis2(t(otu_fungi_out) ~ *Stage * Growhouse*, data=metadata_fungi_out,
+
+by = "margin", permutations=9999)
+Permutation test for adonis under reduced model
+Marginal effects of terms
+Permutation: free
+Number of permutations: 9999
+
+adonis2(formula = t(otu_fungi_out) ~ Stage * Growhouse, data =
+metadata_fungi_out, permutations = 9999, by = "margin")
+             Df SumOfSqs      R2      F Pr(>F)
+Stage:Growhouse  1   0.2171 0.04633 1.2045 0.2443
+Residual        20   3.6045 0.76925
+Total           23   4.6857 1.00000
+
+
+
+The results is clearly very different. Also, in a normal adonis call I
+didn't have any significance for the interaction that I have instead if I
+use A:B. So ~ A*B will not test for interactions at all?
+
+*adonis*(t(otu_fungi_out) ~ Stage * Growhouse, data=metadata_fungi_out,
+
+permutations=9999)
+Call:
+adonis(formula = t(otu_fungi_out) ~ Stage * Growhouse, data =
+metadata_fungi_out,      permutations = 9999)
+
+Permutation: free
+Number of permutations: 9999
+
+Terms added sequentially (first to last)
+
+             Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Stage            1    0.4877 0.48769  2.7060 0.10408 0.0247 *
+Growhouse        1    0.3765 0.37647  2.0889 0.08034 0.0542 .
+Stage:Growhouse  1    0.2171 0.21708  1.2045 0.04633 0.2507
+Residuals       20    3.6045 0.18023         0.76925
+Total           23    4.6857                 1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+
+Thank you!
+
+Gian
+
+
+
+
+
+On Tue, 16 Oct 2018 at 08:54, Jari Oksanen <jari.oksanen at oulu.fi<mailto:jari.oksanen at oulu.fi>> wrote:
+
+
+
+On 16/10/18 11:23, Torsten Hauffe wrote:
+
+"adonis2(speciesdataset~A*B, by="margin") but then only the effect of
+
+the
+
+interaction is tested."
+
+This is not entirely correct.
+adonis2(speciesdataset~A:B, by="margin") would test the interaction
+
+alone.
+
+~A*B unfolds to ~A+B+A:B
+
+
+Well, it was correct: the only **marginal** effect in ~A+B+A:B is A:B (A
+and B are not marginal), and by = "margin" will only analyse marginal
+effects.
+
+Cheers, Jari Oksanen
+
+
+On Tue, 16 Oct 2018 at 11:51, Ellen Pape <ellen.pape at gmail.com<mailto:ellen.pape at gmail.com>> wrote:
+
+Hi all,
+
+I don't know whether this is the correct mailing group to address this
+question:
+
+I would like to perform a 2-way permanova analysis in R (using adonis
+
+in
+
+vegan). By default you are performing sequential tests (by="terms"),
+
+so
+
+when you have 2 or more factors, the order of these factors matter.
+However, since I wanted to circumvent this, I chose for the option
+by="margin" (adonis2(speciesdataset~A*B, by="margin")) but then only
+
+the
+
+effect of the interaction is tested. On the "help page" of anova. cca
+
+it
+
+says: "if you select by="margin" -> the current function only
+
+evaluates
+
+marginal terms. It will, for instance, ignore main effects that are
+included in interaction terms."
+
+
+My question now is: can I somehow get the main effects tested anyhow,
+
+when
+
+the interaction term is not significant?
+
+Thanks,
+Ellen
+
+      [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+   [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+    [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+
+
+
+*----- Do not print this email unless you really need to. Save paper and
+protect the environment! -----*
+
+[[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+[[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Fri Nov  9 00:12:44 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Thu, 08 Nov 2018 23:12:44 +0000
+Subject: [R-sig-eco] Structural Equation Modelling for Ecologists and
+ Evolutionary Biologists (SEMR02)
+Message-ID: <cc1d664210045cf85961a32218ac281d@prstatistics.com>
+
+Structural Equation Modelling for Ecologists and Evolutionary Biologists 
+(SEMR02)
+
+https://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr02/
+
+This course will be delivered by Dr. Jonathan Lefcheck (author of the 
+piecewise package) from the 19th - 23rd November 2018 in Glasgow City 
+Centre.
+
+Course Overview:
+The course is a primer on structural equation modelling (SEM) and 
+confirmatory path analysis, with an emphasis on practical skills and 
+applications to real-world data.
+
+Structural equation modelling is a rapidly growing technique in ecology 
+and evolution that unites multiple hypotheses in a single causal 
+network. It provides an intuitive graphical representation of 
+relationships among variables, underpinned by well-described 
+mathematical estimation procedures. Several advances in SEM over the 
+past few years have expanded its utility for typical ecological 
+datasets, which include count data, missing observations, and nested or 
+hierarchical designs.
+
+We will cover the basic philosophy behind SEM, provide approachable 
+mathematical explanations of the techniques, and cover recent extensions 
+to mixed effects models and non-normal distributions. Along the way, we 
+will work through many examples from the primary literature using the 
+open-source statistical software R (www.r-project.org). We will draw on 
+two popular R packages for conducting SEM, including lavaan and 
+piecewiseSEM.
+
+Participants are encouraged to bring their own data, as there will be 
+opportunities throughout the course to plan, analyze, and receive 
+feedback on structural equation models.
+
+Course Programme
+Day 1
+Introduction to SEM
+Module 1: What is Structural Equation Modeling? Why would I use it?
+Module 2: Creating multivariate causal models
+Module 3: Fitting piecewise models
+Readings: Grace 2010 (overview), Whalen et al. 2013 (example)
+
+Day 2
+SEM Using Likelihood
+Module 4: Fitting Observed Variable models with covariance structures 
+Module 5: What does it mean to evaluate a multivariate hypothesis?
+Module 6: Latent Variable models Module 7: ANCOVA revisited & 
+Nonlinearities
+Readings: Grace & Bollen 2005, Shipley 2004
+Optional Reading: Pearl 2012, Pearl 2009 (causality)
+
+Day 3
+Piecewise SEM
+Module 8: Introduction to piecewise approach
+Module 9: Incorporation of random effects models
+Model 10: Autocorrelation Reading: Shipley 2009; Lefcheck 2016
+
+Day 4
+Advanced Topics with Likelihood and Piecewise SEM
+Module 11: Multigroup models and non-linearities
+Module 12: Composite Variables
+Module 13: Phylogenetically-correlated data
+Module 14: Prediction using SEM
+Module 15: How To Reject A Paper That Uses SEM
+Readings: Grace & Julia 1999, von Hardenberg & Gonzalez?Voyer 2013
+
+Day 5
+Open Lab and Final Presentations
+
+Email oliverhooker at prstatistics.com
+
+Check out our sister sites,
+www.PRstatistics.com (Ecology and Life Sciences)
+www.PRinformatics.com (Bioinformatics and data science)
+www.PSstatistics.com (Behaviour and cognition)
+
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+
+Alternative routes to piscivory: Contrasting growth trajectories in 
+brown trout (Salmo trutta) ecotypes exhibiting contrasting life history 
+strategies. Ecology of Freshwater Fish. DOI to follow
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine 
+brown trout, Salmo trutta. Biological Journal of the Linnean Society. 
+DOI 10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
+
++44 (0) 7966500340
+
+
+From high@t@t @ending from high@t@t@com  Fri Nov 16 08:44:16 2018
+From: high@t@t @ending from high@t@t@com (Highland Statistics Ltd)
+Date: Fri, 16 Nov 2018 09:44:16 +0200
+Subject: [R-sig-eco] Course: Introduction to GAM and GAMM with R
+Message-ID: <7f9ec6c0-7fe4-acc6-b732-2e1aaefd54b1@highstat.com>
+
+Apologies for cross-posting
+
+We would like to announce the following statistics course in Lisbon.
+
+Course: Introduction to GAM and GAMM with R.
+Where:? Lisbon, Portugal.
+When:?? 25 February 2019 - 1 March 2019
+Course website: http://highstat.com/index.php/courses-upcoming
+Course flyer: 
+http://highstat.com/Courses/Flyers/2019/Flyer2019_02Lisbon_GAMM_V3.pdf
+
+Kind regards,
+
+
+Alain Zuur
+
+-- 
+
+Dr. Alain F. Zuur
+Highland Statistics Ltd.
+9 St Clair Wynd
+AB41 6DZ Newburgh, UK
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+And:
+NIOZ Royal Netherlands Institute for Sea Research,
+Department of Coastal Systems, and Utrecht University,
+P.O. Box 59, 1790 AB Den Burg,
+Texel, The Netherlands
+
+
+
+Author of:
+1. Beginner's Guide to Spatial, Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA. (2017).
+2. Beginner's Guide to Zero-Inflated Models with R (2016).
+3. Beginner's Guide to Data Exploration and Visualisation with R (2015).
+4. Beginner's Guide to GAMM with R (2014).
+5. Beginner's Guide to GLM and GLMM with R (2013).
+6. Beginner's Guide to GAM with R (2012).
+7. Zero Inflated Models and GLMM with R (2012).
+8. A Beginner's Guide to R (2009).
+9. Mixed effects models and extensions in ecology with R (2009).
+10. Analysing Ecological Data (2007).
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Wed Nov 21 17:44:18 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Wed, 21 Nov 2018 16:44:18 +0000
+Subject: [R-sig-eco] Statistical modelling of time-to-event data using
+ survival analysis: an introduction for animal behaviourists,
+ ecologists and evolutionary biologists
+Message-ID: <e82e5712e01d1a59ef9d3dc20a131d00@prstatistics.com>
+
+Statistical modelling of time-to-event data using survival analysis: an 
+introduction for animal behaviourists, ecologists and evolutionary 
+biologists (TTED01)
+
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+This course will be delivered by Dr. Will Hoppitt for the 21st - 25th 
+January 2019 in Glasgow City Centre
+
+Course Overview:
+Survival analysis is a set of statistical methods initially designed to 
+analyse data giving the times at which individuals die, and assess the 
+effect that different predictor variables have on the rate of death. 
+However, its applications are much broader than this: it can be used to 
+analyse any time-to-event data. Ecologists and evolutionary biologists 
+often encounter data of this kind. Often factors influencing survival 
+itself will be of interest. But there are many other cases, e.g. what 
+factors influence the time of first breeding? Or the time taken to reach 
+maturity? Animal behaviourists too will encounter this type of data 
+frequently, e.g. what factors influence the time it takes to learn a 
+novel behaviour pattern? Or the time to respond to a stimulus? etc. And 
+yet the techniques of survival analysis are not generally well known by 
+researchers in these disciplines.
+
+In this course, you will learn how to apply survival analysis models to 
+quantify the effect that predictor variables (continuous or discrete) 
+have on the rate at which events occur, and how to test hypotheses about 
+these effects. We will focus on a flexible modelling technique called 
+the Cox proportional hazards model, which makes minimal assumptions 
+about the underlying probability distributions. You will learn how to 
+fit and interpret these models, how to evaluate its assumptions, and how 
+to extend it to model time dependent variables, random effects, 
+multistate models and competing risks models.
+
+Course Programme
+Monday 21st ? Classes from 09:30 to 17:30
+Module 1: Statistical modelling of rates and times
+Module 2: Parametric survival models and the Cox model
+
+Tuesday 22nd ? Classes from 09:30 to 17:30
+Module 3: Fitting Cox models
+Module 4: Interpreting Cox Models
+
+Wednesday 23rd ? Classes from 09:30 to 17:30
+Module 5: Evaluating the proportional hazard assumption
+Module 6: Stratified Cox models
+
+Thursday 24th ? Classes from 09:30 to 17:30
+Module 7: Time dependent variables
+Module 8: Frailty Models and Multistate models
+
+Friday 25th ? Classes from 09:30 to 17:30
+Module 9: Competing risks models
+Module 10: Open session
+
+Email oliverhooker at psstatistics.com
+
+Check out our sister sites,
+www.PRstatistics.com (Ecology and Life Sciences)
+www.PRinformatics.com (Bioinformatics and data science)
+www.PSstatistics.com (Behaviour and cognition)
+
+1.	November 5th ? 8th 2018
+PHYLOGENETIC COMPARATIVE METHODS FOR STUDYING DIVERSIFICATION AND 
+PHENOTYPIC EVOLUTION (PCME01)
+Glasgow, Scotland, Dr. Antigoni Kaliontzopoulou
+https://www.prstatistics.com/course/phylogenetic-comparative-methods-for-studying-diversification-and-phenotypic-evolution-pcme01/
+
+2.	November 19th ? 23rd 2018
+STRUCTUAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY BIOLOGISTS 
+(SEMR02)
+Glasgow, Scotland, Dr. Jonathan Lefcheck
+https://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr02/
+
+3.	November 26th ? 30th 2018
+FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND COMPUTATION 
+(FEER01)
+Glasgow, Scotland, Dr. Francesco de Bello, Dr. Lars G?tzenberger, Dr. 
+Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+4.	December 3rd ? 7th 2018
+INTRODUCTION TO BAYESIAN DATA ANALYSIS FOR SOCIAL AND BEHAVIOURAL 
+SCIENCES USING R AND STAN (BDRS01)
+Glasgow, Dr. Mark Andrews
+https://www.psstatistics.com/course/introduction-to-bayesian-data-analysis-for-social-and-behavioural-sciences-using-r-and-stan-bdrs01/
+
+5.	January 21st ? 25th 2019
+STATISTICAL MODELLING OF TIME-TO-EVENT DATA USING SURVIVAL ANALYSIS: AN 
+INTRODUCTION FOR ANIMAL BEHAVIOURISTS, ECOLOGISTS AND EVOLUTIONARY 
+BIOLOGISTS (TTED01)
+Glasgow, Scotland, Dr. Will Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+6.	January 21st ? 25th 2019
+ADVANCING IN STATISTICAL MODELLING USING R (ADVR08)
+Glasgow, Scotland, Dr. Luc Bussiere, Dr. Tom Houslay
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr08/
+
+7.	January 28th?  February 1st 2019
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+https://www.prstatistics.com/course/aquatic-acoustic-telemetry-data-analysis-atda01/
+
+8.	February 4th ? 8th 2019
+DESIGNING RELIABLE AND EFFICIENT EXPERIMENTS FOR SOCIAL SCIENCES 
+(DRES01)
+Glasgow, Scotland, Dr. Daniel Lakens
+https://www.psstatistics.com/course/designing-reliable-and-effecient-experiments-for-social-sciences-dres01/
+
+9.	February 11th ? 15th 2019
+REPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS
+Glasgow, Scotland, Dr. Thibaut Jombart, Dr. Zhain Kamvar
+https://www.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg02/
+
+10.	25th February ? 1st March 2019
+MOVEMENT ECOLOGY (MOVE02)
+Margam Discovery Centre, Wales, Dr. Luca Borger, Prof. Ronny Wilson, Dr 
+Jonathan Potts
+https://www.prstatistics.com/course/movement-ecology-move02/
+
+11.	March 4th ? 8th 2019
+BIOACOUSTICS FOR ECOLOGISTS: HARDWARE, SURVEY DESIGN AND DATA ANALYSIS 
+(BIAC01)
+Glasgow, Scotland, Dr. Paul Howden-Leach
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac01/
+
+12.	March 11th ? 15th  2019
+ECOLOGICAL NICHE MODELLING USING R (ENMR03)
+Glasgow, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03/
+
+13.	March 18th ? 22nd 2019
+INTRODUCTION TO STATISTICS AND R FOR EVERYONE (IRFE01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe01/
+
+14.	March 25th ? 29th 2019
+LANDSCAPE GENETIC DATA ANALYSIS USING R (LNDG03)
+Glasgow, Scotland, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg03/
+
+15.	April 1st ? 5th 2019
+INTRODUCTION TO STATISTICAL MODELLING FOR PSYCHOLOGISTS USING R (IPSY01)
+Glasgow, Scotland, Dr. Dale Barr, Dr Luc Bussierre
+http://www.psstatistics.com/course/introduction-to-statistics-using-r-for-psychologists-ipsy02/
+
+16.	April 1st ? 5th 2019
+INDIVIDUAL BASED MODELS FOR ECOLOGSITS (IBME01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+Link to follow
+
+17.	April 8th ? 12th 2019
+MACHINE LEARNING (MLUR01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/machine-learning-using-r-mlur01/
+
+18.	April 29th ? May 3rd 2019
+COMPARATIVE GENOMICS (CMGN01)
+Glasgow, Scotland, Dr. Fritz Sedlazeck, Dr. Matthias Weissensteiner
+https://www.prinformatics.com/course/comparative-genomics-cmgn01/
+
+19.	May 6th ? 10th 2019
+NETWORK ANAYLSIS FOR ECOLOGISTS USING R (NTWA03)
+Myuna Bay, AUSTRALIA,  Dr. Marco Scotti
+www.prstatistics.com/course/network-analysis-ecologists-ntwa03/
+
+20.	May 16th ? 18th 2019 (please note this a 3-day course from Thursday 
+to Saturday)
+AQUATIC MOVEMENT ECOLOGY USING R (AMER01)
+Myuna Bay, AUSTRALIA, Dr. Ross Dwyer, Dr. Vinay Udyawer
+Link to follow
+
+21.	May 16th ? 19th 2019 (please note this a 4-day course from Thursday 
+to Monday)
+INTRODUCTION TO R FOR EVERYONE (IRFE02)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe02/
+
+22.	May 20th ? 24th 2019
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV03)
+Myuna Bay, AUSTRALIA, Prof. David Warton
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03/
+
+23.	May 21st ? 24th 2019
+STATISTICAL TOOL BOX FOR ECOLOGISTS (STKE01)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/statistical-toolkit-for-ecologists-stke01/
+
+24.	June 10th ? 14th 2019
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Glasgow, Scotland, Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+25.	June 17th ? 21st 2019
+SPATIAL MODELLING AND ANALYSIS OF ADAPTIVE GENOMIC VARIATION (SPGN01)
+Glasgow, Dr. Matt Fitzpatrick
+https://www.prstatistics.com/course/spatial-modelling-and-analysis-of-adaptive-genomic-variation-spgn01/
+
+26.	June 17th ? 21st 2019
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB06)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb06/
+
+27.	June 24th ? 28th 2019
+ADVANCED PYTHON FOR BIOLOGISTS (APYB03)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb03/
+
+28.	July 1st ? 5th 2019
+DATA VISUALISATION AND MANIPULATION USING PYTHON (DVMP01)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+29.	September 16th ? 20th 2019
+R PACKAGE DESIGN AND DEVELOPMENT AND REPRODUCIBLE DATA SCIENCE FOR 
+BIOLOGISTS (RPKG01)
+Glasgow, Scotland, Dr. Cory Merow, Dr. Andy Rominger
+https://www.prstatistics.com/course/r-package-design-and-development-and-reproducible-data-science-for-biologists-rpkg01/
+
+30.	September 30th ? October 4th 2019
+GEOMETRIC MORPHOMETRICS USING R (GMMR02)
+Glasgow, Scotland, Prof. Dean Adams, Prof. Michael Collyer, Dr. Antigoni 
+Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr02/
+
+31.	October 7th ? 11th 2019
+CONSERVATION PLANNING USING PRIORITIZR : FROM THEORY TO PRACTICE 
+(PRTZ01)
+Crete, GREECE, Dr Richard Schuster and Nina Morell
+https://www.prstatistics.com/course/conservation-planning-using-prioritizr-from-theory-to-practice-prtz01/
+
+32.	October 21st ? 25th 2019
+A COMPLETE GUIDE TO MIXED MODELS (INCLUDING TEMPORAL AND SPATIAL 
+AUTOCORRELATION) (MMTS01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/a-complete-guide-to-mixed-models-including-temporal-and-spatial-autocorrelation-mmts01/
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+
+Alternative routes to piscivory: Contrasting growth trajectories in 
+brown trout (Salmo trutta) ecotypes exhibiting contrasting life history 
+strategies. Ecology of Freshwater Fish. DOI to follow
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine 
+brown trout, Salmo trutta. Biological Journal of the Linnean Society. 
+DOI 10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
+
++44 (0) 7966500340
+
+
+From i@@d@mo90 @ending from gm@il@com  Wed Nov 21 18:07:55 2018
+From: i@@d@mo90 @ending from gm@il@com (Irene Adamo)
+Date: Wed, 21 Nov 2018 18:07:55 +0100
+Subject: [R-sig-eco] Proportion of Variance with adonis
+Message-ID: <CAKJjPx4hkQKR9ysDm7D4KgFOW=ibjq7qnVm_nhFGArH_cUd5Kg@mail.gmail.com>
+
+Dear all,
+
+I have a very simple question which is making me struggle:  when performing
+adonis is it the Rsquared meant as the proportion of variance if not, how
+can I get it?
+thanks a lot!
+
+	[[alternative HTML version deleted]]
+
+
+From @ilv@d@v@@co @ending from gm@il@com  Wed Nov 28 20:47:33 2018
+From: @ilv@d@v@@co @ending from gm@il@com (Vasco Silva)
+Date: Wed, 28 Nov 2018 19:47:33 +0000
+Subject: [R-sig-eco] Fitting a GLMM to a percent cover data with glmer or
+ glmmTMB
+Message-ID: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+
+Hi,
+
+I am trying to fit a GLMM on percent cover for each species using glmer:
+
+>str(cover)
+'data.frame': 102 obs. of  114 variables:
+$ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+$ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+$ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1  ...
+$ sp1 : int  0 0 0 1 0 0 1 ...
+$ sp2 : int  0 0 0 0 0 3 3 ...
+$ sp3 : int  0 1 0 0 1 3 3 ...
+$ sp4 : int  1 3 13 3 3 3 0 ...
+$ sp6 : int  0 0 0 0 0 0 0 ...
+ ...
+$ tot  : int  93 65 120 80 138 113 ...
+
+sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot), data=cover,
+family=binomial (link ="logit"))
+
+However, I wonder if binomial distribution can be used (proportion of
+species cover from a total cover) or if I should  fitted the GLMM with
+glmmTMB (tweedie distribution)?
+
+I would greatly appreciate it if someone could help me.
+
+Cheers.
+
+Vasco Silva
+
+	[[alternative HTML version deleted]]
+
+
+From bott@-duk@t@zolt@n @ending from okologi@@mt@@hu  Thu Nov 29 15:23:32 2018
+From: bott@-duk@t@zolt@n @ending from okologi@@mt@@hu (=?UTF-8?Q?Botta-Duk=c3=a1t_Zolt=c3=a1n?=)
+Date: Thu, 29 Nov 2018 15:23:32 +0100
+Subject: [R-sig-eco] 
+ Fitting a GLMM to a percent cover data with glmer or glmmTMB
+In-Reply-To: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+References: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+Message-ID: <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+
+Hi,
+
+I'm sure that binomial is unsuitable for relative cover. Binomial 
+distribution are defined as number of successes in independent trials. I 
+think this scheme cannot be applied to relative cover or visually 
+estimated cover. It is important because both number of trials and 
+probability of success influence mean and variance, thus both should 
+have a meaning that correspond to terms in this scheme.
+
+Unfortunately, I have no experience with tweedie distribution. I am also 
+interested in experience of others! In theory an alternative would be 
+zero-inflated beta distribution (after rescaling percentage between zero 
+to one interval). Do some has an experience (including its availability 
+in R) with it?
+
+Cheers
+
+Zoltan
+
+2018. 11. 28. 20:47 keltez?ssel, Vasco Silva ?rta:
+> Hi,
+>
+> I am trying to fit a GLMM on percent cover for each species using glmer:
+>
+>> str(cover)
+> 'data.frame': 102 obs. of  114 variables:
+> $ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+> $ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+> $ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1  ...
+> $ sp1 : int  0 0 0 1 0 0 1 ...
+> $ sp2 : int  0 0 0 0 0 3 3 ...
+> $ sp3 : int  0 1 0 0 1 3 3 ...
+> $ sp4 : int  1 3 13 3 3 3 0 ...
+> $ sp6 : int  0 0 0 0 0 0 0 ...
+>   ...
+> $ tot  : int  93 65 120 80 138 113 ...
+>
+> sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot), data=cover,
+> family=binomial (link ="logit"))
+>
+> However, I wonder if binomial distribution can be used (proportion of
+> species cover from a total cover) or if I should  fitted the GLMM with
+> glmmTMB (tweedie distribution)?
+>
+> I would greatly appreciate it if someone could help me.
+>
+> Cheers.
+>
+> Vasco Silva
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From bott@-duk@t@zolt@n @ending from okologi@@mt@@hu  Thu Nov 29 15:30:48 2018
+From: bott@-duk@t@zolt@n @ending from okologi@@mt@@hu (=?UTF-8?Q?Botta-Duk=c3=a1t_Zolt=c3=a1n?=)
+Date: Thu, 29 Nov 2018 15:30:48 +0100
+Subject: [R-sig-eco] 
+ Fitting a GLMM to a percent cover data with glmer or glmmTMB
+In-Reply-To: <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+References: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+ <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+Message-ID: <4884d08b-9b13-8f8b-fc9c-a8abec88c97f@okologia.mta.hu>
+
+I have to correct myself :),? because an important point is missing from 
+this sentence:
+
+Binomial distribution are defined as number of successes in independent 
+trials.
+
+correctly:
+
+Binomial distribution are defined as number of successes in FIXED NUMBER 
+OF independent trials.
+
+Zoltan
+
+2018. 11. 29. 15:23 keltez?ssel, Botta-Duk?t Zolt?n ?rta:
+> Hi,
+>
+> I'm sure that binomial is unsuitable for relative cover. Binomial 
+> distribution are defined as number of successes in independent trials. 
+> I think this scheme cannot be applied to relative cover or visually 
+> estimated cover. It is important because both number of trials and 
+> probability of success influence mean and variance, thus both should 
+> have a meaning that correspond to terms in this scheme.
+>
+> Unfortunately, I have no experience with tweedie distribution. I am 
+> also interested in experience of others! In theory an alternative 
+> would be zero-inflated beta distribution (after rescaling percentage 
+> between zero to one interval). Do some has an experience (including 
+> its availability in R) with it?
+>
+> Cheers
+>
+> Zoltan
+>
+> 2018. 11. 28. 20:47 keltez?ssel, Vasco Silva ?rta:
+>> Hi,
+>>
+>> I am trying to fit a GLMM on percent cover for each species using glmer:
+>>
+>>> str(cover)
+>> 'data.frame': 102 obs. of? 114 variables:
+>> $ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+>> $ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+>> $ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1? ...
+>> $ sp1 : int? 0 0 0 1 0 0 1 ...
+>> $ sp2 : int? 0 0 0 0 0 3 3 ...
+>> $ sp3 : int? 0 1 0 0 1 3 3 ...
+>> $ sp4 : int? 1 3 13 3 3 3 0 ...
+>> $ sp6 : int? 0 0 0 0 0 0 0 ...
+>> ? ...
+>> $ tot? : int? 93 65 120 80 138 113 ...
+>>
+>> sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot), 
+>> data=cover,
+>> family=binomial (link ="logit"))
+>>
+>> However, I wonder if binomial distribution can be used (proportion of
+>> species cover from a total cover) or if I should? fitted the GLMM with
+>> glmmTMB (tweedie distribution)?
+>>
+>> I would greatly appreciate it if someone could help me.
+>>
+>> Cheers.
+>>
+>> Vasco Silva
+>>
+>> ????[[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From jo@nne @ending from the@n@lytic@ledge@com  Thu Nov 29 15:50:47 2018
+From: jo@nne @ending from the@n@lytic@ledge@com (Joanne Potts)
+Date: Thu, 29 Nov 2018 14:50:47 +0000
+Subject: [R-sig-eco] mvabund: difference between 'glm1path' and 'manyglm'
+Message-ID: <CAJakBjBYg6uiFSJ=ZbWvZOA0ZfbvxAHEBPowFg3bpxjhmwTLTA@mail.gmail.com>
+
+<r-sig-ecology at r-project.org>Hi David and list,
+
+Can someone please help me understand why, when changing the
+'method=manyglm' argument to 'method=glm1path' under default settings
+(negative binomial) the estimates of theta change in the 'trait.glm'
+function?
+
+I have provided example code below us the antTraits data set. And you
+should see the plots for ft and ft3 are similar, yet ft2 is quite
+different, so I think I am missing something (no doubt, probably very
+obvious!).
+
+Advice appreciated, thank you.
+
+Jo
+
+
+
+data(antTraits)
+
+ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
+ft$phi
+ft$theta
+qqnorm(residuals(ft)); abline(c(0,1),col="red")
+
+ft2=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
+mean(ft2$phis)
+qqnorm(residuals(ft2)); abline(c(0,1),col="red")
+
+
+ft3=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path",
+negative.binomial(theta=1.641763))
+1/mean(ft3$phis)
+qqnorm(residuals(ft3)); abline(c(0,1),col="red")
+
+
+-- 
+
+Kind regards,
+
+Joanne Potts
+
+
+___________________
+Statistical Consultant
+theanalyticaledge.com
+
+	[[alternative HTML version deleted]]
+
+
+From c@deb @ending from u@g@@gov  Thu Nov 29 16:53:31 2018
+From: c@deb @ending from u@g@@gov (Cade, Brian)
+Date: Thu, 29 Nov 2018 08:53:31 -0700
+Subject: [R-sig-eco] 
+ [EXTERNAL] Re: Fitting a GLMM to a percent cover data
+ with glmer or glmmTMB
+In-Reply-To: <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+References: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+ <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+Message-ID: <CAM5M9BR0D4pBq4uovPs7L3NVKcAyG0-i-x+TZKnCFd9i60m9nA@mail.gmail.com>
+
+Beta regression can be used for modeling proportion (or percentage) cover
+data, but there are some issues with using it if you have many values of
+0.0 or 1.0.  A much more flexible approach that I've used is to use
+quantile regression with the proportion response (y) data logit
+transformed.  Much easier to deal with 0.0 or 1.0 (boundary values) with
+quantiles than with the means being estimated by beta regression.  The
+quantreg package in R has what you need, but I think this logit transformed
+quantile regression approach is also implemented in another package too
+(perhaps Qtools package).  See Bottai et al. (2010.  Logistic quantile
+regression for bounded outcomes.  Statistics in Medicine 29: 309-317.).
+
+Brian
+
+Brian S. Cade, PhD
+
+U. S. Geological Survey
+Fort Collins Science Center
+2150 Centre Ave., Bldg. C
+Fort Collins, CO  80526-8818
+
+email:  cadeb at usgs.gov <brian_cade at usgs.gov>
+tel:  970 226-9326
+
+
+
+On Thu, Nov 29, 2018 at 7:24 AM Botta-Duk?t Zolt?n <
+botta-dukat.zoltan at okologia.mta.hu> wrote:
+
+> Hi,
+>
+> I'm sure that binomial is unsuitable for relative cover. Binomial
+> distribution are defined as number of successes in independent trials. I
+> think this scheme cannot be applied to relative cover or visually
+> estimated cover. It is important because both number of trials and
+> probability of success influence mean and variance, thus both should
+> have a meaning that correspond to terms in this scheme.
+>
+> Unfortunately, I have no experience with tweedie distribution. I am also
+> interested in experience of others! In theory an alternative would be
+> zero-inflated beta distribution (after rescaling percentage between zero
+> to one interval). Do some has an experience (including its availability
+> in R) with it?
+>
+> Cheers
+>
+> Zoltan
+>
+> 2018. 11. 28. 20:47 keltez?ssel, Vasco Silva ?rta:
+> > Hi,
+> >
+> > I am trying to fit a GLMM on percent cover for each species using glmer:
+> >
+> >> str(cover)
+> > 'data.frame': 102 obs. of  114 variables:
+> > $ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+> > $ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+> > $ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1  ...
+> > $ sp1 : int  0 0 0 1 0 0 1 ...
+> > $ sp2 : int  0 0 0 0 0 3 3 ...
+> > $ sp3 : int  0 1 0 0 1 3 3 ...
+> > $ sp4 : int  1 3 13 3 3 3 0 ...
+> > $ sp6 : int  0 0 0 0 0 0 0 ...
+> >   ...
+> > $ tot  : int  93 65 120 80 138 113 ...
+> >
+> > sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot),
+> data=cover,
+> > family=binomial (link ="logit"))
+> >
+> > However, I wonder if binomial distribution can be used (proportion of
+> > species cover from a total cover) or if I should  fitted the GLMM with
+> > glmmTMB (tweedie distribution)?
+> >
+> > I would greatly appreciate it if someone could help me.
+> >
+> > Cheers.
+> >
+> > Vasco Silva
+> >
+> >       [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From @ilv@d@v@@co @ending from gm@il@com  Thu Nov 29 17:40:21 2018
+From: @ilv@d@v@@co @ending from gm@il@com (Vasco Silva)
+Date: Thu, 29 Nov 2018 16:40:21 +0000
+Subject: [R-sig-eco] 
+ Fitting a GLMM to a percent cover data with glmer or glmmTMB
+In-Reply-To: <4884d08b-9b13-8f8b-fc9c-a8abec88c97f@okologia.mta.hu>
+References: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+ <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+ <4884d08b-9b13-8f8b-fc9c-a8abec88c97f@okologia.mta.hu>
+Message-ID: <CAC8jbZewb6Q1ciwHVsgdK4ZdyffBMW9jvOm=y_x5CUdjUvbTQQ@mail.gmail.com>
+
+Thanks Zoltan. Using the glmmTMB with tweedie is the option that I can now
+discern...
+
+Vasco
+
+
+
+Botta-Duk?t Zolt?n <botta-dukat.zoltan at okologia.mta.hu> escreveu no dia
+quinta, 29/11/2018 ?(s) 14:33:
+
+> I have to correct myself :),  because an important point is missing from
+> this sentence:
+>
+> Binomial distribution are defined as number of successes in independent
+> trials.
+>
+> correctly:
+>
+> Binomial distribution are defined as number of successes in FIXED NUMBER
+> OF independent trials.
+>
+> Zoltan
+>
+> 2018. 11. 29. 15:23 keltez?ssel, Botta-Duk?t Zolt?n ?rta:
+> > Hi,
+> >
+> > I'm sure that binomial is unsuitable for relative cover. Binomial
+> > distribution are defined as number of successes in independent trials.
+> > I think this scheme cannot be applied to relative cover or visually
+> > estimated cover. It is important because both number of trials and
+> > probability of success influence mean and variance, thus both should
+> > have a meaning that correspond to terms in this scheme.
+> >
+> > Unfortunately, I have no experience with tweedie distribution. I am
+> > also interested in experience of others! In theory an alternative
+> > would be zero-inflated beta distribution (after rescaling percentage
+> > between zero to one interval). Do some has an experience (including
+> > its availability in R) with it?
+> >
+> > Cheers
+> >
+> > Zoltan
+> >
+> > 2018. 11. 28. 20:47 keltez?ssel, Vasco Silva ?rta:
+> >> Hi,
+> >>
+> >> I am trying to fit a GLMM on percent cover for each species using glmer:
+> >>
+> >>> str(cover)
+> >> 'data.frame': 102 obs. of  114 variables:
+> >> $ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+> >> $ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+> >> $ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1  ...
+> >> $ sp1 : int  0 0 0 1 0 0 1 ...
+> >> $ sp2 : int  0 0 0 0 0 3 3 ...
+> >> $ sp3 : int  0 1 0 0 1 3 3 ...
+> >> $ sp4 : int  1 3 13 3 3 3 0 ...
+> >> $ sp6 : int  0 0 0 0 0 0 0 ...
+> >>   ...
+> >> $ tot  : int  93 65 120 80 138 113 ...
+> >>
+> >> sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot),
+> >> data=cover,
+> >> family=binomial (link ="logit"))
+> >>
+> >> However, I wonder if binomial distribution can be used (proportion of
+> >> species cover from a total cover) or if I should  fitted the GLMM with
+> >> glmmTMB (tweedie distribution)?
+> >>
+> >> I would greatly appreciate it if someone could help me.
+> >>
+> >> Cheers.
+> >>
+> >> Vasco Silva
+> >>
+> >>     [[alternative HTML version deleted]]
+> >>
+> >> _______________________________________________
+> >> R-sig-ecology mailing list
+> >> R-sig-ecology at r-project.org
+> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From l@r@@@fp@@ilv@ @ending from gm@il@com  Thu Nov 29 17:47:22 2018
+From: l@r@@@fp@@ilv@ @ending from gm@il@com (Lara Silva)
+Date: Thu, 29 Nov 2018 15:47:22 -0100
+Subject: [R-sig-eco] How to manipulatechange the space between the numbers
+ of axes (equal interval)? How to add a legend to a map (plot raster)?
+Message-ID: <CALN9TER3W-4HCiNYzPGvpCNRJW7tUJ9W_b--vSL60xJLHTYkeg@mail.gmail.com>
+
+Hello,
+ I?m trying to plot a map in R. Is it possible to change the values of
+x.axis and y.axis and have the same interval (space between the numbers)?
+ How to add a legend for the map?
+
+https://www.dropbox.com/s/60tavy6vez33mw3/Plot_map.tiff?dl=0
+
+> class(proj22PA$P_EMmeanByROC_mergedAlgo_mergedRun_mergedData)
+[1] "RasterLayer"
+attr(,"package")
+[1] "raster"
+>
+> proj22PA$P_EMmeanByROC_mergedAlgo_mergedRun_mergedData
+class       : RasterLayer
+band        : 2  (of  2  bands)
+dimensions  : 277, 412, 114124  (nrow, ncol, ncell)
+resolution  : 100, 100  (x, y)
+extent      : 461214, 502414, 4272892, 4300592  (xmin, xmax, ymin, ymax)
+coord. ref. : NA
+data source : grid
+names       : P_EMmeanByROC_mergedAlgo_mergedRun_mergedData
+values      : 42, 924  (min, max)
+
+>
+
+Code:
+
+plot(proj22PA$P_EMmeanByROC_mergedAlgo_mergedRun_mergedData,
+axes=FALSE,legend=FALSE,box=FALSE,par(mar=c(3,3,0.5,0.5),mgp=c(2,1,0)))
+axis(side = 1, at =c(470000,480000,500000),labels= c("470000", "480000",
+"500000"))
+axis(side = 2, at =c(4272892,4300592),labels= c("4272892", "4300592"))
+box()
+
+Regards,
+
+Silva
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Thu Nov 29 17:48:48 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Thu, 29 Nov 2018 16:48:48 +0000
+Subject: [R-sig-eco] Advanicng in R for ecologists
+Message-ID: <CAEsSYzxMLg1BWqh-EM=dv1pmOZfsbso_EDn4gyjLUL9Kg9T_CQ@mail.gmail.com>
+
+Advancing in statistical modelling for evolutionary biologists and
+ecologists using R (ADVR08)
+
+https://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr08/
+
+This course will be delivered by Dr. Luc Bussiere from the 21st 25th
+January 2019 in Glasgow City Centre
+Course Overview:
+This course will provide an introduction to working with real-life data
+typical of those encountered in the field of evolutionary biology and
+ecology. The course will be delivered by Dr. Luc Bussiere, Dr. Tom Houslay
+and Dr. Ane Timenes Laugen who are all practicing academics in the field of
+evolutionary biology.  This five day course will consist of series of
+modules (each lasting roughly half a day) covering model selection and
+simplification, generalised linear models, mixed effects models,  and
+non-linear models. Along the way you will gain in depth experience in data
+?wrangling?, data and model visualisation and plotting, as well as
+exploring and understanding model diagnostics.
+Classes will comprises of a mixture of lectures and practicals designed to
+either build required skills for future modules or to perform a family of
+analyses that is frequently encountered in the biological literature.
+Course programme
+Monday 21st ? Classes from 09:30 to 17:30
+Course introduction; techniques for data manipulation, aggregation, and
+visualisation; introduction to linear regression. Packages: {tidyr},
+{dplyr}, {ggplot2}
+Tuesday 22nd ? Classes from 09:30 to 17:30
+Linear models (diagnostics, collinearity, scaling, plotting fitted values);
+fitting and interpreting interaction terms; model selection and
+simplification; general linear models and ANCOVA.
+Packages: {stats}, {car}
+Wednesday 23rd ? Classes from 09:30 to 17:30
+Generalized linear models (logistic and Poisson regression); predicting
+using model objects and visualizing model fits. Packages: {broom},
+{visreg}, {ggplot2}
+Thursday 24th ? Classes from 09:30 to 17:30
+Mixed effects models in theory and practice; visualising fixed and random
+effects.
+Packages: {lme4}, {broom}, {ggplot2}, {sjPlot}
+Friday 25th ? Classes from 09:30 to 16:00
+Fitting nonlinear functions (polynomial & mechanistic models); brief
+introduction to more advanced topics & combining methods (e.g., generalised
+linear mixed effects, nonlinear mixed effects, and zero-inflated and
+zero-altered models). Packages: {nlsTools}
+Email oliverhooker at prstatistics.com
+Check out our sister sites,www.PRstatistics.com (Ecology and Life Sciences)
+www.PRinformatics.com (Bioinformatics and data science)www.PSstatistics.com
+(Behaviour and cognition)
+ 1.       November 26th ? 30th 2018FUNCTIONAL ECOLOGY FROM ORGANISM TO
+ECOSYSTEM: THEORY AND COMPUTATION (FEER01)Glasgow, Scotland, Dr. Francesco
+de Bello, Dr. Lars G?tzenberger, Dr. Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+ 2.       December 3rd ? 7th 2018INTRODUCTION TO BAYESIAN DATA ANALYSIS FOR
+SOCIAL AND BEHAVIOURAL SCIENCES USING R AND STAN (BDRS01)Glasgow, Dr. Mark
+Andrews
+https://www.psstatistics.com/course/introduction-to-bayesian-data-analysis-for-social-and-behavioural-sciences-using-r-and-stan-bdrs01/
+ 3.       January 21st ? 25th 2019STATISTICAL MODELLING OF TIME-TO-EVENT
+DATA USING SURVIVAL ANALYSIS: AN INTRODUCTION FOR ANIMAL BEHAVIOURISTS,
+ECOLOGISTS AND EVOLUTIONARY BIOLOGISTS (TTED01)Glasgow, Scotland, Dr. Will
+Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+ 4.       January 21st ? 25th 2019ADVANCING IN STATISTICAL MODELLING USING
+R (ADVR08)Glasgow, Scotland, Dr. Luc Bussiere, Dr. Tom Houslay
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr08/
+ 5.       January 28th?  February 1st 2019AQUATIC ACOUSTIC TELEMETRY DATA
+ANALYSIS AND SURVEY DESIGNGlasgow, Scotland, VEMCO staff and affiliates
+https://www.prstatistics.com/course/aquatic-acoustic-telemetry-data-analysis-atda01/
+ 6.       February 4th ? 8th 2019DESIGNING RELIABLE AND EFFICIENT
+EXPERIMENTS FOR SOCIAL SCIENCES (DRES01) Glasgow, Scotland, Dr. Daniel
+Lakens
+https://www.psstatistics.com/course/designing-reliable-and-effecient-experiments-for-social-sciences-dres01/
+ 7.       February 11th ? 15th 2019REPRODUCIBLE DATA SCIENCE FOR POPULATION
+GENETICSGlasgow, Scotland, Dr. Thibaut Jombart, Dr. Zhain Kamvar
+https://www.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg02/
+ 8.       25th February ? 1st March 2019MOVEMENT ECOLOGY (MOVE02)Margam
+Discovery Centre, Wales, Dr. Luca Borger, Prof. Ronny Wilson, Dr Jonathan
+Pottshttps://www.prstatistics.com/course/movement-ecology-move02/ 9.
+March 4th ? 8th 2019BIOACOUSTICS FOR ECOLOGISTS: HARDWARE, SURVEY DESIGN
+AND DATA ANALYSIS (BIAC01)Glasgow, Scotland, Dr. Paul Howden-Leach
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac01/
+ 10.    March 11th ? 15th  2019ECOLOGICAL NICHE MODELLING USING R
+(ENMR03)Glasgow,
+Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03/
+ 11.    March 18th ? 22nd 2019INTRODUCTION TO STATISTICS AND R FOR EVERYONE
+(IRFE01)Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe01/
+ 12.    March 25th ? 29th 2019LANDSCAPE GENETIC DATA ANALYSIS USING R
+(LNDG03)Glasgow, Scotland, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg03/
+ 13.   April 1st ? 5th 2019INTRODUCTION TO STATISTICAL MODELLING FOR
+PSYCHOLOGISTS USING R (IPSY01)Glasgow, Scotland, Dr. Dale Barr, Dr Luc
+Bussierre
+http://www.psstatistics.com/course/introduction-to-statistics-using-r-for-psychologists-ipsy02/
+ 14.   April 1st ? 5th 2019INDIVIDUAL BASED MODELS FOR ECOLOGSITS
+(IBME01)Glasgow,
+Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/individual-based-models-using-r-and-netlogo-ibms01/
+ 15.   April 8th ? 12th 2019MACHINE LEARNING (MLUR01)Glasgow, Scotland, Dr
+Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/machine-learning-using-r-mlur01/ 16.
+April 15th ? 19th 2019INTRODUCTION TO Q GIS FOR ECOLOGISTS (QGSE01)Glasgow,
+Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/introduction-to-qgis-for-ecologists-qgse01/
+ 17.   April 22nd ? 26th 2019GIS USING R (GISR)Glasgow, Scotland, Dr Luca
+Nellihttps://www.prstatistics.com/course/gis-using-r-gisr01/ 18.   April
+29th ? May 3rd 2019COMPARATIVE GENOMICS (CMGN01)Glasgow, Scotland, Dr.
+Fritz Sedlazeck, Dr. Matthias Weissensteiner
+https://www.prinformatics.com/course/comparative-genomics-cmgn01/ 19.   May
+6th ? 10th 2019 INTRODUCTION TO MULTILEVEL MODELS (MIXED/HIERARCHICAL) FOR
+PSYCHOLOGISTSMyuna Bay, AUSTRALIA,  Dr. Sean MurphyLink to follow 20.   May
+16th ? 18th 2019 (please note this a 3-day course from Thursday to
+Saturday)AQUATIC
+MOVEMENT ECOLOGY USING R (AMER01) Myuna Bay, AUSTRALIA, Dr. Ross Dwyer, Dr.
+Vinay UdyawerLink to follow 21.   May 16th ? 19th 2019 (please note this a
+4-day course from Thursday to Monday)INTRODUCTION TO R FOR EVERYONE
+(IRFE02)Myuna
+Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe02/
+ 22.   May 20th ? 24th 2019MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE
+DATA USING R (MBMV03)Myuna Bay, AUSTRALIA, Prof. David Warton
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03/
+ 23.   May 21st ? 24th 2019STATISTICAL TOOL BOX FOR ECOLOGISTS (STKE01)Myuna
+Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/statistical-toolkit-for-ecologists-stke01/
+ 24.   June 10th ? 14th 2019STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER
+AND MIXSIAR (SIMM04)Glasgow, Scotland, Dr. Andrew Parnell, Dr. Andrew
+Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/ 25.
+June 17th ? 21st 2019SPATIAL MODELLING AND ANALYSIS OF ADAPTIVE GENOMIC
+VARIATION (SPGN01)Glasgow, Dr. Matt Fitzpatrick
+https://www.prstatistics.com/course/spatial-modelling-and-analysis-of-adaptive-genomic-variation-spgn01/
+ 26.   June 17th ? 21st 2019INTRODUCTION TO PYTHON FOR BIOLOGISTS
+(IPYB06)Glasgow,
+Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb06/
+ 27.   June 24th ? 28th 2019ADVANCED PYTHON FOR BIOLOGISTS (APYB03)Glasgow,
+Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb03/ 28.    July
+1st ? 5th 2019DATA VISUALISATION AND MANIPULATION USING PYTHON (DVMP01)Glasgow,
+Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+ 29.    July 29th ? August 2nd 2019INTRODUCTION TO SPATIAL ANALYSIS OF
+ECOLOGICAL DATA USING R (ISPE01)Glasgow, Scotland, Dr. Jakub Nowosad
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe01/
+ 30.    September 16th ? 20th 2019R PACKAGE DESIGN AND DEVELOPMENT AND
+REPRODUCIBLE DATA SCIENCE FOR BIOLOGISTS (RPKG01)Glasgow, Scotland, Dr.
+Cory Merow, Dr. Andy Rominger
+https://www.prstatistics.com/course/r-package-design-and-development-and-reproducible-data-science-for-biologists-rpkg01/
+ 31.   September 30th ? October 4th 2019GEOMETRIC MORPHOMETRICS USING R
+(GMMR02)Glasgow, Scotland, Prof. Dean Adams, Prof. Michael Collyer, Dr.
+Antigoni Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr02/
+32.
+October 7th ? 11th 2019CONSERVATION PLANNING USING PRIORITIZR : FROM THEORY
+TO PRACTICE (PRTZ01)Crete, GREECE, Dr Richard Schuster and Nina Morell
+https://www.prstatistics.com/course/conservation-planning-using-prioritizr-from-theory-to-practice-prtz01/
+ 33.   October 21st ? 25th 2019A COMPLETE GUIDE TO MIXED MODELS (INCLUDING
+TEMPORAL AND SPATIAL AUTOCORRELATION) (MMTS01) Crete, GREECE, Dr Aristides
+(Aris) Moustakas
+https://www.prstatistics.com/course/a-complete-guide-to-mixed-models-including-temporal-and-spatial-autocorrelation-mmts01/
+
+
+
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+Alternative routes to piscivory: Contrasting growth trajectories in brown
+trout (Salmo trutta) ecotypes exhibiting contrasting life history
+strategies. Ecology of Freshwater Fish.
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine brown
+trout, Salmo trutta. Biological Journal of the Linnean Society. DOI
+10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+Alternative routes to piscivory: Contrasting growth trajectories in brown
+trout (Salmo trutta) ecotypes exhibiting contrasting life history
+strategies. Ecology of Freshwater Fish.
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine brown
+trout, Salmo trutta. Biological Journal of the Linnean Society. DOI
+10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
++44 (0) 7966500340
+
+	[[alternative HTML version deleted]]
+
+
+From k@rlogregorio @ending from gm@il@com  Thu Nov 29 18:21:05 2018
+From: k@rlogregorio @ending from gm@il@com (=?UTF-8?Q?Karlo_Greg=C3=B3rio?=)
+Date: Thu, 29 Nov 2018 15:21:05 -0200
+Subject: [R-sig-eco] 
+ How to manipulatechange the space between the numbers
+ of axes (equal interval)? How to add a legend to a map (plot raster)?
+In-Reply-To: <CALN9TER3W-4HCiNYzPGvpCNRJW7tUJ9W_b--vSL60xJLHTYkeg@mail.gmail.com>
+References: <CALN9TER3W-4HCiNYzPGvpCNRJW7tUJ9W_b--vSL60xJLHTYkeg@mail.gmail.com>
+Message-ID: <CAOaR3geJkR1E2W=049hMDpE=7m-Nq98o2Ga6eC-31ZPFhmNG8w@mail.gmail.com>
+
+Hello Lara,
+
+Did you try just using the plot function?
+
+Something like this:
+
+plot(proj22PA)
+
+Cheers,
+
+*Karlo Greg?rio Guidoni Martins*
+PhD Student in Ecology and Evolution
+Community Ecology and Functioning Lab
+Universidade Federal de Goi?s - Brazil
+skype: kguidonimartins
++55 28 9 9992 2969
+
+
+On Thu, Nov 29, 2018 at 2:52 PM Lara Silva <lara.sfp.silva at gmail.com> wrote:
+
+> Hello,
+>  I?m trying to plot a map in R. Is it possible to change the values of
+> x.axis and y.axis and have the same interval (space between the numbers)?
+>  How to add a legend for the map?
+>
+> https://www.dropbox.com/s/60tavy6vez33mw3/Plot_map.tiff?dl=0
+>
+> > class(proj22PA$P_EMmeanByROC_mergedAlgo_mergedRun_mergedData)
+> [1] "RasterLayer"
+> attr(,"package")
+> [1] "raster"
+> >
+> > proj22PA$P_EMmeanByROC_mergedAlgo_mergedRun_mergedData
+> class       : RasterLayer
+> band        : 2  (of  2  bands)
+> dimensions  : 277, 412, 114124  (nrow, ncol, ncell)
+> resolution  : 100, 100  (x, y)
+> extent      : 461214, 502414, 4272892, 4300592  (xmin, xmax, ymin, ymax)
+> coord. ref. : NA
+> data source : grid
+> names       : P_EMmeanByROC_mergedAlgo_mergedRun_mergedData
+> values      : 42, 924  (min, max)
+>
+> >
+>
+> Code:
+>
+> plot(proj22PA$P_EMmeanByROC_mergedAlgo_mergedRun_mergedData,
+> axes=FALSE,legend=FALSE,box=FALSE,par(mar=c(3,3,0.5,0.5),mgp=c(2,1,0)))
+> axis(side = 1, at =c(470000,480000,500000),labels= c("470000", "480000",
+> "500000"))
+> axis(side = 2, at =c(4272892,4300592),labels= c("4272892", "4300592"))
+> box()
+>
+> Regards,
+>
+> Silva
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From Scott@Foster m@ili@g off d@t@61@csiro@@u  Thu Nov 29 20:57:12 2018
+From: Scott@Foster m@ili@g off d@t@61@csiro@@u (Scott@Foster m@ili@g off d@t@61@csiro@@u)
+Date: Thu, 29 Nov 2018 19:57:12 +0000
+Subject: [R-sig-eco] 
+ Fitting a GLMM to a percent cover data with glmer or glmmTMB
+In-Reply-To: <CAC8jbZewb6Q1ciwHVsgdK4ZdyffBMW9jvOm=y_x5CUdjUvbTQQ@mail.gmail.com>
+References: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+ <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+ <4884d08b-9b13-8f8b-fc9c-a8abec88c97f@okologia.mta.hu>
+ <CAC8jbZewb6Q1ciwHVsgdK4ZdyffBMW9jvOm=y_x5CUdjUvbTQQ@mail.gmail.com>
+Message-ID: <1543521431.11082.12.camel@data61.csiro.au>
+
+Hi,
+
+I agree with Zoltan that bionimial is probably inappropriate, for the reasons he stated.
+
+I'm not sure that Tweedie is your solution though -- it is defined for non-negative real numbers.
+?Not just those between 0 and 100%. ?Perhaps easiest to think of fish biomass caught in a net (can
+be zero, or more.
+
+Tweedie might work though, if your percentages are typically nowhere near the 100% boundary. ?In
+this case, the upper end of the support is kind of immaterial... ?You hope...
+
+Does glmmTMB supply a beta distribution? ?Zero-inflated beta? ?The quantile regression idea might be
+useful too, as Brian suggested, but I'm not sure about random effects in that case. ?Beta regression
+will also have problems with exactly 0% (or 100%) observations.
+
+It seems, to me, that you might be forced to make a decision about what is 'least wrong', rather
+than what is 'best'.
+
+Scott
+
+PS Vasco and Zoltan: Sorry for the reply earlier, the message to the list bounced (CSIRO has
+recently changed my email address).
+
+On Thu, 2018-11-29 at 16:40 +0000, Vasco Silva wrote:
+> 
+> Thanks Zoltan. Using the glmmTMB with tweedie is the option that I can now
+> discern...
+> 
+> Vasco
+> 
+> 
+> 
+> Botta-Duk?t Zolt?n <botta-dukat.zoltan at okologia.mta.hu> escreveu no dia
+> quinta, 29/11/2018 ?(s) 14:33:
+> 
+> > 
+> > 
+> > I have to correct myself :),??because an important point is missing from
+> > this sentence:
+> > 
+> > Binomial distribution are defined as number of successes in independent
+> > trials.
+> > 
+> > correctly:
+> > 
+> > Binomial distribution are defined as number of successes in FIXED NUMBER
+> > OF independent trials.
+> > 
+> > Zoltan
+> > 
+> > 2018. 11. 29. 15:23 keltez?ssel, Botta-Duk?t Zolt?n ?rta:
+> > > 
+> > > 
+> > > Hi,
+> > > 
+> > > I'm sure that binomial is unsuitable for relative cover. Binomial
+> > > distribution are defined as number of successes in independent trials.
+> > > I think this scheme cannot be applied to relative cover or visually
+> > > estimated cover. It is important because both number of trials and
+> > > probability of success influence mean and variance, thus both should
+> > > have a meaning that correspond to terms in this scheme.
+> > > 
+> > > Unfortunately, I have no experience with tweedie distribution. I am
+> > > also interested in experience of others! In theory an alternative
+> > > would be zero-inflated beta distribution (after rescaling percentage
+> > > between zero to one interval). Do some has an experience (including
+> > > its availability in R) with it?
+> > > 
+> > > Cheers
+> > > 
+> > > Zoltan
+> > > 
+> > > 2018. 11. 28. 20:47 keltez?ssel, Vasco Silva ?rta:
+> > > > 
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > I am trying to fit a GLMM on percent cover for each species using glmer:
+> > > > 
+> > > > > 
+> > > > > 
+> > > > > str(cover)
+> > > > 'data.frame': 102 obs. of??114 variables:
+> > > > $ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+> > > > $ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+> > > > $ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1??...
+> > > > $ sp1 : int??0 0 0 1 0 0 1 ...
+> > > > $ sp2 : int??0 0 0 0 0 3 3 ...
+> > > > $ sp3 : int??0 1 0 0 1 3 3 ...
+> > > > $ sp4 : int??1 3 13 3 3 3 0 ...
+> > > > $ sp6 : int??0 0 0 0 0 0 0 ...
+> > > > ? ...
+> > > > $ tot??: int??93 65 120 80 138 113 ...
+> > > > 
+> > > > sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot),
+> > > > data=cover,
+> > > > family=binomial (link ="logit"))
+> > > > 
+> > > > However, I wonder if binomial distribution can be used (proportion of
+> > > > species cover from a total cover) or if I should??fitted the GLMM with
+> > > > glmmTMB (tweedie distribution)?
+> > > > 
+> > > > I would greatly appreciate it if someone could help me.
+> > > > 
+> > > > Cheers.
+> > > > 
+> > > > Vasco Silva
+> > > > 
+> > > > ????[[alternative HTML version deleted]]
+> > > > 
+> > > > _______________________________________________
+> > > > R-sig-ecology mailing list
+> > > > R-sig-ecology at r-project.org
+> > > > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> > > _______________________________________________
+> > > R-sig-ecology mailing list
+> > > R-sig-ecology at r-project.org
+> > > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> > 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+Scott Foster
+Research Scientist
+Data61, CSIRO
+E?scott.foster at data61.csiro.au T +61 3 6232 5178
+Postal address: CSIRO
+Marine Laboratories, GPO Box 1538, Hobart TAS 7001
+Street Address:
+CSIRO, Castray Esplanade, Hobart Tas 7001, Australia
+
+From J@vier@At@l@h @ending from c@wthron@org@nz  Thu Nov 29 22:01:16 2018
+From: J@vier@At@l@h @ending from c@wthron@org@nz (Javier Atalah)
+Date: Thu, 29 Nov 2018 21:01:16 +0000
+Subject: [R-sig-eco] 
+ Fitting a GLMM to a percent cover data with glmer or glmmTMB
+In-Reply-To: <1543521431.11082.12.camel@data61.csiro.au>
+References: <CAC8jbZf7fZg5v96H5_WKknqR8TJ2WJyHK2GW5T-82oc65vC9oQ@mail.gmail.com>
+ <f53d9582-73e4-0281-d32a-83d2c2264bae@okologia.mta.hu>
+ <4884d08b-9b13-8f8b-fc9c-a8abec88c97f@okologia.mta.hu>
+ <CAC8jbZewb6Q1ciwHVsgdK4ZdyffBMW9jvOm=y_x5CUdjUvbTQQ@mail.gmail.com>
+ <1543521431.11082.12.camel@data61.csiro.au>
+Message-ID: <SY3PR01MB13717FEC8DBD10E08ADC489CB2D20@SY3PR01MB1371.ausprd01.prod.outlook.com>
+
+Hi,
+
+Have a look at the gamlss library that has three beta inflated families.
+
+Cheers
+Javier
+
+
+-----Original Message-----
+From: R-sig-ecology <r-sig-ecology-bounces at r-project.org> On Behalf Of Scott.Foster at data61.csiro.au
+Sent: Friday, 30 November 2018 8:57 a.m.
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Fitting a GLMM to a percent cover data with glmer or glmmTMB
+
+Hi,
+
+I agree with Zoltan that bionimial is probably inappropriate, for the reasons he stated.
+
+I'm not sure that Tweedie is your solution though -- it is defined for non-negative real numbers.
+ Not just those between 0 and 100%.  Perhaps easiest to think of fish biomass caught in a net (can be zero, or more.
+
+Tweedie might work though, if your percentages are typically nowhere near the 100% boundary.  In this case, the upper end of the support is kind of immaterial...  You hope...
+
+Does glmmTMB supply a beta distribution?  Zero-inflated beta?  The quantile regression idea might be useful too, as Brian suggested, but I'm not sure about random effects in that case.  Beta regression will also have problems with exactly 0% (or 100%) observations.
+
+It seems, to me, that you might be forced to make a decision about what is 'least wrong', rather than what is 'best'.
+
+Scott
+
+PS Vasco and Zoltan: Sorry for the reply earlier, the message to the list bounced (CSIRO has recently changed my email address).
+
+On Thu, 2018-11-29 at 16:40 +0000, Vasco Silva wrote:
+>
+> Thanks Zoltan. Using the glmmTMB with tweedie is the option that I can
+> now discern...
+>
+> Vasco
+>
+>
+>
+> Botta-Duk?t Zolt?n <botta-dukat.zoltan at okologia.mta.hu> escreveu no
+> dia quinta, 29/11/2018 ?(s) 14:33:
+>
+> >
+> >
+> > I have to correct myself :),  because an important point is missing
+> > from this sentence:
+> >
+> > Binomial distribution are defined as number of successes in
+> > independent trials.
+> >
+> > correctly:
+> >
+> > Binomial distribution are defined as number of successes in FIXED
+> > NUMBER OF independent trials.
+> >
+> > Zoltan
+> >
+> > 2018. 11. 29. 15:23 keltez?ssel, Botta-Duk?t Zolt?n ?rta:
+> > >
+> > >
+> > > Hi,
+> > >
+> > > I'm sure that binomial is unsuitable for relative cover. Binomial
+> > > distribution are defined as number of successes in independent trials.
+> > > I think this scheme cannot be applied to relative cover or
+> > > visually estimated cover. It is important because both number of
+> > > trials and probability of success influence mean and variance,
+> > > thus both should have a meaning that correspond to terms in this scheme.
+> > >
+> > > Unfortunately, I have no experience with tweedie distribution. I
+> > > am also interested in experience of others! In theory an
+> > > alternative would be zero-inflated beta distribution (after
+> > > rescaling percentage between zero to one interval). Do some has an
+> > > experience (including its availability in R) with it?
+> > >
+> > > Cheers
+> > >
+> > > Zoltan
+> > >
+> > > 2018. 11. 28. 20:47 keltez?ssel, Vasco Silva ?rta:
+> > > >
+> > > >
+> > > > Hi,
+> > > >
+> > > > I am trying to fit a GLMM on percent cover for each species using glmer:
+> > > >
+> > > > >
+> > > > >
+> > > > > str(cover)
+> > > > 'data.frame': 102 obs. of  114 variables:
+> > > > $ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+> > > > $ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+> > > > $ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1  ...
+> > > > $ sp1 : int  0 0 0 1 0 0 1 ...
+> > > > $ sp2 : int  0 0 0 0 0 3 3 ...
+> > > > $ sp3 : int  0 1 0 0 1 3 3 ...
+> > > > $ sp4 : int  1 3 13 3 3 3 0 ...
+> > > > $ sp6 : int  0 0 0 0 0 0 0 ...
+> > > >   ...
+> > > > $ tot  : int  93 65 120 80 138 113 ...
+> > > >
+> > > > sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot),
+> > > > data=cover, family=binomial (link ="logit"))
+> > > >
+> > > > However, I wonder if binomial distribution can be used
+> > > > (proportion of species cover from a total cover) or if I should
+> > > > fitted the GLMM with glmmTMB (tweedie distribution)?
+> > > >
+> > > > I would greatly appreciate it if someone could help me.
+> > > >
+> > > > Cheers.
+> > > >
+> > > > Vasco Silva
+> > > >
+> > > >     [[alternative HTML version deleted]]
+> > > >
+> > > > _______________________________________________
+> > > > R-sig-ecology mailing list
+> > > > R-sig-ecology at r-project.org
+> > > > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> > > _______________________________________________
+> > > R-sig-ecology mailing list
+> > > R-sig-ecology at r-project.org
+> > > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+--
+Scott Foster
+Research Scientist
+Data61, CSIRO
+E scott.foster at data61.csiro.au T +61 3 6232 5178 Postal address: CSIRO Marine Laboratories, GPO Box 1538, Hobart TAS 7001 Street Address:
+CSIRO, Castray Esplanade, Hobart Tas 7001, Australia _______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+Attention:
+This message is for the named person's use only. It may contain confidential, proprietary or legally privileged information. If you receive this message in error, please immediately delete it and all copies of it from your system, destroy any hard copies of it and notify the sender. You must not, directly or indirectly, use, disclose, distribute, print, or copy any part of this message if you are not the intended recipient. Cawthron reserves the right to monitor all e-mail communications through its networks. Any opinions expressed in this message are those of the individual sender, except where the message states otherwise and the sender is authorised to make that statement.
+

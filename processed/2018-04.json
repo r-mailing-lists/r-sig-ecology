@@ -1,0 +1,424 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2018-04",
+  "messages": [
+    {
+      "id": "msg-fc1aad150391",
+      "message_id": "<CABX+nhxULaK+6H+1eznkqbqCgTiRjBRsu-9zm+wRbyd1+d1ZFQ@mail.gmail.com>",
+      "from_name": "Felicity Edwards",
+      "from_email_hash": "c65cce71dc130477692d50acb02159f7a565a30628ec2e50bb062606704575a7",
+      "date": "2018-04-05T09:12:54+01:00",
+      "subject": "[R-sig-eco] Error randomiseMatrix/dbFD functions - functional trait data",
+      "subject_clean": "Error randomiseMatrix/dbFD functions - functional trait data",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "*Dear group,*\n\n*The background to my study* - I have a species x site matrix which\nincludes abundance data. I'm currently working on my fine scale data set. I\nhave 137 species across 48 points. I also have a species x trait matrix\nwhich I've used to create a 'dist' object. Using these I've calculated\nobserved functional diversity metrics. I'm now trying to calculate expected\nmetrics from these data by using null models.\n\n*My current code set up* - I'm randomising the community data within\nsamples, maintaining sample species richness, the 'richness' null model\nwithin Picante allows me to do this. Below is the code I've been running.\nThis code worked for a data set with far fewer species (n=49).\n\n####Null model permutations (=10,000 times)##obslog1FD$RaoQ - is the\nobserved metric##tcommlog1 = community data (species [columns] x\npoints [rows])##disecomor = dist object from dist.ktab (species by\ntraits)\n\nset.seed(1)\nnull.model.type <- \"richness\"\nnperm <- 10000\n#creation of empty matric#\nRaoQ <- matrix(NaN, nrow=nperm, ncol=length(obslog1FD$RaoQ))\n\nabund.null <- vector(mode=\"list\", nperm)\nt1 <- Sys.time()\nfor(i in seq(nperm)){ # loop for each permutation\n  # Create permutated abundance matrix\n  abund.i <- randomizeMatrix(tcommlog1, null.model = null.model.type,\niterations = 999)\n  traits.i <- disecomor\n\n  abund.null[[i]] <- abund.i\n\n  # Record results\n  res.i <- dbFD(\n    traits.i, abund.i, calc.FRic=FALSE, scale.RaoQ=FALSE,\n    calc.FGR=FALSE, calc.CWM = FALSE, calc.FDiv = FALSE,\n    print.pco = FALSE\n  )\n  # Save result\n  RaoQ[i,] <- res.i$RaoQ\n\n  rm(abund.i); rm(res.i)\n  print(paste0(round(i/nperm*100), \"% of permutations completed\"))}\n\n*My code problem* - When I try to calculate the expected metrics using the\nlarger species data set (n=139) the progress never gets beyond 10% and I\nget the following error: *At least one species does not occur in any\ncommunity (zero total abundance across all communities).*\n\n*My question's* - 1) Firstly, I'm confused as to why I get zero values\nusing this data set when all species are present at at least one sample\npoint (this was also the case for my smaller data set of 49 species which\ndid not have an error). Am I missing something on the way the community\ndata set is shuffled using the random null model?\n\n2) Is it possible to get around the zero species abundances by excluding\nthose zero abundant species? This I realise would require code to check for\nzero abundance and then exclude those identified species from the community\nand trait distance matrices. Although I understand the principle my R\ncoding knowledge is limited to know how to implement this.\n\nI have searched the internet for a solution and had no luck. I appreciate\nany help or advice people can give.\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "*Dear group,*\n\n*The background to my study* - I have a species x site matrix which\nincludes abundance data. I'm currently working on my fine scale data set. I\nhave 137 species across 48 points. I also",
+      "thread_id": "thread-fc1aad150391",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-62e7a09fa89f",
+      "message_id": "<209379733.2084273.1522946032925@mail.yahoo.com>",
+      "from_name": "Serge-Étienne Parent",
+      "from_email_hash": "3130ce17aa223a98a9ec2504df2118c1941bedc59de4477d67abd43eeaf6df30",
+      "date": "2018-04-05T16:33:52Z",
+      "subject": "[R-sig-eco] RDA Permutations",
+      "subject_clean": "RDA Permutations",
+      "in_reply_to": null,
+      "references": [
+        "<209379733.2084273.1522946032925.ref@mail.yahoo.com>"
+      ],
+      "body_plain": "Hi\n\nIn the process of developing a multivariate data analysis toolkit for Python (humbly said, a R-vegan little reptilian sister), I'm trying to implement RDA permutations. I could mimic the 'by=axis' option of the anova.cca function thanks to code published in the supplementary material of LOtB (2011). However, I could not generate results similar to the 'by=term' option, which tests the significance of environmental features. Prof. Legendre wrote me that (if I understood correctly) I must perform a linear regression between species and one environmental feature at the time, compute the original F-score, then permute: the proportion of the permuted F-scores which are equal or superior to the original is the p-value of the associated environmental feature. I coded it with R for this exercise. Still, I'm far from results returned by vegan. I would appreciate any input that might help me to code it right.\n\n# Load data from Gist\ndoubs_env = read.csv('https://gist.githubusercontent.com/essicolo/da940788378316eb180680b25ea11033/raw/6de2262b80f5b46b2b9b79cd05cd541404cae044/DoubsEnv.csv')\ndoubs_spe = read.csv('https://gist.githubusercontent.com/essicolo/95ed343adf89c715d42c622080011228/raw/e488bb9eaff95243bd3247d1f17c203456033918/DoubsSpe.csv')\n\n# Scale data\nY = scale(as.matrix(doubs_spe[, -1]), center=TRUE, scale=TRUE)\nX = scale(as.matrix(doubs_env[, c('pH', 'dur', 'pho', 'nit', 'amm', 'oxy', 'dbo')]), center=TRUE, scale=TRUE)\nn = nrow(Y)\n\n# Rank of X\nm = qr(X)$rank\n\n# Permutations\nnperm = 199\nfor (i in 1:m) {\n? feature_i = X[, i] # isolate the tested feature\n? qr_Xi = qr(feature_i) # qr decomposition of vector X\n? Y_hat_i = qr.fitted(qr_Xi, Y) # fitted linear regression\n? Y_res_i = qr.resid(qr_Xi, Y) # residuals\n? rsq_i = sum(Y_hat_i**2) / sum(Y**2) # r-squared\n? F_score[i] = (rsq_i/m) / ((1-rsq_i) / (n-m-1)) # original F-score\n? \n? F_score_perm = c()\n? for (j in 1:nperm) {\n??? Y_perm = Y_hat_i + Y_res_i[sample(n), ] # reduced permutation model\n??? Y_hat_perm = qr.fitted(qr_Xi, Y_perm) # fitted linear regression\n??? Y_res_perm = qr.resid(qr_Xi, Y_perm) # residuals\n??? rsq_perm = sum(Y_hat_perm**2) / sum(Y_perm**2) # r-squared\n??? F_score_perm[j] = (rsq_perm/m) / ((1-rsq_perm) / (n-m-1)) # permuted F-score\n? }\n? p_value[i] = (1 + sum(F_score_perm >= F_score[i])) / (1 + nperm) # proportion of equal or superior including original (which justifies the + 1)\n}\np_value\n\nlibrary(vegan)\nrda_vegan = rda(Y ~ pH+dur+pho+nit+amm+oxy+dbo,\n??????????????? data=doubs_env, scale = TRUE)\nanova(rda_vegan, by='term', permutations = 199)\n\n\nThanks,\n\nSerge-?tienne Parent, ing., Ph.D.\nProfesseur adjoint\nUniversit? Laval,\nD?partement des sols et de g?nie agroalimentaire,\nFacult? des sciences de l'agriculture et de l'alimentation,\nPavillon Paul-Comtois,\n2425 rue de l'Agriculture, Local 2301\n\n| \n| \n| \n|  |  |\n\n |\n\n |\n| \n|  | \nessicolo/nuee\n\nnuee - :bird: Multivariate data analysis toolkit for numerical ecology with Python\n |\n\n |\n\n |\n\n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi\n\nIn the process of developing a multivariate data analysis toolkit for Python (humbly said, a R-vegan little reptilian sister), I'm trying to implement RDA permutations. I could mimic the 'by=axis'",
+      "thread_id": "thread-62e7a09fa89f",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-e9021037f928",
+      "message_id": "<cf258bfc-608a-daef-38a8-cbae5ff9b230@highstat.com>",
+      "from_name": "Highland Statistics Ltd",
+      "from_email_hash": "d43054e1bf20a3b5b133a436acf0fb618425fad892ef36118bc175ac01f3183d",
+      "date": "2018-04-24T09:47:52+01:00",
+      "subject": "[R-sig-eco] Stats course in Cádiz, Spain",
+      "subject_clean": "Stats course in Cádiz, Spain",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Apologies for cross-posting\n\nWe would like to announce the following statistics course at the \nUniversity of C?diz, C?diz, Spain\n\n\nCourse: Data exploration, regression, GLM & GAM with introduction to R\nWhere:? University of C?diz, C?diz.\nWhen:? 3-7 September 2018\n\nCourse website: http://highstat.com/index.php/courses-upcoming\nCourse flyer: \nhttp://highstat.com/Courses/Flyers/2018/Flyer2018_09Cadiz_RGG.pdf\n\n\nKind regards,\n\nAlain Zuur\n\n-- \n\nDr. Alain F. Zuur\nHighland Statistics Ltd.\n9 St Clair Wynd\nAB41 6DZ Newburgh, UK\nEmail: highstat at highstat.com\nURL:   www.highstat.com\n\nAnd:\nNIOZ Royal Netherlands Institute for Sea Research,\nDepartment of Coastal Systems, and Utrecht University,\nP.O. Box 59, 1790 AB Den Burg,\nTexel, The Netherlands\n\n\n\nAuthor of:\n1. Beginner's Guide to Spatial, Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA. (2017).\n2. Beginner's Guide to Zero-Inflated Models with R (2016).\n3. Beginner's Guide to Data Exploration and Visualisation with R (2015).\n4. Beginner's Guide to GAMM with R (2014).\n5. Beginner's Guide to GLM and GLMM with R (2013).\n6. Beginner's Guide to GAM with R (2012).\n7. Zero Inflated Models and GLMM with R (2012).\n8. A Beginner's Guide to R (2009).\n9. Mixed effects models and extensions in ecology with R (2009).\n10. Analysing Ecological Data (2007).",
+      "body_snippet": "Apologies for cross-posting\n\nWe would like to announce the following statistics course at the \nUniversity of C?diz, C?diz, Spain\n\n\nCourse: Data exploration, regression, GLM & GAM with introduction to ",
+      "thread_id": "thread-e9021037f928",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-32b299dd583a",
+      "message_id": "<19ef2c7785cae8d85951cad5e6922f70@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2018-04-25T00:21:08+01:00",
+      "subject": "[R-sig-eco] PART FUNDED SCHOLARHPS for Stable Isotope Mixing Models using SIBER, SIAR, MixSIAR",
+      "subject_clean": "PART FUNDED SCHOLARHPS for Stable Isotope Mixing Models using SIBER, SIAR, MixSIAR",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "PARTFUNDED SCHOLARHPS for the course \"Stable Isotope Mixing Models using \nSIBER, SIAR, MixSIAR (SIMM04)\"\n\nThis course will run from 28th May 1st June 2018 at Orford Musique, 3165 \nChemin du Parc, Orford, QC J1X 7A2, Canada\n\nwww.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/\n\nPR STATISTICS ARE PLEASED TO ANNOUNCE THAT THROUGH THEIR FUNDING SCHEME \nTHEY CAN OFFER 5 PART-FUNDED SCHOLARSHIPS FOR OUR UP-COMING COURSE \n\"Stable Isotope Mixing Models using SIBER, SIAR, MixSIAR (SIMM04)\"\n\nSCHOLARSHIPS CONTRIBUTE TOWARDS COURSE AND ACCOMMODATION FEES WITH 5 ALL \nINCLUSIVE PLACES (accommodation and meals included) AVAILABLE AT ?475.00 \n(Fees have been subsidised by 40% from ?785.00).\n\nApplications should be sent to oliverhooker at prstatistics.com and contain\nthe following.\n\n1.              Full name\n\n2.              Institute name\n\n3.              PhD subject title or Post doc research questions\n\n4.              Do you hold a funded position\n\n5.              150 words why this course would be relevant to your \nresearch or how it would help.\n\nApplication deadline is Tuesday 8th May and decisions will be made by \nWednesday 9th May 2018\n\nWe still have ?normal? places available for anyone else interested.\n\nFull course details are given below\n\nStable Isotope Mixing Models using SIBER, SIAR, MixSIAR\"\n\nDelivered by Dr. Andrew Parnell and Dr Andrew Jackson\n\nwww.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/\n\nCourse overview:\nThis course will cover the concepts, technical background and use of \nstable isotope mixing models (SIMMs) with a particular focus on running \nthem in R. This course will cover the concepts, technical background and \nuse of stable isotope mixing models (SIMMs) with a particular focus on \nrunning them in R. Recently SIMMs have become a very popular tool for \nquantifying food webs and thus the diet of predators and prey in an \necosystem. Starting with only basic understanding of statistical models, \nwe will cover the do?s and don?ts of using SIMMs with a particular focus \non the widely used package SIAR and the more advanced MixSIAR. \nParticipants will be taught some of the advanced features of these \npackages, which will enable them to produce a richer class of output, \nand are encouraged to bring their own data sets and problems to study \nduring the round-table discussions.\n\nPlease email any questions to oliverhooker at prstatistics.com\n\nCheck out our sister sites,\nwww.PRstatistics.com (Ecology and Life Sciences)\nwww.PRinformatics.com (Bioinformatics and data science)\nwww.PSstatsistics.com (Behaviour and cognition)\n\n1.\tApril 23rd ? 27th 2018\nMULTIVARIATE ANALYSIS OF ECOLOGICAL COMMUNITIES USING THE VEGAN PACKAGE \n(VGNR01)\nGlasgow, Scotland, Dr. Peter Solymos, Dr. Guillaume Blanchet\nwww.prstatistics.com/course/multivariate-analysis-of-ecological-communities-in-r-with-the-vegan-package-vgnr01/\n\n2.\tApril 30th ? 4th May 2018\nQUANTITATIVE GEOGRAPHIC ECOLOGY: MODELING GENOMES, NICHES, AND \nCOMMUNITIES (QGER01)\nGlasgow, Scotland, Dr. Dan Warren, Dr. Matt Fitzpatrick\nwww.prstatistics.com/course/quantitative-geographic-ecology-using-r-modelling-genomes-niches-and-communities-qger01/\n\n3.\tMay 7th ? 11th 2018 ADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL \nECOLOGICAL DATA USING R (MVSP02)\nCANADA (QUEBEC), Prof. Pierre Legendre, Dr. Guillaume Blanchet\nwww.prstatistics.com/course/advances-in-spatial-analysis-of-multivariate-ecological-data-theory-and-practice-mvsp03/\n4.\tMay 14th - 18th 2018\nINTRODUCTION TO MIXED (HIERARCHICAL) MODELS FOR BIOLOGISTS (IMBR01)\nCANADA (QUEBEC), Prof Subhash Lele\nwww.prstatistics.com/course/introduction-to-mixed-hierarchical-models-for-biologists-using-r-imbr01/\n\n5.\tMay 21st - 25th 2018\nINTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB05)\nSCENE, Scotland, Dr. Martin Jones\nhttp://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb05/\n\n6.\tMay 21st - 25th 2018\nINTRODUCTION TO REMOTE SENISNG AND GIS FOR ECOLOGICAL APPLICATIONS \n(IRMS01)\nGlasgow, Scotland, Prof. Duccio Rocchini, Dr. Luca Delucchi\nwww.prinformatics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/\n\n7.\tMay 28th ? 31st 2018\nSTABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)\nCANADA (QUEBEC) Dr. Andrew Parnell, Dr. Andrew Jackson\nwww.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/\n\n8.\tMay 28th ? June 1st 2018\nADVANCED PYTHON FOR BIOLOGISTS (APYB02)\nSCENE, Scotland, Dr. Martin Jones\nwww.prinformatics.com/course/advanced-python-biologists-apyb02/\n\n9.\tJune 12th - 15th 2018\nSPECIES DISTRIBUTION MODELLING (DBMR01)\nMyuna Bay sport and recreation, Australia, Prof. Jane Elith, Dr. \nGurutzeta Guillera\nwww.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\n10.\tJune 18th ? 22nd 2018\nSTRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY BIOLOGISTS \nUSING R (SEMR02)\nMyuna Bay sport and recreation, Australia, Dr. Jon Lefcheck\nwww.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr02/\n\n11.\tJune 25th ? 29th 2018\nSPECIES DISTRIBUTION/OCCUPANCY MODELLING USING R (OCCU01)\nGlasgow, Scotland, Dr. Darryl McKenzie\nwww.prstatistics.com/course/species-distributionoccupancy-modelling-using-r-occu01/\n\n12.\tJuly 2nd - 5th 2018\nSOCIAL NETWORK ANALYSIS FOR BEHAVIOURAL SCIENTISTS USING R (SNAR01)\nGlasgow, Scotland, Prof James Curley\nhttp://www.psstatistics.com/course/social-network-analysis-for-behavioral-scientists-snar01/\n\n13.\tJuly 8th ? 12th 2018\nMODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV02)\nGlasgow, Scotland, Prof David Warton\nwww.prstatistics.com/course/model-base-multivariate-analysis-of-abundance-data-using-r-mbmv02/\n\n14.\tJuly 16th ? 20th 2018\nPRECISION MEDICINE BIOINFORMATICS: FROM RAW GENOME AND TRANSCRIPTOME \nDATA TO CLINICAL INTERPRETATION (PMBI01)\nGlasgow, Scotland, Dr Malachi Griffith, Dr. Obi Griffith\nwww.prinformatics.com/course/precision-medicine-bioinformatics-from-raw-genome-and-transcriptome-data-to-clinical-interpretation-pmbi01/\n\n15.\tJuly 23rd ? 27th 2018\nEUKARYOTIC METABARCODING (EUKB01)\nGlasgow, Scotland, Dr. Owen Wangensteen\nhttp://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/\n\n16.\tOctober 8th ? 12th 2018\nINTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISAE01)\nGlasgow, Scotland, Prof. Subhash Lele\nhttps://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-isae01/\n\n17.\tOctober 15th ? 19th 2018\nAPPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (ABME\nGlasgow, Scotland, Dr. Matt Denwood, Emma Howard\nhttp://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme04/\n\n18.\tOctober 29th ? November 2nd 2018\nPHYLOGENETIC COMPARATIVE METHODS FOR STUDYING DIVERSIFICATION AND \nPHENOTYPIC EVOLUTION (PCME01)\nGlasgow, Scotland, Prof. Subhash Lele\nDr. Antigoni Kaliontzopoulou\nhttps://www.prstatistics.com/course/phylogenetic-comparative-methods-for-studying-diversification-and-phenotypic-evolution-pcme01/\n\n19.\tNovember 26th ? 30th 2018\nFUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND COMPUTATION \n(FEER\nGlasgow, Scotland, Dr. Francesco de Bello, Dr. Lars G?tzenberger, Dr. \nCarlos Carmona\nhttp://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/\n\n20.\tFebruary 2018 TBC\nMOVEMENT ECOLOGY (MOVE02)\nMargam Discovery Centre, Wales, Dr Luca Borger, Dr Ronny Wilson, Dr \nJonathan Potts\nwww.prstatistics.com/course/movement-ecology-move01/\n\nOliver Hooker PhD.\nPR statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Jouranl of the Linnean Society. \nDOI 10.1093/biolinnean/bly032\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "PARTFUNDED SCHOLARHPS for the course \"Stable Isotope Mixing Models using \nSIBER, SIAR, MixSIAR (SIMM04)\"\n\nThis course will run from 28th May 1st June 2018 at Orford Musique, 3165 \nChemin du Parc, Orfo",
+      "thread_id": "thread-32b299dd583a",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-1b718bf5e7ac",
+      "message_id": "<CAOoxtvRWYe6uWE0yYkXyut6MnXkiFxwgyMrL+BBuLy89g06pqQ@mail.gmail.com>",
+      "from_name": "Thiago A. Pires",
+      "from_email_hash": "94d778af5b3dd73c3282a13c35d44073d0b3c5033b03a66a5c8bd9e5c22a24f7",
+      "date": "2018-04-24T23:17:46-03:00",
+      "subject": "[R-sig-eco] Plotting community data in map",
+      "subject_clean": "Plotting community data in map",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "?Hi Folks,\n\nI'm trying to plotting endemism data into a map, and I would like take the\nsymbol color for each sample follow a gradient of endemism values for this\nsample, like a heat map, then higher values would results in reddish colors\nand lower values to yellowish colors. I tried several variation in the\ncode, changing colors and values structure, but is not working so far. Any\nideas???\n\n?R code:\n> map(\"world\", col=\"black\", fill=F)?\n?> symbols(coords, bg =heat.colors(endemism_values), circles=\nendemism_values, inches = .5, add = T)\n?\n\n?Thanks\n\nCheers,\n\n?\nThiago A. Le?o Pires\nPh.D. student in Ecology - UNICAMP\nCollaborator Researcher - UNIFESP\nVisitor Ph.D. student - ANU\n<http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4298681Z0>[image:\nthiagoaugustopires.wix.com/naturevisions]\n<http://www.thiagoaugustopires.wix.com/naturevisions> [image: Skype ID:\nthiago.augusto.pires] <+Skype+ID:+thiago.augusto.pires>\n<https://www.researchgate.net/profile/Thiago_Leao-Pires>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "?Hi Folks,\n\nI'm trying to plotting endemism data into a map, and I would like take the\nsymbol color for each sample follow a gradient of endemism values for this\nsample, like a heat map, then higher v",
+      "thread_id": "thread-1b718bf5e7ac",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-0b68c9584b1c",
+      "message_id": "<CAOoxtvR_9pghNr64muPKoF0-_V1Lr_r7vPW1k0J5gTKe0E4KeQ@mail.gmail.com>",
+      "from_name": "Thiago A. Pires",
+      "from_email_hash": "94d778af5b3dd73c3282a13c35d44073d0b3c5033b03a66a5c8bd9e5c22a24f7",
+      "date": "2018-04-25T01:09:23-03:00",
+      "subject": "[R-sig-eco] Plotting community data in map",
+      "subject_clean": "Plotting community data in map",
+      "in_reply_to": "<CANQfT87LXb12YOOcoUygE-k2uBoKwdxZBiRnLUjVmDBOczZgCA@mail.gmail.com>",
+      "references": [
+        "<CAOoxtvRWYe6uWE0yYkXyut6MnXkiFxwgyMrL+BBuLy89g06pqQ@mail.gmail.com>",
+        "<CANQfT87LXb12YOOcoUygE-k2uBoKwdxZBiRnLUjVmDBOczZgCA@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Erin,\n\nThanks for you response.\nI tried it but, fg gives colors to a symbols border and bg fill it with\ncolors.\nThe thing is, while the circles gives a radius to symbols proportionally to\nthe endemism values (I checked and it's correct), the fg or bg don't seems\nto correctly follows the values.\nAnd this is where I'm stuck. Any other ideias??\n\nCheers,\nT.\n\n\n\nThiago A. Le?o Pires\nPh.D. student in Ecology - UNICAMP\nCollaborator Researcher - UNIFESP\nVisitor Ph.D. student - ANU\n<http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4298681Z0>[image:\nthiagoaugustopires.wix.com/naturevisions]\n<http://www.thiagoaugustopires.wix.com/naturevisions> [image: Skype ID:\nthiago.augusto.pires] <+Skype+ID:+thiago.augusto.pires>\n<https://www.researchgate.net/profile/Thiago_Leao-Pires>\n\n2018-04-24 23:36 GMT-03:00 Erin Frolli <frolli.erin at gmail.com>:\n\n> Hi Thiago,\n> Did you try using fg instead or fg with bg? Looks like in the R docs that\n> the color for the symbol is fg.\n> https://www.rdocumentation.org/packages/graphics/\n> versions/3.4.3/topics/symbols\n>\n> Cheers,\n> Erin\n>\n> On Tue, Apr 24, 2018 at 7:17 PM, Thiago A. Pires <\n> pires.thiagoaugusto at gmail.com> wrote:\n>\n>> ?Hi Folks,\n>>\n>> I'm trying to plotting endemism data into a map, and I would like take the\n>> symbol color for each sample follow a gradient of endemism values for this\n>> sample, like a heat map, then higher values would results in reddish\n>> colors\n>> and lower values to yellowish colors. I tried several variation in the\n>> code, changing colors and values structure, but is not working so far. Any\n>> ideas???\n>>\n>> ?R code:\n>> > map(\"world\", col=\"black\", fill=F)?\n>> ?> symbols(coords, bg =heat.colors(endemism_values), circles=\n>> endemism_values, inches = .5, add = T)\n>> ?\n>>\n>> ?Thanks\n>>\n>> Cheers,\n>>\n>> ?\n>> Thiago A. Le?o Pires\n>> Ph.D. student in Ecology - UNICAMP\n>> Collaborator Researcher - UNIFESP\n>> Visitor Ph.D. student - ANU\n>> <http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4298681Z0\n>> >[image:\n>> thiagoaugustopires.wix.com/naturevisions]\n>> <http://www.thiagoaugustopires.wix.com/naturevisions> [image: Skype ID:\n>> thiago.augusto.pires] <+Skype+ID:+thiago.augusto.pires>\n>> <https://www.researchgate.net/profile/Thiago_Leao-Pires>\n>>\n>>         [[alternative HTML version deleted]]\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>\n>\n>\n> --\n> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n> *Erin Frolli, M.S.*\n> Software Engineer / Data Scientist\n>\n> San Fransisco, CA\n> 530.251.7172\n> Personal Website <https://sites.google.com/view/erinfrolli/about>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Erin,\n\nThanks for you response.\nI tried it but, fg gives colors to a symbols border and bg fill it with\ncolors.\nThe thing is, while the circles gives a radius to symbols proportionally to\nthe endem",
+      "thread_id": "thread-0b68c9584b1c",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-85f438f1f0f4",
+      "message_id": "<c802516d-e729-8f86-f4f2-0cdd4e075651@gmail.com>",
+      "from_name": "Bede-Fazekas Ákos",
+      "from_email_hash": "e3ebd50efac1278ec1fe3fd8d1127aa8c4388bb07f6bead5f4628c5377508fdf",
+      "date": "2018-04-25T07:23:18+02:00",
+      "subject": "[R-sig-eco] Plotting community data in map",
+      "subject_clean": "Plotting community data in map",
+      "in_reply_to": "<CAOoxtvR_9pghNr64muPKoF0-_V1Lr_r7vPW1k0J5gTKe0E4KeQ@mail.gmail.com>",
+      "references": [
+        "<CAOoxtvRWYe6uWE0yYkXyut6MnXkiFxwgyMrL+BBuLy89g06pqQ@mail.gmail.com>",
+        "<CANQfT87LXb12YOOcoUygE-k2uBoKwdxZBiRnLUjVmDBOczZgCA@mail.gmail.com>",
+        "<CAOoxtvR_9pghNr64muPKoF0-_V1Lr_r7vPW1k0J5gTKe0E4KeQ@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Thiago,\n\nI don't know the type and values of your data, but let's say that \nendemism_values is a numeric vector containing positive integers.\nIn this case you can use this formula to produce the desired colors:\nheat.colors(max(endemism_values))[endemism_values]\nSo this should work:\nsymbols(coords, bg =heat.colors(max(endemism_values))[endemism_values], \ncircles=endemism_values, inches = .5, add = T)\n\nHTH,\n?kos Bede-Fazekas\nHungarian Academy of Sciences\n\n\n2018.04.25. 6:09 keltez?ssel, Thiago A. Pires ?rta:\n> Hi Erin,\n>\n> Thanks for you response.\n> I tried it but, fg gives colors to a symbols border and bg fill it with\n> colors.\n> The thing is, while the circles gives a radius to symbols proportionally to\n> the endemism values (I checked and it's correct), the fg or bg don't seems\n> to correctly follows the values.\n> And this is where I'm stuck. Any other ideias??\n>\n> Cheers,\n> T.\n>\n>\n>\n> Thiago A. Le?o Pires\n> Ph.D. student in Ecology - UNICAMP\n> Collaborator Researcher - UNIFESP\n> Visitor Ph.D. student - ANU\n> <http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4298681Z0>[image:\n> thiagoaugustopires.wix.com/naturevisions]\n> <http://www.thiagoaugustopires.wix.com/naturevisions> [image: Skype ID:\n> thiago.augusto.pires] <+Skype+ID:+thiago.augusto.pires>\n> <https://www.researchgate.net/profile/Thiago_Leao-Pires>\n>\n> 2018-04-24 23:36 GMT-03:00 Erin Frolli <frolli.erin at gmail.com>:\n>\n>> Hi Thiago,\n>> Did you try using fg instead or fg with bg? Looks like in the R docs that\n>> the color for the symbol is fg.\n>> https://www.rdocumentation.org/packages/graphics/\n>> versions/3.4.3/topics/symbols\n>>\n>> Cheers,\n>> Erin\n>>\n>> On Tue, Apr 24, 2018 at 7:17 PM, Thiago A. Pires <\n>> pires.thiagoaugusto at gmail.com> wrote:\n>>\n>>> ?Hi Folks,\n>>>\n>>> I'm trying to plotting endemism data into a map, and I would like take the\n>>> symbol color for each sample follow a gradient of endemism values for this\n>>> sample, like a heat map, then higher values would results in reddish\n>>> colors\n>>> and lower values to yellowish colors. I tried several variation in the\n>>> code, changing colors and values structure, but is not working so far. Any\n>>> ideas???\n>>>\n>>> ?R code:\n>>>> map(\"world\", col=\"black\", fill=F)?\n>>> ?> symbols(coords, bg =heat.colors(endemism_values), circles=\n>>> endemism_values, inches = .5, add = T)\n>>> ?\n>>>\n>>> ?Thanks\n>>>\n>>> Cheers,\n>>>\n>>> ?\n>>> Thiago A. Le?o Pires\n>>> Ph.D. student in Ecology - UNICAMP\n>>> Collaborator Researcher - UNIFESP\n>>> Visitor Ph.D. student - ANU\n>>> <http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4298681Z0\n>>>> [image:\n>>> thiagoaugustopires.wix.com/naturevisions]\n>>> <http://www.thiagoaugustopires.wix.com/naturevisions> [image: Skype ID:\n>>> thiago.augusto.pires] <+Skype+ID:+thiago.augusto.pires>\n>>> <https://www.researchgate.net/profile/Thiago_Leao-Pires>\n>>>\n>>>          [[alternative HTML version deleted]]\n>>>\n>>> _______________________________________________\n>>> R-sig-ecology mailing list\n>>> R-sig-ecology at r-project.org\n>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>\n>>\n>>\n>> --\n>> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n>> *Erin Frolli, M.S.*\n>> Software Engineer / Data Scientist\n>>\n>> San Fransisco, CA\n>> 530.251.7172\n>> Personal Website <https://sites.google.com/view/erinfrolli/about>\n>>\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>",
+      "body_snippet": "Dear Thiago,\n\nI don't know the type and values of your data, but let's say that \nendemism_values is a numeric vector containing positive integers.\nIn this case you can use this formula to produce the ",
+      "thread_id": "thread-0b68c9584b1c",
+      "thread_depth": 1,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-07d792ad09f2",
+      "message_id": "<C47D235F-9A3C-46A2-9AED-6B4AEC2E860A@pwssc.org>",
+      "from_name": "Kristen Gorman",
+      "from_email_hash": "d4c421394917fe78be1010b37c6a8a8bbcd99b30f22a93aea1c280169b10ab2a",
+      "date": "2018-04-25T15:39:07-08:00",
+      "subject": "[R-sig-eco] Help with SIBER package, v2.1.3",
+      "subject_clean": "Help with SIBER package, v2.1.3",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear All, \nI would like to connect with anyone who is familiar with the current SIBER package, v2.1.3. This is a package developed by Andrew Jackson that fits ellipse and convex hulls to estimate niche width for stable isotope data. I have run this analysis previously using an earlier package, but much of the code has been updated and I have several questions for running the new package. Please email me at the following address: kgorman at pwssc.org <mailto:kgorman at pwssc.org>, I greatly appreciate any input!\n\nBest wishes, Kristen\n\n\n\n\n\n\n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear All, \nI would like to connect with anyone who is familiar with the current SIBER package, v2.1.3. This is a package developed by Andrew Jackson that fits ellipse and convex hulls to estimate nich",
+      "thread_id": "thread-07d792ad09f2",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-da2b3aaf8302",
+      "message_id": "<CAD2a-+MswdQFyTpbec2BricU6fmJRhDVqm76h_DAk15JAf8Z7g@mail.gmail.com>",
+      "from_name": "Stonewall, Adam",
+      "from_email_hash": "27adc664ab574511947e06eeca71df01800d9aaaccdd5329c6936bbe96ce2339",
+      "date": "2018-04-26T08:20:45-07:00",
+      "subject": "[R-sig-eco] Help with R command 'probPlot' from the 'smwrGraphs' package",
+      "subject_clean": "Help with R command 'probPlot' from the 'smwrGraphs' package",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Howdy,\n\nI'm a novice R coder, so apologies in advance if I'm not asking this\nquestion in a straightforward manner or am neglecting needed information.\n\nI'm having trouble producing .pdf plots using the R command 'probPlot' from\nthe 'smwrGraphs' package (a USGS package).\n\nThe script:\n\n *par(las=1)*\n* probPlot(DCC1, FLIP=T, xtitle = \"Exceedance Probability\",*\n*          ytitle= paste0(NCon1,\" concentration in mg/L\"),*\n*          margin = c (4, 4, 4, 4))*\n* title(main=paste(run, NCon1))*\n* abline(h = log10(TPStand), lty=3)*\n\nworks fine, and produces a plot on the screen as I would expect. However,\nif I use the 'pdf' command with this script:\n\n *pdf(paste0(run,NCon1,\".pdf\"),height=10,width=10)*\n* par(las=1)*\n* probPlot(DCC1, FLIP=T, xtitle = \"Exceedance Probability\",*\n*          ytitle= paste0(NCon1,\" concentration in mg/L\"),*\n*          margin = c (4, 4, 4, 4))*\n* title(main=paste(run, NCon1))*\n* abline(h = log10(TPStand), lty=3)*\n* dev.off()*\n\nI get wildly inconsistent results. On rare occasion it seems to work for no\nreason. But the most common error script is:\n\n> pdf(paste0(run,NCon1,\".pdf\"),height=10,width=10)\n>  par(las=1)\n>  probPlot(DCC1, FLIP=T, xtitle = \"Exceedance Probability\",\n+           ytitle= paste0(NCon1,\" concentration in mg/L\"),\n+           margin = c (4, 4, 4, 4))\nError in mtext(text = labels, side = 2L, at = pretty$labelpos, line = 0.2,\n:\n  invalid font type\nIn addition: There were 20 warnings (use warnings() to see them)\n>  title(main=paste(run, NCon1))\nError in title(main = paste(run, NCon1)) : invalid font type\nIn addition: Warning messages:\n1: In title(main = paste(run, NCon1)) :\n  font family 'USGS' not found in PostScript font database\n2: In title(main = paste(run, NCon1)) :\n  font family 'USGS' not found in PostScript font database\n3: In title(main = paste(run, NCon1)) :\n  font family 'USGS' not found in PostScript font database\n4: In title(main = paste(run, NCon1)) :\n  font family 'USGS' not found in PostScript font database\n5: In title(main = paste(run, NCon1)) :\n  font family 'USGS' not found in PostScript font database\n>  abline(h = log10(TPStand), lty=3)\n>  dev.off()\nRStudioGD\n        2\n\nAnyone have any advice or suggestions?\nThanks,\nAdam\n\n\n-- \nAdam Stonewall, Hydrologist\nUSGS Oregon Water Science Center\n2130 SW 5th Avenue\nPortland, OR  97201\n(503) 251- 3276\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Howdy,\n\nI'm a novice R coder, so apologies in advance if I'm not asking this\nquestion in a straightforward manner or am neglecting needed information.\n\nI'm having trouble producing .pdf plots using th",
+      "thread_id": "thread-da2b3aaf8302",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-814f33a765e5",
+      "message_id": "<CAM_vjukSRyiFZgtAzsfeoU2TON4k3LAGJXfqJBs_WSwgaDjZFg@mail.gmail.com>",
+      "from_name": "Sarah Goslee",
+      "from_email_hash": "273eb6baae4ac25f2de5845f3f62dce55d161cfc7cf04eb5f3cc6d94b3d4aa24",
+      "date": "2018-04-26T12:13:25-04:00",
+      "subject": "[R-sig-eco]  Help with R command 'probPlot' from the 'smwrGraphs' package",
+      "subject_clean": "Help with R command 'probPlot' from the 'smwrGraphs' package",
+      "in_reply_to": "<CAD2a-+MswdQFyTpbec2BricU6fmJRhDVqm76h_DAk15JAf8Z7g@mail.gmail.com>",
+      "references": [
+        "<CAD2a-+MswdQFyTpbec2BricU6fmJRhDVqm76h_DAk15JAf8Z7g@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Adam,\n\nI took a look at the package, and it appears they want you to use\nsetPDF() instead of pdf() - their own custom graphics function,\ninstead of the generic one.\n\nThis is in the help for probPlot. There's also a vignette mentioned\nthat may give you more assistance.\n\nBut also, I tried a regular pdf() with some sample data and didn't get\nany error messages.\n\nIf that doesn't help, here are some things you can do to ensure that\nyou get a useful answer:\n\n1. Don't post in HTML. You'll notice that your post below is rather\nmangled. Posting in plain text ensures that doesn't happen.\n\n2. Provide a reproducible example - we can't try your code, because we\ndon't have your data. Providing fake data is fine, as in the help for\nprobPlot.\n\n3. Include your sessionInfo() - this sounds like it might be a\nWindows-specific problem, but we don't know that. My session info is\nbelow.\n\nSarah\n\n\n> sessionInfo()\nR version 3.4.3 (2017-11-30)\nPlatform: x86_64-redhat-linux-gnu (64-bit)\nRunning under: Fedora 26 (Workstation Edition)\n\nMatrix products: default\nBLAS/LAPACK: /usr/lib64/R/lib/libRblas.so\n\nlocale:\n [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C\n [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8\n [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8\n [7] LC_PAPER=en_US.UTF-8       LC_NAME=C\n [9] LC_ADDRESS=C               LC_TELEPHONE=C\n[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C\n\nattached base packages:\n[1] stats     graphics  grDevices utils     datasets  methods   base\n\nother attached packages:\n[1] smwrGraphs_1.1.4 smwrBase_1.1.5   lubridate_1.7.4  setwidth_1.0-4\n[5] colorout_0.9-9\n\nloaded via a namespace (and not attached):\n [1] Rcpp_0.12.16       lattice_0.20-35    digest_0.6.13      withr_2.1.1\n [5] grid_3.4.3         R6_2.2.2           git2r_0.20.0       magrittr_1.5\n [9] KernSmooth_2.23-15 httr_1.3.1         stringi_1.1.7      curl_3.1\n[13] sp_1.2-5           akima_0.6-2        devtools_1.13.4    tools_3.4.3\n[17] stringr_1.3.0      compiler_3.4.3     tcltk_3.4.3        memoise_1.1.0\n[21] knitr_1.17\n\n\n\n\n\n\nOn Thu, Apr 26, 2018 at 11:20 AM, Stonewall, Adam <stonewal at usgs.gov> wrote:\n> Howdy,\n>\n> I'm a novice R coder, so apologies in advance if I'm not asking this\n> question in a straightforward manner or am neglecting needed information.\n>\n> I'm having trouble producing .pdf plots using the R command 'probPlot' from\n> the 'smwrGraphs' package (a USGS package).\n>\n> The script:\n>\n>  *par(las=1)*\n> * probPlot(DCC1, FLIP=T, xtitle = \"Exceedance Probability\",*\n> *          ytitle= paste0(NCon1,\" concentration in mg/L\"),*\n> *          margin = c (4, 4, 4, 4))*\n> * title(main=paste(run, NCon1))*\n> * abline(h = log10(TPStand), lty=3)*\n>\n> works fine, and produces a plot on the screen as I would expect. However,\n> if I use the 'pdf' command with this script:\n>\n>  *pdf(paste0(run,NCon1,\".pdf\"),height=10,width=10)*\n> * par(las=1)*\n> * probPlot(DCC1, FLIP=T, xtitle = \"Exceedance Probability\",*\n> *          ytitle= paste0(NCon1,\" concentration in mg/L\"),*\n> *          margin = c (4, 4, 4, 4))*\n> * title(main=paste(run, NCon1))*\n> * abline(h = log10(TPStand), lty=3)*\n> * dev.off()*\n>\n> I get wildly inconsistent results. On rare occasion it seems to work for no\n> reason. But the most common error script is:\n>\n>> pdf(paste0(run,NCon1,\".pdf\"),height=10,width=10)\n>>  par(las=1)\n>>  probPlot(DCC1, FLIP=T, xtitle = \"Exceedance Probability\",\n> +           ytitle= paste0(NCon1,\" concentration in mg/L\"),\n> +           margin = c (4, 4, 4, 4))\n> Error in mtext(text = labels, side = 2L, at = pretty$labelpos, line = 0.2,\n> :\n>   invalid font type\n> In addition: There were 20 warnings (use warnings() to see them)\n>>  title(main=paste(run, NCon1))\n> Error in title(main = paste(run, NCon1)) : invalid font type\n> In addition: Warning messages:\n> 1: In title(main = paste(run, NCon1)) :\n>   font family 'USGS' not found in PostScript font database\n> 2: In title(main = paste(run, NCon1)) :\n>   font family 'USGS' not found in PostScript font database\n> 3: In title(main = paste(run, NCon1)) :\n>   font family 'USGS' not found in PostScript font database\n> 4: In title(main = paste(run, NCon1)) :\n>   font family 'USGS' not found in PostScript font database\n> 5: In title(main = paste(run, NCon1)) :\n>   font family 'USGS' not found in PostScript font database\n>>  abline(h = log10(TPStand), lty=3)\n>>  dev.off()\n> RStudioGD\n>         2\n>\n> Anyone have any advice or suggestions?\n> Thanks,\n> Adam\n>\n>\n\n-- \nSarah Goslee\nhttp://www.functionaldiversity.org",
+      "body_snippet": "Hi Adam,\n\nI took a look at the package, and it appears they want you to use\nsetPDF() instead of pdf() - their own custom graphics function,\ninstead of the generic one.\n\nThis is in the help for probPlo",
+      "thread_id": "thread-da2b3aaf8302",
+      "thread_depth": 1,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-b90765659687",
+      "message_id": "<CAO0hAYt-TFMdcynXStHsa_onexnTYWzsBNXx0ooSe8iJP_Qwyg@mail.gmail.com>",
+      "from_name": "José Elías Cuadros Adriazola",
+      "from_email_hash": "7e30a286fb500baa85cfcd4aa41158a4374bf58cfdf0c04b77b1bb12b28624eb",
+      "date": "2018-04-27T18:25:50-05:00",
+      "subject": "[R-sig-eco] Looking for a Spanish-speaking instructor in R and ecology packages (Vegan or alike)",
+      "subject_clean": "Looking for a Spanish-speaking instructor in R and ecology packages (Vegan or alike)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear R community,\n\nI am looking for a Spanish-speaking instructor in R and ecology packages\n(Vegan or alike) willing to travel to Arequipa, Peru. We could manage to\narrange a distance course, but in-person learning is preferred. Anyhow, we\nare open to discuss the available options.\n\nCourse would be focused in identifying environmental impacts on the\nbiodiversity and would be held before August.\n\nBest regards,\n\nJos? Cuadros\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear R community,\n\nI am looking for a Spanish-speaking instructor in R and ecology packages\n(Vegan or alike) willing to travel to Arequipa, Peru. We could manage to\narrange a distance course, but in-p",
+      "thread_id": "thread-b90765659687",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-e686558214f6",
+      "message_id": "<CAK3kiPguHCq4OXjo5YM9wjyxXmHzuVgjqwHOPfD-SO_8opTLrw@mail.gmail.com>",
+      "from_name": "Daniel Patón",
+      "from_email_hash": "ac6a679d51830ad6e6049e363728bf9d22dc7c745bc1e663eecd8a8002845cce",
+      "date": "2018-04-28T08:48:01Z",
+      "subject": "[R-sig-eco] Looking for a Spanish-speaking instructor in R and ecology packages (Vegan or alike)",
+      "subject_clean": "Looking for a Spanish-speaking instructor in R and ecology packages (Vegan or alike)",
+      "in_reply_to": "<CAO0hAYt-TFMdcynXStHsa_onexnTYWzsBNXx0ooSe8iJP_Qwyg@mail.gmail.com>",
+      "references": [
+        "<CAO0hAYt-TFMdcynXStHsa_onexnTYWzsBNXx0ooSe8iJP_Qwyg@mail.gmail.com>"
+      ],
+      "body_plain": "Saludos:\n\nEn principio me apunto. He viajado muchas veces a Sudam?rica. Mi mujer es\nchilena. Espero que eso no sea un problema :-). Lo que s? te digo es que\nmanejo habitualmente R y no solo vegan. Podemos discutir detalles por\nprivado.\n\nUn abrazo\n***********************************************************************\n Daniel Pat?n Dom?nguez\n Numerical Ecology. Ecology Unit\n Department of Plant Biology, Ecology and Earth Sciences\n Faculty of Sciences. University of Extremadura\n Avda. Elvas s/n 06071 Badajoz (Spain)\n http://unex.academia.edu/DanielPatonDominguez\n https://www.researchgate.net/profile/Daniel_Paton/\n http://sites.google.com/site/numericalecologyuex/home\n https://es.linkedin.com/in/daniel-pat%C3%B3n-dom%C3%ADnguez-787546106\n***********************************************************************\nEl s?b., 28 abr. 2018 1:26, Jos? El?as Cuadros Adriazola <\njcuadrosadriazola at gmail.com> escribi?:\n\n> Dear R community,\n>\n> I am looking for a Spanish-speaking instructor in R and ecology packages\n> (Vegan or alike) willing to travel to Arequipa, Peru. We could manage to\n> arrange a distance course, but in-person learning is preferred. Anyhow, we\n> are open to discuss the available options.\n>\n> Course would be focused in identifying environmental impacts on the\n> biodiversity and would be held before August.\n>\n> Best regards,\n>\n> Jos? Cuadros\n>\n>         [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Saludos:\n\nEn principio me apunto. He viajado muchas veces a Sudam?rica. Mi mujer es\nchilena. Espero que eso no sea un problema :-). Lo que s? te digo es que\nmanejo habitualmente R y no solo vegan. Pod",
+      "thread_id": "thread-b90765659687",
+      "thread_depth": 1,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-d635d4dedaf6",
+      "message_id": "<33d34689cef292ffc8fc17c49771a20e@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2018-04-30T12:21:43+01:00",
+      "subject": "[R-sig-eco] Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "subject_clean": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis ciurse will be delivered by Prof. Jane Elith, Dr. Gurutzeta \nGuillera and Jose Square form the 12th - 15th June 2018 at Myuna Bay \nSport and Recreation, Wangi Road, Myuna Bay, New South Wales 2264 \nAustralia\n\nCourse Overview:\nThe aim of this four-day course is to work towards an understanding of, \nand practical ability to fit, species distribution models (SDMs). It \nwill be useful if you plan to use SDMs, or if you just want to \nunderstand them better.\n\nWe will focus on statistical models of species distributions ? those \nthat combine observed species records with environmental data.\n\nUsing a mixture of lectures, computer exercises and case studies, \nparticipants will learn to:\n1) identify relevant data, and prepare it for modelling;\n2) fit models using several modelling methods (including Maxent, \ngeneralized linear models and their extensions, and boosted regression \ntrees);\n3) consider how to model species if detection is imperfect;\n4) evaluate models and interpret them;\n5) understand the range of practical issues that arise in typical \napplications of SDMs.\n\nPractical sessions will use the free statistical software, R ? prior \nexperience (even if some practice before you come) will be useful. \nExample data will be provided but participants may also bring their own \ndata.\nPresenters include Jane Elith and Gurutzeta Guillera-Arroita, who are \nhighly experienced in SDMs.\n\nIf you have any questions please email oliverhooker at prststistics.com\n\nMonday 11th\nMeet at Myuna Bay Sport and |recreation at approx. 18:30\n\nTuesday 12th ? Classes from 09:00 to 17:00\nOverview of modelling distributions; niches and theory\nThe modelling process ? key concepts\nPredictor variables\nSpecies data\nPractical: start working with supplied data\nMethods for presence-absence data; introduction to use of regression \nmodels for species modelling\n\nWednesday 13th ? Classes from 09:00 to 17:00\nGeneralised linear models (GLMs) and GLMMS\nPractical using GLMs with data\nHow to evaluate models ? lecture and practical\nOccupancy-detection models ? lecture and practical\n\nThursday 14th ? Classes from 09:00 to 17:00\nWhat if no absence data? ? introduction to presence-only and background \ndata\nPractical: GLM with background data\nRelative probabilities, point processes\nMaxent ? lecture and practical\nEvaluation for presence-background models\nHow to deal with biased data\n\nFriday 15th ? Classes from 09:00 to 16:00\nBoosted regression trees ? lecture and practical\nComplexity vs simplicity in models\nUsing models for extrapolation\nHot topics: where is species modelling heading?\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Journal of the Linnean Society. \nDOI 10.1093/biolinnean/bly032\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis ciurse will be delivered by",
+      "thread_id": "thread-d635d4dedaf6",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-0917045afe6d",
+      "message_id": "<40b15c583ec463dfe1e546184f8b8506@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2018-04-30T12:23:53+01:00",
+      "subject": "[R-sig-eco] Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "subject_clean": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis course will be delivered by Prof. Jane Elith, Dr. Gurutzeta \nGuillera and Jose Square form the 12th - 15th June 2018 at Myuna Bay \nSport and Recreation, Wangi Road, Myuna Bay, New South Wales 2264 \nAustralia\n\nCourse Overview:\nThe aim of this four-day course is to work towards an understanding of, \nand practical ability to fit, species distribution models (SDMs). It \nwill be useful if you plan to use SDMs, or if you just want to \nunderstand them better.\n\nWe will focus on statistical models of species distributions ? those \nthat combine observed species records with environmental data.\n\nUsing a mixture of lectures, computer exercises and case studies, \nparticipants will learn to:\n1) identify relevant data, and prepare it for modelling;\n2) fit models using several modelling methods (including Maxent, \ngeneralized linear models and their extensions, and boosted regression \ntrees);\n3) consider how to model species if detection is imperfect;\n4) evaluate models and interpret them;\n5) understand the range of practical issues that arise in typical \napplications of SDMs.\n\nPractical sessions will use the free statistical software, R ? prior \nexperience (even if some practice before you come) will be useful. \nExample data will be provided but participants may also bring their own \ndata.\nPresenters include Jane Elith and Gurutzeta Guillera-Arroita, who are \nhighly experienced in SDMs.\n\nIf you have any questions please email oliverhooker at prstatistics.com\n\nMonday 11th\nMeet at Myuna Bay Sport and |recreation at approx. 18:30\n\nTuesday 12th ? Classes from 09:00 to 17:00\nOverview of modelling distributions; niches and theory\nThe modelling process ? key concepts\nPredictor variables\nSpecies data\nPractical: start working with supplied data\nMethods for presence-absence data; introduction to use of regression \nmodels for species modelling\n\nWednesday 13th ? Classes from 09:00 to 17:00\nGeneralised linear models (GLMs) and GLMMS\nPractical using GLMs with data\nHow to evaluate models ? lecture and practical\nOccupancy-detection models ? lecture and practical\n\nThursday 14th ? Classes from 09:00 to 17:00\nWhat if no absence data? ? introduction to presence-only and background \ndata\nPractical: GLM with background data\nRelative probabilities, point processes\nMaxent ? lecture and practical\nEvaluation for presence-background models\nHow to deal with biased data\n\nFriday 15th ? Classes from 09:00 to 16:00\nBoosted regression trees ? lecture and practical\nComplexity vs simplicity in models\nUsing models for extrapolation\nHot topics: where is species modelling heading?\n\nOliver Hooker PhD.\nPR statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Journal of the Linnean Society. \nDOI 10.1093/biolinnean/bly032\n\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Journal of the Linnean Society. \nDOI 10.1093/biolinnean/bly032\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis course will be delivered by",
+      "thread_id": "thread-0917045afe6d",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-0917045afe6d",
+      "message_id": "<40b15c583ec463dfe1e546184f8b8506@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2018-04-30T12:28:34+01:00",
+      "subject": "[R-sig-eco] Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "subject_clean": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis course will be delivered by Prof. Jane Elith, Dr. Gurutzeta \nGuillera and Jose Square form the 12th - 15th June 2018 at Myuna Bay \nSport and Recreation, Wangi Road, Myuna Bay, New South Wales 2264 \nAustralia\n\nCourse Overview:\nThe aim of this four-day course is to work towards an understanding of, \nand practical ability to fit, species distribution models (SDMs). It \nwill be useful if you plan to use SDMs, or if you just want to \nunderstand them better.\n\nWe will focus on statistical models of species distributions ? those \nthat combine observed species records with environmental data.\n\nUsing a mixture of lectures, computer exercises and case studies, \nparticipants will learn to:\n1) identify relevant data, and prepare it for modelling;\n2) fit models using several modelling methods (including Maxent, \ngeneralized linear models and their extensions, and boosted regression \ntrees);\n3) consider how to model species if detection is imperfect;\n4) evaluate models and interpret them;\n5) understand the range of practical issues that arise in typical \napplications of SDMs.\n\nPractical sessions will use the free statistical software, R ? prior \nexperience (even if some practice before you come) will be useful. \nExample data will be provided but participants may also bring their own \ndata.\nPresenters include Jane Elith and Gurutzeta Guillera-Arroita, who are \nhighly experienced in SDMs.\n\nIf you have any questions please email oliverhooker at prstatistics.com\n\nMonday 11th\nMeet at Myuna Bay Sport and |recreation at approx. 18:30\n\nTuesday 12th ? Classes from 09:00 to 17:00\nOverview of modelling distributions; niches and theory\nThe modelling process ? key concepts\nPredictor variables\nSpecies data\nPractical: start working with supplied data\nMethods for presence-absence data; introduction to use of regression \nmodels for species modelling\n\nWednesday 13th ? Classes from 09:00 to 17:00\nGeneralised linear models (GLMs) and GLMMS\nPractical using GLMs with data\nHow to evaluate models ? lecture and practical\nOccupancy-detection models ? lecture and practical\n\nThursday 14th ? Classes from 09:00 to 17:00\nWhat if no absence data? ? introduction to presence-only and background \ndata\nPractical: GLM with background data\nRelative probabilities, point processes\nMaxent ? lecture and practical\nEvaluation for presence-background models\nHow to deal with biased data\n\nFriday 15th ? Classes from 09:00 to 16:00\nBoosted regression trees ? lecture and practical\nComplexity vs simplicity in models\nUsing models for extrapolation\nHot topics: where is species modelling heading?\n\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Journal of the Linnean Society. \nDOI 10.1093/biolinnean/bly032\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis course will be delivered by",
+      "thread_id": "thread-0917045afe6d",
+      "thread_depth": 0,
+      "month": "2018-04"
+    },
+    {
+      "id": "msg-f4b3498e5237",
+      "message_id": "<28e8ea2b1d745dc5fcc35d3cbe90dc98@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2018-04-30T12:32:21+01:00",
+      "subject": "[R-sig-eco] Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "subject_clean": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis course will be delivered by Prof. Jane Elith, Dr. Gurutzeta \nGuillera and Jose Square form the 12th - 15th June 2018 at Myuna Bay \nSport and Recreation, Wangi Road, Myuna Bay, New South Wales 2264 \nAustralia\n\nCourse Overview:\nThe aim of this four-day course is to work towards an understanding of, \nand practical ability to fit, species distribution models (SDMs). It \nwill be useful if you plan to use SDMs, or if you just want to \nunderstand them better.\n\nWe will focus on statistical models of species distributions ? those \nthat combine observed species records with environmental data.\n\nUsing a mixture of lectures, computer exercises and case studies, \nparticipants will learn to:\n1) identify relevant data, and prepare it for modelling;\n2) fit models using several modelling methods (including Maxent, \ngeneralized linear models and their extensions, and boosted regression \ntrees);\n3) consider how to model species if detection is imperfect;\n4) evaluate models and interpret them;\n5) understand the range of practical issues that arise in typical \napplications of SDMs.\n\nPractical sessions will use the free statistical software, R ? prior \nexperience (even if some practice before you come) will be useful. \nExample data will be provided but participants may also bring their own \ndata.\nPresenters include Jane Elith and Gurutzeta Guillera-Arroita, who are \nhighly experienced in SDMs.\n\nIf you have any questions please email oliverhooker at prstatistics.com\n\nMonday 11th\nMeet at Myuna Bay Sport and |recreation at approx. 18:30\n\nTuesday 12th ? Classes from 09:00 to 17:00\nOverview of modelling distributions; niches and theory\nThe modelling process ? key concepts\nPredictor variables\nSpecies data\nPractical: start working with supplied data\nMethods for presence-absence data; introduction to use of regression \nmodels for species modelling\n\nWednesday 13th ? Classes from 09:00 to 17:00\nGeneralised linear models (GLMs) and GLMMS\nPractical using GLMs with data\nHow to evaluate models ? lecture and practical\nOccupancy-detection models ? lecture and practical\n\nThursday 14th ? Classes from 09:00 to 17:00\nWhat if no absence data? ? introduction to presence-only and background \ndata\nPractical: GLM with background data\nRelative probabilities, point processes\nMaxent ? lecture and practical\nEvaluation for presence-background models\nHow to deal with biased data\n\nFriday 15th ? Classes from 09:00 to 16:00\nBoosted regression trees ? lecture and practical\nComplexity vs simplicity in models\nUsing models for extrapolation\nHot topics: where is species modelling heading?\n\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2018 publications -\n\nPhenotypic and resource use partitioning amongst sympatric lacustrine \nbrown trout, Salmo trutta. Biological Journal of the Linnean Society. \nDOI 10.1093/biolinnean/bly032\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "Species distribution models using R (SDMR01)\n\nhttps://www.prstatistics.com/course/species-distribution-models-using-r-sdmr01/\n\nDeadline for registration is 21/05/2018\n\nThis course will be delivered by",
+      "thread_id": "thread-f4b3498e5237",
+      "thread_depth": 0,
+      "month": "2018-04"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-fc1aad150391",
+      "subject": "Error randomiseMatrix/dbFD functions - functional trait data",
+      "message_count": 1,
+      "participants": [
+        "Felicity Edwards"
+      ],
+      "started": "2018-04-05T09:12:54+01:00",
+      "last_reply": "2018-04-05T09:12:54+01:00",
+      "root_message_id": "msg-fc1aad150391"
+    },
+    {
+      "id": "thread-62e7a09fa89f",
+      "subject": "RDA Permutations",
+      "message_count": 1,
+      "participants": [
+        "Serge-Étienne Parent"
+      ],
+      "started": "2018-04-05T16:33:52+00:00",
+      "last_reply": "2018-04-05T16:33:52+00:00",
+      "root_message_id": "msg-62e7a09fa89f"
+    },
+    {
+      "id": "thread-e9021037f928",
+      "subject": "Stats course in Cádiz, Spain",
+      "message_count": 1,
+      "participants": [
+        "Highland Statistics Ltd"
+      ],
+      "started": "2018-04-24T09:47:52+01:00",
+      "last_reply": "2018-04-24T09:47:52+01:00",
+      "root_message_id": "msg-e9021037f928"
+    },
+    {
+      "id": "thread-1b718bf5e7ac",
+      "subject": "Plotting community data in map",
+      "message_count": 1,
+      "participants": [
+        "Thiago A. Pires"
+      ],
+      "started": "2018-04-24T23:17:46-03:00",
+      "last_reply": "2018-04-24T23:17:46-03:00",
+      "root_message_id": "msg-1b718bf5e7ac"
+    },
+    {
+      "id": "thread-32b299dd583a",
+      "subject": "PART FUNDED SCHOLARHPS for Stable Isotope Mixing Models using SIBER, SIAR, MixSIAR",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2018-04-25T00:21:08+01:00",
+      "last_reply": "2018-04-25T00:21:08+01:00",
+      "root_message_id": "msg-32b299dd583a"
+    },
+    {
+      "id": "thread-0b68c9584b1c",
+      "subject": "Plotting community data in map",
+      "message_count": 2,
+      "participants": [
+        "Bede-Fazekas Ákos",
+        "Thiago A. Pires"
+      ],
+      "started": "2018-04-25T01:09:23-03:00",
+      "last_reply": "2018-04-25T07:23:18+02:00",
+      "root_message_id": "msg-0b68c9584b1c"
+    },
+    {
+      "id": "thread-07d792ad09f2",
+      "subject": "Help with SIBER package, v2.1.3",
+      "message_count": 1,
+      "participants": [
+        "Kristen Gorman"
+      ],
+      "started": "2018-04-25T15:39:07-08:00",
+      "last_reply": "2018-04-25T15:39:07-08:00",
+      "root_message_id": "msg-07d792ad09f2"
+    },
+    {
+      "id": "thread-da2b3aaf8302",
+      "subject": "Help with R command 'probPlot' from the 'smwrGraphs' package",
+      "message_count": 2,
+      "participants": [
+        "Sarah Goslee",
+        "Stonewall, Adam"
+      ],
+      "started": "2018-04-26T08:20:45-07:00",
+      "last_reply": "2018-04-26T12:13:25-04:00",
+      "root_message_id": "msg-da2b3aaf8302"
+    },
+    {
+      "id": "thread-b90765659687",
+      "subject": "Looking for a Spanish-speaking instructor in R and ecology packages (Vegan or alike)",
+      "message_count": 2,
+      "participants": [
+        "Daniel Patón",
+        "José Elías Cuadros Adriazola"
+      ],
+      "started": "2018-04-27T18:25:50-05:00",
+      "last_reply": "2018-04-28T08:48:01+00:00",
+      "root_message_id": "msg-b90765659687"
+    },
+    {
+      "id": "thread-d635d4dedaf6",
+      "subject": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2018-04-30T12:21:43+01:00",
+      "last_reply": "2018-04-30T12:21:43+01:00",
+      "root_message_id": "msg-d635d4dedaf6"
+    },
+    {
+      "id": "thread-0917045afe6d",
+      "subject": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2018-04-30T12:23:53+01:00",
+      "last_reply": "2018-04-30T12:23:53+01:00",
+      "root_message_id": "msg-0917045afe6d"
+    },
+    {
+      "id": "thread-0917045afe6d",
+      "subject": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2018-04-30T12:28:34+01:00",
+      "last_reply": "2018-04-30T12:28:34+01:00",
+      "root_message_id": "msg-0917045afe6d"
+    },
+    {
+      "id": "thread-f4b3498e5237",
+      "subject": "Registration deadline for Species distribution models using R (Jane Elith and Gurutzeta Guillera)",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2018-04-30T12:32:21+01:00",
+      "last_reply": "2018-04-30T12:32:21+01:00",
+      "root_message_id": "msg-f4b3498e5237"
+    }
+  ]
+}

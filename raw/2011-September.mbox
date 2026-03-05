@@ -1,0 +1,3689 @@
+From alfredotello at gmail.com  Thu Sep  1 11:56:39 2011
+From: alfredotello at gmail.com (Alfredo Tello)
+Date: Thu, 1 Sep 2011 02:56:39 -0700 (PDT)
+Subject: [R-sig-eco] ecodist mgram p - values
+Message-ID: <1314870999722-6749485.post@n2.nabble.com>
+
+Hi Folks,
+
+Does anyone know if the p - values returned by the /ecodist/ mgram function
+(mantel correlograms) are corrected for multiple testing? I'm aware
+mantel.correlog in /vegan /has several correction options. I have gone
+through the /ecodist/ paper, but still can't find an answer.
+
+Thanks!
+
+A
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ecodist-mgram-p-values-tp6749485p6749485.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From r.knell at qmul.ac.uk  Tue Sep  6 15:21:58 2011
+From: r.knell at qmul.ac.uk (Rob Knell)
+Date: Tue, 6 Sep 2011 14:21:58 +0100
+Subject: [R-sig-eco] plot confidence intervals of a line from a mixed model
+Message-ID: <3EF3830F-91FD-4DF4-B9A7-CBDCCD89E700@qmul.ac.uk>
+
+Hello everyone
+
+I'm afraid this is probably a very dumb question, but I have ended up totally stumped in trying to do this. I have a mixed model fitted to some data using lme, including a fixed effect that is an interaction term between a factor (maternal treatment) with two levels and a continuous variable (weight). I'd like to plot a graph showing the two fitted lines plus their confidence intervals. How do I get the confidence intervals? I can get the standard error of the difference between the two slopes from summary(model), but that's not what I want. I can get the confidence intervals for the difference between the slopes with intervals(model) but again that is for the difference between the slopes. I tried using predict(model,?,int="c") but the int="c" call doesn't seem to work with an lme object. Any suggestions gratefully received.
+
+Rob K
+
+From mdu at ceh.ac.uk  Wed Sep  7 17:28:10 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Wed, 7 Sep 2011 16:28:10 +0100
+Subject: [R-sig-eco] plot confidence intervals of a line from a mixed
+ model
+In-Reply-To: <3EF3830F-91FD-4DF4-B9A7-CBDCCD89E700@qmul.ac.uk>
+References: <3EF3830F-91FD-4DF4-B9A7-CBDCCD89E700@qmul.ac.uk>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1D12105650@nerckwmb1.ad.nerc.ac.uk>
+
+Hi Rob
+
+A couple of suggestions
+
+1. You can use the glht command in the multcomp to get predictions for different factor levels with simultaneous se's / ci's, you just need to formulate the correct contrast(s)
+2. You can make ad-hoc predictions by matrix-multiplying the parameter estimates (from fixef()) from the model with the model.matrix() of explanatory variables, and get the se's by additionally including the variance-covariance matrix of the fixed effects. Please contact me off-list if you'd like some example code - I have some but it was provided to me by a colleague and I'd prefer not to broadcast it indiscriminately as it isn't my invention
+3. I haven't looked at them, but the packages zelig and ez may also help
+4. It isn't a dumb question, it's taken me ages to get even this far (not very far)!
+
+Cheers
+Mike
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Rob Knell
+Sent: 06 September 2011 14:22
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] plot confidence intervals of a line from a mixed model
+
+Hello everyone
+
+I'm afraid this is probably a very dumb question, but I have ended up totally stumped in trying to do this. I have a mixed model fitted to some data using lme, including a fixed effect that is an interaction term between a factor (maternal treatment) with two levels and a continuous variable (weight). I'd like to plot a graph showing the two fitted lines plus their confidence intervals. How do I get the confidence intervals? I can get the standard error of the difference between the two slopes from summary(model), but that's not what I want. I can get the confidence intervals for the difference between the slopes with intervals(model) but again that is for the difference between the slopes. I tried using predict(model,...,int="c") but the int="c" call doesn't seem to work with an lme object. Any suggestions gratefully received.
+
+Rob K
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+This message (and any attachments) is for the recipient only. NERC
+is subject to the Freedom of Information Act 2000 and the contents
+of this email and any reply you make may be disclosed by NERC unless
+it is exempt from release under the Act. Any material supplied to
+NERC may be stored in an electronic records management system.
+
+From gavin.simpson at ucl.ac.uk  Thu Sep  8 10:56:55 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Thu, 08 Sep 2011 09:56:55 +0100
+Subject: [R-sig-eco] [pkg] *permute* an R package for restricted permutations
+Message-ID: <1315472215.20603.10.camel@prometheus.geog.ucl.ac.uk>
+
+Dear List,
+
+Yesterday, I rolled up the first public release of the *permute* package
+and submitted it to CRAN. This represents the first beta release of
+*permute* and presages significant changes to the way permutation tests
+are performed, and to the sorts of permutation available, in *vegan*.
+
+*permute* allows the following permutation designs:
+
+      * free permutation (randomisation) 
+      * permutation of spatial transect or time series data via cyclic
+        wrapping 
+      * permutation of spatial grids via toroidal wrapping
+
+Each of these can be used at one or both of the block level and the
+within-block level. Blocks of samples are defined by the argument
+`strata` as has been used in *vegan* for many years. As such, *permute*
+allows for testing of split-plot designs. For spatial data (transect or
+grid), the cyclic or toroidal wrapping can be performed forwards or
+backwards in either spatial dimension, and the same permutation can be
+used for the samples in each block (for example, in the case of time
+series data where the samples in each block have been "exposed" to the
+same "time process").
+
+An major aim in writing *permute* has been to provide functionality
+found in the widely-used, commercial application Canoco.
+
+The main functions in *permute* are the `shuffle()` and `shuffleSet()`
+functions which generate a single permutation or a set of many
+permutations for a stated design. Permutation designs are defined using
+function `permControl()`. Function `allPerms()` can be used to generate
+the entire set of permutations for a given design, which is useful if
+there are only a small number of permutations possible for the
+combination of permutation design and number of observations and/or
+complete enumeration (an exact test) is required.
+
+With the release of *permute*, the older functions in *vegan* that
+implemented a previous version of these restricted permutations have
+been made defunct. Old code that utilised these functions should be
+ported to use the new functions in *permute*; help is available upon
+request. These changes are in *vegan* from version 2.0-0, which has also
+been released to CRAN.
+
+The main reason for splitting the permutation code out from *vegan* was
+that by doing so we might make this code available to other package
+authors without having to depend on the entirety of *vegan*.
+
+A nascent Vignette is provided with the package which aims to document
+the new functions and will, by version 0.8, include a section on using
+*permute* within functions for package authors wishing to make use of
+the functionality in *permute*.
+
+If you have questions about or comments on the package, contact me or
+post a message in the Forums section of the R-forge website[1] for the
+*vegan* stable of packages.
+
+Gavin Simpson
+
+[1] https://r-forge.r-project.org/forum/?group_id=68
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From sarah.goslee at gmail.com  Thu Sep  8 14:49:18 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 8 Sep 2011 08:49:18 -0400
+Subject: [R-sig-eco] [pkg] *permute* an R package for restricted
+	permutations
+In-Reply-To: <1315472215.20603.10.camel@prometheus.geog.ucl.ac.uk>
+References: <1315472215.20603.10.camel@prometheus.geog.ucl.ac.uk>
+Message-ID: <CAM_vjuk=JNHUfhH3auTrXmq-VYxyRbrQrw-WotP1=523F3ngfQ@mail.gmail.com>
+
+That sounds very useful (and means I can cross it off my own list). Thank
+you for your hard work.
+
+Sarah
+
+On Thu, Sep 8, 2011 at 4:56 AM, Gavin Simpson <gavin.simpson at ucl.ac.uk> wrote:
+> Dear List,
+>
+> Yesterday, I rolled up the first public release of the *permute* package
+> and submitted it to CRAN. This represents the first beta release of
+> *permute* and presages significant changes to the way permutation tests
+> are performed, and to the sorts of permutation available, in *vegan*.
+>
+> *permute* allows the following permutation designs:
+>
+> ? ? ?* free permutation (randomisation)
+> ? ? ?* permutation of spatial transect or time series data via cyclic
+> ? ? ? ?wrapping
+> ? ? ?* permutation of spatial grids via toroidal wrapping
+>
+> Each of these can be used at one or both of the block level and the
+> within-block level. Blocks of samples are defined by the argument
+> `strata` as has been used in *vegan* for many years. As such, *permute*
+> allows for testing of split-plot designs. For spatial data (transect or
+> grid), the cyclic or toroidal wrapping can be performed forwards or
+> backwards in either spatial dimension, and the same permutation can be
+> used for the samples in each block (for example, in the case of time
+> series data where the samples in each block have been "exposed" to the
+> same "time process").
+>
+> An major aim in writing *permute* has been to provide functionality
+> found in the widely-used, commercial application Canoco.
+>
+> The main functions in *permute* are the `shuffle()` and `shuffleSet()`
+> functions which generate a single permutation or a set of many
+> permutations for a stated design. Permutation designs are defined using
+> function `permControl()`. Function `allPerms()` can be used to generate
+> the entire set of permutations for a given design, which is useful if
+> there are only a small number of permutations possible for the
+> combination of permutation design and number of observations and/or
+> complete enumeration (an exact test) is required.
+>
+> With the release of *permute*, the older functions in *vegan* that
+> implemented a previous version of these restricted permutations have
+> been made defunct. Old code that utilised these functions should be
+> ported to use the new functions in *permute*; help is available upon
+> request. These changes are in *vegan* from version 2.0-0, which has also
+> been released to CRAN.
+>
+> The main reason for splitting the permutation code out from *vegan* was
+> that by doing so we might make this code available to other package
+> authors without having to depend on the entirety of *vegan*.
+>
+> A nascent Vignette is provided with the package which aims to document
+> the new functions and will, by version 0.8, include a section on using
+> *permute* within functions for package authors wishing to make use of
+> the functionality in *permute*.
+>
+> If you have questions about or comments on the package, contact me or
+> post a message in the Forums section of the R-forge website[1] for the
+> *vegan* stable of packages.
+>
+> Gavin Simpson
+>
+> [1] https://r-forge.r-project.org/forum/?group_id=68
+> --
+> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+> ?Dr. Gavin Simpson ? ? ? ? ? ? [t] +44 (0)20 7679 0522
+> ?ECRC, UCL Geography, ? ? ? ? ?[f] +44 (0)20 7679 0565
+> ?Pearson Building, ? ? ? ? ? ? [e] gavin.simpsonATNOSPAMucl.ac.uk
+> ?Gower Street, London ? ? ? ? ?[w] http://www.ucl.ac.uk/~ucfagls/
+> ?UK. WC1E 6BT. ? ? ? ? ? ? ? ? [w] http://www.freshwaters.org.uk
+> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+>
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From basille at ase-research.org  Thu Sep  8 20:55:43 2011
+From: basille at ase-research.org (Mathieu Basille)
+Date: Thu, 08 Sep 2011 14:55:43 -0400
+Subject: [R-sig-eco] bursts in adehabitat
+In-Reply-To: <00c301cc63fe$d1039e20$730ada60$@gmail.com>
+References: <002101cc63e8$2df6c010$89e44030$@gmail.com>	<004301cc63e8$f2d1cce0$d87566a0$@gmail.com>	<CAHT1vphuvp3HRez2bGVoT_U5D=pYveqEw1_VHN=YLQmiDVBtLw@mail.gmail.com>	<008b01cc63f5$3680f4a0$a382dde0$@gmail.com>	<1314368262.3592.YahooMailRC@web80403.mail.mud.yahoo.com>
+	<00c301cc63fe$d1039e20$730ada60$@gmail.com>
+Message-ID: <4E690FAF.2070805@ase-research.org>
+
+Dear Jacqueline,
+
+Sorry if I'm a little late on this conversation. To complete Josh's
+answer, a burst is intended to be a series of relocation from one
+individual collected at regular interval. Imagine a monitoring project
+based on GPS collars, with one relocation every 1h year-round. Every
+time an individual is fit with a new collar, a lag might be included
+between the two collars, so that each collar would define a new burst.
+Now, if the schedule is set to 1 relocation every hour at day, and 1
+relocation every 4h at night, every night and every day of each
+individual should be considered as separate bursts (that can make a lot
+of bursts).
+
+It doesn't matter if you have some missing values within a burst (see
+e.g. 'setNA' to add NAs) or if the interval is not precisely the same
+(see e.g. 'sett0' to make the trajectory regular). What is important
+though, is that the burst defines the individual set of relocations used
+for many functions, as Josh already underlined. In your case, I would
+probably use each movie as a burst, complete the trajectory and make it
+regular if it is of any use for you.
+
+You might have a look at:
+
+vignette("adehabitatLT")
+
+which is incredibly useful to me when I have doubts about the use of the
+package.
+
+Best,
+Mathieu.
+
+
+Le 2011-08-26 10:45, J. Augusiak a ?crit :
+> Many thanks Josh.
+> 
+>  
+> 
+> This makes it much clearer now. I do rely on time intervals as I do the
+> tracking based on an ?1-image-per-second? basis as calibration for further
+> modelling where I also plan to work with fixed time steps.
+> 
+>  
+> 
+> Now I know how I will handle ltraj. :-)
+> 
+>  
+> 
+> Thanks again,
+> 
+>  
+> 
+> Jacqueline
+> 
+>  
+> 
+> From: Josh Nowak [mailto:Joshnwk at yahoo.com] 
+> Sent: vrijdag 26 augustus 2011 16:18
+> To: J. Augusiak
+> Subject: Re: [R-sig-eco] bursts in adehabitat
+> 
+>  
+> 
+> Jacqueline, 
+> 
+> In my experience it really only matters if the statistics you are doing
+> require that the fixes be separated by regular time intervals.  This is why
+> bursts are useful to me, a GPS collar will often take fixes at regular
+> intervals, but sometimes it misses a fix and so the fix interval is made
+> irregular.  If my goal is some sort of movement analysis that requires
+> regular intervals then I will use bursts so as not to throw out data or rely
+> on interpolating the missed fixes.  This approach is a nice fix, but the
+> regular interval requirement can likely be overcome too.   
+> 
+>  
+> 
+> Josh Nowak
+> D?partement des sciences du bois et de la for?t
+> Universit? Laval
+> Qu?bec, QC G1K 7P4
+> (418) 656-2131 Ext.6110
+> 
+>  
+> 
+>  
+> 
+>   _____  
+> 
+> From: J. Augusiak <jaugusiak at googlemail.com>
+> To: r-sig-ecology at r-project.org
+> Sent: Fri, August 26, 2011 9:36:50 AM
+> Subject: Re: [R-sig-eco] bursts in adehabitat
+> 
+> Hi Roman,
+> 
+> 
+> 
+> I use cameras which are fixed centered above an aquarium which is 1m2 of
+> size. I record the movement for, say, one hour. Then I take the video file,
+> dissect it into its single frames which I then import as image sequence in
+> ImageJ, an open source image processing software. A custom made plugin for
+> this software then analyzes frame by frame the position of my animal in the
+> aquarium, so basically I get a set of plain x and y coordinates.
+> 
+> 
+> 
+> Due to some setup restrictions on some images in the sequence the animal
+> can't be detected by the software and it interrupts the current track. E.g.
+> On images 1-300 the animal can be seen, I get a coherent track. On images
+> 301 to 367 the animal cannot be seen but is visible again on image 368 to
+> 400. This would give me track 1 (1-300) and track 2 (368-400).
+> 
+> 
+> 
+> Adehabitat's definition of a burst is as follows:
+> 
+> For a given individual, trajectories are often sampled as "bursts" of
+> relocations. For example, when
+> 
+> an animal is monitored using radio-tracking, the data may consist of several
+> circuits of activity (two
+> 
+> successive relocations on one circuit are often highly autocorrelated, but
+> the data from two circuits
+> 
+> may be sampled at long intervals in time). These bursts are indicated by the
+> attribute burst. Note
+> 
+> that the bursts should be unique: do not use the same burst id for bursts
+> collected on different animals.
+> 
+> 
+> 
+> I already had lengthy discussions with my colleagues about it.
+> Theoretically, one could say that I have one "circuit of activity" with one
+> movie (=one burst). On the other hand, I get those track fragments as
+> described above. Those fragments themselves could be interpreted as bursts
+> also.
+> 
+> 
+> 
+> So what do I need to do when setting up my ltraj objects? Define burst as
+> "1", because it's one movie, or say burst = 1, 2, 3,... depending on the
+> number of track fragments for one movie?
+> 
+> 
+> 
+> Many thanks for your reply and time!
+> 
+> 
+> 
+> Jacqueline 
+> 
+> 
+> 
+> From: romunov at gmail.com [mailto:romunov at gmail.com] On Behalf Of Roman
+> Lu?trik
+> Sent: vrijdag 26 augustus 2011 14:49
+> To: J. Augusiak
+> Subject: Re: [R-sig-eco] bursts in adehabitat
+> 
+> 
+> 
+> Hi Jacqueline,
+> 
+> 
+> 
+> what software/hardware are you using for tracking your animals?
+> 
+> 
+> 
+> Cheers,
+> 
+> Roman
+> 
+> 
+> 
+> 
+> 
+> On Fri, Aug 26, 2011 at 2:09 PM, J. Augusiak <jaugusiak at googlemail.com>
+> wrote:
+> 
+> Dear list,
+> 
+> 
+> 
+> I have a question concerning the definition of a "burst" in the adehabitat
+> package. Somehow I 'm not able to wrap my mind around it and to adopt it
+> appropriately for my data set.
+> 
+> 
+> 
+> I want to analyze the movement behavior of aquatic invertebrates and how it
+> may be impacted by different environmental influences. In order to study
+> this I have set up an arena where I let the animals walk around and video
+> tape their locomotion over time.
+> 
+> 
+> 
+> However, my image quality is bad at times, or an animal hides under an
+> object that I placed in the arena, which causes the tracking software to
+> loose a track but it may pick it up again after some time when the
+> individual is visible again. Those separate tracks get different numbers by
+> default.
+> 
+> 
+> 
+> My problem of understanding is now, are the different track ID's that I get
+> from the tracking software "bursts" or not. It's only one animal per movie I
+> look at and it's only one movie of, say, one hour that I record and for
+> which I get track no.1, 2, 3. etc.
+> 
+> 
+> 
+> According to my current understanding I am dealing with only one burst in a
+> situation as described above and I would get several bursts, if I would
+> record one animal for 10 minutes, have a break of 10 minutes, record again
+> for 10 minutes, etc.
+> 
+> 
+> 
+> I'm sorry if this is a trivial question. But the longer I think about it or
+> the more often I read about it the more I get confused and unsure.
+> 
+> 
+> 
+> Many thanks for your time!
+> 
+> 
+> 
+> Jacqueline
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+>       [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+
+~$ whoami
+Mathieu Basille, Post-Doc
+
+~$ locate
+Laboratoire d'?cologie Comportementale et de Conservation de la Faune
++ Centre d'?tude de la For?t
+D?partement de Biologie
+Universit? Laval, Qu?bec
+
+~$ info
+http://ase-research.org/basille
+
+~$ fortune
+``If you can't win by reason, go for volume.''
+Calvin, by Bill Watterson.
+
+
+From paolo.ruzza77 at gmail.com  Thu Sep  8 23:39:21 2011
+From: paolo.ruzza77 at gmail.com (Paolo Ruzza)
+Date: Thu, 8 Sep 2011 22:39:21 +0100
+Subject: [R-sig-eco] ordination with categorical variables
+Message-ID: <CAFwASjvQiT6SJTkiGFG4ZoQhTMsQU1Zdj7HzT+BYM6jovLwi6A@mail.gmail.com>
+
+Dear all,
+
+Apologies in advance for the total beginner's question. I would like
+to perform a simple ordination on a dataset of species traits contaning
+only categorical variables. My aim is to identify the relative niche position
+of each species (possibly in the lowest number of dimensions).
+
+I am tempted to perform a Principal coordinate analysis with a distance
+distance matrix created with the gower dissimilarity coefficient. I have,
+however, read that it is also possible to use other ordination methods such
+as multiple correspondence analysis which seems to be specifically designed
+for categorical variables. What is the best method? Which one should I choose?
+Any help would be greatly appreciated!
+
+Cheers
+
+Paolo
+
+-- 
+Roma
+Italy
+
+
+From eric.d.stolen at nasa.gov  Fri Sep  9 16:32:52 2011
+From: eric.d.stolen at nasa.gov (Stolen, D Eric  (KSC-IHA-4400)[Innovative Health Applications LLC])
+Date: Fri, 9 Sep 2011 09:32:52 -0500
+Subject: [R-sig-eco] plot confidence intervals of a line from a mixed
+ model
+Message-ID: <C4F0189B45EA6A43903ADBB756D6F2D23E6F1BC5EB@NDMSSCC08.ndc.nasa.gov>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110909/f882f288/attachment.pl>
+
+From marchtaylor at gmail.com  Tue Sep 13 11:49:34 2011
+From: marchtaylor at gmail.com (Marc Taylor)
+Date: Tue, 13 Sep 2011 11:49:34 +0200
+Subject: [R-sig-eco] generalized least squares linear model (gls in package
+	nlme)
+Message-ID: <CACg2Sf3x8YWq5mhSR9RbtXRoKTc4sN63vvT13+SmQzfNKCjNDA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/a4a45581/attachment.pl>
+
+From ljkjar at hotmail.com  Tue Sep 13 15:02:01 2011
+From: ljkjar at hotmail.com (Lene Jung)
+Date: Tue, 13 Sep 2011 15:02:01 +0200
+Subject: [R-sig-eco] Wrapped cauchy distribution
+Message-ID: <BLU0-SMTP392351AD12260DA9D62DA94DB050@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/0b756797/attachment.pl>
+
+From tsewang.namgail at gmail.com  Fri Sep 16 01:31:06 2011
+From: tsewang.namgail at gmail.com (Tsewang Namgail)
+Date: Thu, 15 Sep 2011 16:31:06 -0700
+Subject: [R-sig-eco] Brownian Bridge for migratory paths
+Message-ID: <CAOp0Y8fk_G_G09RXQ34FjOats_uOZ+amx1K8DE2Z+6D0eawKQg@mail.gmail.com>
+
+Hi everyone,
+
+I am using the Brownian Bridge Model to demarcate migratory paths of
+birds. I used the following script used for mammals. Using this I
+didn't get bridges but simply blotches of high use areas without any
+link between them. Can anyone guide me as to how can I get continuous
+bridges between all the bird locations. Any help would be highly
+appreciated.
+
+Thanks
+Tsewang
+
+BrownianBridge=function(X,Y,Time,LocationError,cell.size=50,max.lag)
+        {options(digits=20)
+
+#Alternative
+#BBMM=brownian.bridge(x=locations$X,y=locations$Y,time.lag=locations$time.lag,location.error=20,cell.size=50)
+
+#X = locsTN$X
+#Y = locsTN$Y
+#Time = locsTN$Clock
+#LocationError = locsTN$TeleError
+#cell.size = 500
+
+#max.lag = abs(min(diff(Time))+1)
+LocationError = LocationError/sqrt(pi/2)
+
+# Create grid
+xmin=(min(X) - 0.1*(max(X)-min(X)))
+xmax=(max(X) + 0.1*(max(X)-min(X)))
+ymin=(min(Y) - 0.1*(max(Y)-min(Y)))
+ymax=(max(Y) + 0.1*(max(Y)-min(Y)))
+x = seq(xmin, xmax, by=cell.size)
+y = seq(ymin, ymax, by=cell.size)
+x = rep(x, length(y))
+y = sort(rep(y, length(x)/length(y)))
+grid = data.frame(x, y)
+cat("Size of grid =", length(unique(grid$y)), "X",
+length(unique(grid$x)), fill=TRUE)
+
+	n.locs = length(X)
+    cat("Number of animal locations =", n.locs, fill=TRUE)
+
+    #--------------------------------------------------------------
+	#Calculate Brownian motion variance "BMvar"
+    #LocationError = rep(LocationError, length(X))
+    T.jump = alpha = ztz = ob = loc.error.1 = loc.error.2 = NULL
+    i = 2
+    while(i < n.locs){
+    	if((Time[i+1]-Time[i-1])/ 300> max.lag) {i = i + 1}
+    	else {
+    		ob = c(ob, i)
+    		t = Time[i+1]-Time[i-1]
+    		T.jump = c(T.jump, t)
+    		a = (Time[i]-Time[i-1]) / t
+    		alpha = c(alpha, a)
+    		u = c(X[i-1], Y[i-1]) + a*(c(X[i+1], Y[i+1]) -
+                c(X[i-1], Y[i-1]))
+    		ztz = c(ztz, (c(X[i], Y[i]) - u)%*%(c(X[i], Y[i]) - u))
+    		loc.error.1 = c(loc.error.1, LocationError[i-1])
+    		loc.error.2 = c(loc.error.2, LocationError[i+1])
+    	}
+    	i = i + 2
+    }
+
+    #Likelihood
+    likelihood <- function(var){
+    	v = T.jump*alpha*(1-alpha)*var +
+            ((1-alpha)^2)*(loc.error.1^2) +
+    		(alpha^2)*(loc.error.2^2)
+    	l = (1/(2*pi*v))*exp(-ztz/(2*v))
+    	-sum(log(l), na.rm=T)
+    }
+    BMvar = nlminb(start=10000, likelihood, lower=10)$par
+    cat("Brownian Motion Variance (meters^2) =", round(BMvar),
+        fill=TRUE)
+    BMvar = rep(BMvar, length(X))
+
+	#Estimate Brownian bridge
+	#Note: 5 minute time step (dt interval in Eq.5 Horne et al. 2007) is used.
+	Time.Diff = c(diff(Time), NA)
+	Max.Time.Diff = max(diff(Time))
+	T.Total = Time[n.locs] - Time[1]
+	probability = NULL
+	int = 0
+	for(i in 1:(n.locs-1)){
+		#if(Time.Diff[i] <= max.lag){
+		if(Time.Diff[i] <= Max.Time.Diff){
+			theta = NULL
+			tm = 0
+			while(tm <= Time.Diff[i]){
+				alpha = tm/Time.Diff[i]
+				mu.x = X[i] + alpha*(X[i+1] - X[i])
+				mu.y = Y[i] + alpha*(Y[i+1] - Y[i])
+				sigma.2 = Time.Diff[i]*alpha*(1-alpha)*BMvar[i] +
+					((1-alpha)^2)*(LocationError[i]^2) +
+					(alpha^2)*(LocationError[i+1]^2)
+				ZTZ = (grid$x - mu.x)^2 + (grid$y - mu.y)^2
+				theta = (1/sqrt(2*pi*sigma.2))*exp(-ZTZ/(2*sigma.2))
+				int = int + theta
+				tm = tm + 1800
+			}
+		}
+	}
+
+
+From sdleduc at gmail.com  Fri Sep 16 03:12:01 2011
+From: sdleduc at gmail.com (Stephen LeDuc)
+Date: Thu, 15 Sep 2011 21:12:01 -0400
+Subject: [R-sig-eco] Envfit function
+Message-ID: <CAKTuE8A0-p-316agafBaHRUD7t_Obz8SERbu6X0MZ9Z-BrsCsA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110915/ffd68c31/attachment.pl>
+
+From basille at ase-research.org  Fri Sep 16 05:11:59 2011
+From: basille at ase-research.org (Mathieu Basille)
+Date: Thu, 15 Sep 2011 23:11:59 -0400
+Subject: [R-sig-eco] Brownian Bridge for migratory paths
+In-Reply-To: <CAOp0Y8fk_G_G09RXQ34FjOats_uOZ+amx1K8DE2Z+6D0eawKQg@mail.gmail.com>
+References: <CAOp0Y8fk_G_G09RXQ34FjOats_uOZ+amx1K8DE2Z+6D0eawKQg@mail.gmail.com>
+Message-ID: <4E72BE7F.8080602@ase-research.org>
+
+Hi Tsewang,
+
+I'm not sure about your script, but there is a function in 
+'adehabitatHR' to estimate kernel Brownian-Bridge home ranges. See:
+
+?kernelbb
+
+You can find additional details in section 5 of:
+
+vignette("adehabitatHR")
+
+Hope this helps,
+Mathieu.
+
+
+Le 15/09/2011 19:31, Tsewang Namgail a ?crit :
+> Hi everyone,
+>
+> I am using the Brownian Bridge Model to demarcate migratory paths of
+> birds. I used the following script used for mammals. Using this I
+> didn't get bridges but simply blotches of high use areas without any
+> link between them. Can anyone guide me as to how can I get continuous
+> bridges between all the bird locations. Any help would be highly
+> appreciated.
+>
+> Thanks
+> Tsewang
+>
+> BrownianBridge=function(X,Y,Time,LocationError,cell.size=50,max.lag)
+>          {options(digits=20)
+>
+> #Alternative
+> #BBMM=brownian.bridge(x=locations$X,y=locations$Y,time.lag=locations$time.lag,location.error=20,cell.size=50)
+>
+> #X = locsTN$X
+> #Y = locsTN$Y
+> #Time = locsTN$Clock
+> #LocationError = locsTN$TeleError
+> #cell.size = 500
+>
+> #max.lag = abs(min(diff(Time))+1)
+> LocationError = LocationError/sqrt(pi/2)
+>
+> # Create grid
+> xmin=(min(X) - 0.1*(max(X)-min(X)))
+> xmax=(max(X) + 0.1*(max(X)-min(X)))
+> ymin=(min(Y) - 0.1*(max(Y)-min(Y)))
+> ymax=(max(Y) + 0.1*(max(Y)-min(Y)))
+> x = seq(xmin, xmax, by=cell.size)
+> y = seq(ymin, ymax, by=cell.size)
+> x = rep(x, length(y))
+> y = sort(rep(y, length(x)/length(y)))
+> grid = data.frame(x, y)
+> cat("Size of grid =", length(unique(grid$y)), "X",
+> length(unique(grid$x)), fill=TRUE)
+>
+> 	n.locs = length(X)
+>      cat("Number of animal locations =", n.locs, fill=TRUE)
+>
+>      #--------------------------------------------------------------
+> 	#Calculate Brownian motion variance "BMvar"
+>      #LocationError = rep(LocationError, length(X))
+>      T.jump = alpha = ztz = ob = loc.error.1 = loc.error.2 = NULL
+>      i = 2
+>      while(i<  n.locs){
+>      	if((Time[i+1]-Time[i-1])/ 300>  max.lag) {i = i + 1}
+>      	else {
+>      		ob = c(ob, i)
+>      		t = Time[i+1]-Time[i-1]
+>      		T.jump = c(T.jump, t)
+>      		a = (Time[i]-Time[i-1]) / t
+>      		alpha = c(alpha, a)
+>      		u = c(X[i-1], Y[i-1]) + a*(c(X[i+1], Y[i+1]) -
+>                  c(X[i-1], Y[i-1]))
+>      		ztz = c(ztz, (c(X[i], Y[i]) - u)%*%(c(X[i], Y[i]) - u))
+>      		loc.error.1 = c(loc.error.1, LocationError[i-1])
+>      		loc.error.2 = c(loc.error.2, LocationError[i+1])
+>      	}
+>      	i = i + 2
+>      }
+>
+>      #Likelihood
+>      likelihood<- function(var){
+>      	v = T.jump*alpha*(1-alpha)*var +
+>              ((1-alpha)^2)*(loc.error.1^2) +
+>      		(alpha^2)*(loc.error.2^2)
+>      	l = (1/(2*pi*v))*exp(-ztz/(2*v))
+>      	-sum(log(l), na.rm=T)
+>      }
+>      BMvar = nlminb(start=10000, likelihood, lower=10)$par
+>      cat("Brownian Motion Variance (meters^2) =", round(BMvar),
+>          fill=TRUE)
+>      BMvar = rep(BMvar, length(X))
+>
+> 	#Estimate Brownian bridge
+> 	#Note: 5 minute time step (dt interval in Eq.5 Horne et al. 2007) is used.
+> 	Time.Diff = c(diff(Time), NA)
+> 	Max.Time.Diff = max(diff(Time))
+> 	T.Total = Time[n.locs] - Time[1]
+> 	probability = NULL
+> 	int = 0
+> 	for(i in 1:(n.locs-1)){
+> 		#if(Time.Diff[i]<= max.lag){
+> 		if(Time.Diff[i]<= Max.Time.Diff){
+> 			theta = NULL
+> 			tm = 0
+> 			while(tm<= Time.Diff[i]){
+> 				alpha = tm/Time.Diff[i]
+> 				mu.x = X[i] + alpha*(X[i+1] - X[i])
+> 				mu.y = Y[i] + alpha*(Y[i+1] - Y[i])
+> 				sigma.2 = Time.Diff[i]*alpha*(1-alpha)*BMvar[i] +
+> 					((1-alpha)^2)*(LocationError[i]^2) +
+> 					(alpha^2)*(LocationError[i+1]^2)
+> 				ZTZ = (grid$x - mu.x)^2 + (grid$y - mu.y)^2
+> 				theta = (1/sqrt(2*pi*sigma.2))*exp(-ZTZ/(2*sigma.2))
+> 				int = int + theta
+> 				tm = tm + 1800
+> 			}
+> 		}
+> 	}
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+
+~$ whoami
+Mathieu Basille, Post-Doc
+
+~$ locate
+Laboratoire d'?cologie Comportementale et de Conservation de la Faune
++ Centre d'?tude de la For?t
+D?partement de Biologie
+Universit? Laval, Qu?bec
+
+~$ info
+http://ase-research.org/basille
+
+~$ fortune
+``If you can't win by reason, go for volume.''
+Calvin, by Bill Watterson.
+
+
+From jari.oksanen at oulu.fi  Fri Sep 16 07:14:13 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 16 Sep 2011 08:14:13 +0300
+Subject: [R-sig-eco] Envfit function
+In-Reply-To: <CAKTuE8A0-p-316agafBaHRUD7t_Obz8SERbu6X0MZ9Z-BrsCsA@mail.gmail.com>
+Message-ID: <CA98B5D5.1882D%jari.oksanen@oulu.fi>
+
+Stephen,
+
+On 16/09/11 04:12 AM, "Stephen LeDuc" <sdleduc at gmail.com> wrote:
+
+> Dear R-sig-ecology list members,
+> 
+> I'm using the envfit function in the vegan package to fit environmental
+> variables as vectors onto an NMDS orientation.  If there are large scale
+> differences between variables, do I need to normalize the data first?
+
+No.
+
+> And,
+> as a somewhat related matter, do I need to worry about the distribution of
+> the data?  Any help or advice on these questions would be most appreciated!
+
+That depends on your inclination, and what are the things that get you
+worried. If is is about "significances", then many people say that you need
+not get worried because envfit uses permutation tests. However, if your
+variable is skewed, or has some extreme values, those exceptional values
+will be influential both for the assessment of the significance, and in
+particular for direction of your fitted vectors. There are no influence
+statistics available for envfit, but you must use your judgment. Visual
+inspection for each variable is possible by using ordisurf(..., knots=1,
+bubble=4) which plots linear trend surface where the isoclines are
+equidistant lines perpendicular to the envfit vectors (that you can have in
+the same graph), and data values are shown by point sizes. If you save the
+ordisurf result, you can get some diagnostic statistics from that.
+
+Here a (warning) example using Bryce Canyon data from the labdsv package:
+
+library(vegan)
+library(labdsv)
+data(bryceveg)
+data(brycesite)
+m <- metaMDS(bryceveg)
+ordisurf(m ~ slope, brycesite, knots=1, bubble=4)
+plot(envfit(m ~ slope, brycesite))
+
+Cheers, Jari Oksanen
+
+
+From R.Briers at napier.ac.uk  Fri Sep 16 11:24:53 2011
+From: R.Briers at napier.ac.uk (Briers, Rob)
+Date: Fri, 16 Sep 2011 10:24:53 +0100
+Subject: [R-sig-eco] Appropriate mixed model?
+Message-ID: <B94560A00CDE0F4083D776425CFF09A5FA5991C596@E2K7MBX.napier-mail.napier.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110916/5805d42f/attachment.pl>
+
+From mdu at ceh.ac.uk  Fri Sep 16 11:58:43 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Fri, 16 Sep 2011 10:58:43 +0100
+Subject: [R-sig-eco] Appropriate mixed model?
+In-Reply-To: <B94560A00CDE0F4083D776425CFF09A5FA5991C596@E2K7MBX.napier-mail.napier.ac.uk>
+References: <B94560A00CDE0F4083D776425CFF09A5FA5991C596@E2K7MBX.napier-mail.napier.ac.uk>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1D12243326@nerckwmb1.ad.nerc.ac.uk>
+
+Hi Rob
+
+As it stands your model won't really do what you are expecting.
+
+Start with a model like this:
+
+fish.mod1<-lmer(fishsize ~ pH + landuse + conductivity + (1 | subcatchment), data=mydata)
+
+You don't say whether you have multiple samples within each subcatchment + year combination, or whether your temporal replication is only between years. If latter then the above model is fine, the residual represents unexplained variation between years+subcatchments. If you have both within and among year variation then try
+
+fish.mod1<-lmer(fishsize ~ pH + landuse + conductivity + (1 | subcatchment/year), data=mydata)
+
+Year needs to be a factor here and you need to think whether you have enough data (years) to make it a sensible random effect.
+
+Depending on whether your explanatory variables (fixed effects) vary through time or not, they will hopefully explain some of the variance at the appropriate matching level of your random effects. E.g. if land use is just one value for each subcatchment then it can only explain away variance at the subcatchment level. If pH is measured for each individual sample then it can potentially explain variance both among and within subcatchments. You can look visually at how much variance is being explained by individual terms by fitting the model with and without them.
+
+When you start putting fixed effects to the left of the | in the random effects specification you are doing something entirely different. For a continuous variable such as pH, you are allowing the fishsize - pH relationship to vary by subcatchment. This is called a random slope. This could of course be the case but it makes sense to have some a-priori idea that this is a sensible interaction to test. For a categorical variable to go on the left then it's a categorical interpretation of the random slope idea. This can be hard to get to grips with, and you need to think carefully about how to code the categorical variable. This is not something to look into if you are just getting started with mixed models. 
+
+If you think there could be common year to year variation across the subcatchments, e.g. as might be caused by some common climatic factor then you can fit a model like this, again providing you have sufficient years:
+
+fish.mod1<-lmer(fishsize ~ pH + landuse + conductivity + (1 | subcatchment) + (1|year), data=mydata)
+
+Regards
+Mike
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Briers, Rob
+Sent: 16 September 2011 10:25
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Appropriate mixed model?
+
+Dear R-sig-ecology list members,
+
+I've got a dataset of mean fish sizes across a large number of sites within a river system. I am trying to determine the relative significance of variation at the level of major tributaries (the river can be split into a number of subcatchments) compared to variation linked to more local factors (continuous variables such as pH, conductivity etc., along with some categorical variables such as local landuse as well). Fish and environmental data are from the same sites.
+
+I had thought of approaching this using lmer to fit a random effects model of the form:
+
+fish.mod1<-lmer(fishsize ~ 1 + (1 + pH + landuse + conductivity (etc..) | subcatchment))
+
+and then examining the contributions to total variance.  Does this seem an appropriate way to proceed? I have gone round in circles with various options for a few days and thought I would get a broader opinion.
+There is the added complication that data have been collected over a number of years, so ideally I would like to account for between-year variation as well. Is this simply the case of adding year as nested variable after subcatchment:
+
+i.e. fish.mod2<-lmer(fishsize ~ 1 + (1 + pH + landuse + conductivity (etc..) | subcatchment/year))
+
+Any advice would be appreciated!
+
+Cheers,
+
+Rob
+_________________________________________
+Dr Rob Briers
+School of Life, Sport and Social Sciences
+Edinburgh Napier University
+Sighthill Campus
+Edinburgh
+EH11 4BN
+Tel: +44(0)-131-455-2503
+Fax: +44(0)-131-455-2291
+
+
+
+Edinburgh Napier University is one of Scotland's top universities for graduate employability.  93.2% of graduates are in work or further study within six months of leaving. The university is also proud winner of the Queen's Anniversary Prize for Higher and Further Education 2009, awarded for innovative housing construction for environmental benefit and quality of life.
+
+This message is intended for the addressee(s) only\ and ...{{dropped:14}}
+
+
+From R.Briers at napier.ac.uk  Fri Sep 16 14:44:30 2011
+From: R.Briers at napier.ac.uk (Briers, Rob)
+Date: Fri, 16 Sep 2011 13:44:30 +0100
+Subject: [R-sig-eco] Appropriate mixed model?
+In-Reply-To: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1D12243326@nerckwmb1.ad.nerc.ac.uk>
+References: <B94560A00CDE0F4083D776425CFF09A5FA5991C596@E2K7MBX.napier-mail.napier.ac.uk>
+	<9C29AFE27E3FBA4DB1742CC8E8F74ECD1D12243326@nerckwmb1.ad.nerc.ac.uk>
+Message-ID: <B94560A00CDE0F4083D776425CFF09A5FA599D62FF@E2K7MBX.napier-mail.napier.ac.uk>
+
+Mike,
+
+Thanks for the advice - I had started off with something similar to what you specified and as I read around a bit I got more confused and started to move effects around.  I have not really used mixed models before, so forgive any basic mistakes in interpretation!
+
+Just to clarify, and make sure that I understand properly.
+
+There are multiple samples collected from the different subcatchments, but in different years (so parts of the catchment were surveyed in one year, and other parts the following year etc.).  Each site was only visited once, so there is no temporal pseudoreplication at this level.  Sites have been surveyed over 9 years, and between 100-450 sites sampled per year.
+
+In this case the model with the year included would seem to be most appropriate, but probably as a separate term because it is likely to affect all catchments equally i.e.
+
+fish.mod1<-lmer(fishsize ~ pH + landuse + conductivity + (1 | subcatchment) + (1| year), data=mydata)
+
+In terms of comparing the models, then initially it is presumably a case of fitting with and without a given fixed effect and comparing the fit (using ML estimation and then anova to compare) to simplify the model.
+
+To determine what effect the random subcatchment effect on its own has compared to the fixed effects, would it be the case of fitting:
+
+fish.mod2<-lmer(fishsize ~1 + (1|subcatchment))
+
+and comparing this to the model with the fixed effects in?
+
+If this is correct (?) then moving on to the random slopes situation, if pH was included as a fixed effect, and also to the left of the | then would comparing this model to a model with pH only as a fixed effect allow you to establish the extent to which fishsize~pH relationships vary between subcatchments as opposed to assuming a single global relationship as implied by the fixed effect.
+
+Apologies if any of this is not clear - it is Friday!
+
+Cheers,
+
+Rob
+
+
+-----Original Message-----
+From: Dunbar, Michael J. [mailto:mdu at ceh.ac.uk] 
+Sent: 16 September 2011 10:59
+To: Briers, Rob; r-sig-ecology at r-project.org
+Subject: RE: Appropriate mixed model?
+
+Hi Rob
+
+As it stands your model won't really do what you are expecting.
+
+Start with a model like this:
+
+fish.mod1<-lmer(fishsize ~ pH + landuse + conductivity + (1 | subcatchment), data=mydata)
+
+You don't say whether you have multiple samples within each subcatchment + year combination, or whether your temporal replication is only between years. If latter then the above model is fine, the residual represents unexplained variation between years+subcatchments. If you have both within and among year variation then try
+
+fish.mod1<-lmer(fishsize ~ pH + landuse + conductivity + (1 | subcatchment/year), data=mydata)
+
+Year needs to be a factor here and you need to think whether you have enough data (years) to make it a sensible random effect.
+
+Depending on whether your explanatory variables (fixed effects) vary through time or not, they will hopefully explain some of the variance at the appropriate matching level of your random effects. E.g. if land use is just one value for each subcatchment then it can only explain away variance at the subcatchment level. If pH is measured for each individual sample then it can potentially explain variance both among and within subcatchments. You can look visually at how much variance is being explained by individual terms by fitting the model with and without them.
+
+When you start putting fixed effects to the left of the | in the random effects specification you are doing something entirely different. For a continuous variable such as pH, you are allowing the fishsize - pH relationship to vary by subcatchment. This is called a random slope. This could of course be the case but it makes sense to have some a-priori idea that this is a sensible interaction to test. For a categorical variable to go on the left then it's a categorical interpretation of the random slope idea. This can be hard to get to grips with, and you need to think carefully about how to code the categorical variable. This is not something to look into if you are just getting started with mixed models. 
+
+If you think there could be common year to year variation across the subcatchments, e.g. as might be caused by some common climatic factor then you can fit a model like this, again providing you have sufficient years:
+
+fish.mod1<-lmer(fishsize ~ pH + landuse + conductivity + (1 | subcatchment) + (1|year), data=mydata)
+
+Regards
+Mike
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Briers, Rob
+Sent: 16 September 2011 10:25
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Appropriate mixed model?
+
+Dear R-sig-ecology list members,
+
+I've got a dataset of mean fish sizes across a large number of sites within a river system. I am trying to determine the relative significance of variation at the level of major tributaries (the river can be split into a number of subcatchments) compared to variation linked to more local factors (continuous variables such as pH, conductivity etc., along with some categorical variables such as local landuse as well). Fish and environmental data are from the same sites.
+
+I had thought of approaching this using lmer to fit a random effects model of the form:
+
+fish.mod1<-lmer(fishsize ~ 1 + (1 + pH + landuse + conductivity (etc..) | subcatchment))
+
+and then examining the contributions to total variance.  Does this seem an appropriate way to proceed? I have gone round in circles with various options for a few days and thought I would get a broader opinion.
+There is the added complication that data have been collected over a number of years, so ideally I would like to account for between-year variation as well. Is this simply the case of adding year as nested variable after subcatchment:
+
+i.e. fish.mod2<-lmer(fishsize ~ 1 + (1 + pH + landuse + conductivity (etc..) | subcatchment/year))
+
+Any advice would be appreciated!
+
+Cheers,
+
+Rob
+_________________________________________
+Dr Rob Briers
+School of Life, Sport and Social Sciences
+Edinburgh Napier University
+Sighthill Campus
+Edinburgh
+EH11 4BN
+Tel: +44(0)-131-455-2503
+Fax: +44(0)-131-455-2291
+
+
+
+Edinburgh Napier University is one of Scotland's top universities for graduate employability.  93.2% of graduates are in work or further study within six months of leaving. The university is also proud winner of the Queen's Anniversary Prize for Higher and Further Education 2009, awarded for innovative housing construction for environmental benefit and quality of life.
+
+This message is intended for the addressee(s) only\ and ...{{dropped:19}}
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+This message (and any attachments) is for the recipient only. NERC
+is subject to the Freedom of Information Act 2000 and the contents
+of this email and any reply you make may be disclosed by NERC unless
+it is exempt from release under the Act. Any material supplied to
+NERC may be stored in an electronic records management system.
+
+Edinburgh Napier University is one of Scotland's top universities for graduate employability.  93.2% of graduates are in work or further study within six months of leaving. The university is also proud winner of the Queen's Anniversary Prize for Higher and Further Education 2009, awarded for innovative housing construction for environmental benefit and quality of life.
+
+This message is intended for the addressee(s) only
+and should not be read, copied or disclosed to anyone else outwith the University without the permission of the sender. It is your responsibility to ensure that this message and any attachments are scanned for viruses or other defects. 
+Edinburgh Napier University does not accept liability for any loss or
+damage which may result from this email or any attachment, or for errors or omissions arising after it was sent. Email is not a secure medium. Email entering the University's system is subject to routine monitoring and filtering by the University. 
+
+Edinburgh Napier University is a registered Scottish
+charity.
+Registration number SC018373
+
+
+From lquinn at hotmail.com  Tue Sep 20 22:54:34 2011
+From: lquinn at hotmail.com (L Quinn)
+Date: Tue, 20 Sep 2011 20:54:34 +0000
+Subject: [R-sig-eco] returning site and species coordinates in NMDS using
+	vegan
+Message-ID: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/00968912/attachment.pl>
+
+From vllandeiro at gmail.com  Tue Sep 20 23:17:49 2011
+From: vllandeiro at gmail.com (Victor L. Landeiro)
+Date: Tue, 20 Sep 2011 18:17:49 -0300
+Subject: [R-sig-eco] returning site and species coordinates in NMDS
+	using vegan
+In-Reply-To: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+References: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+Message-ID: <CAGVYSMsjqXBPtQSSRyrHoxSGfuKQCjB4eRzqYYnwRFUS5Gvf9A@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/07f94b21/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Tue Sep 20 23:45:00 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 20 Sep 2011 22:45:00 +0100
+Subject: [R-sig-eco] returning site and species coordinates in NMDS
+ using vegan
+In-Reply-To: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+References: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+Message-ID: <1316555100.2719.5.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Tue, 2011-09-20 at 20:54 +0000, L Quinn wrote:
+> Hi,
+> I am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g. 
+> spp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds
+> I am able to plot the results (species nicely overlaying sites) using 
+> plot(spp.mds,display="species",type="t",family="sans",font=2,xlim=c(-0.4,0.4),ylim=c(-0.4,0.4))# and points(env.mds,display="sites")
+> However, try as I might, I am not able to make this figure look pretty enough in R to satisfy journal editors/reviewers. I want to redraw the results in Excel, but I don't know how to extract species and site coordinates from spp.mds. I see that I can do this using isoMDS in MASS, but I'd prefer to use vegan. Perhaps I'm missing something obvious, but I haven't been able to find it anywhere so far. How does one go about extracting those coordinates?
+> Thanks in advance.
+> Lauren
+
+Why don't you tell use what you want to do to produce a plot that will
+meet the reviewers/editors requirements? That way we can help you with R
+code to do the plot as I am 100% certain you won't be able to do a
+better job with Excel.
+
+Yes, I am that confident! I've published umpteen papers using vegan
+plots, that with a bit of crafting haven't had any problems getting past
+reviewers/editors of the ecological/environmental journals I have
+published in.
+
+G
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From cliffbeall at gmail.com  Wed Sep 21 02:07:50 2011
+From: cliffbeall at gmail.com (Cliff Beall)
+Date: Tue, 20 Sep 2011 20:07:50 -0400
+Subject: [R-sig-eco] returning site and species coordinates in NMDS
+	using vegan
+In-Reply-To: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+References: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+Message-ID: <328DB489-6B56-4237-92AC-B97E7A96DDDB@gmail.com>
+
+The site coordinates are in spp.mds$points and the species coordinates are in spp.mds$species
+
+I have used those to make bubble plots, scaling the size of points by species abundance. I got the idea from PRIMER and extended it with R.
+
+I use the R graphics though, I think they are very flexible.
+
+On Sep 20, 2011, at 4:54 PM, L Quinn wrote:
+
+> 
+> Hi,
+> I am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g. 
+> spp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds
+> I am able to plot the results (species nicely overlaying sites) using 
+> plot(spp.mds,display="species",type="t",family="sans",font=2,xlim=c(-0.4,0.4),ylim=c(-0.4,0.4))# and points(env.mds,display="sites")
+> However, try as I might, I am not able to make this figure look pretty enough in R to satisfy journal editors/reviewers. I want to redraw the results in Excel, but I don't know how to extract species and site coordinates from spp.mds. I see that I can do this using isoMDS in MASS, but I'd prefer to use vegan. Perhaps I'm missing something obvious, but I haven't been able to find it anywhere so far. How does one go about extracting those coordinates?
+> Thanks in advance.
+> Lauren
+> 		 	   		  
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From sven.adler2 at uni-rostock.de  Wed Sep 21 12:10:31 2011
+From: sven.adler2 at uni-rostock.de (Sven Adler (2))
+Date: Wed, 21 Sep 2011 10:10:31 +0000
+Subject: [R-sig-eco] returning site and species coordinates in NMDS
+ using vegan
+In-Reply-To: <1316555100.2719.5.camel@chrysothemis.geog.ucl.ac.uk>
+References: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>,
+	<1316555100.2719.5.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <88F307B940AFE24DBC2192184C2C08CA04C585@mbx3.uni-rostock.de>
+
+Hi Lauren,
+type
+?plot
+or ?par
+and you will find several possibilities to change the view of your plot (most of them works in plot.cca to! It is a little bit tricky, but once you understood it, it will be much more easier and faster to build very nice plots in R as if you want to do the same in EXCEL or Power Point ( Power Point: Export the Graph as emf file to Power Point, with a dubble click on the graph you can change whatever you want to change, or use text fields) ? and if you save the code for the plot, changes in the future can be done much more faster, as if you have to do all these things in other programs. 
+http://addictedtor.free.fr/graphiques/ here you can find several ideas (with the R code) how flexible R graphics are 
+Sven 
+________________________________________
+Von: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org]&quot; im Auftrag von &quot;Gavin Simpson [gavin.simpson at ucl.ac.uk]
+Gesendet: Dienstag, 20. September 2011 23:45
+Bis: L Quinn
+Cc: r-sig-ecology at r-project.org
+Betreff: Re: [R-sig-eco] returning site and species coordinates in NMDS using vegan
+
+On Tue, 2011-09-20 at 20:54 +0000, L Quinn wrote:
+> Hi,
+> I am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g.
+> spp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds
+> I am able to plot the results (species nicely overlaying sites) using
+> plot(spp.mds,display="species",type="t",family="sans",font=2,xlim=c(-0.4,0.4),ylim=c(-0.4,0.4))# and points(env.mds,display="sites")
+> However, try as I might, I am not able to make this figure look pretty enough in R to satisfy journal editors/reviewers. I want to redraw the results in Excel, but I don't know how to extract species and site coordinates from spp.mds. I see that I can do this using isoMDS in MASS, but I'd prefer to use vegan. Perhaps I'm missing something obvious, but I haven't been able to find it anywhere so far. How does one go about extracting those coordinates?
+> Thanks in advance.
+> Lauren
+
+Why don't you tell use what you want to do to produce a plot that will
+meet the reviewers/editors requirements? That way we can help you with R
+code to do the plot as I am 100% certain you won't be able to do a
+better job with Excel.
+
+Yes, I am that confident! I've published umpteen papers using vegan
+plots, that with a bit of crafting haven't had any problems getting past
+reviewers/editors of the ecological/environmental journals I have
+published in.
+
+G
+
+--
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From gavin.simpson at ucl.ac.uk  Wed Sep 21 13:03:32 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 21 Sep 2011 12:03:32 +0100
+Subject: [R-sig-eco] returning site and species coordinates in NMDS
+ using vegan
+In-Reply-To: <CAGVYSMsjqXBPtQSSRyrHoxSGfuKQCjB4eRzqYYnwRFUS5Gvf9A@mail.gmail.com>
+References: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+	<CAGVYSMsjqXBPtQSSRyrHoxSGfuKQCjB4eRzqYYnwRFUS5Gvf9A@mail.gmail.com>
+Message-ID: <1316603012.9511.38.camel@prometheus.geog.ucl.ac.uk>
+
+On Tue, 2011-09-20 at 18:17 -0300, Victor L. Landeiro wrote:
+> Hi Lauren,
+> 
+> site.scores<-scores(mds.result, display="sites")
+> species.scores<-scores(mds.result, display="species")
+
+I wanted to write that you can do this in a single call; but you can't.
+You should be able to, so I'll take a look at scores.metaMDS and improve
+it to work more like scores.cca for example.
+
+G
+
+> Note that your result from metaMDS function should be based on "raw data"
+> not on "distance matrices". If your input to metaMDS function is a distance
+> matrix you will not be able to recover species scores.
+> 
+> victor
+> 
+> 
+> 
+> On Tue, Sep 20, 2011 at 5:54 PM, L Quinn <lquinn at hotmail.com> wrote:
+> 
+> >
+> > Hi,
+> > I am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g.
+> > spp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds
+> > I am able to plot the results (species nicely overlaying sites) using
+> > plot(spp.mds,display="species",type="t",family="sans",font=2,xlim=c(-0.4,0.4),ylim=c(-0.4,0.4))#
+> > and points(env.mds,display="sites")
+> > However, try as I might, I am not able to make this figure look pretty
+> > enough in R to satisfy journal editors/reviewers. I want to redraw the
+> > results in Excel, but I don't know how to extract species and site
+> > coordinates from spp.mds. I see that I can do this using isoMDS in MASS, but
+> > I'd prefer to use vegan. Perhaps I'm missing something obvious, but I
+> > haven't been able to find it anywhere so far. How does one go about
+> > extracting those coordinates?
+> > Thanks in advance.
+> > Lauren
+> >
+> >        [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> 
+> 
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From gavin.simpson at ucl.ac.uk  Wed Sep 21 13:21:26 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 21 Sep 2011 12:21:26 +0100
+Subject: [R-sig-eco] returning site and species coordinates in NMDS
+ using vegan
+In-Reply-To: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+References: <BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>
+Message-ID: <1316604086.9511.56.camel@prometheus.geog.ucl.ac.uk>
+
+On Tue, 2011-09-20 at 20:54 +0000, L Quinn wrote:
+> Hi,
+> I am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g. 
+> spp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds
+> I am able to plot the results (species nicely overlaying sites) using 
+> plot(spp.mds,display="species",type="t",family="sans",font=2,xlim=c(-0.4,0.4),ylim=c(-0.4,0.4))# and points(env.mds,display="sites")
+> However, try as I might, I am not able to make this figure look pretty enough in R to satisfy journal editors/reviewers. I want to redraw the results in Excel, but I don't know how to extract species and site coordinates from spp.mds. I see that I can do this using isoMDS in MASS, but I'd prefer to use vegan. Perhaps I'm missing something obvious, but I haven't been able to find it anywhere so far. How does one go about extracting those coordinates?
+> Thanks in advance.
+> Lauren
+
+In anticipation of you telling us what you want to do, the general
+advice is to plot aspects of the model fit by hand, in stages.
+
+# The recommended way of running NMDS (Minchin 1987)
+##
+data(dune)
+# Global NMDS using monoMDS
+sol <- metaMDS(dune)
+
+## extract scrs
+sites <- scores(sol, display = "sites")
+spps  <- scores(sol, display = "species")
+
+## compute axis ranges
+xlim <- range(sites[,1], spps[,1])
+ylim <- range(sites[,2], spps[,2])
+
+## set up a blank plotting window
+plot(sol, type = "n", xlim = xlim, ylim = ylim)
+
+## now do plotting with base R plotting functions, e.g.
+points(sites, col = "blue", pch = 16, cex = 1.2)
+text(spps, labels = rownames(spps), col = "red", cex = 0.6)
+
+If it is the overlap of labels etc that is annoying you,
+ordipointlabel() is your friend, or you can fiddle with things by hand
+using orditkplot(), push the result back to R and then plot it using
+ordiplot().
+
+## try this:
+ordipointlabel(sol)
+
+The success of any of these will depend on the number of sites and
+species etc. and their spacing in the ordination. orditkplot() provides
+the most flexibility, but you have to move all the labels by hand.
+
+G
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From momadou at yahoo.fr  Wed Sep 21 23:06:04 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Wed, 21 Sep 2011 22:06:04 +0100 (BST)
+Subject: [R-sig-eco] Display or save very long matrix
+Message-ID: <1316639164.64537.YahooMailNeo@web28614.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110921/cb8bb186/attachment.pl>
+
+From sarah.goslee at gmail.com  Wed Sep 21 23:16:58 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Wed, 21 Sep 2011 17:16:58 -0400
+Subject: [R-sig-eco] Display or save very long matrix
+In-Reply-To: <1316639164.64537.YahooMailNeo@web28614.mail.ukl.yahoo.com>
+References: <1316639164.64537.YahooMailNeo@web28614.mail.ukl.yahoo.com>
+Message-ID: <CAM_vju=HaQt7QM7WnqTgRRuSra290xsU+9P7KUnv0LKHpb1oWQ@mail.gmail.com>
+
+Hi,
+
+I'm not sure why you want to display a matrix of that size to the screen, but
+why not use write.table() to save it to a file?
+
+>Mat1 <- RasterToColonne(adresse)
+
+If that isn't enough, then we might need to know what the function
+RasterToColonne() does. Or is that the function that you only included
+half of in your email?
+
+Sarah
+
+On Wed, Sep 21, 2011 at 5:06 PM, momadou sow <momadou at yahoo.fr> wrote:
+> Hi,
+>
+> I extract the coordinates and pixel values on my image. Thus I want to
+> display all my matrix and save it in a (. txt) file.
+> I used this code:
+>
+>>library(raster)
+>>adresse<-"C:\\Users\\Documents\\DISC D\\\Images282"
+>>a <- raster(adresse)
+>>CentreRaster <- rasterToPoints(a)
+>>PixelColonne <- as.data.frame(CentreRaster)
+>>PixelColonne <- cbind(PixelColonne,coordonnee =
+> paste(PixelColonne[,1],PixelColonne[,2],sep=" "))
+>>colnames(PixelColonne) <-
+> c("Longitude","Latitude","ValeurPixel","Coordonnees")
+>>return(PixelColonne)
+>>}
+>>Mat1 <- RasterToColonne(adresse)
+>>Mat1[1:5168101,] ?# number of rows = 5168101
+>
+> In the result, I have not all the matrix. Only a part of the matrix
+> appears.
+> How can I save the entire matrix to a file (. txt)?
+>
+> Thank you in advance
+> Momadou
+> ? ? ? ?[[alternative HTML version deleted]]
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+
+-- 
+Sarah Goslee
+http://www.stringpage.com
+http://www.sarahgoslee.com
+http://www.functionaldiversity.org
+
+
+From momadou at yahoo.fr  Thu Sep 22 12:23:29 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Thu, 22 Sep 2011 11:23:29 +0100 (BST)
+Subject: [R-sig-eco] Re :  Display or save very long matrix
+In-Reply-To: <CAM_vju=HaQt7QM7WnqTgRRuSra290xsU+9P7KUnv0LKHpb1oWQ@mail.gmail.com>
+References: <1316639164.64537.YahooMailNeo@web28614.mail.ukl.yahoo.com>
+	<CAM_vju=HaQt7QM7WnqTgRRuSra290xsU+9P7KUnv0LKHpb1oWQ@mail.gmail.com>
+Message-ID: <1316687009.33332.YahooMailNeo@web28602.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/47e34073/attachment.pl>
+
+From sarah.goslee at gmail.com  Thu Sep 22 12:56:37 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 22 Sep 2011 06:56:37 -0400
+Subject: [R-sig-eco] Re :  Display or save very long matrix
+In-Reply-To: <1316687009.33332.YahooMailNeo@web28602.mail.ukl.yahoo.com>
+References: <1316639164.64537.YahooMailNeo@web28614.mail.ukl.yahoo.com>
+	<CAM_vju=HaQt7QM7WnqTgRRuSra290xsU+9P7KUnv0LKHpb1oWQ@mail.gmail.com>
+	<1316687009.33332.YahooMailNeo@web28602.mail.ukl.yahoo.com>
+Message-ID: <CAM_vjunHHzJkWrfKhf5PnHMpEa1Gw09judjBd_4O2-9UUXbMDw@mail.gmail.com>
+
+Excerpted from below, because all else is irrelevant:
+>write.table("C:\\Users\\Documents\\DISC D\\ Mat1.txt",sep=" ")
+
+You need to tell R *what* to write to a file, not just the file name.
+Please read ?write.table and also try
+write.table(Mat1, "C:\\Users\\Documents\\DISC D\\ Mat1.txt",sep=" ")
+
+Sarah
+
+On Thu, Sep 22, 2011 at 6:23 AM, momadou sow <momadou at yahoo.fr> wrote:
+> Hi,
+> Thank Sarah and David for your help.
+> for David Galbraith
+> For the moment, I did not use any text editor, I want to save all my matrix
+> in a file which can be (.txt) or another.
+> ???Sorry Sarah I missed a code line, also I tried write.table but I have not
+> a saved file in my folder.
+> RasterToColonne transforms raster to Colum.??Here, the complete code used:
+>
+>>library(raster)
+>>adresse<-"C:\\Users\\Documents\\DISC D\\Images282"
+>>RasterToColonne <- function(AdresseRaster){ # to transform raster to Colum
+>>a <- raster(adresse)
+>>CentreRaster <- rasterToPoints(a)
+>>PixelColonne <- as.data.frame(CentreRaster)
+>>PixelColonne <- cbind(PixelColonne,coordonnee =
+>> paste(PixelColonne[,1],PixelColonne[,2],sep=" "))
+>>colnames(PixelColonne) <-
+>> c("Longitude","Latitude","ValeurPixel","Coordonnees")
+>>return(PixelColonne)
+>>}
+>>Mat1 <- RasterToColonne(adresse)
+>>write.table("C:\\Users\\Documents\\DISC D\\ Mat1.txt",sep=" ")
+> Thank you for your help
+> De?: Sarah Goslee <sarah.goslee at gmail.com>
+> ??: momadou sow <momadou at yahoo.fr>
+> Cc?: "R-sig-ecology at r-project.org" <R-sig-ecology at r-project.org>
+> Envoy? le : Jeudi 22 Septembre 2011 0h16
+> Objet?: Re: [R-sig-eco] Display or save very long matrix
+>
+> Hi,
+>
+> I'm not sure why you want to display a matrix of that size to the screen,
+> but
+> why not use write.table() to save it to a file?
+>
+>>Mat1 <- RasterToColonne(adresse)
+>
+> If that isn't enough, then we might need to know what the function
+> RasterToColonne() does. Or is that the function that you only included
+> half of in your email?
+>
+> Sarah
+>
+> On Wed, Sep 21, 2011 at 5:06 PM, momadou sow <momadou at yahoo.fr> wrote:
+>> Hi,
+>>
+>> I extract the coordinates and pixel values on my image. Thus I want to
+>> display all my matrix and save it in a (. txt) file.
+>> I used this code:
+>>
+>>>library(raster)
+>>>adresse<-"C:\\Users\\Documents\\DISC D\\\Images282"
+>>>a <- raster(adresse)
+>>>CentreRaster <- rasterToPoints(a)
+>>>PixelColonne <- as.data.frame(CentreRaster)
+>>>PixelColonne <- cbind(PixelColonne,coordonnee =
+>> paste(PixelColonne[,1],PixelColonne[,2],sep=" "))
+>>>colnames(PixelColonne) <-
+>> c("Longitude","Latitude","ValeurPixel","Coordonnees")
+>>>return(PixelColonne)
+>>>}
+>>>Mat1 <- RasterToColonne(adresse)
+>>>Mat1[1:5168101,] ?# number of rows = 5168101
+>>
+>> In the result, I have not all the matrix. Only a part of the matrix
+>> appears.
+>> How can I save the entire matrix to a file (. txt)?
+>>
+>> Thank you in advance
+>> Momadou
+>>
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From momadou at yahoo.fr  Thu Sep 22 14:28:19 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Thu, 22 Sep 2011 13:28:19 +0100 (BST)
+Subject: [R-sig-eco] Re : Re :  Display or save very long matrix
+In-Reply-To: <CAM_vjunHHzJkWrfKhf5PnHMpEa1Gw09judjBd_4O2-9UUXbMDw@mail.gmail.com>
+References: <1316639164.64537.YahooMailNeo@web28614.mail.ukl.yahoo.com>
+	<CAM_vju=HaQt7QM7WnqTgRRuSra290xsU+9P7KUnv0LKHpb1oWQ@mail.gmail.com>
+	<1316687009.33332.YahooMailNeo@web28602.mail.ukl.yahoo.com>
+	<CAM_vjunHHzJkWrfKhf5PnHMpEa1Gw09judjBd_4O2-9UUXbMDw@mail.gmail.com>
+Message-ID: <1316694499.4200.YahooMailNeo@web28611.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/488865c3/attachment.pl>
+
+From sibylle.stoeckli at gmx.ch  Thu Sep 22 21:03:55 2011
+From: sibylle.stoeckli at gmx.ch (=?ISO-8859-1?Q?Sibylle_St=F6ckli?=)
+Date: Thu, 22 Sep 2011 21:03:55 +0200
+Subject: [R-sig-eco] vegan rda
+Message-ID: <9810C7C4-6DCC-4A71-ADEA-A398C600C78D@gmx.ch>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/e8336d7b/attachment.pl>
+
+From scttchamberlain4 at gmail.com  Fri Sep 23 17:59:40 2011
+From: scttchamberlain4 at gmail.com (Scott Chamberlain)
+Date: Fri, 23 Sep 2011 10:59:40 -0500
+Subject: [R-sig-eco] glm coefficients
+Message-ID: <CAD9MWXXEN+M=-rDoQ6AMM1q_NqxbWRuLer+BdAyCaauOgsS_wQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/bd44ca0c/attachment.pl>
+
+From ljkjar at hotmail.com  Fri Sep 23 19:09:29 2011
+From: ljkjar at hotmail.com (Lene Jung)
+Date: Fri, 23 Sep 2011 19:09:29 +0200
+Subject: [R-sig-eco] Help with optim
+Message-ID: <BLU0-SMTP307F58DD8A52037FBDE2AF8DB0F0@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/34973228/attachment.pl>
+
+From pdixon at iastate.edu  Sat Sep 24 15:48:31 2011
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Sat, 24 Sep 2011 08:48:31 -0500
+Subject: [R-sig-eco] MLEs for wrapped Cauchy
+Message-ID: <3E1491A19F369E448BC445A7B0666C27110C0BFDA7@EXITS712.its.iastate.edu>
+
+Lene,
+
+The problem could be a bad starting value, optim wandering into places it shouldn't, insufficient data to estimate c, or something else.
+
+A good way to understand what's going on is to plot profile likelihood against values of c.  For a specified value of c, use optim() to find the 2 parameter mle of  (mu0, rho0) given c.  Evaluating lnl at (\hat mu0, \hat rho0, c) gives you profile lnl(c) = max lnl (over mu0, rho0 given c).  Do that for a range of c and plot profile lnl(c) against c.  
+
+If optim() refuses to work well with the three parameter problem, you can always use optimize() on the profile likelihood.  Golden section search (in optimize) for a 1 parameter optimization is more numerically robust than conjugate gradient optimization.
+
+Philip Dixon
+
+
+From aitor.gaston at upm.es  Sat Sep 24 22:52:41 2011
+From: aitor.gaston at upm.es (=?iso-8859-1?Q?Aitor_Gast=F3n?=)
+Date: Sat, 24 Sep 2011 22:52:41 +0200
+Subject: [R-sig-eco] glm coefficients
+In-Reply-To: <CAD9MWXXEN+M=-rDoQ6AMM1q_NqxbWRuLer+BdAyCaauOgsS_wQ@mail.gmail.com>
+References: <CAD9MWXXEN+M=-rDoQ6AMM1q_NqxbWRuLer+BdAyCaauOgsS_wQ@mail.gmail.com>
+Message-ID: <31194FD54F3246AEB27ECF0265F98508@botanica1>
+
+In your example there is not categorical variables and you need at least one 
+for ANCOVA.
+Try the following, is the same dataset using factor() to create a 
+categorical variable (named CatVar):
+
+dat <- data.frame(response = rnorm(9), size = rnorm(9),  CatVar =
+factor(c(1,1,1,1,0,0,0,0,0)))
+model <- glm(response ~ size * CatVar, data = dat)
+coef(model)
+
+You will get:
+
+(Intercept)         size      CatVar1 size:CatVar1
+   0.2141371   -0.7847063   -1.8409264    3.3637699
+
+The first coefficient (labeled "Intercept") is the intercept for CatVar = 0.
+The second coefficient (labeled "size") is the slope for CatVar=0
+The third coefficient (labeled "CatVar1") is the difference between the 
+intercept for CatVar = 0 and the intercept for CatVar = 1
+The fourth coefficient ("labeled size:CatVar") is the difference between the 
+slope for CatVar = 0 and the slope for CatVar = 1
+
+You can check it plotting this:
+
+plot(dat$size,dat$response,col=dat$CatVar)
+abline(a=coef(model)[1],b=coef(model)[2],col=1)
+abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,4)]),col=2)
+
+This way of presenting coefficients is the default in R (treatment contrast) 
+but there are other alternatives, see ?contr.treatment.
+
+Hope it helps,
+
+Aitor
+
+
+--------------------------------------------------
+From: "Scott Chamberlain" <scttchamberlain4 at gmail.com>
+Sent: Friday, September 23, 2011 5:59 PM
+To: <R-sig-ecology at r-project.org>
+Subject: [R-sig-eco] glm coefficients
+
+> Hello,
+>
+>
+> Is there a way to add up coefficients from a glm model for an ANCOVA to 
+> get
+> the coefficients for each term?
+>
+> For example, in the following:
+> dat <- data.frame(response = rnorm(9), size = rnorm(9),  covariate =
+> c(1,1,1,1,0,0,0,0,0))
+> model <- glm(response ~ size * covariate, data = dat)
+>> coef(model)
+>   (Intercept)           size                covariate       size:covariate
+>    -0.2995964     -0.1969266      0.7158756      1.2829886
+>
+> we are interested in the coefficients for the intercepts for size at both
+> levels of the covariate  (0 and 1), and the slopes for each line. This
+> requires adding up coefficients from the above output.
+>
+> Are there built in base functions or in other packages that do these
+> additions?
+>
+>
+> Thanks!
+> __
+> Scott Chamberlain
+>
+> [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From cmswan at umbc.edu  Sun Sep 25 16:08:51 2011
+From: cmswan at umbc.edu (Chris Swan)
+Date: Sun, 25 Sep 2011 10:08:51 -0400
+Subject: [R-sig-eco] glm coefficients
+In-Reply-To: <31194FD54F3246AEB27ECF0265F98508@botanica1>
+References: <CAD9MWXXEN+M=-rDoQ6AMM1q_NqxbWRuLer+BdAyCaauOgsS_wQ@mail.gmail.com>
+	<31194FD54F3246AEB27ECF0265F98508@botanica1>
+Message-ID: <CD3C742A-21FD-4900-8120-D8E04F9A0B22@umbc.edu>
+
+I am following this and have two other questions.
+
+1) The first is how to get the correct standard errors for each of the coefficients?  In the example offered, asking for summary(model) will yield, in part, the following (please understand my output will differ given the data generated is random):
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)
+(Intercept)    0.7988     0.5801   1.377    0.227
+size          -0.5437     0.7997  -0.680    0.527
+CatVar1       -2.0183     1.0573  -1.909    0.115
+size:CatVar1  -0.5047     1.2368  -0.408    0.700
+
+
+To get the intercept for the CatVar1=1 line, one needs 0.7988-(-2.0183) = 2.18.  Is the standard error for this estimate 1.0573?
+
+
+2) Suppose there were three or more categorical variables.  How can one perform pairwise comparisons between coefficients AND get the associated SE of the difference?  It seems that this would be quite desirable, yet I cannot find a package for this. I am looking for a method similar to the SAS implementation of the ESTIMATE statement.
+
+
+
+-- 
+Christopher M. Swan, Ph.D.
+Associate Professor
+Dept. of Geography & Environmental Systems
+University of Maryland, Baltimore County
+211 Sondheim Hall
+1000 Hilltop Circle
+Baltimore, MD 21250
+Chris.Swan at umbc.edu
+http://www.umbc.edu/people/cmswan
+(410) 455-3957
+
+
+
+
+
+
+
+
+
+On Sep 24, 2011, at 4:52 PM, Aitor Gast?n wrote:
+
+> In your example there is not categorical variables and you need at least one for ANCOVA.
+> Try the following, is the same dataset using factor() to create a categorical variable (named CatVar):
+> 
+> dat <- data.frame(response = rnorm(9), size = rnorm(9),  CatVar =
+> factor(c(1,1,1,1,0,0,0,0,0)))
+> model <- glm(response ~ size * CatVar, data = dat)
+> coef(model)
+> 
+> You will get:
+> 
+> (Intercept)         size      CatVar1 size:CatVar1
+>  0.2141371   -0.7847063   -1.8409264    3.3637699
+> 
+> The first coefficient (labeled "Intercept") is the intercept for CatVar = 0.
+> The second coefficient (labeled "size") is the slope for CatVar=0
+> The third coefficient (labeled "CatVar1") is the difference between the intercept for CatVar = 0 and the intercept for CatVar = 1
+> The fourth coefficient ("labeled size:CatVar") is the difference between the slope for CatVar = 0 and the slope for CatVar = 1
+> 
+> You can check it plotting this:
+> 
+> plot(dat$size,dat$response,col=dat$CatVar)
+> abline(a=coef(model)[1],b=coef(model)[2],col=1)
+> abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,4)]),col=2)
+> 
+> This way of presenting coefficients is the default in R (treatment contrast) but there are other alternatives, see ?contr.treatment.
+> 
+> Hope it helps,
+> 
+> Aitor
+> 
+> 
+> --------------------------------------------------
+> From: "Scott Chamberlain" <scttchamberlain4 at gmail.com>
+> Sent: Friday, September 23, 2011 5:59 PM
+> To: <R-sig-ecology at r-project.org>
+> Subject: [R-sig-eco] glm coefficients
+> 
+>> Hello,
+>> 
+>> 
+>> Is there a way to add up coefficients from a glm model for an ANCOVA to get
+>> the coefficients for each term?
+>> 
+>> For example, in the following:
+>> dat <- data.frame(response = rnorm(9), size = rnorm(9),  covariate =
+>> c(1,1,1,1,0,0,0,0,0))
+>> model <- glm(response ~ size * covariate, data = dat)
+>>> coef(model)
+>>  (Intercept)           size                covariate       size:covariate
+>>   -0.2995964     -0.1969266      0.7158756      1.2829886
+>> 
+>> we are interested in the coefficients for the intercepts for size at both
+>> levels of the covariate  (0 and 1), and the slopes for each line. This
+>> requires adding up coefficients from the above output.
+>> 
+>> Are there built in base functions or in other packages that do these
+>> additions?
+>> 
+>> 
+>> Thanks!
+>> __
+>> Scott Chamberlain
+>> 
+>> [[alternative HTML version deleted]]
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+From aitor.gaston at upm.es  Sun Sep 25 17:09:19 2011
+From: aitor.gaston at upm.es (=?iso-8859-1?Q?Aitor_Gast=F3n?=)
+Date: Sun, 25 Sep 2011 17:09:19 +0200
+Subject: [R-sig-eco] glm coefficients
+In-Reply-To: <CD3C742A-21FD-4900-8120-D8E04F9A0B22@umbc.edu>
+References: <CAD9MWXXEN+M=-rDoQ6AMM1q_NqxbWRuLer+BdAyCaauOgsS_wQ@mail.gmail.com>
+	<31194FD54F3246AEB27ECF0265F98508@botanica1>
+	<CD3C742A-21FD-4900-8120-D8E04F9A0B22@umbc.edu>
+Message-ID: <DD674815A0F34C8ABA829864D156FC42@botanica1>
+
+Chris,
+
+In your example, the intercept for CatVar1=1  is 0.7988+(-2.0183).
+The standar error of the CatVar1 line is the standard error of the 
+difference
+
+You can use the multcomp package for pairwise comparisons, try this:
+
+set.seed(100) #fixed seed to get reproducible results
+dat <- data.frame(response = rnorm(100), size = rnorm(100),  CatVar =
+sample(c("A","B","C"),100,replace=T))
+model <- glm(response ~ size * CatVar, data = dat)
+coef(model)
+
+plot(dat$size,dat$response,col=dat$CatVar)
+abline(a=coef(model)[1],b=coef(model)[2],col=1)
+abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,5)]),col=2)
+abline(a=sum(coef(model)[c(1,4)]),b=sum(coef(model)[c(2,6)]),col=3)
+
+require(multcomp)
+summary(glht(model,linfct=mcp(CatVar="Tukey")))
+
+--------------------------------------------------
+From: "Chris Swan" <cmswan at umbc.edu>
+Sent: Sunday, September 25, 2011 4:08 PM
+To: "Aitor Gast?n" <aitor.gaston at upm.es>
+Cc: "Scott Chamberlain" <scttchamberlain4 at gmail.com>; 
+<R-sig-ecology at r-project.org>
+Subject: Re: [R-sig-eco] glm coefficients
+
+> I am following this and have two other questions.
+>
+> 1) The first is how to get the correct standard errors for each of the 
+> coefficients?  In the example offered, asking for summary(model) will 
+> yield, in part, the following (please understand my output will differ 
+> given the data generated is random):
+>
+> Coefficients:
+>             Estimate Std. Error t value Pr(>|t|)
+> (Intercept)    0.7988     0.5801   1.377    0.227
+> size          -0.5437     0.7997  -0.680    0.527
+> CatVar1       -2.0183     1.0573  -1.909    0.115
+> size:CatVar1  -0.5047     1.2368  -0.408    0.700
+>
+>
+> To get the intercept for the CatVar1=1 line, one needs 0.7988-(-2.0183) = 
+> 2.18.  Is the standard error for this estimate 1.0573?
+>
+>
+> 2) Suppose there were three or more categorical variables.  How can one 
+> perform pairwise comparisons between coefficients AND get the associated 
+> SE of the difference?  It seems that this would be quite desirable, yet I 
+> cannot find a package for this. I am looking for a method similar to the 
+> SAS implementation of the ESTIMATE statement.
+>
+>
+>
+> -- 
+> Christopher M. Swan, Ph.D.
+> Associate Professor
+> Dept. of Geography & Environmental Systems
+> University of Maryland, Baltimore County
+> 211 Sondheim Hall
+> 1000 Hilltop Circle
+> Baltimore, MD 21250
+> Chris.Swan at umbc.edu
+> http://www.umbc.edu/people/cmswan
+> (410) 455-3957
+>
+>
+>
+>
+>
+>
+>
+>
+>
+> On Sep 24, 2011, at 4:52 PM, Aitor Gast?n wrote:
+>
+>> In your example there is not categorical variables and you need at least 
+>> one for ANCOVA.
+>> Try the following, is the same dataset using factor() to create a 
+>> categorical variable (named CatVar):
+>>
+>> dat <- data.frame(response = rnorm(9), size = rnorm(9),  CatVar =
+>> factor(c(1,1,1,1,0,0,0,0,0)))
+>> model <- glm(response ~ size * CatVar, data = dat)
+>> coef(model)
+>>
+>> You will get:
+>>
+>> (Intercept)         size      CatVar1 size:CatVar1
+>>  0.2141371   -0.7847063   -1.8409264    3.3637699
+>>
+>> The first coefficient (labeled "Intercept") is the intercept for CatVar = 
+>> 0.
+>> The second coefficient (labeled "size") is the slope for CatVar=0
+>> The third coefficient (labeled "CatVar1") is the difference between the 
+>> intercept for CatVar = 0 and the intercept for CatVar = 1
+>> The fourth coefficient ("labeled size:CatVar") is the difference between 
+>> the slope for CatVar = 0 and the slope for CatVar = 1
+>>
+>> You can check it plotting this:
+>>
+>> plot(dat$size,dat$response,col=dat$CatVar)
+>> abline(a=coef(model)[1],b=coef(model)[2],col=1)
+>> abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,4)]),col=2)
+>>
+>> This way of presenting coefficients is the default in R (treatment 
+>> contrast) but there are other alternatives, see ?contr.treatment.
+>>
+>> Hope it helps,
+>>
+>> Aitor
+>>
+>>
+>> --------------------------------------------------
+>> From: "Scott Chamberlain" <scttchamberlain4 at gmail.com>
+>> Sent: Friday, September 23, 2011 5:59 PM
+>> To: <R-sig-ecology at r-project.org>
+>> Subject: [R-sig-eco] glm coefficients
+>>
+>>> Hello,
+>>>
+>>>
+>>> Is there a way to add up coefficients from a glm model for an ANCOVA to 
+>>> get
+>>> the coefficients for each term?
+>>>
+>>> For example, in the following:
+>>> dat <- data.frame(response = rnorm(9), size = rnorm(9),  covariate =
+>>> c(1,1,1,1,0,0,0,0,0))
+>>> model <- glm(response ~ size * covariate, data = dat)
+>>>> coef(model)
+>>>  (Intercept)           size                covariate 
+>>> size:covariate
+>>>   -0.2995964     -0.1969266      0.7158756      1.2829886
+>>>
+>>> we are interested in the coefficients for the intercepts for size at 
+>>> both
+>>> levels of the covariate  (0 and 1), and the slopes for each line. This
+>>> requires adding up coefficients from the above output.
+>>>
+>>> Are there built in base functions or in other packages that do these
+>>> additions?
+>>>
+>>>
+>>> Thanks!
+>>> __
+>>> Scott Chamberlain
+>>>
+>>> [[alternative HTML version deleted]]
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+
+
+From cmswan at umbc.edu  Sun Sep 25 19:38:04 2011
+From: cmswan at umbc.edu (Chris Swan)
+Date: Sun, 25 Sep 2011 13:38:04 -0400
+Subject: [R-sig-eco] glm coefficients
+In-Reply-To: <DD674815A0F34C8ABA829864D156FC42@botanica1>
+References: <CAD9MWXXEN+M=-rDoQ6AMM1q_NqxbWRuLer+BdAyCaauOgsS_wQ@mail.gmail.com>
+	<31194FD54F3246AEB27ECF0265F98508@botanica1>
+	<CD3C742A-21FD-4900-8120-D8E04F9A0B22@umbc.edu>
+	<DD674815A0F34C8ABA829864D156FC42@botanica1>
+Message-ID: <92232315-EFCB-45BE-BD65-9C602E3FA792@umbc.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/65473539/attachment.pl>
+
+From aitor.gaston at upm.es  Sun Sep 25 22:20:54 2011
+From: aitor.gaston at upm.es (=?iso-8859-1?Q?Aitor_Gast=F3n?=)
+Date: Sun, 25 Sep 2011 22:20:54 +0200
+Subject: [R-sig-eco] glm coefficients
+In-Reply-To: <92232315-EFCB-45BE-BD65-9C602E3FA792@umbc.edu>
+References: <CAD9MWXXEN+M=-rDoQ6AMM1q_NqxbWRuLer+BdAyCaauOgsS_wQ@mail.gmail.com>
+	<31194FD54F3246AEB27ECF0265F98508@botanica1>
+	<CD3C742A-21FD-4900-8120-D8E04F9A0B22@umbc.edu>
+	<DD674815A0F34C8ABA829864D156FC42@botanica1>
+	<92232315-EFCB-45BE-BD65-9C602E3FA792@umbc.edu>
+Message-ID: <30217435D2B7474BB54E3320FAC1A8BA@botanica1>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/44d11ea1/attachment.pl>
+
+From leslaura at gmail.com  Mon Sep 26 07:01:25 2011
+From: leslaura at gmail.com (Laura S)
+Date: Sun, 25 Sep 2011 22:01:25 -0700
+Subject: [R-sig-eco] Calculating spatial autocorrelation (Moran's I) when
+ have zero-inflated data?
+Message-ID: <CAHLsRK==twoWq86cS4Qb=2=-m2sgyC+Ki34kd_+QEB0SmD2fLg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/92398338/attachment.pl>
+
+From marco.helbich at gmx.at  Tue Sep 27 08:54:52 2011
+From: marco.helbich at gmx.at (Marco Helbich)
+Date: Tue, 27 Sep 2011 08:54:52 +0200
+Subject: [R-sig-eco] gam variable selection
+Message-ID: <4E81733C.8090700@gmx.at>
+
+Dear list,
+
+I am studying the influence of several environmental factors (numeric &
+dummies) on species densities (= numeric) using the gam()
+function with a gaussian link function in the mgcv package. As stated in 
+Wood (2006) there is no variable selection algorithm.
+
+Is it an appropriate (iterative) approach to drop the predictor being
+least significant (eg. p > 0.05), refit the model, compare the GCV/AIC
+score and so forth. Should I first focus on the smoothing functions or 
+fixed effects? Or is such a distinction not important at all?
+
+Perhaps someone has more experience with GAMs and can give me a helping
+hand? Thanks in advance!
+
+Best
+Marco
+-- 
+Marco Helbich
+Department of Geography
+University of Heidelberg
+
+
+From gavin.simpson at ucl.ac.uk  Tue Sep 27 11:40:27 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 27 Sep 2011 10:40:27 +0100
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <4E81733C.8090700@gmx.at>
+References: <4E81733C.8090700@gmx.at>
+Message-ID: <1317116427.2714.3.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+> Dear list,
+> 
+> I am studying the influence of several environmental factors (numeric &
+> dummies) on species densities (= numeric) using the gam()
+> function with a gaussian link function in the mgcv package. As stated in 
+> Wood (2006) there is no variable selection algorithm.
+> 
+> Is it an appropriate (iterative) approach to drop the predictor being
+> least significant (eg. p > 0.05), refit the model, compare the GCV/AIC
+> score and so forth. Should I first focus on the smoothing functions or 
+> fixed effects? Or is such a distinction not important at all?
+> 
+> Perhaps someone has more experience with GAMs and can give me a helping
+> hand? Thanks in advance!
+
+You could do that, but I would be sceptical of the results.
+
+Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+2372-2387) compare various approaches for feature selection in GAMs.
+IIRC, they concluded that an additional penalty term in the smoothness
+selection procedure gave the best results. This can be activated in
+mgcv::gam() by using the `select = TRUE` argument/setting.
+
+HTH
+
+G
+
+> Best
+> Marco
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From marco.helbich at gmx.at  Tue Sep 27 13:42:43 2011
+From: marco.helbich at gmx.at (Marco Helbich)
+Date: Tue, 27 Sep 2011 13:42:43 +0200
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <1317116427.2714.3.camel@chrysothemis.geog.ucl.ac.uk>
+References: <4E81733C.8090700@gmx.at>
+	<1317116427.2714.3.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <4E81B6B3.6080809@gmx.at>
+
+Gavin,
+
+thank you for your reply, I appreciate it!
+
+After consulting the proposed paper, I have tried your suggestion 
+setting "select = T", which results again in another question:
+
+If the p-value is "NA" does this mean that the smoothing term is droped 
+(or shrank to zero)? Independent of its high edf, is this predictor 
+(e.g. s(x1)) not relevant to explain y?
+
+E.g.:
+                     edf    Ref.df      F p-value
+s(x1)   7.521e-09 1.402e-08  0.000      NA
+s(x2)    5.408e+00 6.448e+00  3.049 0.00462 **
+s(x3)    6.287e-09 1.217e-08  0.000      NA
+s(x4)    2.152e+00 2.754e+00  5.037 0.00248 **
+
+Best
+Marco
+
+
+Am 27.09.2011 11:40, schrieb Gavin Simpson:
+> On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+>> Dear list,
+>>
+>> I am studying the influence of several environmental factors (numeric&
+>> dummies) on species densities (= numeric) using the gam()
+>> function with a gaussian link function in the mgcv package. As stated in
+>> Wood (2006) there is no variable selection algorithm.
+>>
+>> Is it an appropriate (iterative) approach to drop the predictor being
+>> least significant (eg. p>  0.05), refit the model, compare the GCV/AIC
+>> score and so forth. Should I first focus on the smoothing functions or
+>> fixed effects? Or is such a distinction not important at all?
+>>
+>> Perhaps someone has more experience with GAMs and can give me a helping
+>> hand? Thanks in advance!
+>
+> You could do that, but I would be sceptical of the results.
+>
+> Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+> 2372-2387) compare various approaches for feature selection in GAMs.
+> IIRC, they concluded that an additional penalty term in the smoothness
+> selection procedure gave the best results. This can be activated in
+> mgcv::gam() by using the `select = TRUE` argument/setting.
+>
+> HTH
+>
+> G
+>
+>> Best
+>> Marco
+>
+
+
+From gavin.simpson at ucl.ac.uk  Tue Sep 27 13:50:34 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 27 Sep 2011 12:50:34 +0100
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <4E81B6B3.6080809@gmx.at>
+References: <4E81733C.8090700@gmx.at>
+	<1317116427.2714.3.camel@chrysothemis.geog.ucl.ac.uk>
+	<4E81B6B3.6080809@gmx.at>
+Message-ID: <1317124234.2714.7.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Tue, 2011-09-27 at 13:42 +0200, Marco Helbich wrote:
+> Gavin,
+> 
+> thank you for your reply, I appreciate it!
+> 
+> After consulting the proposed paper, I have tried your suggestion 
+> setting "select = T", which results again in another question:
+> 
+> If the p-value is "NA" does this mean that the smoothing term is droped 
+> (or shrank to zero)? Independent of its high edf, is this predictor 
+> (e.g. s(x1)) not relevant to explain y?
+
+Those NA terms are ones that have effectively been penalised out of the
+model - the EDF are effectively zero for these terms and they explain no
+variance in the response. These predictors s(x1) and s(x4) appear to
+have no relationships with y.
+
+You should also check out if there is concurvity - the multi
+collinearity problem but for additive models. There is a function in
+mgcv to see if this is a problem or not.
+
+HTH
+
+G
+
+> 
+> E.g.:
+>                      edf    Ref.df      F p-value
+> s(x1)   7.521e-09 1.402e-08  0.000      NA
+> s(x2)    5.408e+00 6.448e+00  3.049 0.00462 **
+> s(x3)    6.287e-09 1.217e-08  0.000      NA
+> s(x4)    2.152e+00 2.754e+00  5.037 0.00248 **
+> 
+> Best
+> Marco
+> 
+> 
+> Am 27.09.2011 11:40, schrieb Gavin Simpson:
+> > On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+> >> Dear list,
+> >>
+> >> I am studying the influence of several environmental factors (numeric&
+> >> dummies) on species densities (= numeric) using the gam()
+> >> function with a gaussian link function in the mgcv package. As stated in
+> >> Wood (2006) there is no variable selection algorithm.
+> >>
+> >> Is it an appropriate (iterative) approach to drop the predictor being
+> >> least significant (eg. p>  0.05), refit the model, compare the GCV/AIC
+> >> score and so forth. Should I first focus on the smoothing functions or
+> >> fixed effects? Or is such a distinction not important at all?
+> >>
+> >> Perhaps someone has more experience with GAMs and can give me a helping
+> >> hand? Thanks in advance!
+> >
+> > You could do that, but I would be sceptical of the results.
+> >
+> > Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+> > 2372-2387) compare various approaches for feature selection in GAMs.
+> > IIRC, they concluded that an additional penalty term in the smoothness
+> > selection procedure gave the best results. This can be activated in
+> > mgcv::gam() by using the `select = TRUE` argument/setting.
+> >
+> > HTH
+> >
+> > G
+> >
+> >> Best
+> >> Marco
+> >
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From marco.helbich at gmx.at  Tue Sep 27 14:40:37 2011
+From: marco.helbich at gmx.at (Marco Helbich)
+Date: Tue, 27 Sep 2011 14:40:37 +0200
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <1317124234.2714.7.camel@chrysothemis.geog.ucl.ac.uk>
+References: <4E81733C.8090700@gmx.at>	
+	<1317116427.2714.3.camel@chrysothemis.geog.ucl.ac.uk>	
+	<4E81B6B3.6080809@gmx.at>
+	<1317124234.2714.7.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <4E81C445.6060402@gmx.at>
+
+thank you for clarifying.
+so I can remove them all at once.
+
+best
+marco
+
+Am 27.09.2011 13:50, schrieb Gavin Simpson:
+> On Tue, 2011-09-27 at 13:42 +0200, Marco Helbich wrote:
+>> Gavin,
+>>
+>> thank you for your reply, I appreciate it!
+>>
+>> After consulting the proposed paper, I have tried your suggestion
+>> setting "select = T", which results again in another question:
+>>
+>> If the p-value is "NA" does this mean that the smoothing term is droped
+>> (or shrank to zero)? Independent of its high edf, is this predictor
+>> (e.g. s(x1)) not relevant to explain y?
+>
+> Those NA terms are ones that have effectively been penalised out of the
+> model - the EDF are effectively zero for these terms and they explain no
+> variance in the response. These predictors s(x1) and s(x4) appear to
+> have no relationships with y.
+>
+> You should also check out if there is concurvity - the multi
+> collinearity problem but for additive models. There is a function in
+> mgcv to see if this is a problem or not.
+>
+> HTH
+>
+> G
+>
+>>
+>> E.g.:
+>>                       edf    Ref.df      F p-value
+>> s(x1)   7.521e-09 1.402e-08  0.000      NA
+>> s(x2)    5.408e+00 6.448e+00  3.049 0.00462 **
+>> s(x3)    6.287e-09 1.217e-08  0.000      NA
+>> s(x4)    2.152e+00 2.754e+00  5.037 0.00248 **
+>>
+>> Best
+>> Marco
+>>
+>>
+>> Am 27.09.2011 11:40, schrieb Gavin Simpson:
+>>> On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+>>>> Dear list,
+>>>>
+>>>> I am studying the influence of several environmental factors (numeric&
+>>>> dummies) on species densities (= numeric) using the gam()
+>>>> function with a gaussian link function in the mgcv package. As stated in
+>>>> Wood (2006) there is no variable selection algorithm.
+>>>>
+>>>> Is it an appropriate (iterative) approach to drop the predictor being
+>>>> least significant (eg. p>   0.05), refit the model, compare the GCV/AIC
+>>>> score and so forth. Should I first focus on the smoothing functions or
+>>>> fixed effects? Or is such a distinction not important at all?
+>>>>
+>>>> Perhaps someone has more experience with GAMs and can give me a helping
+>>>> hand? Thanks in advance!
+>>>
+>>> You could do that, but I would be sceptical of the results.
+>>>
+>>> Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+>>> 2372-2387) compare various approaches for feature selection in GAMs.
+>>> IIRC, they concluded that an additional penalty term in the smoothness
+>>> selection procedure gave the best results. This can be activated in
+>>> mgcv::gam() by using the `select = TRUE` argument/setting.
+>>>
+>>> HTH
+>>>
+>>> G
+>>>
+>>>> Best
+>>>> Marco
+>>>
+>>
+>
+
+
+From a.hayward at sheffield.ac.uk  Tue Sep 27 15:21:32 2011
+From: a.hayward at sheffield.ac.uk (Adam Hayward)
+Date: Tue, 27 Sep 2011 14:21:32 +0100
+Subject: [R-sig-eco] Confidence intervals in lmer
+Message-ID: <CALQiR0_y12p4WgHdmEE4p7XTs3SOy1_KKGBzVdTDpWCGODHLgg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/64730d83/attachment.pl>
+
+From lquinn at hotmail.com  Tue Sep 27 16:06:43 2011
+From: lquinn at hotmail.com (L Quinn)
+Date: Tue, 27 Sep 2011 14:06:43 +0000
+Subject: [R-sig-eco] "lack of fit" computation from LME model?
+Message-ID: <BAY169-W44B33CA794EFEED3293EBECEF00@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/ccb55711/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Tue Sep 27 19:10:35 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 27 Sep 2011 18:10:35 +0100
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <4E81C445.6060402@gmx.at>
+References: <4E81733C.8090700@gmx.at>
+	<1317116427.2714.3.camel@chrysothemis.geog.ucl.ac.uk>
+	<4E81B6B3.6080809@gmx.at>
+	<1317124234.2714.7.camel@chrysothemis.geog.ucl.ac.uk>
+	<4E81C445.6060402@gmx.at>
+Message-ID: <1317143435.2753.1.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Tue, 2011-09-27 at 14:40 +0200, Marco Helbich wrote:
+> thank you for clarifying.
+> so I can remove them all at once.
+
+Given their effects are already removed you could just work with the
+model *as is*. If you refit, you might have to be careful to ensure that
+the same model (and smooth complexities) are selected when the redundant
+variables do not take part in any of the fitting.
+
+Just be careful to check the model with and without the redundant terms
+really is the same.
+
+G
+
+> best
+> marco
+> 
+> Am 27.09.2011 13:50, schrieb Gavin Simpson:
+> > On Tue, 2011-09-27 at 13:42 +0200, Marco Helbich wrote:
+> >> Gavin,
+> >>
+> >> thank you for your reply, I appreciate it!
+> >>
+> >> After consulting the proposed paper, I have tried your suggestion
+> >> setting "select = T", which results again in another question:
+> >>
+> >> If the p-value is "NA" does this mean that the smoothing term is droped
+> >> (or shrank to zero)? Independent of its high edf, is this predictor
+> >> (e.g. s(x1)) not relevant to explain y?
+> >
+> > Those NA terms are ones that have effectively been penalised out of the
+> > model - the EDF are effectively zero for these terms and they explain no
+> > variance in the response. These predictors s(x1) and s(x4) appear to
+> > have no relationships with y.
+> >
+> > You should also check out if there is concurvity - the multi
+> > collinearity problem but for additive models. There is a function in
+> > mgcv to see if this is a problem or not.
+> >
+> > HTH
+> >
+> > G
+> >
+> >>
+> >> E.g.:
+> >>                       edf    Ref.df      F p-value
+> >> s(x1)   7.521e-09 1.402e-08  0.000      NA
+> >> s(x2)    5.408e+00 6.448e+00  3.049 0.00462 **
+> >> s(x3)    6.287e-09 1.217e-08  0.000      NA
+> >> s(x4)    2.152e+00 2.754e+00  5.037 0.00248 **
+> >>
+> >> Best
+> >> Marco
+> >>
+> >>
+> >> Am 27.09.2011 11:40, schrieb Gavin Simpson:
+> >>> On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+> >>>> Dear list,
+> >>>>
+> >>>> I am studying the influence of several environmental factors (numeric&
+> >>>> dummies) on species densities (= numeric) using the gam()
+> >>>> function with a gaussian link function in the mgcv package. As stated in
+> >>>> Wood (2006) there is no variable selection algorithm.
+> >>>>
+> >>>> Is it an appropriate (iterative) approach to drop the predictor being
+> >>>> least significant (eg. p>   0.05), refit the model, compare the GCV/AIC
+> >>>> score and so forth. Should I first focus on the smoothing functions or
+> >>>> fixed effects? Or is such a distinction not important at all?
+> >>>>
+> >>>> Perhaps someone has more experience with GAMs and can give me a helping
+> >>>> hand? Thanks in advance!
+> >>>
+> >>> You could do that, but I would be sceptical of the results.
+> >>>
+> >>> Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+> >>> 2372-2387) compare various approaches for feature selection in GAMs.
+> >>> IIRC, they concluded that an additional penalty term in the smoothness
+> >>> selection procedure gave the best results. This can be activated in
+> >>> mgcv::gam() by using the `select = TRUE` argument/setting.
+> >>>
+> >>> HTH
+> >>>
+> >>> G
+> >>>
+> >>>> Best
+> >>>> Marco
+> >>>
+> >>
+> >
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From gavin.simpson at ucl.ac.uk  Tue Sep 27 22:11:38 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 27 Sep 2011 21:11:38 +0100
+Subject: [R-sig-eco] "lack of fit" computation from LME model?
+In-Reply-To: <BAY169-W44B33CA794EFEED3293EBECEF00@phx.gbl>
+References: <BAY169-W44B33CA794EFEED3293EBECEF00@phx.gbl>
+Message-ID: <1317154298.2753.10.camel@chrysothemis.geog.ucl.ac.uk>
+
+Hi Laura,
+
+You might want to look at the lmmfit package:
+
+http://finzi.psych.upenn.edu/R/library/lmmfit/html/lmmfit-package.html
+
+which has several such measures (well, goodness of fit) for models with
+one grouping variable.
+
+You might get more traction on the R Mixed Models SIG.
+
+I often wonder (knowing nothing about this particular topic) about the
+merit of "test". Surely if the linearity assumption of the model you
+fitted is not appropriate, this will show up in the model residuals as
+patterns/curves. This would be part of a standard model evaluation
+anyway.
+
+HTH
+
+G
+
+On Tue, 2011-09-27 at 14:06 +0000, L Quinn wrote:
+> Dear list,
+> I recently submitted a paper in which I analyzed plant growth response to several environmental factors in several sites. I wanted to account for the variation attributable to the different sites, so I made "site" a random effect in a simple LME regression model (e.g. m<-lme(plantgrowth~nitrogen,random=~1|site,method="ML"); library nlme). I had 10 observations in each of 11 sites. Seemed fairly straightforward to me.
+> When reviews came back, one reviewer and the editor requested that I compute a "lack of fit" term for my regressions without which they couldn't be confident that linear models were most appropriate for my data. I have not done this before, and I have not seen anything about this for LME models when I have searched. I have only seen it for regular regression tests, but I don't think I can apply what I would find in regular regression tests to this LME model because I would lose the random effect. I know about model checking via diagnostic plots, etc, but I don't think this is what they want. They seem to want me to generate an F statistic and a p value for this "lack of fit" term. 
+> My questions are: 
+> 1.) is this even possible/practical within a LME model? 
+> 2.) if so, what steps should I take to complete this task?3.) if not, can you suggest other diagnostics that might satisfy what they're looking for?
+> I have a feeling this is a fairly elementary question/procedure, so I hope I am not wasting anyone's time. Please help if you can. I am happy to provide any more information that may be needed.
+> Thank you in advance.
+> Lauren Quinn
+> 
+> 
+> 
+>    		 	   		  
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From gavin.simpson at ucl.ac.uk  Tue Sep 27 22:20:09 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 27 Sep 2011 21:20:09 +0100
+Subject: [R-sig-eco] Calculating spatial autocorrelation (Moran's I)
+ when have zero-inflated data?
+In-Reply-To: <CAHLsRK==twoWq86cS4Qb=2=-m2sgyC+Ki34kd_+QEB0SmD2fLg@mail.gmail.com>
+References: <CAHLsRK==twoWq86cS4Qb=2=-m2sgyC+Ki34kd_+QEB0SmD2fLg@mail.gmail.com>
+Message-ID: <1317154809.2753.18.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Sun, 2011-09-25 at 22:01 -0700, Laura S wrote:
+> Dear all:
+> 
+> I was wondering if you have suggestions on how to analyze the spatial
+> autocorrelation of tree abundance in a grid of contiguous quadrats given
+> that the data set follows a zero inflated distribution, i.e., in many
+> quadrats the abundance of a species is zero.
+> 
+> Thank you for your time and consideration,
+> Laura
+
+Many zeros don't in and of themselves mean that the data are over
+dispersed or zero-inflated.
+
+You could simply start with fitting a count model via glm() and then
+look at the residuals. Compute the variogram from the residuals to check
+if the residuals are independent. You can also check this model to see
+if it fits the data well or if the zero part is not well captured. If it
+isn't then you have to move on to more complex models.
+
+The pscl package contains tools for fitting models to over dispersed
+count data. If the glm doesn't fit well, you could move on to these. The
+spatial autocorrelation can be investigated from the residuals as above.
+Where you go from there though is more complex. You could replace the
+estimated correlation matrix with one estimated from the variogram to
+produce a variance-covariance matrix that accounts for the lack of
+dependence in the residuals. There may already be something in the
+sandwich package that allows you to do this.
+
+I'll stop now as I am getting somewhat out of my depth...
+
+G
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From jari.oksanen at oulu.fi  Tue Sep 27 23:25:36 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 28 Sep 2011 00:25:36 +0300
+Subject: [R-sig-eco] vegan rda
+In-Reply-To: <9810C7C4-6DCC-4A71-ADEA-A398C600C78D@gmx.ch>
+Message-ID: <CAA81A00.18BF0%jari.oksanen@oulu.fi>
+
+Sibylle,
+
+I noticed that you also sent this message to the main R-news mailing list,
+but may not have received any answers. I'm not sure that I can answer to
+your questions either, since I don't quite follow your explanation. So here
+comes a rambling in a parallel universe in hope we go on with similar lines,
+and you find some relief in this message.
+
+1) The rda() cals should be of this form
+
+rda(Y ~ X1 + X2 + ... Xn, data = DF, na.action = na.exclude)
+
+where Y are the dependent data (matrix, data frame or a single variable),
+and X1, X2, ..., Xn are the independent data. The independent data can be
+variables or matrices (but not data frame). Argument 'data' gives the name
+of the data frame (here DF) where the dependent variables are searched
+first, and if they are not found there, they are searched in the main
+working environment. Finally, na.action tells you how to handle missing
+values in dependent data. The default was na.fail (like you were informed in
+the output), but you can also have na.exclude or na.omit (see the
+documentation). Can you put your problem in this form?
+
+2) About "missing" species. If a species is missing, it is *certainly* 0.
+Missing *value* (NA) means that you do not know the abundance of the
+species, or you do not know the presence of the species. For presence, it
+could be anything between 0 and 1. In your case it certainly is 0.
+
+3) Missing data are not allowed in dependent variable in vegan rda().
+
+4) You cannot reverse the left and right hand sides in the rda() formula.
+The method is non-symmetric: you have dependent variable(s) (left-hand side)
+and you have independent variable(s) (right-hand side). Function rda() is
+very much like linear regression: you cannot swap dependent and independent
+variables.
+
+Can you go on with these guidelines?
+
+Cheers, Jari Oksanen
+
+First about defining an rda() model.
+On 22/09/11 22:03 PM, "Sibylle St?ckli" <sibylle.stoeckli at gmx.ch> wrote:
+
+> Dear R users
+> 
+> I am calculating a RDA for a dependent matrix (different variables for
+> tree performance) and different explanatory variables (species
+> identitiy, diversity, soil data, ground vegetation). I would very much
+> appreciate some help with my txt input file for the vegan function.
+> 
+> As for standard RDA's I have different plots (lines, the dependent
+> matrix) and for each plot a value for diversity, soil and vegetation
+> (in columns, the environmental matrix). I additionally have different
+> species for each plot (separated in columns). In standard RDA's for
+> vegetational data you put your dependent variable (e.g. number of a
+> specific species in the specific plot) below your species columns.
+> Problem: I do not have vegetational data with values 0, 1,2, 3 for
+> each plot and species. I have 6 species in total, but the plots have a
+> predetermined diversity level (e.g. 1, 2, 4, 6). So in comparison to
+> vegetational data I do not have '0' values. For example in my 4
+> species plot I have 4 species and two missing (NA) values. I have read
+> some papers using the same analysis for biodiversity experiments, so
+> it should be appropriate. So I decided to put the dependent variables
+> separately in different variables and to give species values as the
+> proportion within the plot (2-species plot: 0.5+0.5, 1-species plot:
+> 1.0).
+> 
+> My txt file looks like
+> 
+> tree height - crown PA - tree biomass (all dependent variables) -
+> Diversity - Species A - Species B - Species C - Species D - Soil -
+> Vegetation
+> 10                     20
+> 15 
+>                                                                             2
+>               0                      0.5
+> 0.5            0                    16        25
+> 20                      56
+> 36 
+>                                                                           1
+>               1                      0
+> 0              0                   22        45
+> 
+> 
+> So I changed the code for rda (dependent variable on the right of the
+> tilde and the explanatory variable on the left of the tilde). In
+> standad RDA the dependent variable would be on the left. I tried this,
+> but then I was getting points for the dependent variables and not
+> arrows. it is because RDA tried to do an RDA on the dfferent species
+> (but there is no dependent variable, but just die identity). However,
+> I get some error message changing the R-code: Error in
+> model.frame.default(formula, data, na.action = na.fail, xlev = xlev) :
+>    invalid type (list) for variable 'height'. And a second problem is
+> that I wanted to include the other environmental matrix (env). I tried
+> to include the second matrix on the right of the tilde, but rda was
+> producing an error.
+> 
+> A last question: Some rare NA values within my env matrix. na.rm=TRUE
+> does not seem to work with rda. Does anyone know how to work with NA
+> values and RDA (according to the list it seems a bit more complex, but
+> maybe in the meanwhile there is a better solution).
+> 
+> Many thanks for any hint or comments
+> Sibylle
+> 
+> ME<-read.table("ME_rda.txt", na.strings="*", header=TRUE)
+> 
+> height<-ME[,3:6]
+> mortality<-ME[,7:9]
+> species<-ME[,11:16]
+> env<-ME[,10:33]
+> 
+> 
+> library(vegan)
+> ME_rda<-rda(species~height, scale=TRUE)
+> ME_rda
+> plot(ME_rda, scaling=-1)
+> 
+> 
+> [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From sibylle.stoeckli at gmx.ch  Wed Sep 28 00:49:36 2011
+From: sibylle.stoeckli at gmx.ch (=?ISO-8859-1?Q?Sibylle_St=F6ckli?=)
+Date: Wed, 28 Sep 2011 00:49:36 +0200
+Subject: [R-sig-eco] vegan rda
+In-Reply-To: <CAA81A00.18BF0%jari.oksanen@oulu.fi>
+References: <CAA81A00.18BF0%jari.oksanen@oulu.fi>
+Message-ID: <E8F54DD3-90BF-40BA-8952-A29961AAE3A5@gmx.ch>
+
+Dear Jari,
+
+Thanks a lot for your very helpful comments. I still believe that my  
+results are wrong using the 'standard' RDA code.
+
+Using the following code, I receive 'points' for the Y matrix (height)  
+and arrows for the X matrix (species) (see pdf). It should be the  
+opposite way (as seen in the R help varespec example) so I think my  
+RDA model is not yet adequate. If you look at the R help varespec  
+file, you see that the 'dependent' values are placed below each species.
+
+I  attached the txt file maybe it is easier to understand my problem:  
+My dependent values are placed each in a separate variable, and below  
+the species variables the identity is given (e.g. two species plot 2  
+species have the values 0.5 and 0.5, and all the others are zero).
+I tried as.factor for species, but I it does not look fine
+As mentioned I tried to place the tree height values below each  
+species, but there are a lot of NA values (e.g. in a two species plot  
+I just have two species and all teh others are NA). In the varespec  
+file such values would be zero (as they are not present in that plot).
+The 'varechem' file is similar to my matrix. They are just the env  
+variables (not yet included) giving arrows, which is perfect.
+
+Thank a lot to the R community!
+Sibylle
+
+R example
+data(varespec)
+data(varechem)
+## Common but bad way: use all variables you happen to have in your
+## environmental data matrix
+vare.cca <- cca(varespec, varechem)
+vare.cca
+plot(vare.cca)
+
+
+
+
+
+
+My code
+ME<-read.table("ME_rda.txt", na.strings="*", header=TRUE)
+
+height<-ME[,3:6]
+mortality<-ME[,7:9]
+species<-ME[,11:16]
+env<-ME[,10:33]
+
+library(vegan)
+ME_rda<-rda(height~.,species, scale=TRUE)
+ME_rda
+plot(ME_rda, scaling=-1)
+
+
+From sibylle.stoeckli at gmx.ch  Wed Sep 28 00:50:41 2011
+From: sibylle.stoeckli at gmx.ch (=?ISO-8859-1?Q?Sibylle_St=F6ckli?=)
+Date: Wed, 28 Sep 2011 00:50:41 +0200
+Subject: [R-sig-eco] vegan rda
+In-Reply-To: <CAA81A00.18BF0%jari.oksanen@oulu.fi>
+References: <CAA81A00.18BF0%jari.oksanen@oulu.fi>
+Message-ID: <B2E027AF-E9B3-45CC-9AC2-F8691FA07051@gmx.ch>
+
+Dear Jari,
+
+Thanks a lot for your very helpful comments. I still believe that my  
+results are wrong using the 'standard' RDA code.
+
+Using the following code, I receive 'points' for the Y matrix (height)  
+and arrows for the X matrix (species) (see pdf). It should be the  
+opposite way (as seen in the R help varespec example) so I think my  
+RDA model is not yet adequate. If you look at the R help varespec  
+file, you see that the 'dependent' values are placed below each species.
+
+I  attached the txt file maybe it is easier to understand my problem:  
+My dependent values are placed each in a separate variable, and below  
+the species variables the identity is given (e.g. two species plot 2  
+species have the values 0.5 and 0.5, and all the others are zero).
+I tried as.factor for species, but I it does not look fine
+As mentioned I tried to place the tree height values below each  
+species, but there are a lot of NA values (e.g. in a two species plot  
+I just have two species and all teh others are NA). In the varespec  
+file such values would be zero (as they are not present in that plot).
+The 'varechem' file is similar to my matrix. They are just the env  
+variables (not yet included) giving arrows, which is perfect.
+
+Thank a lot to the R community!
+Sibylle
+
+R example
+data(varespec)
+data(varechem)
+## Common but bad way: use all variables you happen to have in your
+## environmental data matrix
+vare.cca <- cca(varespec, varechem)
+vare.cca
+plot(vare.cca)
+
+
+
+
+
+
+My code
+ME<-read.table("ME_rda.txt", na.strings="*", header=TRUE)
+
+height<-ME[,3:6]
+mortality<-ME[,7:9]
+species<-ME[,11:16]
+env<-ME[,10:33]
+
+library(vegan)
+ME_rda<-rda(height~.,species, scale=TRUE)
+ME_rda
+plot(ME_rda, scaling=-1)
+
+
+From chris at trickysolutions.com.au  Wed Sep 28 01:15:11 2011
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Wed, 28 Sep 2011 09:15:11 +1000
+Subject: [R-sig-eco] Confidence intervals in lmer
+In-Reply-To: <CALQiR0_y12p4WgHdmEE4p7XTs3SOy1_KKGBzVdTDpWCGODHLgg@mail.gmail.com>
+References: <CALQiR0_y12p4WgHdmEE4p7XTs3SOy1_KKGBzVdTDpWCGODHLgg@mail.gmail.com>
+Message-ID: <1929208526897803633@unknownmsgid>
+
+U could try the predict function with se.fit=true. I believe this
+should give u the predicted score and se and u can calculate CI from
+there.
+
+U'll have to create an input matrix with the score u want to predict for.
+
+Chris Howden
+Founding Partner
+Tricky Solutions
+Tricky Solutions 4 Tricky Problems
+Evidence Based Strategic Development, IP Commercialisation and
+Innovation, Data Analysis, Modelling and Training
+
+(mobile) 0410 689 945
+(fax / office)
+chris at trickysolutions.com.au
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information. If you are not
+the named or intended recipient, please delete this communication and
+contact us immediately. Please note you are not authorised to copy,
+use or disclose this communication or any attachments without our
+consent. Although this email has been checked by anti-virus software,
+there is a risk that email messages may be corrupted or infected by
+viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the
+company. Tricky Solutions always does our best to provide accurate
+forecasts and analyses based on the data supplied, however it is
+possible that some important predictors were not included in the data
+sent to us. Information provided by us should not be solely relied
+upon when making decisions and clients should use their own judgement.
+
+On 27/09/2011, at 23:23, Adam Hayward <a.hayward at sheffield.ac.uk> wrote:
+
+> Dear list members,
+>
+> I have a significant interaction between two continuous variables (it
+> happens to be a mixed model in lmer, but I imagine the same is applicable to
+> a glm). The interaction tells me that the relationship between z and y
+> changes as a function of x, but I want to know whether y has a significant
+> effect on z at a given value of x. For instance, the interaction might show
+> that the relationship between body weight and fitness changes with age, but
+> I want to know if the association between body weight and fitness is
+> significantly positive at the age of 1. Therefore, I'd like to estimate 95%
+> CIs or SEs around the association between body weight and fitness at a given
+> age, but have yet to work out how to do it. Any suggestions would be greatly
+> appreciated.
+>
+> Best wishes,
+> Adam
+>
+>
+>
+>
+> --
+> Adam Hayward
+> Post-Doctoral Research Associate
+> Department of Animal and Plant Sciences
+> Alfred Denny Building
+> University of Sheffield
+> Western Bank
+> Sheffield S10 2TN
+> UK
+>
+>    [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From gavin.simpson at ucl.ac.uk  Wed Sep 28 09:26:11 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 28 Sep 2011 08:26:11 +0100
+Subject: [R-sig-eco] vegan rda
+In-Reply-To: <E8F54DD3-90BF-40BA-8952-A29961AAE3A5@gmx.ch>
+References: <CAA81A00.18BF0%jari.oksanen@oulu.fi>
+	<E8F54DD3-90BF-40BA-8952-A29961AAE3A5@gmx.ch>
+Message-ID: <1317194771.2807.8.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Wed, 2011-09-28 at 00:49 +0200, Sibylle St?ckli wrote:
+> Dear Jari,
+> 
+> Thanks a lot for your very helpful comments. I still believe that my  
+> results are wrong using the 'standard' RDA code.
+> 
+> Using the following code, I receive 'points' for the Y matrix (height)  
+> and arrows for the X matrix (species) (see pdf). It should be the  
+> opposite way (as seen in the R help varespec example) so I think my  
+> RDA model is not yet adequate. If you look at the R help varespec  
+> file, you see that the 'dependent' values are placed below each species.
+
+That **is** what you asked for. Note that **you** specified `height` as
+response and `., data = species` for the constraints (the independent
+variables or explanatory variables).
+
+Some object to the way vegan displays biplots/triplots for RDA. One
+could argue that both the species (or response variable, height in your
+case) scores and the constraints (explanatory variables, the species in
+your case) should both be represented by biplot arrows.
+
+Vegan doesn't do this; it draws the species (response) scores as points;
+these points are where the arrow head would be if we *had* drawn them as
+arrows. Only the constraints are represented as arrows in vegan PCA/RDA
+biplot/triplots.
+
+I honestly couldn't follow your line of argument in your original post
+to the list. If you want (your object) `species` as the response and
+(your object) `height` as the constraints or explanatory variables, then
+
+ME_rda <- rda(species ~ ., height, scale = TRUE)
+
+> I  attached the txt file maybe it is easier to understand my problem:  
+> My dependent values are placed each in a separate variable, and below  
+> the species variables the identity is given (e.g. two species plot 2  
+> species have the values 0.5 and 0.5, and all the others are zero).
+> I tried as.factor for species, but I it does not look fine
+> As mentioned I tried to place the tree height values below each  
+> species, but there are a lot of NA values (e.g. in a two species plot  
+> I just have two species and all teh others are NA). In the varespec  
+> file such values would be zero (as they are not present in that plot).
+> The 'varechem' file is similar to my matrix. They are just the env  
+> variables (not yet included) giving arrows, which is perfect.
+
+Your file did not make it through the mail filters. Plain text should
+get through, so supply as CSV or similar if you need us to take a look.
+
+However, It isn't too helpful to keep on telling us how your data are
+formatted in whatever programme you entered the data in. R most easily
+works with data in simple spreadsheet-style formats. If you have your
+variables in columns, samples in rows, you won't go wrong. The file can
+contain both the response and explanatory variables or you can two
+separate files for response and explanatory variables.
+
+HTH
+
+G
+
+> Thank a lot to the R community!
+> Sibylle
+> 
+> R example
+> data(varespec)
+> data(varechem)
+> ## Common but bad way: use all variables you happen to have in your
+> ## environmental data matrix
+> vare.cca <- cca(varespec, varechem)
+> vare.cca
+> plot(vare.cca)
+> 
+> 
+> 
+> 
+> 
+> 
+> My code
+> ME<-read.table("ME_rda.txt", na.strings="*", header=TRUE)
+> 
+> height<-ME[,3:6]
+> mortality<-ME[,7:9]
+> species<-ME[,11:16]
+> env<-ME[,10:33]
+> 
+> library(vegan)
+> ME_rda<-rda(height~.,species, scale=TRUE)
+> ME_rda
+> plot(ME_rda, scaling=-1)
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From rebecca.ross at plymouth.ac.uk  Wed Sep 28 11:44:49 2011
+From: rebecca.ross at plymouth.ac.uk (Rebecca Ross)
+Date: Wed, 28 Sep 2011 10:44:49 +0100
+Subject: [R-sig-eco] gam variable selection
+Message-ID: <6CD19ED93A7A8F4593955A11621242C2375826407D@ILS133.uopnet.plymouth.ac.uk>
+
+Hi Marco,
+Having recently been working with gams myself I would suggest a procedure whereby you build your model in a forward stepwise approach first, having run individual gams for each of your variables and selecting the significant variable with the best AIC as your first variable, and iteratively trying out the other variables as 2nd in the gam, selecting the combination with the best AIC, and repeating until you get no further AIC improvement.
+
+I found it advisable to always first run each gam with all smooth functions applied (and with number of knots restricted to avoid overfitting the model using the term k=4 for 4 knots e.g. gam(x~s(y,k=4)+s(z,k=4), family=Gaussian)) then check the plots for each of your variables and rerun each model with linear functions applied as advised by the plots.
+
+Also remember to throw out significantly correlated variables once one of your correlates has been selected.
+
+The backwards stepwise model build could then be run to check the forwards build and using a global model that has excluded the thrown out correlates.
+
+Also worth knowing, but not worth relying on, is that there is a function called "dredge" which will run through your global model and list the potential model builds in order of best AIC. This is a variable selection algorithm but it does not take into account correlates or significance so it is best used only as advice and another check for a longhand build.
+
+All the best,
+Bex
+
+Research Assistant 
+University of Plymouth
+
+
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of r-sig-ecology-request at r-project.org
+Sent: 27 September 2011 11:00
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 42, Issue 16
+
+Send R-sig-ecology mailing list submissions to
+	r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+	r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+	r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. gam variable selection (Marco Helbich)
+   2. Re: gam variable selection (Gavin Simpson)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Tue, 27 Sep 2011 08:54:52 +0200
+From: Marco Helbich <marco.helbich at gmx.at>
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] gam variable selection
+Message-ID: <4E81733C.8090700 at gmx.at>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+
+Dear list,
+
+I am studying the influence of several environmental factors (numeric &
+dummies) on species densities (= numeric) using the gam() function with a gaussian link function in the mgcv package. As stated in Wood (2006) there is no variable selection algorithm.
+
+Is it an appropriate (iterative) approach to drop the predictor being least significant (eg. p > 0.05), refit the model, compare the GCV/AIC score and so forth. Should I first focus on the smoothing functions or fixed effects? Or is such a distinction not important at all?
+
+Perhaps someone has more experience with GAMs and can give me a helping hand? Thanks in advance!
+
+Best
+Marco
+--
+Marco Helbich
+Department of Geography
+University of Heidelberg
+
+
+
+------------------------------
+
+Message: 2
+Date: Tue, 27 Sep 2011 10:40:27 +0100
+From: Gavin Simpson <gavin.simpson at ucl.ac.uk>
+To: Marco Helbich <marco.helbich at gmx.at>
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] gam variable selection
+Message-ID: <1317116427.2714.3.camel at chrysothemis.geog.ucl.ac.uk>
+Content-Type: text/plain; charset="UTF-8"
+
+On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+> Dear list,
+> 
+> I am studying the influence of several environmental factors (numeric &
+> dummies) on species densities (= numeric) using the gam()
+> function with a gaussian link function in the mgcv package. As stated in
+> Wood (2006) there is no variable selection algorithm.
+> 
+> Is it an appropriate (iterative) approach to drop the predictor being
+> least significant (eg. p > 0.05), refit the model, compare the GCV/AIC
+> score and so forth. Should I first focus on the smoothing functions or 
+> fixed effects? Or is such a distinction not important at all?
+> 
+> Perhaps someone has more experience with GAMs and can give me a helping
+> hand? Thanks in advance!
+
+You could do that, but I would be sceptical of the results.
+
+Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+2372-2387) compare various approaches for feature selection in GAMs.
+IIRC, they concluded that an additional penalty term in the smoothness
+selection procedure gave the best results. This can be activated in
+mgcv::gam() by using the `select = TRUE` argument/setting.
+
+HTH
+
+G
+
+> Best
+> Marco
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 42, Issue 16
+
+
+From mdu at ceh.ac.uk  Wed Sep 28 12:00:27 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Wed, 28 Sep 2011 11:00:27 +0100
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <6CD19ED93A7A8F4593955A11621242C2375826407D@ILS133.uopnet.plymouth.ac.uk>
+References: <6CD19ED93A7A8F4593955A11621242C2375826407D@ILS133.uopnet.plymouth.ac.uk>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1D1240FA52@nerckwmb1.ad.nerc.ac.uk>
+
+Hi Bex
+
+Did you mean the dredge function from the MuMIn package? I'm not really sure what you mean by "it does not take into account correlates or significance". The point about dredge is that it is part of a family of functions for multi-model inference which specifically avoid concepts of "significance". It must not be used on its own. ANY stepwise procedure, forwards, backwards and including all subsets (dredge) will give BIASED parameter estimates if you just pick the best model. The application of the multi-model inference approach guards against this, and MuMIn provides all the functions to do this properly. I'd recommend anyone thinking of doing stepwise variable selection to learn more about this by reading the book by Burnham and Anderson, who give an excellent description of the pitfalls of dredging and stepwise selection, and explains why a multimodel approach, which completely avoids concepts of significance, is the most appropriate manner to compare alternative models of environmental data (i.e. not designed experiments) and make predictions.
+
+Regards
+Mike
+
+
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Rebecca Ross
+Sent: 28 September 2011 10:45
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] gam variable selection
+
+Hi Marco,
+Having recently been working with gams myself I would suggest a procedure whereby you build your model in a forward stepwise approach first, having run individual gams for each of your variables and selecting the significant variable with the best AIC as your first variable, and iteratively trying out the other variables as 2nd in the gam, selecting the combination with the best AIC, and repeating until you get no further AIC improvement.
+
+I found it advisable to always first run each gam with all smooth functions applied (and with number of knots restricted to avoid overfitting the model using the term k=4 for 4 knots e.g. gam(x~s(y,k=4)+s(z,k=4), family=Gaussian)) then check the plots for each of your variables and rerun each model with linear functions applied as advised by the plots.
+
+Also remember to throw out significantly correlated variables once one of your correlates has been selected.
+
+The backwards stepwise model build could then be run to check the forwards build and using a global model that has excluded the thrown out correlates.
+
+Also worth knowing, but not worth relying on, is that there is a function called "dredge" which will run through your global model and list the potential model builds in order of best AIC. This is a variable selection algorithm but it does not take into account correlates or significance so it is best used only as advice and another check for a longhand build.
+
+All the best,
+Bex
+
+Research Assistant 
+University of Plymouth
+
+
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of r-sig-ecology-request at r-project.org
+Sent: 27 September 2011 11:00
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 42, Issue 16
+
+Send R-sig-ecology mailing list submissions to
+	r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+	r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+	r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. gam variable selection (Marco Helbich)
+   2. Re: gam variable selection (Gavin Simpson)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Tue, 27 Sep 2011 08:54:52 +0200
+From: Marco Helbich <marco.helbich at gmx.at>
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] gam variable selection
+Message-ID: <4E81733C.8090700 at gmx.at>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+
+Dear list,
+
+I am studying the influence of several environmental factors (numeric &
+dummies) on species densities (= numeric) using the gam() function with a gaussian link function in the mgcv package. As stated in Wood (2006) there is no variable selection algorithm.
+
+Is it an appropriate (iterative) approach to drop the predictor being least significant (eg. p > 0.05), refit the model, compare the GCV/AIC score and so forth. Should I first focus on the smoothing functions or fixed effects? Or is such a distinction not important at all?
+
+Perhaps someone has more experience with GAMs and can give me a helping hand? Thanks in advance!
+
+Best
+Marco
+--
+Marco Helbich
+Department of Geography
+University of Heidelberg
+
+
+
+------------------------------
+
+Message: 2
+Date: Tue, 27 Sep 2011 10:40:27 +0100
+From: Gavin Simpson <gavin.simpson at ucl.ac.uk>
+To: Marco Helbich <marco.helbich at gmx.at>
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] gam variable selection
+Message-ID: <1317116427.2714.3.camel at chrysothemis.geog.ucl.ac.uk>
+Content-Type: text/plain; charset="UTF-8"
+
+On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+> Dear list,
+> 
+> I am studying the influence of several environmental factors (numeric &
+> dummies) on species densities (= numeric) using the gam()
+> function with a gaussian link function in the mgcv package. As stated in
+> Wood (2006) there is no variable selection algorithm.
+> 
+> Is it an appropriate (iterative) approach to drop the predictor being
+> least significant (eg. p > 0.05), refit the model, compare the GCV/AIC
+> score and so forth. Should I first focus on the smoothing functions or 
+> fixed effects? Or is such a distinction not important at all?
+> 
+> Perhaps someone has more experience with GAMs and can give me a helping
+> hand? Thanks in advance!
+
+You could do that, but I would be sceptical of the results.
+
+Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+2372-2387) compare various approaches for feature selection in GAMs.
+IIRC, they concluded that an additional penalty term in the smoothness
+selection procedure gave the best results. This can be activated in
+mgcv::gam() by using the `select = TRUE` argument/setting.
+
+HTH
+
+G
+
+> Best
+> Marco
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 42, Issue 16
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+This message (and any attachments) is for the recipient only. NERC
+is subject to the Freedom of Information Act 2000 and the contents
+of this email and any reply you make may be disclosed by NERC unless
+it is exempt from release under the Act. Any material supplied to
+NERC may be stored in an electronic records management system.
+
+From marco.helbich at gmx.at  Wed Sep 28 12:14:56 2011
+From: marco.helbich at gmx.at (Marco Helbich)
+Date: Wed, 28 Sep 2011 12:14:56 +0200
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <mailman.1.1317204001.25705.r-sig-ecology@r-project.org>
+References: <mailman.1.1317204001.25705.r-sig-ecology@r-project.org>
+Message-ID: <4E82F3A0.10905@gmx.at>
+
+Hello Bex,
+
+thanks for the detailed answer. You mentioned a function called 
+"dredge", perhaps you still know the corresponding package?
+
+Again, thanks Gavin and Bex for you advices and patience!
+
+Marco
+
+
+From gavin.simpson at ucl.ac.uk  Wed Sep 28 13:04:28 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 28 Sep 2011 12:04:28 +0100
+Subject: [R-sig-eco] gam variable selection
+In-Reply-To: <6CD19ED93A7A8F4593955A11621242C2375826407D@ILS133.uopnet.plymouth.ac.uk>
+References: <6CD19ED93A7A8F4593955A11621242C2375826407D@ILS133.uopnet.plymouth.ac.uk>
+Message-ID: <1317207868.2807.80.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Wed, 2011-09-28 at 10:44 +0100, Rebecca Ross wrote:
+> Hi Marco,
+> Having recently been working with gams myself I would suggest a
+> procedure whereby you build your model in a forward stepwise approach
+> first, having run individual gams for each of your variables and
+> selecting the significant variable with the best AIC as your first
+> variable, and iteratively trying out the other variables as 2nd in the
+> gam, selecting the combination with the best AIC, and repeating until
+> you get no further AIC improvement.
+
+Forward selection/backward elimination should be avoided at all costs.
+By doing this sort of inclusion/elimination you are introducing
+selection bias into the "coefficients" for the terms in the models. You
+are explicitly setting some to zero be excluding them from the model and
+this biases the other "coefficients".
+
+Many quantitative ecologists bemoan the continued use of step-wise
+feature selection procedures by ecologists. See for example Whittingham
+et al. (2006).
+
+Marra and Wood (2011) look at a backwards elimination strategy as part
+of their comparison of variable selection methods for GAMs. IIRC, it
+performs badly.
+
+> I found it advisable to always first run each gam with all smooth
+> functions applied (and with number of knots restricted to avoid
+> overfitting the model using the term k=4 for 4 knots e.g.
+> gam(x~s(y,k=4)+s(z,k=4), family=Gaussian)) then check the plots for
+> each of your variables and rerun each model with linear functions
+> applied as advised by the plots.
+
+By restricting the dimension of the basis functions to such low levels,
+you are making an explicit statement about the forms of model that the
+GAM can fit. This is fine if you have knowledge to guide this process,
+say from previous work etc. that suggests such forms for the fitted
+smooths, but if not, you are forcing a very restrictive set of models
+that can be fitted.
+
+> Also remember to throw out significantly correlated variables once one
+> of your correlates has been selected.
+
+This is an important point - known as concurvity in additive models.
+mgcv has a function to compute some measures that might indicate the
+presence of concurvity, but this is more involved than just looking for
+correlated variables - note that linear correlation is not much use when
+you are allowing for non-linear relationships between variables.
+
+> The backwards stepwise model build could then be run to check the
+> forwards build and using a global model that has excluded the thrown
+> out correlates.
+> 
+> Also worth knowing, but not worth relying on, is that there is a
+> function called "dredge" which will run through your global model and
+> list the potential model builds in order of best AIC. This is a
+> variable selection algorithm but it does not take into account
+> correlates or significance so it is best used only as advice and
+> another check for a longhand build.
+
+The idea here is that one can average the predictions from the set of
+best candidate models - not use it as a means to find the best set of
+predictors for a single model.
+
+The paper by Marra and Wood (2011), whilst being somewhat technical in
+places, is a excellent resource for comparing the various means
+available for doing feature selection in GAMs. Whilst theirs is but one
+study, the general result appears to be that adding an extra penalty to
+the penalised regression solved by mgcv:::gam(), which allows variables
+to be shrunk out of the model entirely, is a robust and powerful means
+of identifying important features.
+
+Couple this with fitting via REML or ML (not the default GCV) as GCV can
+overfit and we now have very good guides as to how to perform feature
+selection in, and fit, GAMs via the penalised regression approach of
+Simon Wood as implemented in his mgcv package.
+
+G
+
+Refs:
+
+Marra G., Wood S.N. (2011) Practical variable selection for generalized
+additive models. Computational Statistics and Data Analysis 55;
+2372-2387
+
+Whittingham MJ, Stephens PA, Bradbury RB, Freckleton RP (2006) Why do we
+still use step-wise modelling in ecology and behaviour? J Animal Ecol
+75:1182-1189
+
+> All the best,
+> Bex
+> 
+> Research Assistant 
+> University of Plymouth
+> 
+> 
+> 
+> 
+> -----Original Message-----
+> From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of r-sig-ecology-request at r-project.org
+> Sent: 27 September 2011 11:00
+> To: r-sig-ecology at r-project.org
+> Subject: R-sig-ecology Digest, Vol 42, Issue 16
+> 
+> Send R-sig-ecology mailing list submissions to
+> 	r-sig-ecology at r-project.org
+> 
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+> 	r-sig-ecology-request at r-project.org
+> 
+> You can reach the person managing the list at
+> 	r-sig-ecology-owner at r-project.org
+> 
+> When replying, please edit your Subject line so it is more specific than "Re: Contents of R-sig-ecology digest..."
+> 
+> 
+> Today's Topics:
+> 
+>    1. gam variable selection (Marco Helbich)
+>    2. Re: gam variable selection (Gavin Simpson)
+> 
+> 
+> ----------------------------------------------------------------------
+> 
+> Message: 1
+> Date: Tue, 27 Sep 2011 08:54:52 +0200
+> From: Marco Helbich <marco.helbich at gmx.at>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] gam variable selection
+> Message-ID: <4E81733C.8090700 at gmx.at>
+> Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+> 
+> Dear list,
+> 
+> I am studying the influence of several environmental factors (numeric &
+> dummies) on species densities (= numeric) using the gam() function with a gaussian link function in the mgcv package. As stated in Wood (2006) there is no variable selection algorithm.
+> 
+> Is it an appropriate (iterative) approach to drop the predictor being least significant (eg. p > 0.05), refit the model, compare the GCV/AIC score and so forth. Should I first focus on the smoothing functions or fixed effects? Or is such a distinction not important at all?
+> 
+> Perhaps someone has more experience with GAMs and can give me a helping hand? Thanks in advance!
+> 
+> Best
+> Marco
+> --
+> Marco Helbich
+> Department of Geography
+> University of Heidelberg
+> 
+> 
+> 
+> ------------------------------
+> 
+> Message: 2
+> Date: Tue, 27 Sep 2011 10:40:27 +0100
+> From: Gavin Simpson <gavin.simpson at ucl.ac.uk>
+> To: Marco Helbich <marco.helbich at gmx.at>
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] gam variable selection
+> Message-ID: <1317116427.2714.3.camel at chrysothemis.geog.ucl.ac.uk>
+> Content-Type: text/plain; charset="UTF-8"
+> 
+> On Tue, 2011-09-27 at 08:54 +0200, Marco Helbich wrote:
+> > Dear list,
+> > 
+> > I am studying the influence of several environmental factors (numeric &
+> > dummies) on species densities (= numeric) using the gam()
+> > function with a gaussian link function in the mgcv package. As stated in
+> > Wood (2006) there is no variable selection algorithm.
+> > 
+> > Is it an appropriate (iterative) approach to drop the predictor being
+> > least significant (eg. p > 0.05), refit the model, compare the GCV/AIC
+> > score and so forth. Should I first focus on the smoothing functions or 
+> > fixed effects? Or is such a distinction not important at all?
+> > 
+> > Perhaps someone has more experience with GAMs and can give me a helping
+> > hand? Thanks in advance!
+> 
+> You could do that, but I would be sceptical of the results.
+> 
+> Marra and Wood (2011, Computational Statistics and Data Analysis 55;
+> 2372-2387) compare various approaches for feature selection in GAMs.
+> IIRC, they concluded that an additional penalty term in the smoothness
+> selection procedure gave the best results. This can be activated in
+> mgcv::gam() by using the `select = TRUE` argument/setting.
+> 
+> HTH
+> 
+> G
+> 
+> > Best
+> > Marco
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From rebecca.ross at plymouth.ac.uk  Thu Sep 29 12:11:49 2011
+From: rebecca.ross at plymouth.ac.uk (Rebecca Ross)
+Date: Thu, 29 Sep 2011 11:11:49 +0100
+Subject: [R-sig-eco] gam variable selection
+Message-ID: <6CD19ED93A7A8F4593955A11621242C237582645F0@ILS133.uopnet.plymouth.ac.uk>
+
+Hi All,
+Many thanks for your different perspectives on stepwise model building and the dredge function, you've helped me out as well as Marco and I shall read more thoroughly into all your points.
+All the best,
+Bex
+
+

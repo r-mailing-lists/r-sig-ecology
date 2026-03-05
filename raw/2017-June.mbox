@@ -1,0 +1,2704 @@
+From alexsouza.cb.ufrn.br at gmail.com  Thu Jun  1 16:34:57 2017
+From: alexsouza.cb.ufrn.br at gmail.com (Alexandre F. Souza)
+Date: Thu, 1 Jun 2017 11:34:57 -0300
+Subject: [R-sig-eco] Deviance in Multinomial Logistic Regression
+Message-ID: <CAFXQFgOL0JPa9Xh0DhKGLiUOkXv54UxUscQrRLVO_4JS8R7c9A@mail.gmail.com>
+
+Hello,
+
+I am using the following code to perform model selection on a categorical
+variable with 9 levels corresponding to floristic regions. Explanatory
+variables are climatic, soil, and MEMs describing spatial structure. I am
+using AIC and wAIC to choose models. As far as I understood, the Deviance
+should be smaller in the worse model, which would be similar to the null
+model containing just the intercept, and larger in the best model. However,
+the Deviance statistic, however, is increasing from the best model to the
+worse model. Do anyone have any idas about what am I doing or reading wrong?
+
+Many thanks in advance, any ideas will help
+
+
+# Verify the total deviance (null model)
+
+Null_model<-multinom(subregion~1, data=variables)
+Total_deviance<-Null_model[[25]] # store the total deviance
+
+# Prepare the models to be tested
+formlist <- list() # Empty list to receive nested formulas in forward
+selection
+formlist[[1]]<-as.formula("subregion~AMT+APP+CEC+Sand+TAR+MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# Climatic/soil Productivity
+formlist[[2]]<-as.formula("subregion~ElevR+ElevCV+MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# Topography
+formlist[[3]]<-as.formula("subregion~HFP+MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# Human footprint
+formlist[[4]]<-as.formula("subregion~AMT+APP+CEC+Sand+TAR+ElevR+ElevCV+MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# Productivity + Topography
+formlist[[5]]<-as.formula("subregion~AMT+APP+CEC+Sand+TAR+HFP+MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# Productivity + HFP
+formlist[[6]]<-as.formula("subregion~HFP+ElevR+ElevCV+MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# HFP + Topography
+formlist[[7]]<-as.formula("subregion~AMT+APP+CEC+Sand+TAR+ElevR+ElevCV+HFP+MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# Total Contemporary Environment
+formlist[[8]]<-as.formula("subregion~MEM2+MEM1+MEM3+MEM4+MEM5+MEM27+MEM24+MEM15+MEM10+MEM26+MEM16")
+# Space only
+
+
+# Prepare empty dataframe to receive models' results
+
+MLRresults<-as.data.frame(matrix(nrow=8, ncol=4))
+colnames(MLRresults) <- (c("Model", "Deviance", "AIC", "AICc"))
+for (i in 1:8){ # the remaining variables to be forward selected
+  formula<-formlist[[i]]
+  MLR_test<-multinom(formula, data=variables)
+  MLRresults[i,1]<-paste(formlist[i]) # store the 'model formula'
+  MLRresults[i,2]<-(Total_deviance-MLR_test[[19]])/Total_deviance # store
+the % of deviance explained
+  MLRresults[i,3]<-MLR_test[[26]] # store the AIC value
+  MLRresults[i,4]<-AICc(MLR_test)} # store the AICc value
+
+wAICc<-Weights(MLRresults$AICc) # AIC weigth
+MLRresults<-cbind(MLRresults, wAICc) # combine results in a single table
+View(MLRresults[order(MLRresults$wAICc, decreasing=T), ]) # print the
+output table from the model selection procedure
+
+The above code yields
+
+MODEL
+                          DEVIANCE  AIC            AICc         wAIC
+
+
+
+
+
+8
+subregion ~ MEM2 + MEM1 + MEM3 + MEM4 + MEM5 + MEM27 + MEM24 + MEM15 +
+MEM10 + MEM26 + MEM16
+0.5025134
+738.7133
+910.5673
+9.999907e-01
+3
+subregion ~ HFP + MEM2 + MEM1 + MEM3 + MEM4 + MEM5 + MEM27 + MEM24 + MEM15
++ MEM10 + MEM26 + MEM16
+0.5393317
+718.0280
+933.7467
+9.260806e-06
+2
+subregion ~ ElevR + ElevCV + MEM2 + MEM1 + MEM3 + MEM4 + MEM5 + MEM27 +
+MEM24 + MEM15 + MEM10 + MEM26 + MEM16
+0.5574922
+716.9467
+985.8879
+4.409071e-17
+6
+subregion ~ HFP + ElevR + ElevCV + MEM2 + MEM1 + MEM3 + MEM4 + MEM5 + MEM27
++ MEM24 + MEM15 + MEM10 + MEM26 + MEM16
+0.5805342
+710.7362
+1044.5544
+8.036491e-30
+1
+subregion ~ AMT + APP + CEC + Sand + TAR + MEM2 + MEM1 + MEM3 + MEM4 + MEM5
++ MEM27 + MEM24 + MEM15 + MEM10 + MEM26 + MEM16
+0.6736414
+648.9077
+1161.1251
+3.909003e-55
+5
+subregion ~ AMT + APP + CEC + Sand + TAR + HFP + MEM2 + MEM1 + MEM3 + MEM4
++ MEM5 + MEM27 + MEM24 + MEM15 + MEM10 + MEM26 + MEM16
+0.6818203
+658.3141
+1294.6032
+4.051928e-84
+4
+subregion ~ AMT + APP + CEC + Sand + TAR + ElevR + ElevCV + MEM2 + MEM1 +
+MEM3 + MEM4 + MEM5 + MEM27 + MEM24 + MEM15 + MEM10 + MEM26 + MEM16
+0.6943008
+663.2007
+1458.1197
+1.260428e-119
+7
+subregion ~ AMT + APP + CEC + Sand + TAR + ElevR + ElevCV + HFP + MEM2 +
+MEM1 + MEM3 + MEM4 + MEM5 + MEM27 + MEM24 + MEM15 + MEM10 + MEM26 + MEM16
+0.7016101
+673.5208
+1675.9823
+6.197945e-167
+
+-- 
+Dr. Alexandre F. Souza
+Professor Adjunto IV
+Universidade Federal do Rio Grande do Norte
+CB, Departamento de Ecologia
+Campus Universit?rio - Lagoa Nova
+59072-970 - Natal, RN - Brasil
+lattes: lattes.cnpq.br/7844758818522706
+http://esferacientifica.wixsite.com/esferacientifica
+http://www.docente.ufrn.br/alexsouza
+
+	[[alternative HTML version deleted]]
+
+
+From mariojmaaz at gmail.com  Thu Jun  1 16:43:15 2017
+From: mariojmaaz at gmail.com (=?UTF-8?Q?Mario_Jos=C3=A9_Marques=2DAzevedo?=)
+Date: Thu, 1 Jun 2017 11:43:15 -0300
+Subject: [R-sig-eco] [R-sig-phylo] ape prop.part error malloc(): memory
+	corruption
+In-Reply-To: <CAKB+p3X60zhq4gbLC26rJ=S7AWZiRBZhdBtK3_moTy3WNTeUWg@mail.gmail.com>
+References: <CANFObyy4K9Wof_kgskrL20qYVCOmy8uVVZnNrWJmrY74FVy5dw@mail.gmail.com>
+ <CAKB+p3X+_uWQC_o+krNRz4zEUSxq9Us8rV72iUYfePCHD0ZhVQ@mail.gmail.com>
+ <CAKB+p3X60zhq4gbLC26rJ=S7AWZiRBZhdBtK3_moTy3WNTeUWg@mail.gmail.com>
+Message-ID: <CANFObyxi1CW8Zk6Ki9WGi_1w9Z=xeQ3=vSy0r5TdL4AVoirrOw@mail.gmail.com>
+
+Dear Klaus,
+
+Thank you for your answer and good news that ape/phangorn will load tree
+with singletons! Can I send the tree to your email?
+
+My problem with collapse.singles is, for instance, when I have only one
+genus/specie. I want the node name with genus and a tip name with species.
+When I collapse, genus node name is removed. For instance:
+
+This tree:
+
+((((A_1,A_2,)A,(B1,B2,B3)B)C,((((D1))),(E1,E2)E)D),(F1)F)R;
+
+when 'collapsed' will be:
+
+((((A_1,A_2)A,(B1,B2,B3)B)C,(D1,(E1,E2)E)D),F1)R;
+
+?Note that I lost node name 'F'.
+
+I don't know why, but month ago I ran extract.clade of my tree without
+problem. Maybe some update that I did, but I'm not sure.
+
+Thank you again!
+
+Best regards,
+
+Mario
+
+
+?....................................................................
+Mario Jos? Marques-Azevedo
+Ph.D. Candidate in Ecology
+Department of Plant Biology, Institute of Biology
+University of Campinas, Campinas, S?o Paulo, Brazil
+https://github.com/mariojose?
+
+
+
+
+On 1 June 2017 at 11:17, Klaus Schliep <klaus.schliep at gmail.com> wrote:
+
+> Dear Mario,
+> Emmanuel and I are working to allow singletons in ape / phangorn. In the
+> next version will read the tree in with read.tree().
+> Can you send me your larger tree for testing purposes, as it is one which
+> would fail at the moment?
+> Regards,
+> Klaus
+>
+>
+>
+>
+>
+>
+> On Thu, Jun 1, 2017 at 8:51 AM, Klaus Schliep <klaus.schliep at gmail.com>
+> wrote:
+>
+>> Hi Mario,
+>>
+>> the problem with your tree is that it contains singleton (nodes of degree
+>> 2). Try collapse.singles() before using extract.clade().
+>>
+>> Cheers,
+>> Klaus
+>>
+>>
+>>
+>>
+>> On Thu, Jun 1, 2017 at 1:31 AM, Mario Jos? Marques-Azevedo <
+>> mariojmaaz at gmail.com> wrote:
+>>
+>>> Dears,
+>>>
+>>> I'm using extract.clade from ape package and get some issues. I'm using
+>>> phytools package to load tree with single clade like above:
+>>>
+>>> library(phytools)
+>>>
+>>> t1 <- read.newick(text='(((((A_1,A_2,)A,(B1,B2,B3)B)C,(D1,(E1,E2)
+>>> E)D),(F1)F)G)R;')
+>>>
+>>> t2 <- read.newick(text='((((A_1,A_2,)A,(B1,B2,B3)B)C,((((D1))),(
+>>> E1,E2)E)D),(F1)F)R;
+>>>
+>>> When I extract 'F' clade, for instance:
+>>>
+>>> c1 <- extract.clade(t1, 'F')
+>>>
+>>> or
+>>>
+>>> c2 <- extract.clade(t2, 'F')
+>>>
+>>> I have this error:
+>>>
+>>> Error in prop.part(phy) : attempt to set index 8/8 in SET_VECTOR_ELT
+>>>
+>>> I have one tree with mode than 300 tips. When I try extract any clade, I
+>>> have the same error. If I repeat the command I have this one:
+>>>
+>>> *** Error in `/usr/lib/rstudio/bin/rsession': malloc(): memory
+>>> corruption:
+>>> 0x000000000a3aaa40 ***
+>>>
+>>> My configurations was:
+>>>
+>>> platform       x86_64-pc-linux-gnu
+>>> arch           x86_64
+>>> os             linux-gnu
+>>> system         x86_64, linux-gnu
+>>> language       R
+>>> version.string R version 3.3.3 (2017-03-06)
+>>>
+>>> phytools (0.6.0), ape (4.1), maps (3.1.1), Rcpp (0.12.10)
+>>>
+>>> I try update R to 3.4 and recompile all my packages, but I get the same
+>>> error.
+>>>
+>>> My new configurations:
+>>>
+>>> platform       x86_64-pc-linux-gnu
+>>> arch           x86_64
+>>> os             linux-gnu
+>>> system         x86_64, linux-gnu
+>>> language       R
+>>> version.string R version 3.4.0 (2017-04-21)
+>>>
+>>> phytools (0.6.0), ape (4.1), maps (3.1.1), Rcpp (0.12.10)
+>>>
+>>> I don't know why I have this error if I can extract with the same
+>>> commands
+>>> some time ago.
+>>>
+>>> I have the same error if I run in RStudio or in terminal. When I use
+>>> RStudio, it abort after the error.
+>>>
+>>> I try Google, but I don't found nothing that can help me.
+>>>
+>>> Thank you and best regards,
+>>>
+>>> Mario
+>>>
+>>>
+>>> ....................................................................
+>>> Mario Jos? Marques-Azevedo
+>>> Ph.D. Candidate in Ecology
+>>> Department of Plant Biology, Institute of Biology
+>>> University of Campinas, Campinas, S?o Paulo, Brazil
+>>> https://github.com/mariojose <http://www.github.com/mariojose>
+>>>
+>>>         [[alternative HTML version deleted]]
+>>>
+>>> _______________________________________________
+>>> R-sig-phylo mailing list - R-sig-phylo at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-phylo
+>>> Searchable archive at http://www.mail-archive.com/r-
+>>> sig-phylo at r-project.org/
+>>
+>>
+>>
+>>
+>> --
+>> Klaus Schliep
+>> Postdoctoral Fellow
+>> Revell Lab, University of Massachusetts Boston
+>> http://www.phangorn.org/
+>>
+>>
+>
+>
+> --
+> Klaus Schliep
+> Postdoctoral Fellow
+> Revell Lab, University of Massachusetts Boston
+> http://www.phangorn.org/
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From mariojmaaz at gmail.com  Thu Jun  1 19:38:50 2017
+From: mariojmaaz at gmail.com (=?UTF-8?Q?Mario_Jos=C3=A9_Marques=2DAzevedo?=)
+Date: Thu, 1 Jun 2017 14:38:50 -0300
+Subject: [R-sig-eco] [R-sig-phylo] ape prop.part error malloc(): memory
+	corruption
+In-Reply-To: <CANFObyxi1CW8Zk6Ki9WGi_1w9Z=xeQ3=vSy0r5TdL4AVoirrOw@mail.gmail.com>
+References: <CANFObyy4K9Wof_kgskrL20qYVCOmy8uVVZnNrWJmrY74FVy5dw@mail.gmail.com>
+ <CAKB+p3X+_uWQC_o+krNRz4zEUSxq9Us8rV72iUYfePCHD0ZhVQ@mail.gmail.com>
+ <CAKB+p3X60zhq4gbLC26rJ=S7AWZiRBZhdBtK3_moTy3WNTeUWg@mail.gmail.com>
+ <CANFObyxi1CW8Zk6Ki9WGi_1w9Z=xeQ3=vSy0r5TdL4AVoirrOw@mail.gmail.com>
+Message-ID: <CANFObyxsROLCskoDASPz5Ep+nU8j3X=DoVoWKBEJZNegWQ54DA@mail.gmail.com>
+
+Dear Eliot,
+
+Thank you for your answer! My tree is ok, but to plot is needed to collapse
+singles, as you said.
+
+I use ape/phytools to manipulate my tree for date it after with phylocom.
+Then, all node is important, including single one. For this, collapse
+singletons do not work for me. For instance.
+
+This trees:
+
+((((A_1,A_2,)A,(B1,B2,B3)B)C,((((D1))),(E1,E2)E)D),(F1)F)R;
+
+(((((A_1,A_2,)A,(B1,B2,B3)B)C,(D1,(E1,E2)E)D),(F1)F)G)R;
+
+'collapsed' is:
+
+((((A_1,A_2)A,(B1,B2,B3)B)C,(D1,(E1,E2)E)D),F1)R;
+
+I lost 'F' node, as I said early. D1 is now in 'right' way.
+
+This tree:
+
+((((((A_1,A_2,)A,(B1,B2,B3)B)C)ABC,((D1,(E1,E2)E)D))DE,(F1)F)G)R;
+
+'collapsed' is:
+
+((((A_1,A_2)A,(B1,B2,B3)B)C,(D1,(E1,E2)E)D)DE,F1)G;
+
+I lost 'F', 'R' and 'ABC' node.
+
+I have a big tree and some families has polytomies. Then, I extract each
+family (remove tips of this node), resolve plytomies, and I bind families
+tree again. After that, I date tree with phylocon. Phylocon use ages file
+with node age, then each node in my tree is important and collapse
+singletons would be a lost of information.
+
+I created one function to help me with extract node because I have issues
+using drop.tips (
+https://github.com/MarioJose/r-functions/blob/master/drop.clade.label/example.md
+).
+
+As I said, extract.node was working months ago. I don't know if this error
+is some updated that I did.
+
+Best regards,
+
+Mario
+
+
+
+
+
+
+On 1 June 2017 at 11:43, Mario Jos? Marques-Azevedo <mariojmaaz at gmail.com>
+wrote:
+
+> Dear Klaus,
+>
+> Thank you for your answer and good news that ape/phangorn will load tree
+> with singletons! Can I send the tree to your email?
+>
+> My problem with collapse.singles is, for instance, when I have only one
+> genus/specie. I want the node name with genus and a tip name with species.
+> When I collapse, genus node name is removed. For instance:
+>
+> This tree:
+>
+> ((((A_1,A_2,)A,(B1,B2,B3)B)C,((((D1))),(E1,E2)E)D),(F1)F)R;
+>
+> when 'collapsed' will be:
+>
+> ((((A_1,A_2)A,(B1,B2,B3)B)C,(D1,(E1,E2)E)D),F1)R;
+>
+> ?Note that I lost node name 'F'.
+>
+> I don't know why, but month ago I ran extract.clade of my tree without
+> problem. Maybe some update that I did, but I'm not sure.
+>
+> Thank you again!
+>
+> Best regards,
+>
+> Mario
+>
+>
+> ?....................................................................
+> Mario Jos? Marques-Azevedo
+> Ph.D. Candidate in Ecology
+> Department of Plant Biology, Institute of Biology
+> University of Campinas, Campinas, S?o Paulo, Brazil
+> https://github.com/mariojose?
+>
+>
+>
+>
+> On 1 June 2017 at 11:17, Klaus Schliep <klaus.schliep at gmail.com> wrote:
+>
+>> Dear Mario,
+>> Emmanuel and I are working to allow singletons in ape / phangorn. In the
+>> next version will read the tree in with read.tree().
+>> Can you send me your larger tree for testing purposes, as it is one which
+>> would fail at the moment?
+>> Regards,
+>> Klaus
+>>
+>>
+>>
+>>
+>>
+>>
+>> On Thu, Jun 1, 2017 at 8:51 AM, Klaus Schliep <klaus.schliep at gmail.com>
+>> wrote:
+>>
+>>> Hi Mario,
+>>>
+>>> the problem with your tree is that it contains singleton (nodes of
+>>> degree 2). Try collapse.singles() before using extract.clade().
+>>>
+>>> Cheers,
+>>> Klaus
+>>>
+>>>
+>>>
+>>>
+>>> On Thu, Jun 1, 2017 at 1:31 AM, Mario Jos? Marques-Azevedo <
+>>> mariojmaaz at gmail.com> wrote:
+>>>
+>>>> Dears,
+>>>>
+>>>> I'm using extract.clade from ape package and get some issues. I'm using
+>>>> phytools package to load tree with single clade like above:
+>>>>
+>>>> library(phytools)
+>>>>
+>>>> t1 <- read.newick(text='(((((A_1,A_2,)A,(B1,B2,B3)B)C,(D1,(E1,E2)
+>>>> E)D),(F1)F)G)R;')
+>>>>
+>>>> t2 <- read.newick(text='((((A_1,A_2,)A,(B1,B2,B3)B)C,((((D1))),(
+>>>> E1,E2)E)D),(F1)F)R;
+>>>>
+>>>> When I extract 'F' clade, for instance:
+>>>>
+>>>> c1 <- extract.clade(t1, 'F')
+>>>>
+>>>> or
+>>>>
+>>>> c2 <- extract.clade(t2, 'F')
+>>>>
+>>>> I have this error:
+>>>>
+>>>> Error in prop.part(phy) : attempt to set index 8/8 in SET_VECTOR_ELT
+>>>>
+>>>> I have one tree with mode than 300 tips. When I try extract any clade, I
+>>>> have the same error. If I repeat the command I have this one:
+>>>>
+>>>> *** Error in `/usr/lib/rstudio/bin/rsession': malloc(): memory
+>>>> corruption:
+>>>> 0x000000000a3aaa40 ***
+>>>>
+>>>> My configurations was:
+>>>>
+>>>> platform       x86_64-pc-linux-gnu
+>>>> arch           x86_64
+>>>> os             linux-gnu
+>>>> system         x86_64, linux-gnu
+>>>> language       R
+>>>> version.string R version 3.3.3 (2017-03-06)
+>>>>
+>>>> phytools (0.6.0), ape (4.1), maps (3.1.1), Rcpp (0.12.10)
+>>>>
+>>>> I try update R to 3.4 and recompile all my packages, but I get the same
+>>>> error.
+>>>>
+>>>> My new configurations:
+>>>>
+>>>> platform       x86_64-pc-linux-gnu
+>>>> arch           x86_64
+>>>> os             linux-gnu
+>>>> system         x86_64, linux-gnu
+>>>> language       R
+>>>> version.string R version 3.4.0 (2017-04-21)
+>>>>
+>>>> phytools (0.6.0), ape (4.1), maps (3.1.1), Rcpp (0.12.10)
+>>>>
+>>>> I don't know why I have this error if I can extract with the same
+>>>> commands
+>>>> some time ago.
+>>>>
+>>>> I have the same error if I run in RStudio or in terminal. When I use
+>>>> RStudio, it abort after the error.
+>>>>
+>>>> I try Google, but I don't found nothing that can help me.
+>>>>
+>>>> Thank you and best regards,
+>>>>
+>>>> Mario
+>>>>
+>>>>
+>>>> ....................................................................
+>>>> Mario Jos? Marques-Azevedo
+>>>> Ph.D. Candidate in Ecology
+>>>> Department of Plant Biology, Institute of Biology
+>>>> University of Campinas, Campinas, S?o Paulo, Brazil
+>>>> https://github.com/mariojose <http://www.github.com/mariojose>
+>>>>
+>>>>         [[alternative HTML version deleted]]
+>>>>
+>>>> _______________________________________________
+>>>> R-sig-phylo mailing list - R-sig-phylo at r-project.org
+>>>> https://stat.ethz.ch/mailman/listinfo/r-sig-phylo
+>>>> Searchable archive at http://www.mail-archive.com/r-
+>>>> sig-phylo at r-project.org/
+>>>
+>>>
+>>>
+>>>
+>>> --
+>>> Klaus Schliep
+>>> Postdoctoral Fellow
+>>> Revell Lab, University of Massachusetts Boston
+>>> http://www.phangorn.org/
+>>>
+>>>
+>>
+>>
+>> --
+>> Klaus Schliep
+>> Postdoctoral Fellow
+>> Revell Lab, University of Massachusetts Boston
+>> http://www.phangorn.org/
+>>
+>>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From mariojmaaz at gmail.com  Thu Jun  1 21:15:48 2017
+From: mariojmaaz at gmail.com (=?UTF-8?Q?Mario_Jos=C3=A9_Marques=2DAzevedo?=)
+Date: Thu, 1 Jun 2017 16:15:48 -0300
+Subject: [R-sig-eco] ape prop.part error malloc(): memory corruption
+In-Reply-To: <CANFObyy4K9Wof_kgskrL20qYVCOmy8uVVZnNrWJmrY74FVy5dw@mail.gmail.com>
+References: <CANFObyy4K9Wof_kgskrL20qYVCOmy8uVVZnNrWJmrY74FVy5dw@mail.gmail.com>
+Message-ID: <CANFObyyX8gMj_yu7XK3MBn7N_sK0MRPKz7pejMqO6vz=+6hx-g@mail.gmail.com>
+
+?Dears,
+Excuse me. I replied to wrong group.
+Regards,
+Mario?
+
+	[[alternative HTML version deleted]]
+
+
+From marko.djurakic at dbe.uns.ac.rs  Mon Jun  5 17:54:39 2017
+From: marko.djurakic at dbe.uns.ac.rs (Marko Djurakic)
+Date: Mon, 5 Jun 2017 17:54:39 +0200
+Subject: [R-sig-eco] Interpretation of RDA triplot where x axis is RDA
+ vector and y axis is PCA vector
+Message-ID: <54e49165-d877-dfe0-e6f6-4eb0b8918299@dbe.uns.ac.rs>
+
+Dear r-sig-ecology community,
+
+I appreciate if someone can tell me is it meaningful to interpret 
+redundancy analysis (RDA) and triplot of RDA where x axis represent RDA 
+vector and y axis is PCA vector?
+
+For instance, I performed RDA in vegan where response matrix was 
+Hellinger-transformed absolute abundance of several types of chromosomal 
+inversions and explanatory matrix consisted of 19 bioclim variables. 
+With a full set of bioclim variables model was overfitted and I reduced 
+number of explanatory variables using VIF and afterwards (if necessary) 
+performed forward selection. In the final model, there was only one 
+explanatory variable in the model, thus there is one RDA axis, and 
+several PCA axes (unconstrained residual variance). Therefore RDA 
+triplot shows RDA vector as x axis and PCA vector on the y axis. Is is 
+meaningful to interpret such RDA and its graph?
+
+Kind regards,
+
+Marko
+
+
+From oliverhooker at prstatistics.com  Mon Jun  5 19:07:11 2017
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Mon, 05 Jun 2017 18:07:11 +0100
+Subject: [R-sig-eco] Course on genetic data analysuis using R
+Message-ID: <ebbbbf1b5b6efd9c2a066cfff5a74a95@prstatistics.com>
+
+"Genetic data analysis/exploration using R" (GDAR03)
+
+This course will be delivered by Dr. Thibaut Jombart who authors the
+adegenet package and Dr. Zhian Kamvar.
+
+This course will run from the 23rd - 27th October at Margam discovery 
+centre
+in Wales, United Kingdom.
+
+Course Overview:
+This course provides a comprehensive introduction to exploratory
+statistical methods used in population genetics and molecular ecology.
+Participants will become proficient in a range of approaches for 
+uncovering
+genetic structures from usual genetic data including most genetic 
+markers
+(e.g. microsatellites, SNPs, AFLP) and genetic sequences (DNA or amino-
+acid). After covering different types of phylogenetic reconstruction, 
+and
+basic population genetics tests, a strong emphasis will be put on using
+factorial methods (e.g. Principal Component Analysis) for investigating
+genetic diversity. In particular, we will focus on the identification 
+and
+description of genetic clusters, and on characterising spatial genetic
+patterns. The last day of the course will be an open problem day, where
+participants will be able to analyse their own data.
+
+Day 1
+Intro to phylogenetic reconstruction.
+Module 1a: Reconstructing phylogenies from genetic sequence data. Three
+main approaches covered: distance-based phylogenies; maximum parsimony; 
+and
+likelihood-based approaches.
+Module 1b: Short R refresher.
+Practical 1: Phylogenetic reconstruction using R. Three main approaches
+plus rooting a tree; assessing/testing for a molecular clock; and
+bootstrapping.
+Main packages: ape, phangorn.
+
+Day 2
+Intro to multivariate analysis of genetic data
+Module 2: Key concepts in multivariate analysis. Focus on using 
+factorial
+methods for genetic data analysis.
+Practical 2: Basics of multivariate analysis of genetic data in R. 
+Topics
+include: data handling, population genetic tests of population structure
+(PCA, PCoA).
+Main packages: adegenet, ade4, ape.
+
+Day 3
+Exploring group diversity
+Module 3: Approaches to identifying and describing genetic clusters. 
+Topics
+include: hierarchical clustering, K-means, population-level multivariate
+analysis (between-group-PCA, DA, DAPC).
+Practical 3: Applying the approaches covered in morning lecture and
+emphasising their strengths and weaknesses.
+Main packages: adegenet, ade4.
+
+Day 4
+Spatial genetic structures
+Module 4: Discussing the origin and significance of spatial genetic
+patterns, and how to test for them.
+Practical 4: Visualising and analysing spatial genetic data. Topics:
+spatial density estimates, Moran/Mantel tests, mapping principal 
+components
+in PCA, spatial PCA.
+Main packages: adegenet, adehabitat, ade4.
+
+Day 5
+Using R for reproducible science.
+Module 5: Using R for reproducible science
+Practical 5: Practical session based on morning lecture
+Main packages: knitr, Sweave, rmarkdown
+
+
+If you have any questions please email oliverhooker at prstatistics.com or
+visit www.prstatistics.com
+
+To book online go to http://www.prstatistics.com/course/genetic-data-
+analysis-exploration-using-r-gdar03/
+
+Other up-coming courses are as follows
+
+PR statistics other courses
+
+1.	MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA #MASE
+19th ? 23rd June, Canada, Prof. Subhash Lele, Dr. Peter Solymos
+http://www.prstatistics.com/course/multivariate-analysis-of-spatial-ecological-data-using-r-mase01/
+
+2.	TIME SERIES MODELS FOR ECOLOGISTS USING R (JUNE 2017 #TSME
+26th ? 30th June, Canada, Dr. Andrew Parnell
+http://www.prstatistics.com/course/time-series-models-foe-ecologists-tsme01/
+
+3.	META-ANALYSIS IN ECOLOGY, EVOLUTION AND ENVIRONMENTAL SCIENCES 
+#METR01
+24th ? 28th July, Scotland, Prof. Julia Koricheva, Prof. Elena 
+Kulinskaya
+http://www.prstatistics.com/course/meta-analysis-in-ecology-evolution-and-environmental-sciences-metr01/
+
+4.	SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R #SPAE
+7th ? 12th August 2017, Scotland, Prof. Jason Matthiopoulos, Dr. James 
+Grecian
+http://www.prstatistics.com/course/spatial-analysis-ecological-data-using-r-spae05/
+
+5.	ECOLOGICAL NICHE MODELLING USING R #ENMR
+16th ? 20th October 2017, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr01/
+
+6.	GENETIC DATA ANALYSIS AND EXPLORATION USING R #GDAR
+23rd ? 27th October, Wales, Dr. Thibaut Jombart, Zhian Kavar
+http://www.prstatistics.com/course/genetic-data-analysis-exploration-using-r-gdar03/
+
+7.	STRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY 
+BIOLOGISTS USING R #SEMR
+23rd ? 27th October, Wales, Prof Jarrett Byrnes, Dr. Jon Lefcheck
+http://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/
+
+8.	LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R #LNDG
+6th ? 10th November, Wales, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg02/
+
+9.	APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS #ABME
+20th - 25th November 2017, Scotland, Prof. Jason Matthiopoulos, Dr. Matt 
+Denwood
+http://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme03/
+
+10.	INTRODUCTION REMOTE SENSING AND GIS APPLICATIONS FOR ECOLOGISTS 
+#IRMS
+27th Nov ? 1st Dec, Wales, Dr Duccio Rocchini, Dr. Luca Delucchi
+http://www.prstatistics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+11.	ADVANCING IN STATISTICAL MODELLING USING R #ADVR
+11th ? 15th December 2017, Wales, Dr. Luc Bussiere, Dr. Tom Houslay, 
+Dr. Ane Timenes Laugen,
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr07/
+
+12.	INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING #IBHM
+29th Jan ? 2nd Feb 2018, Scotland, Dr. Andrew Parnell
+http://www.prstatistics.com/course/introduction-to-bayesian-hierarchical-modelling-using-r-ibhm02/
+
+13.	ANIMAL MOVEMENT ECOLOGY (February 2018) #ANME
+19th ? 23rd February 2018, Wales, Dr Luca Borger, Dr. John Fieberg
+
+14.	GEOMETRIC MORPHOMETRICS USING R #GMMR
+5th ? 9th June 2017, Scotland, Prof. Dean Adams, Prof. Michael 
+Collyer, Dr. Antigoni Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/
+
+15.	FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND 
+COMPUTATION #FEER
+5th ? 9th March 2018, Scotland, Dr. Francesco de Bello, Dr. Lars 
+G?tzenberger, Dr. Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+16.	ADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA USING R 
+#MVSP
+Prof. Pierre Legendre, Dr. Olivier Gauthier - Date and location to be 
+confirmed
+
+17.	STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR #SIMM
+Dr. Andrew Parnell, Dr. Andrew Jackson ? Date and location to be 
+confirmed
+
+18.	NETWORK ANAYLSIS FOR ECOLOGISTS USING R #NTWA
+Dr. Marco Scotti - Date and location to be confirmed
+
+19.	MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R #MBMV0
+Prof David Warton - Date and location to be confirmed
+
+20.	PHYLOGENETIC DATA ANALYSIS USING R (TBC) #PHYL
+Dr. Emmanuel Paradis ? Date and location to be confirmed
+
+
+--------------------------------------------------------------------------------------------------------------
+
+PR informatics other courses
+
+1.	BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS #BIGB
+3rd ? 7th July 2017, Scotland, Dr. Nic Blouin, Dr. Ian Misner
+http://www.prinformatics.com/course/bioinformatics-for-geneticists-and-biologists-bigb02/
+
+2.	INTRODUCTION TO BIOINFORMATICS USING LINUX #IBUL
+16th ? 20th October, Scotland, Dr. Martin Jones
+http://www.prstatistics.com/course/introduction-to-bioinformatics-using-linux-ibul02/
+
+3.	INTRODUCTION TO PYTHON FOR BIOLOGISTS #IPYB
+27th Nov ? 1st Dec, Wales, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb04/
+
+4.	INTRODUCTION REMOTE SENSING AND GIS APPLICATIONS FOR ECOLOGISTS #IRMS
+27th Nov ? 1st Dec, Wales, Dr Duccio Rocchini, Dr. Luca Delucchi
+http://www.prstatistics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+5.	DATA VISUALISATION AND MANIPULATION USING PYTHON #DVMP
+11th ? 15th December 2017, Wales, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+6.	EUKARYOTIC METABARCODING
+23rd ? 27th July 2018, Scotland, Dr. Owen Wangensteen
+http://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/
+
+7.	CODING, DATA MANAGEMENT AND SHINY APPLICATIONS USING RSTUDIO FOR 
+EVOLUTIONARY BIOLOGISTS AND ECOLOGISTS #CDSR
+Dr. Aline Quadros
+
+
+
+Oliver Hooker PhD.
+PR statistics
+
+2017 publications -
+
+Ecosystem size predicts eco-morphological variability in post-glacial 
+diversification. Ecology and Evolution. In press.
+
+The physiological costs of prey switching reinforce foraging 
+specialization. Journal of animal ecology.
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+3/1, 128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+
+From taniabird at gmail.com  Thu Jun  8 12:53:28 2017
+From: taniabird at gmail.com (Tania Bird)
+Date: Thu, 8 Jun 2017 13:53:28 +0300
+Subject: [R-sig-eco] Dissimilarity measure for rank data
+Message-ID: <CAGJPu+2UZ7uKg+MNh1ugwgjZAKE6qwoKO9_5Hee458=gCH2xHg@mail.gmail.com>
+
+I have species data that I would like to use for ordination. With
+regular abundance data I would apply a Hellinger Transformation and
+then use the Bray-Curtis distance.
+
+Since the data are ranked (0 to 5) I will not transform it. But what
+dissimilarity measure should I use instead of Bray-Curtis?
+
+Thanks
+
+
+Tania Bird MSc
+"There is a sufficiency in the world for man's need but not for man's
+greed" ~ Mahatma Gandhi
+
+
+From ramiroricardo at gmail.com  Thu Jun  8 13:05:36 2017
+From: ramiroricardo at gmail.com (Ricardo Ramiro)
+Date: Thu, 8 Jun 2017 12:05:36 +0100
+Subject: [R-sig-eco] Permanova for microbiome analysis with repeated measures
+Message-ID: <CA+278ZpGwJqe-ej9yGZonPqQBCLYR0aad8yGXPAyszdzHyah2g@mail.gmail.com>
+
+Dear all,
+
+I have the following experimental design: 9 mice (mouseID) were assigned to
+three different treatments (3 mice per treatment level) and we estimated
+the composition of microbial species in the gut at 5 time points (same time
+points for each mouse). I would like to know if the community differs
+between the 3 treatment levels and I am not really interested in the
+treatment*time interaction, but I would like to take into account that the
+samples are not independent.
+
+I was thinking of using adonis from the R vegan package to test for this,
+but I have doubts as to what is the best way of setting the model?
+
+I have looked through the answers on the list (particularly the replies
+form Stephen Brewer) and have seen a  the model formulated as:
+
+*adonis(matrix~treatment + mouseID,data=data,strata=mouseID)*
+
+But it is unclear to me why the "random" variable needs to be included in
+the fixed effects and why should we not simply use:
+
+*adonis(matrix~treatment,data=data,strata=mouseID)*
+
+
+Any thoughts on this would be of great help,
+
+
+Ramiro
+
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Thu Jun  8 13:45:48 2017
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 08 Jun 2017 11:45:48 +0000
+Subject: [R-sig-eco] Dissimilarity measure for rank data
+In-Reply-To: <CAGJPu+2UZ7uKg+MNh1ugwgjZAKE6qwoKO9_5Hee458=gCH2xHg@mail.gmail.com>
+References: <CAGJPu+2UZ7uKg+MNh1ugwgjZAKE6qwoKO9_5Hee458=gCH2xHg@mail.gmail.com>
+Message-ID: <CAM_vju=Me9oZq3dc53wyLoKUCJ3ukyDnF11tH-j6PX1G3oZe4A@mail.gmail.com>
+
+Hi Tania,
+
+That's not really an R question, and there's no one perfect answer.
+Googling "distance metric for ordinal data" turns up some discussions of
+the pros and cons of the various options.
+
+You need to choose the one best able to address your hypothesis. You might
+get better ideas on a statistics forum, rather than an R-specific list.
+
+Sarah
+
+On Thu, Jun 8, 2017 at 6:54 AM Tania Bird <taniabird at gmail.com> wrote:
+
+> I have species data that I would like to use for ordination. With
+> regular abundance data I would apply a Hellinger Transformation and
+> then use the Bray-Curtis distance.
+>
+> Since the data are ranked (0 to 5) I will not transform it. But what
+> dissimilarity measure should I use instead of Bray-Curtis?
+>
+> Thanks
+>
+>
+> Tania Bird MSc
+> "There is a sufficiency in the world for man's need but not for man's
+> greed" ~ Mahatma Gandhi
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+-- 
+Sarah Goslee
+http://www.stringpage.com
+http://www.sarahgoslee.com
+http://www.functionaldiversity.org
+
+	[[alternative HTML version deleted]]
+
+
+From hanna.tuomisto at utu.fi  Thu Jun  8 15:26:29 2017
+From: hanna.tuomisto at utu.fi (Hanna Tuomisto)
+Date: Thu, 08 Jun 2017 13:26:29 +0000
+Subject: [R-sig-eco] Dissimilarity measure for rank data
+In-Reply-To: <CAM_vju=Me9oZq3dc53wyLoKUCJ3ukyDnF11tH-j6PX1G3oZe4A@mail.gmail.com>
+References: <CAGJPu+2UZ7uKg+MNh1ugwgjZAKE6qwoKO9_5Hee458=gCH2xHg@mail.gmail.com>
+ <CAM_vju=Me9oZq3dc53wyLoKUCJ3ukyDnF11tH-j6PX1G3oZe4A@mail.gmail.com>
+Message-ID: <D6A10D51-3884-4211-9783-7AC619830AB9@utu.fi>
+
+Hi Tania,
+
+Even though there is no perfect answer: don't use the combination Hellinger transformation + Bray-Curtis distance. The appropriate combination is Hellinger transformation + Euclidean distance, which gives you Hellinger distances (this is an asymmetric dissimilarity measure, which does not suffer from the double-zero problem that plagues the Euclidean distance). Bray-Curtis distance is in itself asymmetric, and it can be used directly both on regular abundance data and on ranked data.
+
+Cheers,
+Hanna Tuomisto
+
+
+On 8 Jun 2017, at 14:45, Sarah Goslee wrote:
+
+> Hi Tania,
+> 
+> That's not really an R question, and there's no one perfect answer.
+> Googling "distance metric for ordinal data" turns up some discussions of
+> the pros and cons of the various options.
+> 
+> You need to choose the one best able to address your hypothesis. You might
+> get better ideas on a statistics forum, rather than an R-specific list.
+> 
+> Sarah
+> 
+> On Thu, Jun 8, 2017 at 6:54 AM Tania Bird <taniabird at gmail.com> wrote:
+> 
+>> I have species data that I would like to use for ordination. With
+>> regular abundance data I would apply a Hellinger Transformation and
+>> then use the Bray-Curtis distance.
+>> 
+>> Since the data are ranked (0 to 5) I will not transform it. But what
+>> dissimilarity measure should I use instead of Bray-Curtis?
+>> 
+>> Thanks
+>> 
+>> 
+>> Tania Bird MSc
+>> "There is a sufficiency in the world for man's need but not for man's
+>> greed" ~ Mahatma Gandhi
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> 
+> -- 
+> Sarah Goslee
+> http://www.stringpage.com
+> http://www.sarahgoslee.com
+> http://www.functionaldiversity.org
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From r.knell at qmul.ac.uk  Mon Jun 12 12:23:34 2017
+From: r.knell at qmul.ac.uk (R Knell)
+Date: Mon, 12 Jun 2017 10:23:34 +0000
+Subject: [R-sig-eco] Confidence intervals for spectral analysis
+Message-ID: <B4274272-EF20-42E9-B619-D42A3A9E521C@qmul.ac.uk>
+
+Dear all
+
+I?m analysing some population time series, and have got a bit confused by the confidence intervals plotted by the spectrum() function in base R. Can anyone explain to me what these represent?
+
+Much obliged for any help
+
+Rob
+
+
+Rob Knell
+Reader in Evolutionary Ecology
+School of Biological and Chemical Sciences
+Queen Mary University of London
+
+research website http://webspace.qmul.ac.uk/rknell/
+
+r.knell at qmul.ac.uk
+
+
+
+
+From francois.gillet at univ-fcomte.fr  Wed Jun 14 17:11:52 2017
+From: francois.gillet at univ-fcomte.fr (=?UTF-8?Q?Fran=C3=A7ois_Gillet?=)
+Date: Wed, 14 Jun 2017 17:11:52 +0200
+Subject: [R-sig-eco] Interpretation of RDA triplot where x axis is RDA
+ vector and y axis is PCA vector
+In-Reply-To: <54e49165-d877-dfe0-e6f6-4eb0b8918299@dbe.uns.ac.rs>
+References: <54e49165-d877-dfe0-e6f6-4eb0b8918299@dbe.uns.ac.rs>
+Message-ID: <CACpb48TDadWGsOxovBszhEyZo9_n28KU45_+4unZRsKYKggKQA@mail.gmail.com>
+
+Dear Marko,
+
+First, you should not exclude explanatory variables with high VIF before
+the forward selection, but use VIF afterwards to check the result of this
+selection.
+Second, if you select only one (numeric or binary) explanatory variable,
+then you get only one constrained axis and the adjusted R-square gives you
+the variation in the response matrix explained by this single variable. You
+can plot the first unconstrained axis, which shows the main residual
+variation in your data. So yes, this RDA and its triplot are meaningful.
+
+Best wishes,
+
+Fran?ois
+
+-------------------------------------------------------------------------------
+Pr *Fran?ois Gillet*
+Universit? de Franche-Comt? - CNRS
+UMR 6249 Chrono-environnement
+UFR Sciences et Techniques
+16, Route de Gray
+F-25030 Besan?on cedex
+France
+http://chrono-environnement.univ-fcomte.fr/
+Phone: +33 (0)3 81 66 62 81
+iPhone: +33 (0)7 88 37 07 76
+Location: La Bouloie, B?t. Prop?deutique, -114L
+-------------------------------------------------------------------------------
+Associate Editor of* Plant Ecology and Evolution*
+http://www.plecevo.eu
+-------------------------------------------------------------------------------
+Homepage: http://chrono-environnement.univ-fcomte.fr/spip.php?article530
+ResearchID: http://www.researcherid.com/rid/B-6160-2008
+Google Scholar: http://scholar.google.com.au/citations?user=a5xiIfQAAAAJ
+
+-------------------------------------------------------------------------------
+
+2017-06-05 17:54 GMT+02:00 Marko Djurakic <marko.djurakic at dbe.uns.ac.rs>:
+
+> Dear r-sig-ecology community,
+>
+> I appreciate if someone can tell me is it meaningful to interpret
+> redundancy analysis (RDA) and triplot of RDA where x axis represent RDA
+> vector and y axis is PCA vector?
+>
+> For instance, I performed RDA in vegan where response matrix was
+> Hellinger-transformed absolute abundance of several types of chromosomal
+> inversions and explanatory matrix consisted of 19 bioclim variables. With a
+> full set of bioclim variables model was overfitted and I reduced number of
+> explanatory variables using VIF and afterwards (if necessary) performed
+> forward selection. In the final model, there was only one explanatory
+> variable in the model, thus there is one RDA axis, and several PCA axes
+> (unconstrained residual variance). Therefore RDA triplot shows RDA vector
+> as x axis and PCA vector on the y axis. Is is meaningful to interpret such
+> RDA and its graph?
+>
+> Kind regards,
+>
+> Marko
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker at prstatistics.com  Sun Jun 18 16:47:21 2017
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Sun, 18 Jun 2017 15:47:21 +0100
+Subject: [R-sig-eco]
+	SpatialAnalysisOfEcologicalDataUsingR_JasonMatthiopoulos_UK_7th-12thAug
+Message-ID: <390ee39c604d9006b78c1060cc944fe7@prstatistics.com>
+
+Final Call for 'Spatial analysis of ecological data using R'
+
+Delivered by Prof. Jason Matthiopoulos, Dr. James Grecian
+
+http://www.prstatistics.com/course/spatial-analysis-ecological-data-using-r-spae05/
+
+This course will run from 7th ? 12th August 2017 at SCENE field 
+station, Loch Lomond national park, Scotland
+
+The course will cover the concepts and R tools that can be used to 
+analyse spatial data in ecology covering elementary and advanced spatial 
+analysis techniques applicable to both plants and animals. We will 
+investigate analyses appropriate to transect (e.g. line surveys, 
+trapping arrays), grid (e.g. occupancy surveys) and point data (e.g. 
+telemetry). The focal questions will be on deriving species 
+distributions, determining their environmental drivers and quantifying 
+different types of associated uncertainty. Novel methodology for 
+generating predictions will be introduced. We will also address the 
+challenges of applying the results of these methods to wildlife 
+conservation and resource management and communicate the findings to 
+non-experts.
+
+Course content is as follows
+
+Day 1: Elementary concepts
+Module 1 Introductory lectures and practical; this will cover the key 
+questions in spatial ecology, the main types of data on species 
+distributions, concepts and challenges and different types of 
+environmental data, concepts and challenges; useful concepts from 
+statistics; Generalised Linear Models
+Module 2 GIS tools in R: Types and structure of spatial objects in R, 
+generating and manipulating spatial objects,
+projections and transformations, cropping and masking spatial objects, 
+extracting covariate data and other simple
+GIS operations in R, optionally plotting simple maps
+
+Day 2: Overview of basic analyses
+Module 3 Density estimation, Spatial autocorrelation, Smoothing, Kernel 
+Smoothers, Kriging, Trend-fitting (linear, generalised linear, 
+generalised additive models)
+Module 4 Habitat preference, Resource selection functions, MaxEnt: 
+What?s it all about? Overview and caveats related to Niche models
+
+Day 3: Challenging problems
+Module 5 Analysing grid data, Poisson processes, Occupancy models, 
+Use-availability designs
+Module 6 Analysing telemetry data, Presence-only data, Spatial and 
+serial autocorrelation, Partitioning variation by
+mixed effects models
+
+Day 4: Challenging problems
+Module 7 Analysing transect data, Detection functions for point and line 
+transects, Using covariates in transect models. Afternoon for catch up 
+and/or excursion
+
+Day 5: Challenging problems
+Module 8 Advanced methods, Generalised Estimation Equations for 
+difficult survey designs, Generalised additive
+models for habitat preference, Dealing with boundary effects using soap 
+smoothers, Spatial point processes with INLA
+
+Day 6: Delivering advice
+Module 9 Prediction, Validation by resampling, Generalised Functional 
+Responses for species distribution, Quantifying uncertainty, Dealing 
+with the effects of population density
+Module 10 Applications, designing protected areas, thinking about 
+critical habitat, Representing uncertainty
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+
+Upcoming PR statistics courses
+
+1.	MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA #MASE
+19th ? 23rd June, Canada, Prof. Subhash Lele, Dr. Peter Solymos
+http://www.prstatistics.com/course/multivariate-analysis-of-spatial-ecological-data-using-r-mase01/
+
+2.	TIME SERIES MODELS FOR ECOLOGISTS USING R (JUNE 2017 #TSME
+26th ? 30th June, Canada, Dr. Andrew Parnell
+http://www.prstatistics.com/course/time-series-models-foe-ecologists-tsme01/
+
+3.	META-ANALYSIS IN ECOLOGY, EVOLUTION AND ENVIRONMENTAL SCIENCES 
+#METR01
+24th ? 28th July, Scotland, Prof. Julia Koricheva, Prof. Elena 
+Kulinskaya
+http://www.prstatistics.com/course/meta-analysis-in-ecology-evolution-and-environmental-sciences-metr01/
+
+4.	SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R #SPAE
+7th ? 12th August 2017, Scotland, Prof. Jason Matthiopoulos, Dr. James 
+Grecian
+http://www.prstatistics.com/course/spatial-analysis-ecological-data-using-r-spae05/
+
+5.	ECOLOGICAL NICHE MODELLING USING R #ENMR
+16th ? 20th October 2017, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr01/
+
+6.	GENETIC DATA ANALYSIS AND EXPLORATION USING R #GDAR
+23rd ? 27th October, Wales, Dr. Thibaut Jombart, Zhian Kavar
+http://www.prstatistics.com/course/genetic-data-analysis-exploration-using-r-gdar03/
+
+7.	STRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY 
+BIOLOGISTS USING R #SEMR
+23rd ? 27th October, Wales, Prof Jarrett Byrnes, Dr. Jon Lefcheck
+http://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/
+
+8.	LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R #LNDG
+6th ? 10th November, Wales, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg02/
+
+9.	APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS #ABME
+20th - 25th November 2017, Scotland, Prof. Jason Matthiopoulos, Dr. Matt 
+Denwood
+http://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme03/
+
+10.	ADVANCING IN STATISTICAL MODELLING USING R #ADVR
+11th ? 15th December 2017, Wales, Dr. Luc Bussiere, Dr. Tom Houslay, 
+Dr. Ane Timenes Laugen,
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr07/
+
+11.	INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING #IBHM
+29th Jan ? 2nd Feb 2018, Scotland, Dr. Andrew Parnell
+http://www.prstatistics.com/course/introduction-to-bayesian-hierarchical-modelling-using-r-ibhm02/
+
+12.	ANIMAL MOVEMENT ECOLOGY (February 2018) #ANME
+19th ? 23rd February 2018, Wales, Dr Luca Borger, Dr. John Fieberg
+
+13.	GEOMETRIC MORPHOMETRICS USING R #GMMR
+5th ? 9th June 2017, Scotland, Prof. Dean Adams, Prof. Michael 
+Collyer, Dr. Antigoni Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/
+
+14.	FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND 
+COMPUTATION #FEER
+5th ? 9th March 2018, Scotland, Dr. Francesco de Bello, Dr. Lars 
+G?tzenberger, Dr. Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+15.	ADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA USING R 
+#MVSP
+Prof. Pierre Legendre, Dr. Olivier Gauthier - Date and location to be 
+confirmed
+
+16.	STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR #SIMM
+Dr. Andrew Parnell, Dr. Andrew Jackson ? Date and location to be 
+confirmed
+
+17.	NETWORK ANAYLSIS FOR ECOLOGISTS USING R #NTWA
+Dr. Marco Scotti - Date and location to be confirmed
+
+18.	MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R #MBMV0
+Prof David Warton - Date and location to be confirmed
+
+19.	PHYLOGENETIC DATA ANALYSIS USING R (TBC) #PHYL
+Dr. Emmanuel Paradis ? Date and location to be confirmed
+
+----------------------------------------------------------------------------------------------------------------
+
+Upcoming PR informatics courses
+
+1.	BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS #BIGB
+3rd ? 7th July 2017, Scotland, Dr. Nic Blouin, Dr. Ian Misner
+http://www.prinformatics.com/course/bioinformatics-for-geneticists-and-biologists-bigb02/
+
+2.	INTRODUCTION TO BIOINFORMATICS USING LINUX #IBUL
+16th ? 20th October, Scotland, Dr. Martin Jones
+http://www.prstatistics.com/course/introduction-to-bioinformatics-using-linux-ibul02/
+
+3.	INTRODUCTION TO PYTHON FOR BIOLOGISTS #IPYB
+27th Nov ? 1st Dec, Wales, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb04/
+
+4.	INTRODUCTION REMOTE SENSING AND GIS APPLICATIONS FOR ECOLOGISTS #IRMS
+27th Nov ? 1st Dec, Wales, Dr Duccio Rocchini, Dr. Luca Delucchi
+http://www.prstatistics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+5.	DATA VISUALISATION AND MANIPULATION USING PYTHON #DVMP
+11th ? 15th December 2017, Wales, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+6.	EUKARYOTIC METABARCODING
+23rd ? 27th July 2018, Scotland, Dr. Owen Wangensteen
+http://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/
+
+7.	CODING, DATA MANAGEMENT AND SHINY APPLICATIONS USING RSTUDIO FOR 
+EVOLUTIONARY BIOLOGISTS AND ECOLOGISTS #CDSR
+Dr. Aline Quadros
+
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2017 publications -
+
+Ecosystem size predicts eco-morphological variability in post-glacial 
+diversification. Ecology and Evolution. In press.
+
+The physiological costs of prey switching reinforce foraging 
+specialization. Journal of animal ecology.
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+3/1, 128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+
+From highstat at highstat.com  Tue Jun 20 09:26:44 2017
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Tue, 20 Jun 2017 08:26:44 +0100
+Subject: [R-sig-eco] New book: Spatial,
+ Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA
+Message-ID: <727b4fc1-c197-10c3-773d-26a81a499860@highstat.com>
+
+We are pleased to announce the following book:
+
+Spatial, Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA
+Authors: Zuur, Ieno, Saveliev
+
+
+Book website: www.highstat.com
+Paperback or EBook can be order (exclusively) from www.highstat.com
+TOC: http://highstat.com/Books/BGS/SpatialTemp/Zuuretal2017_TOCOnline.pdf
+
+
+Summary: We explain how to apply linear regression models, generalised 
+linear models (GLM), and generalised linear mixed-effects models (GLMM) 
+to spatial, temporal, and spatial-temporal data.
+
+
+Outline
+In Chapter 2 we discuss an important topic: dependency. Ignoring this 
+means that we have pseudoreplication. We present a series of examples 
+and discuss how dependency can manifest itself.
+
+We briefly discuss frequentist tools that are available for the analysis 
+of temporal and spatial data in Chapters 3 and 4, and we will conclude 
+that their application is rather limited, especially if non-Gaussian 
+distributions are required. We will therefore consider alternative 
+models, but these require Bayesian techniques.
+
+In Chapter 5 we discuss linear mixed-effects models to analyse 
+hierarchical (i.e. clustered or nested) data, and in Chapter 6 we 
+outline how we add spatial and spatial-temporal dependency to regression 
+models via spatial (and/or temporal) correlated random effects.
+
+In Chapter 7 we introduce Bayesian analysis, Markov chain Monte Carlo 
+techniques (MCMC), and Integrated Nested Laplace Approximation (INLA). 
+INLA allows us to apply models to spatial, temporal, or spatial-temporal 
+data.
+
+In Chapters 8 through 16 we present a series of INLA examples. We start 
+by applying linear regression and mixed-effects models in INLA (Chapters 
+8 and 9), followed by GLM examples in Chapter 10. In Chapters 11 through 
+13 we show how to apply GLM models on spatial data. In Chapter 14 we 
+discuss time-series techniques and how to implement them in INLA. 
+Finally, in Chapters 15 and 16 we analyse spatial-temporal models in INLA.
+
+
+
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+
+
+-- 
+
+Dr. Alain F. Zuur
+
+
+
+Author of:
+1. Beginner's Guide to Spatial, Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA. (2017).
+2. Beginner's Guide to Zero-Inflated Models with R (2016).
+3. Beginner's Guide to Data Exploration and Visualisation with R (2015).
+4. Beginner's Guide to GAMM with R (2014).
+5. Beginner's Guide to GLM and GLMM with R (2013).
+6. Beginner's Guide to GAM with R (2012).
+7. Zero Inflated Models and GLMM with R (2012).
+8. A Beginner's Guide to R (2009).
+9. Mixed effects models and extensions in ecology with R (2009).
+10. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker at prstatistics.com  Wed Jun 21 14:23:01 2017
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Wed, 21 Jun 2017 13:23:01 +0100
+Subject: [R-sig-eco] Course on Geometric Morphometrics Using R - Adams,
+ Collyer, Kaliontzopoulou - Feb 2018
+Message-ID: <c398ab0a79bbdd15b4fb53f18c828300@prstatistics.com>
+
+Geometric Morphometrics Using R (GMMR01)
+
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/
+
+This course is being delivered by Prof. Dean Adams, Prof. Michael 
+Collyer and Dr. Antigoni Kaliontzopoulou and will run from 19th 
+-?23rd?February 2018 at Margam Discovery Centre, Wales, UK. Nearest 
+Airport, Hethrow, Gatwick, Bristol, Cardiff.
+
+https://www.google.com/maps/place/Field+Studies+Council+-+Margam+Discovery+Centre/@51.555721,-3.7225627,17z/data=!3m1!4b1!4m5!3m4!1s0x486e663ddc578163:0x59d5928da312f1a2!8m2!3d51.555721!4d-3.720374?hl=en
+
+The field of geometric morphometrics (GM) is concerned with the 
+quantification and analysis of patterns of shape variation, and its 
+covariation with other variables. Over the past several decades these 
+approaches have become a mainstay in the field of ecology, evolutionary 
+biology, and anthropology, and a panoply of analytical tools for 
+addressing specific biological hypotheses concerning shape have been 
+developed. The goal of this is to provide participants with a working 
+knowledge of the theory of geometric morphometrics, as well as practical 
+training in the application of these methods.
+
+The course is organized in both theoretical and practical sessions. The 
+theoretical sessions will provide a comprehensive introduction to the 
+methods of landmark-based geometric morphometrics, which aims at 
+providing the participants with a solid theoretical background for 
+understanding the procedures used in shape data analysis. Practical 
+sessions will include worked examples, giving the participants the 
+opportunity to gain hands-on experience in the treatment of shape data 
+using the R package geomorph. These sessions focus on the generation of 
+shape variables from primary landmark data, the statistical treatment of 
+shape variation with respect to biological hypotheses, and the 
+visualization of patterns of shape variation and of the shapes 
+themselves for interpretation of statistical findings, using the R 
+language for statistical programming. While practice datasets will be 
+available, it is strongly recommended that participants come with their 
+own datasets.
+
+Note: Because this is a geometric morphometrics workshop in R, it is 
+required that participants have some working knowledge in R. The 
+practical sessions of the course will focus on GM-based analyses, and 
+not basic R user-interfacing. It is therefore strongly recommended that 
+participants refresh their R skills prior to attending the workshop.
+
+Course?fees start at ?500 and accommodation packages are?available 
+for ?260, includes accommodation, meals and refreshments.
+
+Course Programme
+
+Meet at?Margam Discovery?Centre at approximately 18:30.
+
+Monday 19th ? Classes from 09:00 to 18:00
+1: Morphometrics: History, Introduction and Data Types
+2: Review of matrix algebra and multivariate statistics
+3: Superimposition
+4: Software demonstration and lab practicum
+
+Tuesday 20th ? Classes from 09:00 to 18:00
+1: Shape spaces, shape variables, PCA
+2: GPA with semi-landmarks
+3: Shape covariation
+4: Software demonstration and lab practicum
+
+Wednesday 21st ? Classes from 09:00 to 18:00
+1: Phylogenetic shape variation
+2: Group Differences & Trajectory Analysis
+3: Allometry
+4: Software demonstration and lab practicum
+
+Thursday 22nd ? Classes from 09:00 to 18:00
+1: Assymetry
+2: Missing Data
+3: Integration and Modularity
+4: Disparity
+5: Software demonstration and lab practicum
+
+Friday 23rd ? Classes from 09:00 to 16:00
+1: Future Directions
+2: Lab Pacticum
+3: Student Presentations
+
+Please send inquiries to oliverhooker at prstatistics.com or visit the 
+website www.prstatistics.com
+
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/
+
+Please feel free to distribute this information anywhere you think 
+suitable.
+
+1. MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA #MASE
+19th ? 23rd June, Canada, Prof. Subhash Lele, Dr. Peter Solymos
+http://www.prstatistics.com/course/multivariate-analysis-of-spatial-ecological-data-using-r-mase01/
+
+2. TIME SERIES MODELS FOR ECOLOGISTS USING R (JUNE 2017 #TSME
+26th ? 30th June, Canada, Dr. Andrew Parnell
+http://www.prstatistics.com/course/time-series-models-foe-ecologists-tsme01/
+
+3. META-ANALYSIS IN ECOLOGY, EVOLUTION AND ENVIRONMENTAL SCIENCES 
+#METR01
+24th ? 28th July, Scotland, Prof. Julia Koricheva, Prof. Elena 
+Kulinskaya
+http://www.prstatistics.com/course/meta-analysis-in-ecology-evolution-and-environmental-sciences-metr01/
+
+4. SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R #SPAE
+7th ? 12th August 2017, Scotland, Prof. Jason Matthiopoulos, Dr. James 
+Grecian
+http://www.prstatistics.com/course/spatial-analysis-ecological-data-using-r-spae05/
+
+5. ECOLOGICAL NICHE MODELLING USING R #ENMR
+16th ? 20th October 2017, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr01/
+
+6. GENETIC DATA ANALYSIS AND EXPLORATION USING R #GDAR
+23rd ? 27th October, Wales, Dr. Thibaut Jombart, Zhian Kavar
+http://www.prstatistics.com/course/genetic-data-analysis-exploration-using-r-gdar03/
+
+7. STRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY 
+BIOLOGISTS USING R #SEMR
+23rd ? 27th October, Wales, Prof Jarrett Byrnes, Dr. Jon Lefcheck
+http://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/
+
+8. LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R #LNDG
+6th ? 10th November, Wales, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg02/
+
+9. APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS #ABME
+20th - 25th November 2017, Scotland, Prof. Jason Matthiopoulos, Dr. Matt 
+Denwood
+http://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme03/
+
+10. ADVANCING IN STATISTICAL MODELLING USING R #ADVR
+11th ? 15th December 2017, Wales, Dr. Luc Bussiere, Dr. Tom Houslay, 
+Dr. Ane Timenes Laugen,
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr07/
+
+11. INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING #IBHM
+29th Jan ? 2nd Feb 2018, Scotland, Dr. Andrew Parnell
+http://www.prstatistics.com/course/introduction-to-bayesian-hierarchical-modelling-using-r-ibhm02/
+
+12. ANIMAL MOVEMENT ECOLOGY (February 2018) #ANME
+19th ? 23rd February 2018, Wales, Dr Luca Borger, Dr. John Fieberg
+
+13. GEOMETRIC MORPHOMETRICS USING R #GMMR
+19th - 23rd February 2018, Wales, Prof. Dean Adams, Prof. Michael 
+Collyer, Dr. Antigoni Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/
+
+14. FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND 
+COMPUTATION #FEER
+5th ? 9th March 2018, Scotland, Dr. Francesco de Bello, Dr. Lars 
+G?tzenberger, Dr. Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+15. ADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA USING R 
+#MVSP
+Prof. Pierre Legendre, Dr. Olivier Gauthier - Date and location to be 
+confirmed
+
+16. STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR #SIMM
+Dr. Andrew Parnell, Dr. Andrew Jackson ? Date and location to be 
+confirmed
+
+17. NETWORK ANAYLSIS FOR ECOLOGISTS USING R #NTWA
+Dr. Marco Scotti - Date and location to be confirmed
+
+18. MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R #MBMV0
+Prof David Warton - Date and location to be confirmed
+
+19. PHYLOGENETIC DATA ANALYSIS USING R (TBC) #PHYL
+Dr. Emmanuel Paradis ? Date and location to be confirmed
+
+-----------------------------------------------------------------------------------
+
+Upcoming PR informatics courses
+
+1. BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS #BIGB
+3rd ? 7th July 2017, Scotland, Dr. Nic Blouin, Dr. Ian Misner
+http://www.prinformatics.com/course/bioinformatics-for-geneticists-and-biologists-bigb02/
+
+2. INTRODUCTION TO BIOINFORMATICS USING LINUX #IBUL
+16th ? 20th October, Scotland, Dr. Martin Jones
+http://www.prstatistics.com/course/introduction-to-bioinformatics-using-linux-ibul02/
+
+3. INTRODUCTION TO PYTHON FOR BIOLOGISTS #IPYB
+27th Nov ? 1st Dec, Wales, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb04/
+
+4. INTRODUCTION REMOTE SENSING AND GIS APPLICATIONS FOR ECOLOGISTS #IRMS
+27th Nov ? 1st Dec, Wales, Dr Duccio Rocchini, Dr. Luca Delucchi
+http://www.prstatistics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+5. DATA VISUALISATION AND MANIPULATION USING PYTHON #DVMP
+11th ? 15th December 2017, Wales, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+6. EUKARYOTIC METABARCODING
+23rd ? 27th July 2018, Scotland, Dr. Owen Wangensteen
+http://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/
+
+7. CODING, DATA MANAGEMENT AND SHINY APPLICATIONS USING RSTUDIO FOR 
+EVOLUTIONARY BIOLOGISTS AND ECOLOGISTS #CDSR
+Dr. Aline Quadros
+
+-----------------------------------------------------------------------------------
+
+Oliver Hooker PhD.
+PR statistics
+
+2017 publications -
+
+Ecosystem size predicts eco-morphological variability in post-glacial 
+diversification. Ecology and Evolution. In press.
+
+The physiological costs of prey switching reinforce foraging 
+specialization. Journal of animal ecology.
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+3/1, 128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2017 publications -
+
+Ecosystem size predicts eco-morphological variability in post-glacial 
+diversification. Ecology and Evolution. In press.
+
+The physiological costs of prey switching reinforce foraging 
+specialization. Journal of animal ecology.
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+3/1, 128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+
+From mspinola10 at gmail.com  Fri Jun 23 21:59:13 2017
+From: mspinola10 at gmail.com (=?UTF-8?Q?Manuel_Sp=C3=ADnola?=)
+Date: Fri, 23 Jun 2017 13:59:13 -0600
+Subject: [R-sig-eco] mvpart alternatives and machine learning multivariate
+	analysis
+Message-ID: <CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw@mail.gmail.com>
+
+Dear list members,
+
+As mvpart has been removed form the CRAN repository, Is there any r package
+that do similar analysis (multivariate partitioning)?
+
+Also, is there any other machine learning technique to do multivariate
+analysis as done in ecology to asses multiple species-environment
+relationships?
+
+Thank you very much in advance,
+
+Manuel
+
+-- 
+*Manuel Sp?nola, Ph.D.*
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.cr <mspinola at una.ac.cr>
+mspinola10 at gmail.com
+Tel?fono: (506) 8706 - 4662
+Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/>
+Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+
+	[[alternative HTML version deleted]]
+
+
+From senator at ecotoxicology.de  Sat Jun 24 13:25:54 2017
+From: senator at ecotoxicology.de (=?utf-8?Q?Ralf_Sch=C3=A4fer?=)
+Date: Sat, 24 Jun 2017 13:25:54 +0200
+Subject: [R-sig-eco] mvpart alternatives and machine learning
+ multivariate	analysis
+Message-ID: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+
+Dear Manuel
+
+despite it has been removed, it should still work.
+At least I used it last year - just install the version from the archive manually:
+https://cran.r-project.org/src/contrib/Archive/mvpart/
+
+Best regards
+Ralf
+
+
+> Date: Fri, 23 Jun 2017 13:59:13 -0600
+> From: Manuel Sp?nola <mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>>
+> To: "r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>" <r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>>
+> Subject: [R-sig-eco] mvpart alternatives and machine learning
+> 	multivariate	analysis
+> Message-ID:
+> 	<CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.gmail.com <mailto:CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.gmail.com>>
+> Content-Type: text/plain; charset="UTF-8"
+> 
+> Dear list members,
+> 
+> As mvpart has been removed form the CRAN repository, Is there any r package
+> that do similar analysis (multivariate partitioning)?
+> 
+> Also, is there any other machine learning technique to do multivariate
+> analysis as done in ecology to asses multiple species-environment
+> relationships?
+> 
+> Thank you very much in advance,
+> 
+> Manuel
+> 
+> -- 
+> *Manuel Sp?nola, Ph.D.*
+> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> Universidad Nacional
+> Apartado 1350-3000
+> Heredia
+> COSTA RICA
+> mspinola at una.cr <mailto:mspinola at una.cr> <mspinola at una.ac.cr <mailto:mspinola at una.ac.cr>>
+> mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+> Tel?fono: (506) 8706 - 4662
+> Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/ <https://sites.google.com/site/lobitoderio/>>
+> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/ <http://www.icomvis.una.ac.cr/>>
+
+	[[alternative HTML version deleted]]
+
+
+From mspinola10 at gmail.com  Sat Jun 24 17:47:57 2017
+From: mspinola10 at gmail.com (=?UTF-8?Q?Manuel_Sp=C3=ADnola?=)
+Date: Sat, 24 Jun 2017 09:47:57 -0600
+Subject: [R-sig-eco] mvpart alternatives and machine learning
+	multivariate analysis
+In-Reply-To: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+References: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+Message-ID: <CABkCotSqZ=S9NjU4VkQStMu-kYDoqC4buFyP+1Lqc1Er16bofA@mail.gmail.com>
+
+Thank you Ralf,
+
+But I guess is not going to be newer versions and could be incompatible
+with newer version of R, so at some moment there will be no accessibility
+to the package.
+
+Manuel
+
+2017-06-24 5:25 GMT-06:00 Ralf Sch?fer <senator at ecotoxicology.de>:
+
+> Dear Manuel
+>
+> despite it has been removed, it should still work.
+> At least I used it last year - just install the version from the archive
+> manually:
+> https://cran.r-project.org/src/contrib/Archive/mvpart/
+>
+> Best regards
+> Ralf
+>
+>
+> Date: Fri, 23 Jun 2017 13:59:13 -0600
+> From: Manuel Sp?nola <mspinola10 at gmail.com>
+> To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+> Subject: [R-sig-eco] mvpart alternatives and machine learning
+> multivariate analysis
+> Message-ID:
+> <CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.gmail.com>
+> Content-Type: text/plain; charset="UTF-8"
+>
+> Dear list members,
+>
+> As mvpart has been removed form the CRAN repository, Is there any r package
+> that do similar analysis (multivariate partitioning)?
+>
+> Also, is there any other machine learning technique to do multivariate
+> analysis as done in ecology to asses multiple species-environment
+> relationships?
+>
+> Thank you very much in advance,
+>
+> Manuel
+>
+> --
+> *Manuel Sp?nola, Ph.D.*
+> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> Universidad Nacional
+> Apartado 1350-3000
+> Heredia
+> COSTA RICA
+> mspinola at una.cr <mspinola at una.ac.cr>
+> mspinola10 at gmail.com
+> Tel?fono: (506) 8706 - 4662
+> Personal website: Lobito de r?o <https://sites.google.com/
+> site/lobitoderio/>
+> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>
+>
+
+
+-- 
+*Manuel Sp?nola, Ph.D.*
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.cr <mspinola at una.ac.cr>
+mspinola10 at gmail.com
+Tel?fono: (506) 8706 - 4662
+Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/>
+Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+
+	[[alternative HTML version deleted]]
+
+
+From senator at ecotoxicology.de  Sat Jun 24 17:57:10 2017
+From: senator at ecotoxicology.de (=?utf-8?Q?Ralf_Sch=C3=A4fer?=)
+Date: Sat, 24 Jun 2017 17:57:10 +0200
+Subject: [R-sig-eco] mvpart alternatives and machine learning
+ multivariate analysis
+In-Reply-To: <CABkCotSqZ=S9NjU4VkQStMu-kYDoqC4buFyP+1Lqc1Er16bofA@mail.gmail.com>
+References: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+ <CABkCotSqZ=S9NjU4VkQStMu-kYDoqC4buFyP+1Lqc1Er16bofA@mail.gmail.com>
+Message-ID: <81EA8E22-2827-4CFF-9320-131F7C011B0D@ecotoxicology.de>
+
+Manuel,
+
+I just checked, it is currently still compatible. So you can download from the archive and install from source - at least on Linux and OS X, nut sure about Windows.
+See Session information below:
+
+> R version 3.4.0 (2017-04-21)
+> Platform: x86_64-apple-darwin15.6.0 (64-bit)
+> Running under: macOS Sierra 10.12.5
+> 
+> Matrix products: default
+> BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+> LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+> 
+> locale:
+> [1] de_DE.UTF-8/de_DE.UTF-8/de_DE.UTF-8/C/de_DE.UTF-8/de_DE.UTF-8
+> 
+> attached base packages:
+> [1] stats     graphics  grDevices utils     datasets  methods   base     
+> 
+> other attached packages:
+> [1] mvpart_1.6-2
+> 
+> loaded via a namespace (and not attached):
+> [1] compiler_3.4.0
+
+
+However, there are certainly other packages that can partition multivariate ecological data, though I am not aware of other packages for use with multivariate regression trees.
+
+Regards
+Ralf
+
+
+
+> Am 24.06.2017 um 17:47 schrieb Manuel Sp?nola <mspinola10 at gmail.com>:
+> 
+> Thank you Ralf,
+> 
+> But I guess is not going to be newer versions and could be incompatible with newer version of R, so at some moment there will be no accessibility to the package.
+> 
+> Manuel
+> 
+> 2017-06-24 5:25 GMT-06:00 Ralf Sch?fer <senator at ecotoxicology.de <mailto:senator at ecotoxicology.de>>:
+> Dear Manuel
+> 
+> despite it has been removed, it should still work.
+> At least I used it last year - just install the version from the archive manually:
+> https://cran.r-project.org/src/contrib/Archive/mvpart/ <https://cran.r-project.org/src/contrib/Archive/mvpart/>
+> 
+> Best regards
+> Ralf
+> 
+> 
+>> Date: Fri, 23 Jun 2017 13:59:13 -0600
+>> From: Manuel Sp?nola <mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>>
+>> To: "r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>" <r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>>
+>> Subject: [R-sig-eco] mvpart alternatives and machine learning
+>> 	multivariate	analysis
+>> Message-ID:
+>> 	<CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.gmail.com <mailto:CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.gmail.com>>
+>> Content-Type: text/plain; charset="UTF-8"
+>> 
+>> Dear list members,
+>> 
+>> As mvpart has been removed form the CRAN repository, Is there any r package
+>> that do similar analysis (multivariate partitioning)?
+>> 
+>> Also, is there any other machine learning technique to do multivariate
+>> analysis as done in ecology to asses multiple species-environment
+>> relationships?
+>> 
+>> Thank you very much in advance,
+>> 
+>> Manuel
+>> 
+>> -- 
+>> *Manuel Sp?nola, Ph.D.*
+>> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+>> Universidad Nacional
+>> Apartado 1350-3000
+>> Heredia
+>> COSTA RICA
+>> mspinola at una.cr <mailto:mspinola at una.cr> <mspinola at una.ac.cr <mailto:mspinola at una.ac.cr>>
+>> mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+>> Tel?fono: (506) 8706 - 4662
+>> Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/ <https://sites.google.com/site/lobitoderio/>>
+>> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/ <http://www.icomvis.una.ac.cr/>>
+> 
+> 
+> 
+> -- 
+> Manuel Sp?nola, Ph.D. 
+> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre 
+> Universidad Nacional 
+> Apartado 1350-3000 
+> Heredia 
+> COSTA RICA 
+> mspinola at una.cr <mailto:mspinola at una.ac.cr> 
+> mspinola10 at gmail.com <mailto:mspinola10 at gmail.com> 
+> Tel?fono: (506) 8706 - 4662
+> Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/> 
+> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+
+	[[alternative HTML version deleted]]
+
+
+From torsten.hauffe at gmail.com  Sat Jun 24 18:02:44 2017
+From: torsten.hauffe at gmail.com (Torsten Hauffe)
+Date: Sat, 24 Jun 2017 12:02:44 -0400
+Subject: [R-sig-eco] mvpart alternatives and machine learning
+	multivariate analysis
+In-Reply-To: <81EA8E22-2827-4CFF-9320-131F7C011B0D@ecotoxicology.de>
+References: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+ <CABkCotSqZ=S9NjU4VkQStMu-kYDoqC4buFyP+1Lqc1Er16bofA@mail.gmail.com>
+ <81EA8E22-2827-4CFF-9320-131F7C011B0D@ecotoxicology.de>
+Message-ID: <CAGCrCxY5+xPvYbmKnQuOOW6sdrHCY1NsCxuv0Q=ZQxuKkekqGA@mail.gmail.com>
+
+As far as I remember, on Windows you will need to download and install the
+Rtools first (https://cran.r-project.org/bin/windows/Rtools/) because some
+parts of mvpart need to be compiled.
+
+You can analyse multiple species-environment relationships with the mvabund
+package. This is not fancy machine-learning but solid likelihood statistic.
+
+HTH,
+Torsten
+
+On 24 June 2017 at 11:57, Ralf Sch?fer <senator at ecotoxicology.de> wrote:
+
+> Manuel,
+>
+> I just checked, it is currently still compatible. So you can download from
+> the archive and install from source - at least on Linux and OS X, nut sure
+> about Windows.
+> See Session information below:
+>
+> > R version 3.4.0 (2017-04-21)
+> > Platform: x86_64-apple-darwin15.6.0 (64-bit)
+> > Running under: macOS Sierra 10.12.5
+> >
+> > Matrix products: default
+> > BLAS: /Library/Frameworks/R.framework/Versions/3.4/
+> Resources/lib/libRblas.0.dylib
+> > LAPACK: /Library/Frameworks/R.framework/Versions/3.4/
+> Resources/lib/libRlapack.dylib
+> >
+> > locale:
+> > [1] de_DE.UTF-8/de_DE.UTF-8/de_DE.UTF-8/C/de_DE.UTF-8/de_DE.UTF-8
+> >
+> > attached base packages:
+> > [1] stats     graphics  grDevices utils     datasets  methods   base
+> >
+> > other attached packages:
+> > [1] mvpart_1.6-2
+> >
+> > loaded via a namespace (and not attached):
+> > [1] compiler_3.4.0
+>
+>
+> However, there are certainly other packages that can partition
+> multivariate ecological data, though I am not aware of other packages for
+> use with multivariate regression trees.
+>
+> Regards
+> Ralf
+>
+>
+>
+> > Am 24.06.2017 um 17:47 schrieb Manuel Sp?nola <mspinola10 at gmail.com>:
+> >
+> > Thank you Ralf,
+> >
+> > But I guess is not going to be newer versions and could be incompatible
+> with newer version of R, so at some moment there will be no accessibility
+> to the package.
+> >
+> > Manuel
+> >
+> > 2017-06-24 5:25 GMT-06:00 Ralf Sch?fer <senator at ecotoxicology.de
+> <mailto:senator at ecotoxicology.de>>:
+> > Dear Manuel
+> >
+> > despite it has been removed, it should still work.
+> > At least I used it last year - just install the version from the archive
+> manually:
+> > https://cran.r-project.org/src/contrib/Archive/mvpart/ <
+> https://cran.r-project.org/src/contrib/Archive/mvpart/>
+> >
+> > Best regards
+> > Ralf
+> >
+> >
+> >> Date: Fri, 23 Jun 2017 13:59:13 -0600
+> >> From: Manuel Sp?nola <mspinola10 at gmail.com <mailto:mspinola10 at gmail.com
+> >>
+> >> To: "r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>"
+> <r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>>
+> >> Subject: [R-sig-eco] mvpart alternatives and machine learning
+> >>      multivariate    analysis
+> >> Message-ID:
+> >>      <CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw@
+> mail.gmail.com <mailto:CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3
+> DXTw at mail.gmail.com>>
+> >> Content-Type: text/plain; charset="UTF-8"
+> >>
+> >> Dear list members,
+> >>
+> >> As mvpart has been removed form the CRAN repository, Is there any r
+> package
+> >> that do similar analysis (multivariate partitioning)?
+> >>
+> >> Also, is there any other machine learning technique to do multivariate
+> >> analysis as done in ecology to asses multiple species-environment
+> >> relationships?
+> >>
+> >> Thank you very much in advance,
+> >>
+> >> Manuel
+> >>
+> >> --
+> >> *Manuel Sp?nola, Ph.D.*
+> >> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> >> Universidad Nacional
+> >> Apartado 1350-3000
+> >> Heredia
+> >> COSTA RICA
+> >> mspinola at una.cr <mailto:mspinola at una.cr> <mspinola at una.ac.cr <mailto:
+> mspinola at una.ac.cr>>
+> >> mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+> >> Tel?fono: (506) 8706 - 4662
+> >> Personal website: Lobito de r?o <https://sites.google.com/
+> site/lobitoderio/ <https://sites.google.com/site/lobitoderio/>>
+> >> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/ <
+> http://www.icomvis.una.ac.cr/>>
+> >
+> >
+> >
+> > --
+> > Manuel Sp?nola, Ph.D.
+> > Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> > Universidad Nacional
+> > Apartado 1350-3000
+> > Heredia
+> > COSTA RICA
+> > mspinola at una.cr <mailto:mspinola at una.ac.cr>
+> > mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+> > Tel?fono: (506) 8706 - 4662
+> > Personal website: Lobito de r?o <https://sites.google.com/
+> site/lobitoderio/>
+> > Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From senator at ecotoxicology.de  Sat Jun 24 18:10:27 2017
+From: senator at ecotoxicology.de (=?utf-8?Q?Ralf_Sch=C3=A4fer?=)
+Date: Sat, 24 Jun 2017 18:10:27 +0200
+Subject: [R-sig-eco] mvpart alternatives and machine learning
+ multivariate analysis
+In-Reply-To: <CAGCrCxY5+xPvYbmKnQuOOW6sdrHCY1NsCxuv0Q=ZQxuKkekqGA@mail.gmail.com>
+References: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+ <CABkCotSqZ=S9NjU4VkQStMu-kYDoqC4buFyP+1Lqc1Er16bofA@mail.gmail.com>
+ <81EA8E22-2827-4CFF-9320-131F7C011B0D@ecotoxicology.de>
+ <CAGCrCxY5+xPvYbmKnQuOOW6sdrHCY1NsCxuv0Q=ZQxuKkekqGA@mail.gmail.com>
+Message-ID: <F4BA06FE-0CD3-429D-8F27-A9497AE26EFF@ecotoxicology.de>
+
+Indeed! To expand on this: if you need a tutorial for mvabund, we once analysed some categorical multivariate data and provided a tutorial:
+http://dx.doi.org/10.1007/s10646-015-1421-0
+Paper and tutorial are freely available on researchgate
+
+There are also many other methods, but to point you to some, it would be good if you were more specific than ?community- environment relationships?.
+
+Best regards
+Ralf
+
+
+> Am 24.06.2017 um 18:02 schrieb Torsten Hauffe <torsten.hauffe at gmail.com>:
+> 
+> As far as I remember, on Windows you will need to download and install the Rtools first (https://cran.r-project.org/bin/windows/Rtools/ <https://cran.r-project.org/bin/windows/Rtools/>) because some parts of mvpart need to be compiled.
+> 
+> You can analyse multiple species-environment relationships with the mvabund package. This is not fancy machine-learning but solid likelihood statistic.
+> 
+> HTH,
+> Torsten
+> 
+> On 24 June 2017 at 11:57, Ralf Sch?fer <senator at ecotoxicology.de <mailto:senator at ecotoxicology.de>> wrote:
+> Manuel,
+> 
+> I just checked, it is currently still compatible. So you can download from the archive and install from source - at least on Linux and OS X, nut sure about Windows.
+> See Session information below:
+> 
+> > R version 3.4.0 (2017-04-21)
+> > Platform: x86_64-apple-darwin15.6.0 (64-bit)
+> > Running under: macOS Sierra 10.12.5
+> >
+> > Matrix products: default
+> > BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+> > LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+> >
+> > locale:
+> > [1] de_DE.UTF-8/de_DE.UTF-8/de_DE.UTF-8/C/de_DE.UTF-8/de_DE.UTF-8
+> >
+> > attached base packages:
+> > [1] stats     graphics  grDevices utils     datasets  methods   base
+> >
+> > other attached packages:
+> > [1] mvpart_1.6-2
+> >
+> > loaded via a namespace (and not attached):
+> > [1] compiler_3.4.0
+> 
+> 
+> However, there are certainly other packages that can partition multivariate ecological data, though I am not aware of other packages for use with multivariate regression trees.
+> 
+> Regards
+> Ralf
+> 
+> 
+> 
+> > Am 24.06.2017 um 17:47 schrieb Manuel Sp?nola <mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>>:
+> >
+> > Thank you Ralf,
+> >
+> > But I guess is not going to be newer versions and could be incompatible with newer version of R, so at some moment there will be no accessibility to the package.
+> >
+> > Manuel
+> >
+> > 2017-06-24 5:25 GMT-06:00 Ralf Sch?fer <senator at ecotoxicology.de <mailto:senator at ecotoxicology.de> <mailto:senator at ecotoxicology.de <mailto:senator at ecotoxicology.de>>>:
+> > Dear Manuel
+> >
+> > despite it has been removed, it should still work.
+> > At least I used it last year - just install the version from the archive manually:
+> > https://cran.r-project.org/src/contrib/Archive/mvpart/ <https://cran.r-project.org/src/contrib/Archive/mvpart/> <https://cran.r-project.org/src/contrib/Archive/mvpart/ <https://cran.r-project.org/src/contrib/Archive/mvpart/>>
+> >
+> > Best regards
+> > Ralf
+> >
+> >
+> >> Date: Fri, 23 Jun 2017 13:59:13 -0600
+> >> From: Manuel Sp?nola <mspinola10 at gmail.com <mailto:mspinola10 at gmail.com> <mailto:mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>>>
+> >> To: "r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org> <mailto:r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>>" <r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org> <mailto:r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>>>
+> >> Subject: [R-sig-eco] mvpart alternatives and machine learning
+> >>      multivariate    analysis
+> >> Message-ID:
+> >>      <CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.gmail.com <mailto:6w3DXTw at mail.gmail.com> <mailto:CABkCotRiCwJjsh <mailto:CABkCotRiCwJjsh>=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.gmail.com <mailto:6w3DXTw at mail.gmail.com>>>
+> >> Content-Type: text/plain; charset="UTF-8"
+> >>
+> >> Dear list members,
+> >>
+> >> As mvpart has been removed form the CRAN repository, Is there any r package
+> >> that do similar analysis (multivariate partitioning)?
+> >>
+> >> Also, is there any other machine learning technique to do multivariate
+> >> analysis as done in ecology to asses multiple species-environment
+> >> relationships?
+> >>
+> >> Thank you very much in advance,
+> >>
+> >> Manuel
+> >>
+> >> --
+> >> *Manuel Sp?nola, Ph.D.*
+> >> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> >> Universidad Nacional
+> >> Apartado 1350-3000
+> >> Heredia
+> >> COSTA RICA
+> >> mspinola at una.cr <mailto:mspinola at una.cr> <mailto:mspinola at una.cr <mailto:mspinola at una.cr>> <mspinola at una.ac.cr <mailto:mspinola at una.ac.cr> <mailto:mspinola at una.ac.cr <mailto:mspinola at una.ac.cr>>>
+> >> mspinola10 at gmail.com <mailto:mspinola10 at gmail.com> <mailto:mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>>
+> >> Tel?fono: (506) 8706 - 4662
+> >> Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/ <https://sites.google.com/site/lobitoderio/> <https://sites.google.com/site/lobitoderio/ <https://sites.google.com/site/lobitoderio/>>>
+> >> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/ <http://www.icomvis.una.ac.cr/> <http://www.icomvis.una.ac.cr/ <http://www.icomvis.una.ac.cr/>>>
+> >
+> >
+> >
+> > --
+> > Manuel Sp?nola, Ph.D.
+> > Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> > Universidad Nacional
+> > Apartado 1350-3000
+> > Heredia
+> > COSTA RICA
+> > mspinola at una.cr <mailto:mspinola at una.cr> <mailto:mspinola at una.ac.cr <mailto:mspinola at una.ac.cr>>
+> > mspinola10 at gmail.com <mailto:mspinola10 at gmail.com> <mailto:mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>>
+> > Tel?fono: (506) 8706 - 4662
+> > Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/ <https://sites.google.com/site/lobitoderio/>>
+> > Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/ <http://www.icomvis.una.ac.cr/>>
+> 
+>         [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology <https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+
+
+	[[alternative HTML version deleted]]
+
+
+From mspinola10 at gmail.com  Sat Jun 24 18:32:55 2017
+From: mspinola10 at gmail.com (=?UTF-8?Q?Manuel_Sp=C3=ADnola?=)
+Date: Sat, 24 Jun 2017 10:32:55 -0600
+Subject: [R-sig-eco] mvpart alternatives and machine learning
+	multivariate analysis
+In-Reply-To: <CAGCrCxY5+xPvYbmKnQuOOW6sdrHCY1NsCxuv0Q=ZQxuKkekqGA@mail.gmail.com>
+References: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+ <CABkCotSqZ=S9NjU4VkQStMu-kYDoqC4buFyP+1Lqc1Er16bofA@mail.gmail.com>
+ <81EA8E22-2827-4CFF-9320-131F7C011B0D@ecotoxicology.de>
+ <CAGCrCxY5+xPvYbmKnQuOOW6sdrHCY1NsCxuv0Q=ZQxuKkekqGA@mail.gmail.com>
+Message-ID: <CABkCotQ8eWm1=R2A+k11ySO_Lue=ppAA-nLjmFx4DDOKE7nOiQ@mail.gmail.com>
+
+Thank you very much Torsten.
+
+Manuel
+
+2017-06-24 10:02 GMT-06:00 Torsten Hauffe <torsten.hauffe at gmail.com>:
+
+> As far as I remember, on Windows you will need to download and install the
+> Rtools first (https://cran.r-project.org/bin/windows/Rtools/) because
+> some parts of mvpart need to be compiled.
+>
+> You can analyse multiple species-environment relationships with the
+> mvabund package. This is not fancy machine-learning but solid likelihood
+> statistic.
+>
+> HTH,
+> Torsten
+>
+> On 24 June 2017 at 11:57, Ralf Sch?fer <senator at ecotoxicology.de> wrote:
+>
+>> Manuel,
+>>
+>> I just checked, it is currently still compatible. So you can download
+>> from the archive and install from source - at least on Linux and OS X, nut
+>> sure about Windows.
+>> See Session information below:
+>>
+>> > R version 3.4.0 (2017-04-21)
+>> > Platform: x86_64-apple-darwin15.6.0 (64-bit)
+>> > Running under: macOS Sierra 10.12.5
+>> >
+>> > Matrix products: default
+>> > BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/
+>> libRblas.0.dylib
+>> > LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/
+>> libRlapack.dylib
+>> >
+>> > locale:
+>> > [1] de_DE.UTF-8/de_DE.UTF-8/de_DE.UTF-8/C/de_DE.UTF-8/de_DE.UTF-8
+>> >
+>> > attached base packages:
+>> > [1] stats     graphics  grDevices utils     datasets  methods   base
+>> >
+>> > other attached packages:
+>> > [1] mvpart_1.6-2
+>> >
+>> > loaded via a namespace (and not attached):
+>> > [1] compiler_3.4.0
+>>
+>>
+>> However, there are certainly other packages that can partition
+>> multivariate ecological data, though I am not aware of other packages for
+>> use with multivariate regression trees.
+>>
+>> Regards
+>> Ralf
+>>
+>>
+>>
+>> > Am 24.06.2017 um 17:47 schrieb Manuel Sp?nola <mspinola10 at gmail.com>:
+>> >
+>> > Thank you Ralf,
+>> >
+>> > But I guess is not going to be newer versions and could be incompatible
+>> with newer version of R, so at some moment there will be no accessibility
+>> to the package.
+>> >
+>> > Manuel
+>> >
+>> > 2017-06-24 5:25 GMT-06:00 Ralf Sch?fer <senator at ecotoxicology.de
+>> <mailto:senator at ecotoxicology.de>>:
+>> > Dear Manuel
+>> >
+>> > despite it has been removed, it should still work.
+>> > At least I used it last year - just install the version from the
+>> archive manually:
+>> > https://cran.r-project.org/src/contrib/Archive/mvpart/ <
+>> https://cran.r-project.org/src/contrib/Archive/mvpart/>
+>> >
+>> > Best regards
+>> > Ralf
+>> >
+>> >
+>> >> Date: Fri, 23 Jun 2017 13:59:13 -0600
+>> >> From: Manuel Sp?nola <mspinola10 at gmail.com <mailto:
+>> mspinola10 at gmail.com>>
+>> >> To: "r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>"
+>> <r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>>
+>> >> Subject: [R-sig-eco] mvpart alternatives and machine learning
+>> >>      multivariate    analysis
+>> >> Message-ID:
+>> >>      <CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.
+>> gmail.com <mailto:CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw@
+>> mail.gmail.com>>
+>> >> Content-Type: text/plain; charset="UTF-8"
+>> >>
+>> >> Dear list members,
+>> >>
+>> >> As mvpart has been removed form the CRAN repository, Is there any r
+>> package
+>> >> that do similar analysis (multivariate partitioning)?
+>> >>
+>> >> Also, is there any other machine learning technique to do multivariate
+>> >> analysis as done in ecology to asses multiple species-environment
+>> >> relationships?
+>> >>
+>> >> Thank you very much in advance,
+>> >>
+>> >> Manuel
+>> >>
+>> >> --
+>> >> *Manuel Sp?nola, Ph.D.*
+>> >> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+>> >> Universidad Nacional
+>> >> Apartado 1350-3000
+>> >> Heredia
+>> >> COSTA RICA
+>> >> mspinola at una.cr <mailto:mspinola at una.cr> <mspinola at una.ac.cr <mailto:
+>> mspinola at una.ac.cr>>
+>> >> mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+>> >> Tel?fono: (506) 8706 - 4662
+>> >> Personal website: Lobito de r?o <https://sites.google.com/site
+>> /lobitoderio/ <https://sites.google.com/site/lobitoderio/>>
+>> >> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/ <
+>> http://www.icomvis.una.ac.cr/>>
+>> >
+>> >
+>> >
+>> > --
+>> > Manuel Sp?nola, Ph.D.
+>> > Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+>> > Universidad Nacional
+>> > Apartado 1350-3000
+>> > Heredia
+>> > COSTA RICA
+>> > mspinola at una.cr <mailto:mspinola at una.ac.cr>
+>> > mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+>> > Tel?fono: (506) 8706 - 4662
+>> > Personal website: Lobito de r?o <https://sites.google.com/site
+>> /lobitoderio/>
+>> > Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+
+
+-- 
+*Manuel Sp?nola, Ph.D.*
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.cr <mspinola at una.ac.cr>
+mspinola10 at gmail.com
+Tel?fono: (506) 8706 - 4662
+Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/>
+Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+
+	[[alternative HTML version deleted]]
+
+
+From mspinola10 at gmail.com  Sat Jun 24 18:35:31 2017
+From: mspinola10 at gmail.com (=?UTF-8?Q?Manuel_Sp=C3=ADnola?=)
+Date: Sat, 24 Jun 2017 10:35:31 -0600
+Subject: [R-sig-eco] mvpart alternatives and machine learning
+	multivariate analysis
+In-Reply-To: <F4BA06FE-0CD3-429D-8F27-A9497AE26EFF@ecotoxicology.de>
+References: <DBB75EAB-0BD0-4879-B682-E18593EC1DEC@ecotoxicology.de>
+ <CABkCotSqZ=S9NjU4VkQStMu-kYDoqC4buFyP+1Lqc1Er16bofA@mail.gmail.com>
+ <81EA8E22-2827-4CFF-9320-131F7C011B0D@ecotoxicology.de>
+ <CAGCrCxY5+xPvYbmKnQuOOW6sdrHCY1NsCxuv0Q=ZQxuKkekqGA@mail.gmail.com>
+ <F4BA06FE-0CD3-429D-8F27-A9497AE26EFF@ecotoxicology.de>
+Message-ID: <CABkCotQC7sQdm3F8Y9nuDU4vdc+eHusc7XA5icxpVG4kB5r_8g@mail.gmail.com>
+
+Thank you very much Ralf.
+
+I am looking for alternatives to the classic CCA community analysis, and I
+was thinking into machine learning techniques.
+
+Manuel
+
+2017-06-24 10:10 GMT-06:00 Ralf Sch?fer <senator at ecotoxicology.de>:
+
+> Indeed! To expand on this: if you need a tutorial for mvabund, we once
+> analysed some categorical multivariate data and provided a tutorial:
+> http://dx.doi.org/10.1007/s10646-015-1421-0
+> Paper and tutorial are freely available on researchgate
+>
+> There are also many other methods, but to point you to some, it would be
+> good if you were more specific than ?community- environment relationships?.
+>
+> Best regards
+> Ralf
+>
+>
+> Am 24.06.2017 um 18:02 schrieb Torsten Hauffe <torsten.hauffe at gmail.com>:
+>
+> As far as I remember, on Windows you will need to download and install the
+> Rtools first (https://cran.r-project.org/bin/windows/Rtools/) because
+> some parts of mvpart need to be compiled.
+>
+> You can analyse multiple species-environment relationships with the
+> mvabund package. This is not fancy machine-learning but solid likelihood
+> statistic.
+>
+> HTH,
+> Torsten
+>
+> On 24 June 2017 at 11:57, Ralf Sch?fer <senator at ecotoxicology.de> wrote:
+>
+>> Manuel,
+>>
+>> I just checked, it is currently still compatible. So you can download
+>> from the archive and install from source - at least on Linux and OS X, nut
+>> sure about Windows.
+>> See Session information below:
+>>
+>> > R version 3.4.0 (2017-04-21)
+>> > Platform: x86_64-apple-darwin15.6.0 (64-bit)
+>> > Running under: macOS Sierra 10.12.5
+>> >
+>> > Matrix products: default
+>> > BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/
+>> libRblas.0.dylib
+>> > LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/
+>> libRlapack.dylib
+>> >
+>> > locale:
+>> > [1] de_DE.UTF-8/de_DE.UTF-8/de_DE.UTF-8/C/de_DE.UTF-8/de_DE.UTF-8
+>> >
+>> > attached base packages:
+>> > [1] stats     graphics  grDevices utils     datasets  methods   base
+>> >
+>> > other attached packages:
+>> > [1] mvpart_1.6-2
+>> >
+>> > loaded via a namespace (and not attached):
+>> > [1] compiler_3.4.0
+>>
+>>
+>> However, there are certainly other packages that can partition
+>> multivariate ecological data, though I am not aware of other packages for
+>> use with multivariate regression trees.
+>>
+>> Regards
+>> Ralf
+>>
+>>
+>>
+>> > Am 24.06.2017 um 17:47 schrieb Manuel Sp?nola <mspinola10 at gmail.com>:
+>> >
+>> > Thank you Ralf,
+>> >
+>> > But I guess is not going to be newer versions and could be incompatible
+>> with newer version of R, so at some moment there will be no accessibility
+>> to the package.
+>> >
+>> > Manuel
+>> >
+>> > 2017-06-24 5:25 GMT-06:00 Ralf Sch?fer <senator at ecotoxicology.de
+>> <mailto:senator at ecotoxicology.de>>:
+>> > Dear Manuel
+>> >
+>> > despite it has been removed, it should still work.
+>> > At least I used it last year - just install the version from the
+>> archive manually:
+>> > https://cran.r-project.org/src/contrib/Archive/mvpart/ <
+>> https://cran.r-project.org/src/contrib/Archive/mvpart/>
+>> >
+>> > Best regards
+>> > Ralf
+>> >
+>> >
+>> >> Date: Fri, 23 Jun 2017 13:59:13 -0600
+>> >> From: Manuel Sp?nola <mspinola10 at gmail.com <mailto:
+>> mspinola10 at gmail.com>>
+>> >> To: "r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>"
+>> <r-sig-ecology at r-project.org <mailto:r-sig-ecology at r-project.org>>
+>> >> Subject: [R-sig-eco] mvpart alternatives and machine learning
+>> >>      multivariate    analysis
+>> >> Message-ID:
+>> >>      <CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw at mail.
+>> gmail.com <mailto:CABkCotRiCwJjsh=_hsONMsh+OE52rC7L6E3Q4ssOUM=6w3DXTw@
+>> mail.gmail.com>>
+>> >> Content-Type: text/plain; charset="UTF-8"
+>> >>
+>> >> Dear list members,
+>> >>
+>> >> As mvpart has been removed form the CRAN repository, Is there any r
+>> package
+>> >> that do similar analysis (multivariate partitioning)?
+>> >>
+>> >> Also, is there any other machine learning technique to do multivariate
+>> >> analysis as done in ecology to asses multiple species-environment
+>> >> relationships?
+>> >>
+>> >> Thank you very much in advance,
+>> >>
+>> >> Manuel
+>> >>
+>> >> --
+>> >> *Manuel Sp?nola, Ph.D.*
+>> >> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+>> >> Universidad Nacional
+>> >> Apartado 1350-3000
+>> >> Heredia
+>> >> COSTA RICA
+>> >> mspinola at una.cr <mailto:mspinola at una.cr> <mspinola at una.ac.cr <mailto:
+>> mspinola at una.ac.cr>>
+>> >> mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+>> >> Tel?fono: (506) 8706 - 4662
+>> >> Personal website: Lobito de r?o <https://sites.google.com/site
+>> /lobitoderio/ <https://sites.google.com/site/lobitoderio/>>
+>> >> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/ <
+>> http://www.icomvis.una.ac.cr/>>
+>> >
+>> >
+>> >
+>> > --
+>> > Manuel Sp?nola, Ph.D.
+>> > Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+>> > Universidad Nacional
+>> > Apartado 1350-3000
+>> > Heredia
+>> > COSTA RICA
+>> > mspinola at una.cr <mailto:mspinola at una.ac.cr>
+>> > mspinola10 at gmail.com <mailto:mspinola10 at gmail.com>
+>> > Tel?fono: (506) 8706 - 4662
+>> > Personal website: Lobito de r?o <https://sites.google.com/site
+>> /lobitoderio/>
+>> > Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+
+
+-- 
+*Manuel Sp?nola, Ph.D.*
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.cr <mspinola at una.ac.cr>
+mspinola10 at gmail.com
+Tel?fono: (506) 8706 - 4662
+Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/>
+Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+
+	[[alternative HTML version deleted]]
+
+

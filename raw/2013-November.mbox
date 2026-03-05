@@ -1,0 +1,2245 @@
+From gaertner.p at gmail.com  Fri Nov  1 14:53:03 2013
+From: gaertner.p at gmail.com (Philipp01)
+Date: Fri, 1 Nov 2013 06:53:03 -0700 (PDT)
+Subject: [R-sig-eco] Cross validate model with calibrate
+Message-ID: <1383313983557-7578486.post@n2.nabble.com>
+
+Hello all,
+
+I would like to cross validate my rda() derived model with the calibrate
+function (vegan package) and calculate the RMSE as value for performance
+measure. 
+For simplicity I use the example from the predict.cca {vegan} help.
+
+library(ade4)
+library(vegan)
+
+data(dune)
+data(dune.env)
+
+nbr <- as.numeric(rownames(dune))
+
+library(caret)
+inTrain <- createDataPartition(y=nbr, p=3/4, list=F, times=1)
+
+train.dune <- dune[inTrain[,i],];
+test.dune  <- dune[-inTrain[,i],];
+  
+train.dune.env <- dune.env[inTrain[,i],];
+test.dune.env  <- dune.env[-inTrain[,i],];
+
+
+mod  <- rda(train.dune ~ A1, train.dune.env)
+cal <- calibrate(mod, newdata=test.dune)
+
+with(test.dune.env, plot(A1, cal[,"A1"] - A1, ylab="Prediction Error"))
+abline(h=0)
+
+error <- cal - test.dune.env$A1
+(rmse <- sqrt(mean(error^2)))
+
+When I apply this code snippet to my very own data I get positive and
+negative "cal" values, which would be unrealistic for parameters such as
+tree height (etc.). Therefore, I doubt that my approach is correct. How do
+you compute the RMSE for the rda() derived model?
+
+Regards, Philipp 
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Cross-validate-model-with-calibrate-tp7578486.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From jari.oksanen at oulu.fi  Sat Nov  2 07:40:48 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Sat, 2 Nov 2013 06:40:48 +0000
+Subject: [R-sig-eco] Cross validate model with calibrate
+In-Reply-To: <1383313983557-7578486.post@n2.nabble.com>
+References: <1383313983557-7578486.post@n2.nabble.com>
+Message-ID: <A9381958-39D2-4781-AB1C-AACDC655EBB1@oulu.fi>
+
+Dear Philipp,
+
+I cannot see anything wrong in your approach. The only problem is that RDA may not do very well. It is very common that the calibrated values are outside the original range of the data and if the predictions are not very good, they can also be "unrealistic" values. RDA has no idea what is realistic for given data. 
+
+You get cross-validated values outside data range even in the Dune meadow data you used. Here an example that applies 4-fold cross validation (in line with 3/4 subsetting in your example):
+
+library(vegan)
+data(dune, dune.env)
+vec <- rep(1:4, length=nrow(dune))
+pred <- rep(NA, length=nrow(dune))
+set.seed(4711)
+take <- sample(vec)
+for(i in 1:4) pred[take==i] <- calibrate(rda(dune ~ A1, dune.env, subset = take != i), newdata = subset(dune, take==i))
+range(pred)  
+## [1]  0.9104486 12.3583826
+with(dune.env, range(A1))
+## [1]  2.8 11.5
+
+The predicted values extend nearly 2cm below and 1cm above the data values. In this case the predicted values were not negative, but that could happen, too. The tool (RDA) may not work very well in all cases, but RMSE will tell you how good RDA is for the job. If it is bad, do not use it. It seems RDA is very poor in this dune example: RMSE is larger than standard deviation of A1 (but you could almost guess this by looking at the low constrained eigenvalues of the model).
+
+The code above uses the 'subset' argument of vegan::rda and the subset() function of R to make the code a bit easier to write.
+
+Cheers, Jari Oksanen
+
+
+On 01/11/2013, at 15:53 PM, Philipp01 wrote:
+
+> Hello all,
+> 
+> I would like to cross validate my rda() derived model with the calibrate
+> function (vegan package) and calculate the RMSE as value for performance
+> measure. 
+> For simplicity I use the example from the predict.cca {vegan} help.
+> 
+> library(ade4)
+> library(vegan)
+> 
+> data(dune)
+> data(dune.env)
+> 
+> nbr <- as.numeric(rownames(dune))
+> 
+> library(caret)
+> inTrain <- createDataPartition(y=nbr, p=3/4, list=F, times=1)
+> 
+> train.dune <- dune[inTrain[,i],];
+> test.dune  <- dune[-inTrain[,i],];
+> 
+> train.dune.env <- dune.env[inTrain[,i],];
+> test.dune.env  <- dune.env[-inTrain[,i],];
+> 
+> 
+> mod  <- rda(train.dune ~ A1, train.dune.env)
+> cal <- calibrate(mod, newdata=test.dune)
+> 
+> with(test.dune.env, plot(A1, cal[,"A1"] - A1, ylab="Prediction Error"))
+> abline(h=0)
+> 
+> error <- cal - test.dune.env$A1
+> (rmse <- sqrt(mean(error^2)))
+> 
+> When I apply this code snippet to my very own data I get positive and
+> negative "cal" values, which would be unrealistic for parameters such as
+> tree height (etc.). Therefore, I doubt that my approach is correct. How do
+> you compute the RMSE for the rda() derived model?
+> 
+> Regards, Philipp 
+> 
+> 
+> 
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Cross-validate-model-with-calibrate-tp7578486.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From weiser2 at natur.cuni.cz  Mon Nov  4 09:44:15 2013
+From: weiser2 at natur.cuni.cz (Martin Weiser)
+Date: Mon, 04 Nov 2013 09:44:15 +0100
+Subject: [R-sig-eco] (almost) complete population
+Message-ID: <1383554655.12015.37.camel@zouzel.natur.cuni.cz>
+
+Dear friends,
+
+I am in strange situation now:
+I analyze data about decline of bats on the island, and I have got data
+about almost complete population (no substantial migration). However,
+there are only 7 time replicates.
+I would like to link the decrease in number of bats with weather
+conditions in those 7 times (years), and improve my fit with the fact
+that I have data about vast majority of the population (clearly not a
+tiny sample). Is there any way how to get the advantage form this fact,
+e.g. how to be able to use this information in order to use more than 1
+weather predictor reliably and avoid overfitting?
+
+Any advice?
+
+With thanks in advance,
+best,
+Martin Weiser
+
+
+From rshepard at appl-ecosys.com  Mon Nov  4 16:59:32 2013
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 4 Nov 2013 07:59:32 -0800 (PST)
+Subject: [R-sig-eco] Multivariate Analyses of Ecological Communities
+Message-ID: <alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>
+
+   I've read the docs for anosim, adonis, and mrpp and am currently reading
+the vegan tutorial. Toward the end of the anosim and mprr docs the author
+writes that each has potential shortcomings and recommends the adonis
+package be used instead. This leads to my two questions:
+
+   1) Why are anosin and mrpp packages still maintained and included? That
+they are suggests question
+
+   2) Under what circumstances are these two packages appropriately used?
+
+TIA,
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |      Have knowledge, will travel.
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From jari.oksanen at oulu.fi  Mon Nov  4 17:37:01 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Mon, 4 Nov 2013 16:37:01 +0000
+Subject: [R-sig-eco] Multivariate Analyses of Ecological Communities
+In-Reply-To: <alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>
+Message-ID: <7E5D8EC2-4ECF-4715-AC4F-ED3B480CD3CC@oulu.fi>
+
+
+On 04/11/2013, at 17:59 PM, Rich Shepard wrote:
+
+>  I've read the docs for anosim, adonis, and mrpp and am currently reading
+> the vegan tutorial. Toward the end of the anosim and mprr docs the author
+> writes that each has potential shortcomings and recommends the adonis
+> package be used instead. This leads to my two questions:
+> 
+>  1) Why are anosin and mrpp packages still maintained and included? That
+> they are suggests question
+
+To serve the people?
+
+> 
+>  2) Under what circumstances are these two packages appropriately used?
+> 
+I don't know, but since they are available, it is possible to find out.
+
+I have suggested in the documentation that adonis() usually is better, but it also suffers from similar problems as these alternatives. My analysis suggests that adonis() is more robust and reliable. However, not everybody agrees, and alternatives are provided for these standard methods. Since the alternatives are provided, you can study the issue independently.
+
+The existence of a method is not a sufficient reason to use that method.  
+
+Cheers, Jari Oksanen
+
+
+From rshepard at appl-ecosys.com  Mon Nov  4 18:07:55 2013
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 4 Nov 2013 09:07:55 -0800 (PST)
+Subject: [R-sig-eco] Multivariate Analyses of Ecological Communities
+In-Reply-To: <7E5D8EC2-4ECF-4715-AC4F-ED3B480CD3CC@oulu.fi>
+References: <alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>
+	<7E5D8EC2-4ECF-4715-AC4F-ED3B480CD3CC@oulu.fi>
+Message-ID: <alpine.LNX.2.00.1311040904030.24904@salmo.appl-ecosys.com>
+
+On Mon, 4 Nov 2013, Jari Oksanen wrote:
+
+> To serve the people?
+
+Jari,
+
+   Ah, altriism is not dead. :-)
+
+> I have suggested in the documentation that adonis() usually is better, but
+> it also suffers from similar problems as these alternatives. My analysis
+> suggests that adonis() is more robust and reliable. However, not everybody
+> agrees, and alternatives are provided for these standard methods. Since
+> the alternatives are provided, you can study the issue independently.
+
+   I'm more than happy to study the issue independently as I look for the
+most appropriate method for my needs. I'll see if my reference library has
+sufficient documentation.
+
+> The existence of a method is not a sufficient reason to use that method.
+
+   Heh-heh-heh! It certainly is sufficient reason in the world of
+environmental regulation. :-) But, that's a contentious discussion best done
+in a micro-brew pub with some good ale.
+
+Many thanks,
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |      Have knowledge, will travel.
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From alexander.angeloski at hotmail.com  Mon Nov  4 23:42:57 2013
+From: alexander.angeloski at hotmail.com (Angel)
+Date: Mon, 4 Nov 2013 14:42:57 -0800 (PST)
+Subject: [R-sig-eco] Multivariate Analyses of Ecological Communities
+In-Reply-To: <alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>
+Message-ID: <BLU174-W3507DA32F14074803AEFE8F2F60@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131104/ccefa235/attachment.pl>
+
+From rshepard at appl-ecosys.com  Mon Nov  4 23:55:22 2013
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 4 Nov 2013 14:55:22 -0800 (PST)
+Subject: [R-sig-eco] Multivariate Analyses of Ecological Communities
+In-Reply-To: <BLU174-W3507DA32F14074803AEFE8F2F60@phx.gbl>
+References: <alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>
+	<BLU174-W3507DA32F14074803AEFE8F2F60@phx.gbl>
+Message-ID: <alpine.LNX.2.00.1311041449060.24904@salmo.appl-ecosys.com>
+
+On Mon, 4 Nov 2013, Angel wrote:
+
+> Hello Rich, I may be able to provide some insight into this...
+
+> I would think they are included because of familiarity and different usage
+> scenario's.
+
+Angel,
+
+   I assumed this to be the case and appreciate your insights into what those
+are.
+
+> ANOSIM/MRPP would be used for simple experiments, where you would believe
+> there to be no interactions,
+
+   My work is with data collected for compliance with regulatory permits; for
+example, NPDES water discharge permits. There's no experimental design, only
+what regulatory agencies required at different times or locations.
+
+   The current project involves functional feeding groups, not taxa, from
+several annual collections in a set of streams. I need to define the
+variability in the proportions of each funcional feeding group (the
+descriptors) for each collection time (the objects). Because the
+characteristics of the drainage basins and their stream networks are so
+different, each basin/stream network needs to be analyzed by itself. Broad
+generalizations (e.g., west-draining vs. east-draining) might be done but
+that's not critical.
+
+Thanks,
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.          |      Have knowledge, will travel.
+Applied Ecosystem Services, Inc.   |
+<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863
+
+
+From viana.sptd at gmail.com  Thu Nov  7 11:05:46 2013
+From: viana.sptd at gmail.com (Duarte Viana)
+Date: Thu, 7 Nov 2013 11:05:46 +0100
+Subject: [R-sig-eco] NA in species scores using capscale in vegan
+Message-ID: <CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/5652e7b0/attachment.pl>
+
+From jari.oksanen at oulu.fi  Thu Nov  7 11:11:12 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 7 Nov 2013 10:11:12 +0000
+Subject: [R-sig-eco] NA in species scores using capscale in vegan
+In-Reply-To: <CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>
+References: <CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>
+Message-ID: <5E84EA8B-077A-4B25-A86B-16AA00B801BA@oulu.fi>
+
+
+On 07/11/2013, at 12:05 PM, Duarte Viana wrote:
+
+> Hello all,
+> 
+> I am doing a CAP (or dbRDA) in vegan, using the function "capscale", where
+> the response is a dissimilarity matrix (Sorensen's distance index) and the
+> explanatory matrix consists of 19 variables. The code runs apparently fine,
+> but the species scores appear as NA (site scores are properly given).
+> 
+> Does anyone knows what might be the problem?
+> 
+Duarte,
+
+Did you supply species data? Species scores cannot be estimated without information on species. If your response is a dissimilarity, there is no information about the original species. You can supply the original community data (which has the information on species) as argument 'comm' in capscale().
+
+Cheers, Jari Oksanen
+
+
+From viana.sptd at gmail.com  Thu Nov  7 11:36:02 2013
+From: viana.sptd at gmail.com (Duarte Viana)
+Date: Thu, 7 Nov 2013 11:36:02 +0100
+Subject: [R-sig-eco] NA in species scores using capscale in vegan
+In-Reply-To: <5E84EA8B-077A-4B25-A86B-16AA00B801BA@oulu.fi>
+References: <CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>
+	<5E84EA8B-077A-4B25-A86B-16AA00B801BA@oulu.fi>
+Message-ID: <CAAHYTEL28vKwct4ooLRdSJOihdm_XHfgk9+kWGUWSwdjiiFYMQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/fb317d4d/attachment.pl>
+
+From kersusan.dylann at gmail.com  Thu Nov  7 16:23:47 2013
+From: kersusan.dylann at gmail.com (Dylann Kersusan)
+Date: Thu, 7 Nov 2013 16:23:47 +0100
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+	home-range contours
+Message-ID: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/3c5e9371/attachment.pl>
+
+From roman.lustrik at gmail.com  Thu Nov  7 16:28:42 2013
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Thu, 7 Nov 2013 16:28:42 +0100
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+ home-range contours
+In-Reply-To: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+References: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+Message-ID: <CAHT1vpi0BiJ++BsvL7WUG6dn=gm+r1vkar8-3MfpV_A=H7yP5g@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/8a606f4c/attachment.pl>
+
+From sarah.goslee at gmail.com  Thu Nov  7 16:30:54 2013
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 7 Nov 2013 10:30:54 -0500
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+ home-range contours
+In-Reply-To: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+References: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+Message-ID: <CAM_vjumX+QnOkGgzx=LFArGVtXg6zZUu4t+0B3SS7X-iU3meEw@mail.gmail.com>
+
+Hi Dylann,
+
+All we can possibly tell you is that the index is out of range.
+
+That's the kind of problem that really needs a reproducible example
+for anyone to be able to give you useful advice.
+
+Here's some advice on doing so:
+http://stackoverflow.com/questions/5963269/how-to-make-a-great-r-reproducible-example
+
+Sarah
+
+On Thu, Nov 7, 2013 at 10:23 AM, Dylann Kersusan
+<kersusan.dylann at gmail.com> wrote:
+> Dear list,
+>
+> I am running a script on my computer to estimate kernelUDs for several
+> individuals and several years (from GPS relocations). I am using the
+> getverticeshr() function to extract home range contours, and for some
+> reasons I end up having this error message:
+>
+> Erreur dans re[[i]] : indice hors limites
+>
+> in french, the english translation would be:
+>
+> Error in re [[i]]: index out of range
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From kersusan.dylann at gmail.com  Thu Nov  7 16:30:56 2013
+From: kersusan.dylann at gmail.com (Dylann Kersusan)
+Date: Thu, 7 Nov 2013 16:30:56 +0100
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+	home-range contours
+In-Reply-To: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+References: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+Message-ID: <CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/cd2ea623/attachment.pl>
+
+From kersusan.dylann at gmail.com  Thu Nov  7 16:32:57 2013
+From: kersusan.dylann at gmail.com (Dylann Kersusan)
+Date: Thu, 7 Nov 2013 16:32:57 +0100
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+	home-range contours
+In-Reply-To: <CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>
+References: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+	<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>
+Message-ID: <CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/1fe11b68/attachment.pl>
+
+From kersusan.dylann at gmail.com  Thu Nov  7 16:37:29 2013
+From: kersusan.dylann at gmail.com (Dylann Kersusan)
+Date: Thu, 7 Nov 2013 16:37:29 +0100
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+	home-range contours
+In-Reply-To: <CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>
+References: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+	<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>
+	<CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>
+Message-ID: <CAEcqiB9PRqjpp8ZaQO2dEZ_80GwH4c58fgNtTJ8eREMPdr+h-w@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/fb40909e/attachment.pl>
+
+From roman.lustrik at gmail.com  Thu Nov  7 16:36:52 2013
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Thu, 7 Nov 2013 16:36:52 +0100
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+ home-range contours
+In-Reply-To: <CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>
+References: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+	<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>
+	<CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>
+Message-ID: <CAHT1vpjRPE=5MWonVmCbWphHAqeaA9nUeT2fGL1yGGSP3c-YHw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/524d53fa/attachment.pl>
+
+From clement.calenge at oncfs.gouv.fr  Thu Nov  7 16:47:43 2013
+From: clement.calenge at oncfs.gouv.fr (Clement Calenge)
+Date: Thu, 7 Nov 2013 16:47:43 +0100
+Subject: [R-sig-eco] Error message using getverticeshr() to extract
+ home-range contours
+In-Reply-To: <CAM_vjumX+QnOkGgzx=LFArGVtXg6zZUu4t+0B3SS7X-iU3meEw@mail.gmail.com>
+References: <CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>
+	<CAM_vjumX+QnOkGgzx=LFArGVtXg6zZUu4t+0B3SS7X-iU3meEw@mail.gmail.com>
+Message-ID: <527BB61F.4070404@oncfs.gouv.fr>
+
+Hi Dylann,
+
+On 11/07/2013 04:30 PM, Sarah Goslee wrote:
+> Hi Dylann,
+>
+> All we can possibly tell you is that the index is out of range.
+>
+> That's the kind of problem that really needs a reproducible example
+> for anyone to be able to give you useful advice.
+>
+> Here's some advice on doing so:
+> http://stackoverflow.com/questions/5963269/how-to-make-a-great-r-reproducible-example
+
+I agree. And I would add that a prior google search might not harm... 
+There are several discussions about this problem on the internet (which 
+occurs when the parameter extent of the grid is too small in comparison 
+to the smoothing parameter; try to increase it).
+For example, have a look at:
+http://r-sig-geo.2731867.n2.nabble.com/error-subscript-out-of-bounds-using-getverticeshr-td7580358.html
+HTH,
+
+Cl?ment.
+
+>
+> Sarah
+>
+> On Thu, Nov 7, 2013 at 10:23 AM, Dylann Kersusan
+> <kersusan.dylann at gmail.com> wrote:
+>> Dear list,
+>>
+>> I am running a script on my computer to estimate kernelUDs for several
+>> individuals and several years (from GPS relocations). I am using the
+>> getverticeshr() function to extract home range contours, and for some
+>> reasons I end up having this error message:
+>>
+>> Erreur dans re[[i]] : indice hors limites
+>>
+>> in french, the english translation would be:
+>>
+>> Error in re [[i]]: index out of range
+
+
+-- 
+Cl?ment CALENGE
+Cellule d'appui ? l'analyse de donn?es
+Direction des Etudes et de la Recherche
+Office national de la chasse et de la faune sauvage
+Saint Benoist - 78610 Auffargis
+tel. (33) 01.30.46.54.14
+
+
+From rshepard at appl-ecosys.com  Thu Nov  7 21:38:35 2013
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Thu, 7 Nov 2013 12:38:35 -0800 (PST)
+Subject: [R-sig-eco] Data Frame Structure for vegdist()
+Message-ID: <alpine.LNX.2.00.1311071233010.16836@salmo.appl-ecosys.com>
+
+   I have data frames on which I want to calculate the default Bray-Curtis
+dissimilarity matrix using vegdist() in the vegan package. The data are
+proportions of individuals in each of 5 categories with the first column as
+the collection date. One such data frame is:
+
+     sampdate filter gather  graze predate  shred
+1 2004-06-17 0.0093 0.8881 0.0295  0.0685 0.0046
+2 2005-07-18 0.0149 0.8402 0.0951  0.0467 0.0030
+3 2006-06-29 0.0217 0.7538 0.1185  0.1006 0.0055
+4 2011-07-14 0.0241 0.8408 0.0645  0.0625 0.0081
+5 2012-07-10 0.0114 0.4877 0.0256  0.2936 0.1818
+
+   Am I correct in assuming that I need to remove the sampdate column?
+
+Rich
+
+
+From e.r.j.wubs at gmail.com  Fri Nov  8 12:41:01 2013
+From: e.r.j.wubs at gmail.com (Jasper)
+Date: Fri, 8 Nov 2013 03:41:01 -0800 (PST)
+Subject: [R-sig-eco] heteroscedasticity and d.f.
+Message-ID: <1383910861564-7578507.post@n2.nabble.com>
+
+Dear all,
+I am analyzing an experiment where the treatments cause heteroscedasticty in
+the residuals. Following Pinheiro & Bates (2000 Mixed effects models in S
+and S-plus) and Zuur et al (2009 Mixed effects models and extensions in
+ecology with R) I try to include seperate treatment variances using varIdent
+structure. This improves thing according to my residual plots and a LR test.
+However, what I don't understand is that when I test for the effect of my
+treatment, I don't seem to loose any degrees of freedom for modelling these
+seperate variances! Does anyone know why this is?
+
+Below a simple example dataset with 4 observations in each of 5 treatments
+(the sample size is insufficient to show the differences in variance so the
+LR is not significant, but that's not my point). Comparing both models I see
+a difference in d.f. among the models for the LR test of variance structures
+(6 vs. 10), but when I look at the tests of fixed effects for both models,
+both still have 15 residual d.f. eventhough the second model needs to
+estimate 5 variances instead of one.
+
+I am curious about your thoughts!
+
+Best wishes,
+Jasper Wubs
+
+> library(nlme)
+> m1 <- gls(SM~Treat,weights=NULL,data=data)
+> vf1 <- varIdent(form=~1|Treat) #estimate a variance per treatment
+> m1v <- gls(SM~Treat,weights=vf1,data=data)
+> anova(m1,m1v)
+
+    Model df       AIC       BIC   logLik   Test  L.Ratio p-value
+m1      1  6 -85.76002 -81.51172 48.88001                        
+m1v     2 10 -84.85906 -77.77855 52.42953 1 vs 2 7.099036  0.1307
+
+> anova(m1)
+Denom. DF: 15 
+            numDF   F-value p-value
+(Intercept)     1 10246.756  <.0001
+Treat           4     1.937  0.1564
+
+> anova(m1v)
+Denom. DF: 15 
+            numDF   F-value p-value
+(Intercept)     1 27538.274  <.0001
+Treat           4     7.733  0.0014
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/heteroscedasticity-and-d-f-tp7578507.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From mspinola10 at gmail.com  Fri Nov  8 16:01:28 2013
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Fri, 8 Nov 2013 09:01:28 -0600
+Subject: [R-sig-eco] Error when installing packages in R.3.0.2 (Windows 7)
+Message-ID: <CABkCotQPvV4hGr=1PGZE6JKBs3+_ZAfkP7OCLTp2Nct3oUj4NQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131108/6fad6409/attachment.pl>
+
+From eugenego at web.de  Sun Nov 10 21:56:12 2013
+From: eugenego at web.de (eugenego)
+Date: Sun, 10 Nov 2013 12:56:12 -0800 (PST)
+Subject: [R-sig-eco] stressplot-low observed dissimilarities but 0
+	ordination distance
+Message-ID: <1384116972138-7578509.post@n2.nabble.com>
+
+Hi everybody,
+
+I am quite new to the whole ordination stuff and run an analysis with one of
+my datasets in vegan using the monoMDS function.
+
+stressplot() showes me this picture: 
+<http://r-sig-ecology.471788.n2.nabble.com/file/n7578509/stressplot.png> 
+
+what might be the reason i have 0 ordination distance although there are
+dissimilarities between communities?
+
+thanks,
+
+eugen
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/stressplot-low-observed-dissimilarities-but-0-ordination-distance-tp7578509.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From weiser2 at natur.cuni.cz  Mon Nov 11 11:02:47 2013
+From: weiser2 at natur.cuni.cz (Martin Weiser)
+Date: Mon, 11 Nov 2013 11:02:47 +0100
+Subject: [R-sig-eco] Data Frame Structure for vegdist()
+In-Reply-To: <alpine.LNX.2.00.1311071233010.16836@salmo.appl-ecosys.com>
+References: <alpine.LNX.2.00.1311071233010.16836@salmo.appl-ecosys.com>
+Message-ID: <1384164167.20076.89.camel@zouzel.natur.cuni.cz>
+
+Rich Shepard p??e v ?t 07. 11. 2013 v 12:38 -0800:
+>    I have data frames on which I want to calculate the default Bray-Curtis
+> dissimilarity matrix using vegdist() in the vegan package. The data are
+> proportions of individuals in each of 5 categories with the first column as
+> the collection date. One such data frame is:
+> 
+>      sampdate filter gather  graze predate  shred
+> 1 2004-06-17 0.0093 0.8881 0.0295  0.0685 0.0046
+> 2 2005-07-18 0.0149 0.8402 0.0951  0.0467 0.0030
+> 3 2006-06-29 0.0217 0.7538 0.1185  0.1006 0.0055
+> 4 2011-07-14 0.0241 0.8408 0.0645  0.0625 0.0081
+> 5 2012-07-10 0.0114 0.4877 0.0256  0.2936 0.1818
+> 
+>    Am I correct in assuming that I need to remove the sampdate column?
+> 
+> Rich
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+Dear Rich,
+
+I guess you are asking because you wish to retain your sampling dates as
+labels. 
+(If not, throw them away. If they say something you wish to base your
+distances on (e.g. some important phenological date, peak of some
+organism or characteristic), then retain them.)
+
+If you just need labels:
+
+newdata <- olddata[,2:length(olddata)]
+rownames(newdata) <- olddata[,1]
+
+HTH,
+Martin Weiser
+
+
+From mlgentes2 at yahoo.com  Tue Nov 12 02:29:33 2013
+From: mlgentes2 at yahoo.com (marieline gentes)
+Date: Mon, 11 Nov 2013 17:29:33 -0800 (PST)
+Subject: [R-sig-eco] question about beta regressions
+Message-ID: <1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>
+
+
+Hello,? 
+
+I have a question regarding the function Betareg. I am a bit new to this package, and maybe I did not understand all the theory behind...
+?
+My data are proportions (%) of a?contaminant (DecaBDE) in blood of birds (n=78) which?were GPS-tagged so that we could see what kind of habitat they visited.?We are investigating the effects of habitat use on the proportions of that contaminant. 
+?
+The full model is as follow: %contaminant = % time spent in agriculture + %
+time in urban + % time in St-Lawrence River + having visited a landfill (yes/no). ?
+
+Coding: 
+Deca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + AllLawren.outCol24 + LandfiWstwater.YesNo
++ UrbanCov1.outCol24, data = mydata). 
+
+Because I am not yet completely?familiar with all the theory underlying beta regressions, I?followed?one of the examples in the package and?created a basic model?i.e., no second part?specified?to model the precision (as you can see from the coding).?
+?
+Somehow?all my models produced with betareg (including the intercept only) end up with a negative intercept - but I have no negative data. I was also expecting that the intercept of the null model would be the average of my dependant variable (as in a regular linear regression), but it is not.... 
+
+Any suggesions ? Could this be?happening because I did not fit a two parts model ??Or did I simply misunderstand
+how to interpret and use beta regressions?
+
+Thank you for your time,
+
+Marie
+PhD candidate
+Canada???????
+
+
+From fvfaleiro at gmail.com  Tue Nov 12 02:47:45 2013
+From: fvfaleiro at gmail.com (Frederico Faleiro)
+Date: Mon, 11 Nov 2013 23:47:45 -0200
+Subject: [R-sig-eco] Get the cross-validation informations from gbm in
+ dismo and others measures of fit
+In-Reply-To: <CAL+ycWm18NDkPLNw-QavvU1Dcz0LomexLr4b3i583=8cpfo74A@mail.gmail.com>
+References: <CAL+ycWm18NDkPLNw-QavvU1Dcz0LomexLr4b3i583=8cpfo74A@mail.gmail.com>
+Message-ID: <CAL+ycW=qRP03Vj3gXUmxnuTzW+yvwHWiFgeyxdGe3wO1dPQBAg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131111/61e69d91/attachment.pl>
+
+From scott.foster at csiro.au  Tue Nov 12 03:27:59 2013
+From: scott.foster at csiro.au (Scott Foster)
+Date: Tue, 12 Nov 2013 13:27:59 +1100
+Subject: [R-sig-eco] question about beta regressions
+In-Reply-To: <1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>
+References: <1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>
+Message-ID: <5281922F.80300@csiro.au>
+
+Hi,
+
+This seems like it is a problem with interpretation.  You are not modelling the mean of the distribution directly, rather it is a function of the mean 
+(a link function) that is modelled.  This is all stated in ?betareg and it gives a number of different options for link function.  A negative value is 
+perfectly OK as the inverse-link of a negative value is positive and within the range.
+
+If you want to have a look at the expected values, on the original scale of the data (response scale), then you will have to call another function 
+(formally a method) -- using predict( Deca.sumBDE, type="response").  When calling predict() in this manner you will get a prediction for each 
+observation.  It is likely that these are not the values of the covariates that you want to predict at.  To do predictions at those pre-specified 
+covariates you will need to create a data.frame with all variables used in your model, with values that you want to predict at.  See ?predict.betareg.
+
+A good place to get more familiar with beta regression is to look at one of the numerous online tutorials about GLMs (generalised linear models).  In 
+fact, it seems to be a special case of a GLM as a beta distribution is a member of the exponential family (so Wikipedia says).  In any case, the 
+compartmentalisation of the beta regression seems to mirror a GLM.
+
+I hope that this helps.
+
+Scott
+
+PS Marie: I forgot to send this to the list the first time.
+
+On 12/11/13 12:29, marieline gentes wrote:
+> Hello,
+>
+> I have a question regarding the function Betareg. I am a bit new to this package, and maybe I did not understand all the theory behind...
+>
+> My data are proportions (%) of a contaminant (DecaBDE) in blood of birds (n=78) which were GPS-tagged so that we could see what kind of habitat they visited. We are investigating the effects of habitat use on the proportions of that contaminant.
+>
+> The full model is as follow: %contaminant = % time spent in agriculture + %
+> time in urban + % time in St-Lawrence River + having visited a landfill (yes/no).
+>
+> Coding:
+> Deca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + AllLawren.outCol24 + LandfiWstwater.YesNo
+> + UrbanCov1.outCol24, data = mydata).
+>
+> Because I am not yet completely familiar with all the theory underlying beta regressions, I followed one of the examples in the package and created a basic model i.e., no second part specified to model the precision (as you can see from the coding).
+>
+> Somehow all my models produced with betareg (including the intercept only) end up with a negative intercept - but I have no negative data. I was also expecting that the intercept of the null model would be the average of my dependant variable (as in a regular linear regression), but it is not....
+>
+> Any suggesions ? Could this be happening because I did not fit a two parts model ? Or did I simply misunderstand
+> how to interpret and use beta regressions?
+>
+> Thank you for your time,
+>
+> Marie
+> PhD candidate
+> Canada
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+-- 
+Scott Foster
+Computational Informatics
+CSIRO
+E scott.foster at csiro.au T +61 3 6232 5178
+Postal address: CSIRO Computational Informatics, GPO Box 1538, Hobart TAS 7001
+Street Address: CSIRO Computational Informatics, Castray Esplanade, Hobart Tas 7001, Australia
+www.csiro.au
+
+
+From s.blomberg1 at uq.edu.au  Tue Nov 12 04:18:44 2013
+From: s.blomberg1 at uq.edu.au (Simon Blomberg)
+Date: Tue, 12 Nov 2013 14:18:44 +1100
+Subject: [R-sig-eco] question about beta regressions
+In-Reply-To: <1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>
+References: <1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>
+Message-ID: <52819E14.90703@uq.edu.au>
+
+Hi Marie,
+
+betareg uses a logit link function, so the negative intercept just means 
+that the intercept proportion is less than one. To convert it back to a 
+proportion, use plogis(InterceptValue).
+
+The intercept is the logit(proportion) that you would get if all your 
+covariates were set to zero and the landfill treatment is set to its 
+baseline. You might get a more interpretable intercept if you centre 
+your explanatory variables (see ?scale). You could also look at changing 
+the default contrasts to "contr.sum" which will give comparisons to the 
+grand mean for your landfill variable. See ?contr.sum. To do this, just use:
+
+options(contrasts=c("contr.sum", "contr.poly"))
+
+Hope this helps,
+
+Simon.
+
+On 12/11/13 12:29, marieline gentes wrote:
+> Hello,
+>
+> I have a question regarding the function Betareg. I am a bit new to this package, and maybe I did not understand all the theory behind...
+>   
+> My data are proportions (%) of a contaminant (DecaBDE) in blood of birds (n=78) which were GPS-tagged so that we could see what kind of habitat they visited. We are investigating the effects of habitat use on the proportions of that contaminant.
+>   
+> The full model is as follow: %contaminant = % time spent in agriculture + %
+> time in urban + % time in St-Lawrence River + having visited a landfill (yes/no).
+>
+> Coding:
+> Deca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + AllLawren.outCol24 + LandfiWstwater.YesNo
+> + UrbanCov1.outCol24, data = mydata).
+>
+> Because I am not yet completely familiar with all the theory underlying beta regressions, I followed one of the examples in the package and created a basic model i.e., no second part specified to model the precision (as you can see from the coding).
+>   
+> Somehow all my models produced with betareg (including the intercept only) end up with a negative intercept - but I have no negative data. I was also expecting that the intercept of the null model would be the average of my dependant variable (as in a regular linear regression), but it is not....
+>
+> Any suggesions ? Could this be happening because I did not fit a two parts model ? Or did I simply misunderstand
+> how to interpret and use beta regressions?
+>
+> Thank you for your time,
+>
+> Marie
+> PhD candidate
+> Canada
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+Simon Blomberg, BSc (Hons), PhD, MAppStat, AStat.
+Lecturer and Consultant Statistician
+School of Biological Sciences
+The University of Queensland
+St. Lucia Queensland 4072
+Australia
+T: +61 7 3365 2506
+email: S.Blomberg1_at_uq.edu.au
+http://www.evolutionarystatistics.org
+
+Policies:
+1.  I will NOT analyse your data for you.
+2.  Your deadline is your problem.
+
+Statistics is the grammar of science - Karl Pearson.
+
+
+From s.blomberg1 at uq.edu.au  Tue Nov 12 04:24:21 2013
+From: s.blomberg1 at uq.edu.au (Simon Blomberg)
+Date: Tue, 12 Nov 2013 14:24:21 +1100
+Subject: [R-sig-eco] question about beta regressions
+In-Reply-To: <52819E14.90703@uq.edu.au>
+References: <1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>
+	<52819E14.90703@uq.edu.au>
+Message-ID: <52819F65.3050907@uq.edu.au>
+
+On 12/11/13 14:18, Simon Blomberg wrote:
+> Hi Marie,
+>
+> betareg uses a logit link function, so the negative intercept just 
+> means that the intercept proportion is less than one. 
+
+My bad. Negative intercept means p < 0.5).
+
+> To convert it back to a proportion, use plogis(InterceptValue).
+>
+> The intercept is the logit(proportion) that you would get if all your 
+> covariates were set to zero and the landfill treatment is set to its 
+> baseline. You might get a more interpretable intercept if you centre 
+> your explanatory variables (see ?scale). You could also look at 
+> changing the default contrasts to "contr.sum" which will give 
+> comparisons to the grand mean for your landfill variable. See 
+> ?contr.sum. To do this, just use:
+>
+> options(contrasts=c("contr.sum", "contr.poly"))
+>
+> Hope this helps,
+>
+> Simon.
+>
+> On 12/11/13 12:29, marieline gentes wrote:
+>> Hello,
+>>
+>> I have a question regarding the function Betareg. I am a bit new to 
+>> this package, and maybe I did not understand all the theory behind...
+>>   My data are proportions (%) of a contaminant (DecaBDE) in blood of 
+>> birds (n=78) which were GPS-tagged so that we could see what kind of 
+>> habitat they visited. We are investigating the effects of habitat use 
+>> on the proportions of that contaminant.
+>>   The full model is as follow: %contaminant = % time spent in 
+>> agriculture + %
+>> time in urban + % time in St-Lawrence River + having visited a 
+>> landfill (yes/no).
+>>
+>> Coding:
+>> Deca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + 
+>> AllLawren.outCol24 + LandfiWstwater.YesNo
+>> + UrbanCov1.outCol24, data = mydata).
+>>
+>> Because I am not yet completely familiar with all the theory 
+>> underlying beta regressions, I followed one of the examples in the 
+>> package and created a basic model i.e., no second part specified to 
+>> model the precision (as you can see from the coding).
+>>   Somehow all my models produced with betareg (including the 
+>> intercept only) end up with a negative intercept - but I have no 
+>> negative data. I was also expecting that the intercept of the null 
+>> model would be the average of my dependant variable (as in a regular 
+>> linear regression), but it is not....
+>>
+>> Any suggesions ? Could this be happening because I did not fit a two 
+>> parts model ? Or did I simply misunderstand
+>> how to interpret and use beta regressions?
+>>
+>> Thank you for your time,
+>>
+>> Marie
+>> PhD candidate
+>> Canada
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+-- 
+Simon Blomberg, BSc (Hons), PhD, MAppStat, AStat.
+Lecturer and Consultant Statistician
+School of Biological Sciences
+The University of Queensland
+St. Lucia Queensland 4072
+Australia
+T: +61 7 3365 2506
+email: S.Blomberg1_at_uq.edu.au
+http://www.evolutionarystatistics.org
+
+Policies:
+1.  I will NOT analyse your data for you.
+2.  Your deadline is your problem.
+
+Statistics is the grammar of science - Karl Pearson.
+
+
+From martin.obrist at wsl.ch  Tue Nov 12 16:23:20 2013
+From: martin.obrist at wsl.ch (Martin Obrist)
+Date: Tue, 12 Nov 2013 16:23:20 +0100
+Subject: [R-sig-eco] Count species in species lists with species
+	aggregates/complexes
+Message-ID: <57C6FF2B-4277-442F-8633-8E8726EDFD3E@wsl.ch>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/2fdba1df/attachment.pl>
+
+From tom_philippi at nps.gov  Tue Nov 12 21:20:57 2013
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Tue, 12 Nov 2013 12:20:57 -0800
+Subject: [R-sig-eco] Count species in species lists with species
+	aggregates/complexes
+In-Reply-To: <57C6FF2B-4277-442F-8633-8E8726EDFD3E@wsl.ch>
+References: <57C6FF2B-4277-442F-8633-8E8726EDFD3E@wsl.ch>
+Message-ID: <CAM9kYqhby-5GeRtY_kc15o4xM7OzoZ2=vbNC2m4weqRWrsuFJw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/ed36a594/attachment.pl>
+
+From rrsolar at gmail.com  Tue Nov 12 21:28:40 2013
+From: rrsolar at gmail.com (Ricardo Solar)
+Date: Tue, 12 Nov 2013 18:28:40 -0200
+Subject: [R-sig-eco] Collwel's extrapolation
+Message-ID: <CAA6CCijnxwvfyea-Dez6Eaw6h0Rq8TTwELBg66mL9pA6n4LN4A@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/92f23da5/attachment.pl>
+
+From batsncats at gmail.com  Wed Nov 13 12:14:41 2013
+From: batsncats at gmail.com (Bruce Miller)
+Date: Wed, 13 Nov 2013 06:14:41 -0500
+Subject: [R-sig-eco] Count species in species lists with species,
+	aggregates/complexes
+In-Reply-To: <mailman.1.1384340402.32061.r-sig-ecology@r-project.org>
+References: <mailman.1.1384340402.32061.r-sig-ecology@r-project.org>
+Message-ID: <52835F21.1070507@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131113/c4afffcb/attachment.pl>
+
+From amommendes at hotmail.com  Wed Nov 13 21:19:25 2013
+From: amommendes at hotmail.com (amommendes)
+Date: Wed, 13 Nov 2013 12:19:25 -0800 (PST)
+Subject: [R-sig-eco] Erro in ordiR2step
+Message-ID: <1384373965690-7578520.post@n2.nabble.com>
+
+Dear List,
+
+I'm trying select spatial variables with ordiR2step function {vegan}.
+But I got the following error:
+
+Error in terms.formula(formula, data = data) : 
+  invalid model formula in ExtractVars
+
+Could someone help me with this error? Would be some wrong with structure of
+my data?
+
+Thanks in advance,
+
+Best,
+
+Amom
+
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Erro-in-ordiR2step-tp7578520.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From ljleamy at uncc.edu  Thu Nov 14 15:31:51 2013
+From: ljleamy at uncc.edu (Leamy, Larry)
+Date: Thu, 14 Nov 2013 14:31:51 +0000
+Subject: [R-sig-eco] Interactions in MRM
+Message-ID: <80A91D3B40F03347AEE3E69E21946C5E07365EA7@RPITSEXMS2.its.uncc.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131114/7f7c1d9e/attachment.pl>
+
+From sarah.goslee at gmail.com  Thu Nov 14 16:53:31 2013
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 14 Nov 2013 10:53:31 -0500
+Subject: [R-sig-eco] Interactions in MRM
+In-Reply-To: <80A91D3B40F03347AEE3E69E21946C5E07365EA7@RPITSEXMS2.its.uncc.edu>
+References: <80A91D3B40F03347AEE3E69E21946C5E07365EA7@RPITSEXMS2.its.uncc.edu>
+Message-ID: <CAM_vjumKgiVWJshuS5cND3db_PEGnqeNARuRPxPboWAJ5U1WZg@mail.gmail.com>
+
+Hi Larry,
+
+On Thu, Nov 14, 2013 at 9:31 AM, Leamy, Larry <ljleamy at uncc.edu> wrote:
+> Dear Dr. Goslee:
+>
+> I found some posts about potential interactions in MRM, and I wonder if it is acceptable to construct an interaction term as follows?
+> leaf1 = MRM(gendist ~ regiondist + envirdist +I(regiondist*envirdist) + moldist, mrank = TRUE, nperm=1000)
+>
+> (I am using mrank = TRUE, incidentally, because our gendist matrix has a number of 0 values)
+
+Nothing has changed since those earlier discussions: MRM will not
+process interaction terms. You can use standard regression methods to
+get coefficients, but not measures of significance because os the
+permutation test needed for properly testing hypotheses based on
+dissimilarities.
+
+> If this is not acceptable, what if I simply multiply the elements in the two matrices to generate a separate (interaction) matrix?  This is the usual way I have formed interactions in multiple regression models in SAS.
+
+I don't know of any testing of the effectiveness of that method, and
+cannot recommend it. The extensive literature on partial Mantel tests
+should give you some idea that dealing with anything involving
+dissimilarities is not statistically straightforward.
+
+That said, if you find some research on the subject or develop your
+own rigorous testing I will add your findings into the ecodist
+package. :)
+
+> Which (if either) is preferable, and is there any problem with significance testing with an interaction term in the model?
+>
+> Thanks much for your help.
+>
+> Best,
+>
+> Larry Leamy
+>
+>
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From ucfagls at gmail.com  Thu Nov 14 20:49:07 2013
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Thu, 14 Nov 2013 13:49:07 -0600
+Subject: [R-sig-eco] Erro in ordiR2step
+In-Reply-To: <1384373965690-7578520.post@n2.nabble.com>
+References: <1384373965690-7578520.post@n2.nabble.com>
+Message-ID: <CAAHES9yZcxTVVvFQhNDBHKVVjZoBYa5mU5O_4pTJV+WUeapkCg@mail.gmail.com>
+
+The error says there is a problem with the formula used. Did you use a
+formula to fit the model? If so, care to show it to us?
+
+G
+
+On 13 November 2013 14:19, amommendes <amommendes at hotmail.com> wrote:
+> Dear List,
+>
+> I'm trying select spatial variables with ordiR2step function {vegan}.
+> But I got the following error:
+>
+> Error in terms.formula(formula, data = data) :
+>   invalid model formula in ExtractVars
+>
+> Could someone help me with this error? Would be some wrong with structure of
+> my data?
+>
+> Thanks in advance,
+>
+> Best,
+>
+> Amom
+>
+>
+>
+>
+>
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Erro-in-ordiR2step-tp7578520.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+Gavin Simpson, PhD
+
+
+From bottini.claire at orange.fr  Thu Nov 14 23:43:47 2013
+From: bottini.claire at orange.fr (Claire)
+Date: Thu, 14 Nov 2013 23:43:47 +0100 (CET)
+Subject: [R-sig-eco] fitting model with unbalanced design and
+	heteroscedasticity
+Message-ID: <967249737.41685.1384469027811.JavaMail.www@wwinf1m25>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131114/9514afba/attachment.pl>
+
+From n.santostasi at gmail.com  Fri Nov 15 14:28:24 2013
+From: n.santostasi at gmail.com (nina)
+Date: Fri, 15 Nov 2013 05:28:24 -0800 (PST)
+Subject: [R-sig-eco] help specifiyng cohort effects in package mra
+Message-ID: <1384522104281-7578525.post@n2.nabble.com>
+
+Hello,
+
+I am using package mra to perform some mark recapture analysis on a 4
+occasions dataset. 
+
+I want to fit a cormack-jolly-seber model with cohort and time varying
+capture probability and constant survival probability. 
+
+I decided to use 2d (number of animals*number of samples) matrices instead
+of vectors to specify the model. 
+
+My question is: how do I build the matrix for the cohort effect? How do I
+tell R to consider also the interactions between the factor "time" and
+"cohort"? 
+
+I hope someone can help me with this, 
+
+Thank you in advance
+
+Nina
+
+
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/help-specifiyng-cohort-effects-in-package-mra-tp7578525.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From bottini.claire at orange.fr  Tue Nov 19 00:50:05 2013
+From: bottini.claire at orange.fr (Claire)
+Date: Tue, 19 Nov 2013 00:50:05 +0100 (CET)
+Subject: [R-sig-eco] Good writting of an unballanced lme model ?
+Message-ID: <1009481697.45085.1384818605513.JavaMail.www@wwinf1m26>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131119/93620dc7/attachment.pl>
+
+From nickvandoormaal26 at hotmail.com  Wed Nov 20 13:21:09 2013
+From: nickvandoormaal26 at hotmail.com (Nick van Doormaal)
+Date: Wed, 20 Nov 2013 13:21:09 +0100
+Subject: [R-sig-eco] Adehabitat Ltraj error message: "non unique dates for a
+	given burst"
+Message-ID: <DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131120/7233ef41/attachment.pl>
+
+From basille.web at ase-research.org  Wed Nov 20 15:09:59 2013
+From: basille.web at ase-research.org (basille.web at ase-research.org)
+Date: Wed, 20 Nov 2013 09:09:59 -0500
+Subject: [R-sig-eco] Adehabitat Ltraj error message: "non unique dates
+ for a given burst"
+In-Reply-To: <DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>
+References: <DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>
+Message-ID: <528CC2B7.5020300@ase-research.org>
+
+Hi Nick,
+
+You can try:
+
+sum(duplicated(paste(da, march2012df$ID)))
+
+and from there, if the sum is > 0, identify the duplicates *per individual*.
+
+As far as I can tell, the function as.ltraj works at the burst level, in 
+your cases individuals.
+
+Mathieu.
+
+
+Le 11/20/2013 07:21 AM, Nick van Doormaal a ?crit :
+> Hello everyone,
+>
+> I'm trying to create a ltraj-class.
+> I start with importing an excel file containing all the relocations (in this case for the month March) into ArcMap and create a shapefile. Next I load the shapefile into R and transform the coordinates to UTM37S.
+>
+> My dataset looks as follows:
+>
+> head(march2012)
+>   coordinates                           ID                                       Date_old        Longitude   Latitude           Date
+> 0 (496297, 9688770)  Emusaya_Male  2012-03-20   38.96668   -2.815783  2012-03-20 00:04
+> 1 (496670, 9686680)  Emusaya_Male  2012-03-20   38.97003   -2.834650  2012-03-20 01:04
+> 2 (497136, 9685230)  Emusaya_Male  2012-03-20   38.97423   -2.847833  2012-03-20 02:04
+> 3 (497233, 9684700)  Emusaya_Male  2012-03-20   38.97510   -2.852633  2012-03-20 03:05
+> 4 (497105, 9684290)  Emusaya_Male  2012-03-20   38.97395   -2.856317  2012-03-20 04:04
+> 5 (497281, 9683830)  Emusaya_Male  2012-03-20   38.97553   -2.860467  2012-03-20 05:04
+>
+> I used the following script:
+> da <- as.character(march2012$Date)
+> da <- as.POSIXct(strptime(as.character(march2012$Date),"%y-%m-%d  %H:%M"))
+> march2012df <- as.data.frame(march2012)
+> xymarch2012 <- coordinates(march2012)
+> elemarch2012 <- as.ltraj(xy =xymarch2012, date = da, id = march2012df$ID)
+>
+> There error message I got was: "Error in as.ltraj(xy = xymarch2012, date = da, id = march2012df$ID) :
+>    non unique dates for a given burst".
+>
+> Before posting this message, I read about duplicates. My dataset includes 10 different elephants, so it could be that some dates are the same. However, I would like to keep these locations because they are different individuals.
+>
+> I hope I made my problem clear. If you need any more information, please let me know what kind of information and how to send it.
+>
+> Kind regards,
+>
+> Nick van Doormaal
+> MSc student Forest and Nature Conservation
+> Wageningen University, The Netherlands 		 	   		
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+-- 
+
+~$ whoami
+Mathieu Basille, PhD
+
+~$ locate --details
+University of Florida \\
+Fort Lauderdale Research and Education Center
+(+1) 954-577-6314
+http://ase-research.org/basille
+
+~$ fortune
+? Le tout est de tout dire, et je manque de mots
+Et je manque de temps, et je manque d'audace. ?
+  -- Paul ?luard
+
+
+From highstat at highstat.com  Thu Nov 21 09:34:43 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Thu, 21 Nov 2013 08:34:43 +0000
+Subject: [R-sig-eco] Course: Introduction to Linear mixed effects models,
+ GLMM and MCMC with R
+Message-ID: <528DC5A3.80208@highstat.com>
+
+We would like to announce the following statistics course;
+
+Course: Introduction to Linear mixed effects models, GLMM and MCMC with R
+When: 10-14 February, 2014
+Where: Pousada de juventude parque das nacoes. Rua de Moscavide, Lt 47 ? 
+101, 1998- 011. Lisbon, Portugal
+Info: http://www.highstat.com/statscourse.htm
+Flyer: http://www.highstat.com/Courses/Flyer2014_02SIM_LisbonV2.pdf
+
+Kind regards,
+
+Alain
+
+
+-- 
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007)
+2. Mixed effects models and extensions in ecology with R (2009)
+3. A Beginner's Guide to R (2009)
+4. Zero Inflated Models and GLMM with R (2012)
+5. A Beginner's Guide to GAM (2012)
+6. A Beginner's Guide to GLM and GLMM (2013)
+
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From nickvandoormaal26 at hotmail.com  Thu Nov 21 11:58:56 2013
+From: nickvandoormaal26 at hotmail.com (NickvanDoormaal)
+Date: Thu, 21 Nov 2013 02:58:56 -0800 (PST)
+Subject: [R-sig-eco] Adehabitat Ltraj error message: "non unique dates
+ for a given burst"
+In-Reply-To: <528CC2B7.5020300@ase-research.org>
+References: <DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>
+	<528CC2B7.5020300@ase-research.org>
+Message-ID: <DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131121/01cbe465/attachment.pl>
+
+From basille.web at ase-research.org  Thu Nov 21 16:40:16 2013
+From: basille.web at ase-research.org (Mathieu Basille)
+Date: Thu, 21 Nov 2013 10:40:16 -0500
+Subject: [R-sig-eco] Adehabitat Ltraj error message: "non unique dates
+ for a given burst"
+In-Reply-To: <DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>
+References: <DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>	<528CC2B7.5020300@ase-research.org>
+	<DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>
+Message-ID: <528E2960.3060008@ase-research.org>
+
+Ah! I didn't spot that in the first place, but you gave a wrong format to 
+the strptime function! The one you gave implied a '12-03-20 00:04' format. 
+As a result, all of them returned NAs (well, almost all of them... Might be 
+worth looking at the ten that went through it).
+
+You need to use %Y instead of %y.
+
+Mathieu.
+
+
+Le 11/21/2013 05:58 AM, NickvanDoormaal a ?crit :
+> Thank you so much for your quick reply Mathieu!
+>
+> I tried your suggestion:
+> sum(duplicated(paste(da, march2012df$ID)))
+> [1] 2587
+>
+> I was surprised by this large number, so I checked how many rows many dataset has:
+> nrow(march2012)
+> [1] 2597
+>
+> This almost exactly the same, only a difference of 10 (maybe because of the 10 individuals?).
+> It seems that all the dates are identified as duplicates...
+>
+>
+>
+> Date: Wed, 20 Nov 2013 06:11:26 -0800
+> From: ml-node+s471788n7578529h52 at n2.nabble.com
+> To: nickvandoormaal26 at hotmail.com
+> Subject: Re: Adehabitat Ltraj error message: "non unique dates for a given burst"
+>
+>
+>
+> 	Hi Nick,
+>
+>
+> You can try:
+>
+>
+> sum(duplicated(paste(da, march2012df$ID)))
+>
+>
+> and from there, if the sum is > 0, identify the duplicates *per individual*.
+>
+>
+> As far as I can tell, the function as.ltraj works at the burst level, in
+>
+> your cases individuals.
+>
+>
+> Mathieu.
+>
+>
+>
+> Le 11/20/2013 07:21 AM, Nick van Doormaal a ?crit :
+>
+>> Hello everyone,
+>
+>>
+>
+>> I'm trying to create a ltraj-class.
+>
+>> I start with importing an excel file containing all the relocations (in this case for the month March) into ArcMap and create a shapefile. Next I load the shapefile into R and transform the coordinates to UTM37S.
+>
+>>
+>
+>> My dataset looks as follows:
+>
+>>
+>
+>> head(march2012)
+>
+>>    coordinates                           ID                                       Date_old        Longitude   Latitude           Date
+>
+>> 0 (496297, 9688770)  Emusaya_Male  2012-03-20   38.96668   -2.815783  2012-03-20 00:04
+>
+>> 1 (496670, 9686680)  Emusaya_Male  2012-03-20   38.97003   -2.834650  2012-03-20 01:04
+>
+>> 2 (497136, 9685230)  Emusaya_Male  2012-03-20   38.97423   -2.847833  2012-03-20 02:04
+>
+>> 3 (497233, 9684700)  Emusaya_Male  2012-03-20   38.97510   -2.852633  2012-03-20 03:05
+>
+>> 4 (497105, 9684290)  Emusaya_Male  2012-03-20   38.97395   -2.856317  2012-03-20 04:04
+>
+>> 5 (497281, 9683830)  Emusaya_Male  2012-03-20   38.97553   -2.860467  2012-03-20 05:04
+>
+>>
+>
+>> I used the following script:
+>
+>> da <- as.character(march2012$Date)
+>
+>> da <- as.POSIXct(strptime(as.character(march2012$Date),"%y-%m-%d  %H:%M"))
+>
+>> march2012df <- as.data.frame(march2012)
+>
+>> xymarch2012 <- coordinates(march2012)
+>
+>> elemarch2012 <- as.ltraj(xy =xymarch2012, date = da, id = march2012df$ID)
+>
+>>
+>
+>> There error message I got was: "Error in as.ltraj(xy = xymarch2012, date = da, id = march2012df$ID) :
+>
+>>     non unique dates for a given burst".
+>
+>>
+>
+>> Before posting this message, I read about duplicates. My dataset includes 10 different elephants, so it could be that some dates are the same. However, I would like to keep these locations because they are different individuals.
+>
+>>
+>
+>> I hope I made my problem clear. If you need any more information, please let me know what kind of information and how to send it.
+>
+>>
+>
+>> Kind regards,
+>
+>>
+>
+>> Nick van Doormaal
+>
+>> MSc student Forest and Nature Conservation
+>
+>> Wageningen University, The Netherlands 		 	   		
+>
+>> 	[[alternative HTML version deleted]]
+>
+>>
+>
+>> _______________________________________________
+>
+>> R-sig-ecology mailing list
+>
+>> [hidden email]
+>
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+-- 
+
+~$ whoami
+Mathieu Basille, PhD
+
+~$ locate --details
+University of Florida \\
+Fort Lauderdale Research and Education Center
+(+1) 954-577-6314
+http://ase-research.org/basille
+
+~$ fortune
+? Le tout est de tout dire, et je manque de mots
+Et je manque de temps, et je manque d'audace. ?
+  -- Paul ?luard
+
+
+From rab.mahnaz at gmail.com  Fri Nov 22 10:39:00 2013
+From: rab.mahnaz at gmail.com (Mahnaz Rabbaniha)
+Date: Fri, 22 Nov 2013 13:09:00 +0330
+Subject: [R-sig-eco] pca in ade4
+Message-ID: <CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/b73436b6/attachment.pl>
+
+From Finn.Bastiansen at rifcon.de  Fri Nov 22 10:53:31 2013
+From: Finn.Bastiansen at rifcon.de (Finn Bastiansen)
+Date: Fri, 22 Nov 2013 09:53:31 +0000
+Subject: [R-sig-eco] pca in ade4
+In-Reply-To: <CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>
+References: <CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>
+Message-ID: <34B3D68F987EA547A68BCCF8E7FF5CDC22DD7CB3@Rifcon-HD-MSX1.rifcon-gmbh.intern>
+
+Dear Mahnaz,
+
+I do not use that specific library, however, judging from the structure of the resulting object ("str(deug.dudi)") it only contains numerical data. However, a factorial variable is expected by the function you use ("factor expected for fac "). Thus you have to convert the respective variable to factors to make the function happy :-)
+
+Have a look in the R documentation on how to do that:
+
+?factor
+?as.factor
+
+Hope that helps,
+Finn
+
+RIFCON GmbH
+Goldbeckstra?e 13
+D-69493 Hirschberg
+Tel: +49-6201 84528-24
+Email: finn.bastiansen at rifcon.de
+
+RIFCON GmbH - Zinkenbergweg 8 - D-69493 Hirschberg
+Goldbeckstra?e 13 - D-69493 Hirschberg
+Amtsgericht Mannheim - HRB 433053 - Ust.IdNr. DE 814188954 - www.rifcon.de
+Gesch?ftsf?hrer: Dr. Michael Riffel
+Prokura: J?rgen Riffel / Dr. Jan-Dieter Ludwigs
+
+
+-----Urspr?ngliche Nachricht-----
+Von: Mahnaz Rabbaniha [mailto:rab.mahnaz at gmail.com]
+Gesendet: Freitag, 22. November 2013 10:39
+An: r-sig-ecology
+Betreff: [R-sig-eco] pca in ade4
+
+Dear all
+
+for pca on my data i used this code
+
+deug.dudi <- dudi.pca(c(1:62), center =c(63),scale = FALSE, scan = FALSE)
+
+s.class(deug.dudi$li, c(63), cpoint = 1)
+
+but i take this message:
+
+*Error in s.class(deug.dudi$li, c(63), cpoint = 1) : *
+*  factor expected for fac*
+
+please explain, what is meaning of this error
+
+
+thanks
+--
+Mahnaz Rabbaniha
+marine Ecologist, PhD
+Iranian Fisheries Research Organization (IFRO)
+P.O.Box: 14155-6116
+Tehran, IRAN
+Phone:   +98 21 44580953
+Fax:       +98 21 44580583
+
+        [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+DISCLAIMER: This e-mail transmission may contain confide...{{dropped:13}}
+
+
+From nickvandoormaal26 at hotmail.com  Fri Nov 22 10:56:13 2013
+From: nickvandoormaal26 at hotmail.com (NickvanDoormaal)
+Date: Fri, 22 Nov 2013 01:56:13 -0800 (PST)
+Subject: [R-sig-eco] Adehabitat Ltraj error message: "non unique dates
+ for a given burst"
+In-Reply-To: <528E2960.3060008@ase-research.org>
+References: <DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>
+	<528CC2B7.5020300@ase-research.org>
+	<DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>
+	<528E2960.3060008@ase-research.org>
+Message-ID: <DUB119-W8D4D48E76A6354C46C4CAAAE00@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/c94dfda0/attachment.pl>
+
+From Finn.Bastiansen at rifcon.de  Fri Nov 22 11:37:10 2013
+From: Finn.Bastiansen at rifcon.de (Finn Bastiansen)
+Date: Fri, 22 Nov 2013 10:37:10 +0000
+Subject: [R-sig-eco] pca in ade4
+In-Reply-To: <CANLCanVowNJvQTv9nVBDUUt3cG-BzfJ-AF5Dvvo89PaZUGaw2A@mail.gmail.com>
+References: <CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>
+	<34B3D68F987EA547A68BCCF8E7FF5CDC22DD7CB3@Rifcon-HD-MSX1.rifcon-gmbh.intern>
+	<CANLCanVowNJvQTv9nVBDUUt3cG-BzfJ-AF5Dvvo89PaZUGaw2A@mail.gmail.com>
+Message-ID: <34B3D68F987EA547A68BCCF8E7FF5CDC22DD7CF3@Rifcon-HD-MSX1.rifcon-gmbh.intern>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/80b827e9/attachment.pl>
+
+From stephane.dray at univ-lyon1.fr  Fri Nov 22 21:22:18 2013
+From: stephane.dray at univ-lyon1.fr (=?ISO-8859-1?Q?St=E9phane_Dray?=)
+Date: Fri, 22 Nov 2013 21:22:18 +0100
+Subject: [R-sig-eco] pca in ade4
+In-Reply-To: <CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>
+References: <CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>
+Message-ID: <528FBCFA.2010200@univ-lyon1.fr>
+
+Hi,
+
+I am not sure to understand what you really want to do. Here is an 
+example of pca:
+
+library(ade4)
+data(doubs)
+pca1 <- dudi.pca(doubs$env, scan = F)
+screeplot(pca1)
+summary(pca1)
+scatter(pca1) ## or biplot(pca1)
+s.label(pca1$li) ## factorial maps for the row
+s.corcircle(pca1$co)
+
+## partition of the sites in 3 groups according to their position on the 
+river
+fac <- cut(1:30, 3,labels=c("upstream", "center", "downstream"))
+s.class(pca1$li, fac, col = rainbow(3))
+
+Cheers
+
+
+Le 22/11/2013 10:39, Mahnaz Rabbaniha a ?crit :
+> Dear all
+>
+> for pca on my data i used this code
+>
+> deug.dudi <- dudi.pca(c(1:62), center =c(63),scale = FALSE, scan = FALSE)
+>
+> s.class(deug.dudi$li, c(63), cpoint = 1)
+>
+> but i take this message:
+>
+> *Error in s.class(deug.dudi$li, c(63), cpoint = 1) : *
+> *  factor expected for fac*
+>
+> please explain, what is meaning of this error
+>
+>
+> thanks
+
+
+-- 
+St?phane DRAY (stephane.dray at univ-lyon1.fr)
+Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+Tel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88
+http://pbil.univ-lyon1.fr/members/dray/
+
+
+From enrico.caprio at gmail.com  Tue Nov 26 11:00:52 2013
+From: enrico.caprio at gmail.com (Enrico Caprio)
+Date: Tue, 26 Nov 2013 11:00:52 +0100
+Subject: [R-sig-eco] Dealing with overdispersion in mixed model with count
+	data
+Message-ID: <CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/8dae6d7c/attachment.pl>
+
+From enrico.caprio at gmail.com  Tue Nov 26 12:36:40 2013
+From: enrico.caprio at gmail.com (Enrico Caprio)
+Date: Tue, 26 Nov 2013 12:36:40 +0100
+Subject: [R-sig-eco] Dealing with overdispersion in mixed model with
+	count data
+In-Reply-To: <06443C27-B20E-4F34-8F7D-6AC8C5369BBA@gmail.com>
+References: <CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>
+	<06443C27-B20E-4F34-8F7D-6AC8C5369BBA@gmail.com>
+Message-ID: <CAG6hCpMMhPnUjKB9nm48sZ3PbA92pO=b6A+RS5C0_wEB38xJxQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/a3dff9fa/attachment.pl>
+
+From francesco.vitali at unifi.it  Tue Nov 26 17:31:59 2013
+From: francesco.vitali at unifi.it (Vitali francesco)
+Date: Tue, 26 Nov 2013 17:31:59 +0100
+Subject: [R-sig-eco] ANOSIM interpretation
+Message-ID: <5294CCFF.2070202@unifi.it>
+
+Dear all,
+
+I am using ANOSIM to test differences in groups of microbial 
+communities, analysed with T-RFLP. I would like to receive some 
+indication on the correct interpretation of the output, especially the 
+graphical one.
+
+- Firs of all, what is the meaning of the y-scale in the boxplot? Does 
+it represent dissimilarity values?
+- Consequently, is it correct to interpret the width and position of the 
+boxes as a comparison of the variability of samples in different groups? 
+(i.e. a group of samples that exhibit lower values and a narrower box 
+has lower variability than a group with higher values and broader box)
+
+Hopefully I was clear enough
+Thank for your time,
+
+Francesco
+PhD student
+
+-- 
+Francesco Vitali
+University of Florence - Department of Biology
+Via Madonna del Piano 6
+50019 Sesto Fiorentino (FI) - Italy
+Tel. +39 055 4574731
+Fax. +39 055 4574905
+
+
+From highstat at highstat.com  Tue Nov 26 18:18:35 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Tue, 26 Nov 2013 17:18:35 +0000
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 68, Issue 17
+In-Reply-To: <mailman.1.1385463601.1684.r-sig-ecology@r-project.org>
+References: <mailman.1.1385463601.1684.r-sig-ecology@r-project.org>
+Message-ID: <5294D7EB.2090807@highstat.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/d752d2bb/attachment.pl>
+
+From carbrae at gmail.com  Wed Nov 27 19:20:14 2013
+From: carbrae at gmail.com (Bradley Carlson)
+Date: Wed, 27 Nov 2013 13:20:14 -0500
+Subject: [R-sig-eco] Dealing with overdispersion in mixed model with
+	count data
+In-Reply-To: <CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>
+References: <CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>
+Message-ID: <CAF37_Nd-s_n3VjvC6FopSX-0U-JM5OqNB2SDPS975dOzrWicWA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/6202ae3d/attachment.pl>
+
+From pdixon at iastate.edu  Wed Nov 27 19:59:23 2013
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Wed, 27 Nov 2013 18:59:23 +0000
+Subject: [R-sig-eco] Observation-level random effects to account for
+	overdispersion
+Message-ID: <70BE37C808A96042AD67E77340C4D4634D3CAAD8@ITSDAG3D.its.iastate.edu>
+
+All,
+
+I am a real fan of using observation-level random effects to account for overdispersion with count data.  Using the default log link, an observation-level normally-distributed random effect models the data as a convolution of a Poisson and log-normal distribution.  The negative binomial is the convolution of a Poisson and gamma distribution.  For all practical purposes, the log-normal and gamma distribution are indistinguishable.  Computationally, the normal model is much easier especially if you have additional normally distributed random effects.  The sum of normals is easy to model; the sum of some normals and a log gamma is not.
+
+Philip Dixon
+
+
+From pdixon at iastate.edu  Wed Nov 27 20:00:32 2013
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Wed, 27 Nov 2013 19:00:32 +0000
+Subject: [R-sig-eco] Modeling overdispersed count data
+Message-ID: <70BE37C808A96042AD67E77340C4D4634D3CAAF0@ITSDAG3D.its.iastate.edu>
+
+Bayesians commonly use the log normal to account for overdispersion.  I learnt the trick from Ben Bolker.  His book may be a citable source.
+
+Philip Dixon
+
+
+From mlgentes2 at yahoo.com  Wed Nov 27 22:29:57 2013
+From: mlgentes2 at yahoo.com (marieline gentes)
+Date: Wed, 27 Nov 2013 13:29:57 -0800 (PST)
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+Message-ID: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/fc5a73de/attachment.pl>
+
+From chris at trickysolutions.com.au  Wed Nov 27 23:29:07 2013
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Thu, 28 Nov 2013 09:29:07 +1100
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+Message-ID: <a8f03899b1409e6c00782028cab95833@mail.gmail.com>
+
+Hi Marieline,
+
+I would consider using the raw data so it is binary, and use a random
+intercept to account for the different sampling intensities for each bird.
+
+
+If U have summarised the data so it is 1 score for each bird which is a %
+I can?t see how U can account for repeated measures since U don?t have the
+correlation structure in your data.
+
+It's also hard to tell if you will likely need to account for
+pseudoreplication caused by serial correlation i.e. repeated measure since
+I can?t see any indication of the fix rate. However if you plot the
+residuals this may help, that said residuals from logistic regressions can
+be hard to interpret so some type of lagged correlation plot would likely
+be better.
+
+Chris Howden B.Sc. (Hons) GStat.
+Founding Partner
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(skype) chris.howden
+chris at trickysolutions.com.au
+
+
+
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of marieline gentes
+Sent: Thursday, 28 November 2013 8:30 AM
+To: r-sig-ecology at r-project.org; moi
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+
+Dear list,
+
+I am a bit new to logistic regressions. I am working with GPS data from
+GPS-tracked birds. My objective is to investigate whether various
+covariates influence the probabilty of visiting specific habitats. Each
+bird has visited many habitats during the course of its GPS tracking.
+
+Here is a small sample of the data:
+
+Bird.ID Year Sex body.index Recapt PrevWeek.Rain AgriYes AgriNo UrbanYes
+UrbanNo CAL 2010 M 21.99155 13-May-10 1.43 0 100 0 100 CAO 2011 F
+-19.91797 27-Apr-11 4.23 54 46 9 91 CFL 2010 F 25.61063 12-May-10 2.16 31
+69 2 98 CFP 2010 M -30.65814 13-May-10 1.43 60 40 0 100
+
+I understand that I have to use logistic regression, with a cbind code,
+because my response variable is not binary anymore (the response is a
+summary of the success vs failures).
+
+Based on R tutorials, I am thinking about codes that would look like this:
+
+Agri.RainSex = glm(cbind(AgriYes, AgriNo) ~ PrevWeekRain + Sex + Year +
+Year*Sex,family=binomial (logit), data=mydata) However, contrary to the
+examples I see online, my data are from individual birds, not from groups
+of birds. If I had been using the raw binary data, each bird would have
+100 hundred lines (I converted the percentages into success/failures)(all
+my % are weighted the same - that is not a problem here). Am I supposed to
+take into account some kind of repeated measure in my model ?
+
+Notes:
+For people who are thinking about overdispersed data: my data does not
+seem to be overdispersed. But I will inspect that after I am confident
+that my basic model is ok. So this question is about dealing with repeated
+measured, not about adding a random intercept for overdispersion.
+
+For people who are working with habitat selection models: this is not the
+case here. We are not working on resource selection. We want to fit a
+simple logistic regression on this data as a part of data exploration.
+This ultimate goal is to link contaminant burden with the proportion of
+time spent in a given habitat.
+
+Thank you for your advice,
+
+Marie
+	[[alternative HTML version deleted]]
+
+
+From solymos at ualberta.ca  Thu Nov 28 00:32:47 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Wed, 27 Nov 2013 16:32:47 -0700
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+Message-ID: <CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/c99cb9bf/attachment.pl>
+
+From chris at trickysolutions.com.au  Thu Nov 28 00:50:15 2013
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Thu, 28 Nov 2013 10:50:15 +1100
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+	<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>
+Message-ID: <89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>
+
+Hi Peter,
+
+Does it have the ability to fit random effects? Or some other way to
+address the pseudoreplication expected in RSF studies using GPS fix data
+with little time between fixes ? (Just had a quick look at the rspf
+package and I couldn't see any)
+
+
+
+Chris Howden B.Sc. (Hons) GStat.
+Founding Partner
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(skype) chris.howden
+chris at trickysolutions.com.au
+
+
+
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Peter Solymos
+Sent: Thursday, 28 November 2013 10:33 AM
+To: marieline gentes
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Logistic regression with repeated measures ?
+
+Marie,
+
+Your problem and data seems to me a resource selection problem with
+matched use-availability design. Estimating procedure for that design is
+discussed in Lele and Keim (2006, Ecology 87:3021--3028) and implemented
+in the ResourceSelection package: rspf function, see description of
+argument 'm'
+for specifying matched points for individual birds. The output is a model
+for probability of selection given the distribution of environmental
+covariates available for these specific individuals.
+
+Cheers,
+
+Peter
+
+--
+PC)ter SC3lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB
+solymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com Alberta
+Biodiversity Monitoring Institute, http://www.abmi.ca Boreal Avian
+Modelling Project, http://www.borealbirds.ca
+
+
+On Wed, Nov 27, 2013 at 2:29 PM, marieline gentes
+<mlgentes2 at yahoo.com>wrote:
+
+> Dear list,
+>
+> I am a bit new to logistic regressions. I am working with GPS data
+> from GPS-tracked birds. My objective is to investigate whether various
+> covariates influence the probabilty of visiting specific habitats.
+> Each bird has visited many habitats during the course of its GPS
+tracking.
+>
+> Here is a small sample of the data:
+>
+> Bird.ID Year Sex body.index Recapt PrevWeek.Rain AgriYes AgriNo
+> UrbanYes UrbanNo CAL 2010 M 21.99155 13-May-10 1.43 0 100 0 100 CAO
+> 2011 F -19.91797 27-Apr-11 4.23 54 46 9 91 CFL 2010 F 25.61063
+> 12-May-10 2.16 31 69 2 98 CFP 2010 M -30.65814 13-May-10 1.43 60 40 0
+> 100
+>
+> I understand that I have to use logistic regression, with a cbind
+> code, because my response variable is not binary anymore (the response
+> is a summary of the success vs failures).
+>
+> Based on R tutorials, I am thinking about codes that would look like
+this:
+>
+> Agri.RainSex = glm(cbind(AgriYes, AgriNo) ~ PrevWeekRain + Sex + Year
+> + Year*Sex,family=binomial (logit), data=mydata) However, contrary to
+> the examples I see online, my data are from individual birds, not from
+> groups of birds. If I had been using the raw binary data, each bird
+> would have 100 hundred lines (I converted the percentages into
+> success/failures)(all my % are weighted the same - that is not a
+> problem here). Am I supposed to take into account some kind of
+> repeated measure in my model ?
+>
+> Notes:
+> For people who are thinking about overdispersed data: my data does not
+> seem to be overdispersed. But I will inspect that after I am confident
+> that my basic model is ok. So this question is about dealing with
+> repeated measured, not about adding a random intercept for
+overdispersion.
+>
+> For people who are working with habitat selection models: this is not
+> the case here. We are not working on resource selection. We want to
+> fit a simple logistic regression on this data as a part of data
+> exploration. This ultimate goal is to link contaminant burden with the
+> proportion of time spent in a given habitat.
+>
+> Thank you for your advice,
+>
+> Marie
+>         [[alternative HTML version deleted]]
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From solymos at ualberta.ca  Thu Nov 28 01:19:46 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Wed, 27 Nov 2013 17:19:46 -0700
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+	<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>
+	<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>
+Message-ID: <CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/305a9157/attachment.pl>
+
+From mlgentes2 at yahoo.com  Thu Nov 28 02:08:18 2013
+From: mlgentes2 at yahoo.com (marieline gentes)
+Date: Wed, 27 Nov 2013 17:08:18 -0800 (PST)
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>	<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>	<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>
+	<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>
+Message-ID: <1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/27121c7a/attachment.pl>
+
+From solymos at ualberta.ca  Thu Nov 28 02:17:58 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Wed, 27 Nov 2013 18:17:58 -0700
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+	<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>
+	<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>
+	<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>
+	<1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>
+Message-ID: <CAH9coKaON8GH=Or9Ehq6sGDp174az-0++08uVFhLM3aaoVEmvg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/bff7cf77/attachment.pl>
+
+From mbrooks at ufl.edu  Thu Nov 28 02:20:33 2013
+From: mbrooks at ufl.edu (Mollie Brooks)
+Date: Thu, 28 Nov 2013 10:20:33 +0900
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <a8f03899b1409e6c00782028cab95833@mail.gmail.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+	<a8f03899b1409e6c00782028cab95833@mail.gmail.com>
+Message-ID: <7345C28F-FAF7-42B7-8E8A-EA36FDC7A2EF@ufl.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/55f3388f/attachment.pl>
+
+From mbrooks at ufl.edu  Thu Nov 28 02:31:14 2013
+From: mbrooks at ufl.edu (Mollie Brooks)
+Date: Thu, 28 Nov 2013 10:31:14 +0900
+Subject: [R-sig-eco] Logistic regression with repeated measures ?
+In-Reply-To: <CAH9coKaON8GH=Or9Ehq6sGDp174az-0++08uVFhLM3aaoVEmvg@mail.gmail.com>
+References: <1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>
+	<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>
+	<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>
+	<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>
+	<1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>
+	<CAH9coKaON8GH=Or9Ehq6sGDp174az-0++08uVFhLM3aaoVEmvg@mail.gmail.com>
+Message-ID: <058092DB-6038-4542-ABDA-978F5971A5D8@ufl.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/21f3dbeb/attachment.pl>
+
+From alemukass at yahoo.com  Thu Nov 28 15:09:01 2013
+From: alemukass at yahoo.com (kassahun Alemu)
+Date: Thu, 28 Nov 2013 17:09:01 +0300
+Subject: [R-sig-eco] This chains contains uninitialized variables and the
+	trap report says " undefined real result"
+Message-ID: <000001ceec43$9ef47d30$dcdd7790$@com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/6e8b9b87/attachment.pl>
+
+From bohara at senckenberg.de  Thu Nov 28 16:07:50 2013
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Thu, 28 Nov 2013 16:07:50 +0100
+Subject: [R-sig-eco] This chains contains uninitialized variables and
+ the trap report says " undefined real result"
+In-Reply-To: <000001ceec43$9ef47d30$dcdd7790$@com>
+References: <000001ceec43$9ef47d30$dcdd7790$@com>
+Message-ID: <52975C46.5030206@senckenberg.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/105d5326/attachment.pl>
+

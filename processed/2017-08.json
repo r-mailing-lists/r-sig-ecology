@@ -1,0 +1,372 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2017-08",
+  "messages": [
+    {
+      "id": "msg-547ec9de99d3",
+      "message_id": "<CAGJPu+2pQFwbdohatf8+1d4ye67Fd=S6bK1UJ+uPRPJWxBhhYg@mail.gmail.com>",
+      "from_name": "Tania Bird",
+      "from_email_hash": "6d9ea5642079aaf7dcadfcc2fbfde593a9fd96c23b820a615c5694f173d3f3e4",
+      "date": "2017-08-02T19:58:04+03:00",
+      "subject": "[R-sig-eco] Thresholds of Synchrony in R",
+      "subject_clean": "Thresholds of Synchrony in R",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi all,\nApologies if this is more a stats question than an R question but I do need\nhelp with R for the solution.\n\nI'm calculating the degree of synchrony of population fluctuations through\ntime in a community, based on Loreau & Mazencourt 2008 paper.\nLoreau, Michel, and Claire de Mazancourt. (2008) \"Species synchrony and its\ndrivers: Neutral and nonneutral community dynamics in fluctuating\nenvironments.\" The American Naturalist 172, no. 2: E48-66.\ndoi:10.1086/589746.\n\nI am using this code:\n\ndat = cbind(sp1 = rnorm(100, 10, 2), sp2 = rnorm(100, 10, 2))\n    #Two species with random independent abundance sampled 100 times.\nV = var(dat)   # variance-covariance matrix for all species\n    # calculate synchrony index from covariance matrix\nsynchrony = function(V) {\nd = sqrt(diag(V))\nsum(V) /sum(d%*%t(d))\n}\n\nS = synchrony(V)\n\nS runs from 0 (total Asynchrony) to 1 (total Synchrony) with 0.5 = random\nor no synchrony as described by the authors.\n\nI am wondering if there is a to calculate a threshold or value of S at\nwhich I can say that there is \"significant Asynchrony in this community\" or\n significant Synchrony in this community\". For example is 0.3 asynchronous\nor not really ?\n\nShould this threshold based on the data range or the variation itself?\nIn which case how would I code this calculation?\n\nOr should I just say that anything <0.25 is significantly/very\nAsynchronous?\nIn which case how can I generate a column to say\n if S <0.25 its asynchronous or if its >0.75 its synchronous?\n\nThanks for your feedback\nTania\n\n\nTania Bird MSc\nPhD Student,\nGeo Ecology Lab\nBen Gurion University\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi all,\nApologies if this is more a stats question than an R question but I do need\nhelp with R for the solution.\n\nI'm calculating the degree of synchrony of population fluctuations through\ntime in a ",
+      "thread_id": "thread-547ec9de99d3",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-8385ea511fc2",
+      "message_id": "<0d2db5dc-1a93-3198-fda7-49108648f451@okologia.mta.hu>",
+      "from_name": "Zoltan Botta-Dukat",
+      "from_email_hash": "f00e656eaf52ee61f2a9504394926524b0b4f3d3969f97823c7d8510b1cd309c",
+      "date": "2017-08-03T09:51:50+02:00",
+      "subject": "[R-sig-eco] Thresholds of Synchrony in R",
+      "subject_clean": "Thresholds of Synchrony in R",
+      "in_reply_to": "<CAGJPu+2pQFwbdohatf8+1d4ye67Fd=S6bK1UJ+uPRPJWxBhhYg@mail.gmail.com>",
+      "references": [
+        "<CAGJPu+2pQFwbdohatf8+1d4ye67Fd=S6bK1UJ+uPRPJWxBhhYg@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Tania,\n\nI suspect that there is no general threshold.\nYou can check significance of departure from 0.5 by randomization test:\n1)  randomize your data,\n2) calculate synchrony for the randomized data\n3) repeat step 1 and 2 many times (at least 999)\n4) p-value = min(# cases where observed S is higher than random; # cases \nwhere observed S is lower than random)/(number of randoms +1)\n\nThere are (at least) two ways of randomization:\n- simply shuffling values within one species' time series - it is \nsimple, but destroys the temporal autocorrelation within time series\n- shifting values within one one species' time series (as it would be \ncircular data) - it preserves the autocorrelation, so I would use it.\n\nBest wishes,\n\nZoltan\n\n2017.08.02. 18:58 keltez?ssel, Tania Bird ?rta:\n> Hi all,\n> Apologies if this is more a stats question than an R question but I do need\n> help with R for the solution.\n>\n> I'm calculating the degree of synchrony of population fluctuations through\n> time in a community, based on Loreau & Mazencourt 2008 paper.\n> Loreau, Michel, and Claire de Mazancourt. (2008) \"Species synchrony and its\n> drivers: Neutral and nonneutral community dynamics in fluctuating\n> environments.\" The American Naturalist 172, no. 2: E48-66.\n> doi:10.1086/589746.\n>\n> I am using this code:\n>\n> dat = cbind(sp1 = rnorm(100, 10, 2), sp2 = rnorm(100, 10, 2))\n>      #Two species with random independent abundance sampled 100 times.\n> V = var(dat)   # variance-covariance matrix for all species\n>      # calculate synchrony index from covariance matrix\n> synchrony = function(V) {\n> d = sqrt(diag(V))\n> sum(V) /sum(d%*%t(d))\n> }\n>\n> S = synchrony(V)\n>\n> S runs from 0 (total Asynchrony) to 1 (total Synchrony) with 0.5 = random\n> or no synchrony as described by the authors.\n>\n> I am wondering if there is a to calculate a threshold or value of S at\n> which I can say that there is \"significant Asynchrony in this community\" or\n>   significant Synchrony in this community\". For example is 0.3 asynchronous\n> or not really ?\n>\n> Should this threshold based on the data range or the variation itself?\n> In which case how would I code this calculation?\n>\n> Or should I just say that anything <0.25 is significantly/very\n> Asynchronous?\n> In which case how can I generate a column to say\n>   if S <0.25 its asynchronous or if its >0.75 its synchronous?\n>\n> Thanks for your feedback\n> Tania\n>\n>\n> Tania Bird MSc\n> PhD Student,\n> Geo Ecology Lab\n> Ben Gurion University\n>\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n-- \n\nBotta-Duk?t Zolt?n                                Zolt?n BOTTA-Duk?t\n------------------------------------------------------------------------------------\n?kol?giai ?s Botanikai Int?zet                    Institute of Ecology and Botany\nMagyar Tudom?nyos Akad?mia                        Hungarian Academy of Sciences\n?kol?giai Kutat?k?zpont                           Centre for Ecological Research\n--------------------------------------------------------------------------------------------\n2163. V?cr?t?t, Alkotm?ny u. 2-4.                 H-2163 V?cr?t?t, Alkom?ny u. 2-4.,HUNGARY\ntel: +36 28 360122/138                            Phone: +36 28 360122/138\nfax: +36 28 360110                                Fax +36 28 360110\nbotta-dukat.zoltan at okologia.mta.hu                botta-dukat.zoltan at okologia.mta.hu\nhttp://okologia.mta.hu/Botta-Dukat.Zoltan         http://okologia.mta.hu/en/Zoltan.BOTTA-DUKAT\n\n*New book:*\nTheory-Based Ecology; A Darwinian approach\nAuthors: Liz P?sztor, Zolt?n Botta-Duk?t, Gabriella Magyar, Tam?s \nCz?r?n, and G?za Mesz?na\nAvailable at Amazon \n<https://www.amazon.com/Theory-Based-Ecology-Darwinian-Liz-Pasztor/dp/0199577862/ref=sr_1_1?s=books&ie=UTF8&qid=1467644770&sr=1-1&refinements=p_27%3ATamas+Czaran>, \nin most major bookstores, or directly from Oxford University Press \n<https://global.oup.com/academic/product/theory-based-ecology-9780199577866?lang=en&cc=gb>\nCompanion website: http://tbe.elte.hu/\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear Tania,\n\nI suspect that there is no general threshold.\nYou can check significance of departure from 0.5 by randomization test:\n1)  randomize your data,\n2) calculate synchrony for the randomized da",
+      "thread_id": "thread-547ec9de99d3",
+      "thread_depth": 1,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-b6c6752a0027",
+      "message_id": "<CADU_5Xn9Hz8VWB-QMrhXZd1Z7a_oN8JfohUdm763Ut_QH42J-Q@mail.gmail.com>",
+      "from_name": "Adam Rusk",
+      "from_email_hash": "be07374b064d91e02d8e7c9d0fa80948b553e58ce92a66a10510dd0f71c2e4a4",
+      "date": "2017-08-03T09:44:55-05:00",
+      "subject": "[R-sig-eco] gridExtra font family",
+      "subject_clean": "gridExtra font family",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Is there a way to change the front family in a gridExtra tableGrob? I?m\ntrying to add a table below a ggplot graphic and need to use a specific\nfont.\n\n\n\nThanks!\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Is there a way to change the front family in a gridExtra tableGrob? I?m\ntrying to add a table below a ggplot graphic and need to use a specific\nfont.\n\n\n\nThanks!\n\n\t[[alternative HTML version deleted]]",
+      "thread_id": "thread-b6c6752a0027",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-d0f30e0c8db3",
+      "message_id": "<CAL_woYCHoza4r16uc+C=5uwrWpjcCtPWAG_zqeCdU4So3im+-g@mail.gmail.com>",
+      "from_name": "Robert Rankin",
+      "from_email_hash": "60eaacbd77f7647e6d9164ab866144156f93b6c5b24926e6d46919ad7c0ce893",
+      "date": "2017-08-06T22:06:20-04:00",
+      "subject": "[R-sig-eco] Mac/Linux sharing files to Windows users on github: problems with new lines",
+      "subject_clean": "Mac/Linux sharing files to Windows users on github: problems with new lines",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear Mac or Linux users,\nI am trying to share capture-recapture R source code and JAGS models on\nGithub.\nI am writing the scripts in Emacs on a GNU/linux Ubuntu machine. When\nWindows users download my scripts, they get a single line of code (no line\nbreaks) and the JAGS models fail. What is your best-practises for getting\n*nix scripts to work and read properly on Windows through Github?\n\nI am using the program unix2dos (in the ubuntu repositories) to convert the\n*nix line-breaks to the Windows line-breaks, and this seems to work when I\ndownload from Github and open on a Windows machine with notepad or\nnotepad++. However, other Windows users still can't get the JAGS models and\nR source code to load properly.\n\nHere is my github directory for windows:\nhttps://github.com/faraway1nspace/PCRD_JAGS_demo/tree/master/WINDOWS\n\nCan any Mac or Linux user share their workflow?\nThank you,\nRobert\n\n-- \n\"You could give Aristotle a tutorial. And you could thrill him to the core\nof his being ... Such is the privilege of living after Newton, Darwin,\nEinstein, Planck, Watson, Crick and their colleagues.\"\n-- Richard Dawkins\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear Mac or Linux users,\nI am trying to share capture-recapture R source code and JAGS models on\nGithub.\nI am writing the scripts in Emacs on a GNU/linux Ubuntu machine. When\nWindows users download my",
+      "thread_id": "thread-d0f30e0c8db3",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-e7104d91f523",
+      "message_id": "<CAJuCY5wjkU+OWh2WrRnnVm3Yydhyh3qeO4dd8f+nDCG4w=AyHw@mail.gmail.com>",
+      "from_name": "Thierry Onkelinx",
+      "from_email_hash": "939ccb0e8bbc2d0c7bbe22a43b9bdc551e1b9ce62c1e0af38d79ce042e5bddbe",
+      "date": "2017-08-07T10:28:21+02:00",
+      "subject": "[R-sig-eco] Mac/Linux sharing files to Windows users on github: problems with new lines",
+      "subject_clean": "Mac/Linux sharing files to Windows users on github: problems with new lines",
+      "in_reply_to": "<CAL_woYCHoza4r16uc+C=5uwrWpjcCtPWAG_zqeCdU4So3im+-g@mail.gmail.com>",
+      "references": [
+        "<CAL_woYCHoza4r16uc+C=5uwrWpjcCtPWAG_zqeCdU4So3im+-g@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Robert,\n\nChange your line ending settings in git. See\nhttps://help.github.com/articles/dealing-with-line-endings/\n\nBest regards,\n\nir. Thierry Onkelinx\nInstituut voor natuur- en bosonderzoek / Research Institute for Nature and\nForest\nteam Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance\nKliniekstraat 25\n1070 Anderlecht\nBelgium\n\nTo call in the statistician after the experiment is done may be no more\nthan asking him to perform a post-mortem examination: he may be able to say\nwhat the experiment died of. ~ Sir Ronald Aylmer Fisher\nThe plural of anecdote is not data. ~ Roger Brinner\nThe combination of some data and an aching desire for an answer does not\nensure that a reasonable answer can be extracted from a given body of data.\n~ John Tukey\n\n2017-08-07 4:06 GMT+02:00 Robert Rankin <robertw.rankin at gmail.com>:\n\n> Dear Mac or Linux users,\n> I am trying to share capture-recapture R source code and JAGS models on\n> Github.\n> I am writing the scripts in Emacs on a GNU/linux Ubuntu machine. When\n> Windows users download my scripts, they get a single line of code (no line\n> breaks) and the JAGS models fail. What is your best-practises for getting\n> *nix scripts to work and read properly on Windows through Github?\n>\n> I am using the program unix2dos (in the ubuntu repositories) to convert the\n> *nix line-breaks to the Windows line-breaks, and this seems to work when I\n> download from Github and open on a Windows machine with notepad or\n> notepad++. However, other Windows users still can't get the JAGS models and\n> R source code to load properly.\n>\n> Here is my github directory for windows:\n> https://github.com/faraway1nspace/PCRD_JAGS_demo/tree/master/WINDOWS\n>\n> Can any Mac or Linux user share their workflow?\n> Thank you,\n> Robert\n>\n> --\n> \"You could give Aristotle a tutorial. And you could thrill him to the core\n> of his being ... Such is the privilege of living after Newton, Darwin,\n> Einstein, Planck, Watson, Crick and their colleagues.\"\n> -- Richard Dawkins\n>\n>         [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear Robert,\n\nChange your line ending settings in git. See\nhttps://help.github.com/articles/dealing-with-line-endings/\n\nBest regards,\n\nir. Thierry Onkelinx\nInstituut voor natuur- en bosonderzoek / Res",
+      "thread_id": "thread-d0f30e0c8db3",
+      "thread_depth": 1,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-24487e0c650f",
+      "message_id": "<CACg2Sf1cP=ocaoeSZk=dhH9rSvurkndkn9ZXxqH3NPuxsHiFSg@mail.gmail.com>",
+      "from_name": "Marc Taylor",
+      "from_email_hash": "8aeb45a8e6f8dd3dc98dfcb1a87835e8d43b3222ba9ac3b362035e1f5f2ab65f",
+      "date": "2017-08-17T17:07:12+02:00",
+      "subject": "[R-sig-eco] Probabilistic maturation reaction norms",
+      "subject_clean": "Probabilistic maturation reaction norms",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "I'm having some difficulty getting my head around the concept of\n'Probabilistic maturation reaction norms' (PMRN) () - as are often used to\ndescribe maturation schedules. These models generally describe when a\ncertain species becomes mature (e.g. as a function of size and age).\n\nMy issue is not in fitting such a model in R to data (e.g. fit <- glm(mat ~\nsize + age, family = binomial(link = \"logit\")) ). Rather, I wonder how such\na model can be used in simulating a maturity event in an iterative growth\nmodel (say for a given individual). The above model can predict the\n\"probability of *being *mature\" at a given size and age, but what I am more\ninterested for my simulation model is the \"probability of *becoming *mature\"\nat a given size and age, and during a given period of time. These two\npoints of view do not mean the same thing in my opinion, but it looks as if\nthey may be used interchangeably in the literature. It would seem that the\nlatter perspective involves use of the model's derivative in some way.\n\nI would be interested if anyone has any thoughts on how such a model could\nbe correctly applied in a model that simulates a change in maturity for a\ngiven individual.\n\nIf this seems like a question more appropriate to r-sig-dynamic-models, I\ncould also ask there.\n\nCheers, Marc\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "I'm having some difficulty getting my head around the concept of\n'Probabilistic maturation reaction norms' (PMRN) () - as are often used to\ndescribe maturation schedules. These models generally descri",
+      "thread_id": "thread-24487e0c650f",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-f85ce74da3ef",
+      "message_id": "<442fd8be814fcac49aa0764195ff8092@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2017-08-18T00:20:02+01:00",
+      "subject": "[R-sig-eco] SCHOLARSHIPS.UK.ReproducibleDataScienceForPopulationGeneticsUsingR.23-27Oct.",
+      "subject_clean": "SCHOLARSHIPS.UK.ReproducibleDataScienceForPopulationGeneticsUsingR.23-27Oct.",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "PARTFUNDED SCHOLARHPS for the course \"Reproducible data science for \npopulation genetics\"\n\nPR STATISTICS ARE PLEASED TO ANNOUNCE THAT THROUGH THEIR FUNDING SCHEME \nTHEY CAN OFFER 5 PART-FUNDED SCHOLARSHIPS FOR OUR UP-COMING COURSE \n?Reproducible data science for population genetics\" (RDPG01)\n\nSCHOLARSHIPS CONTRIBUTE TOWARDS COURSE FEES WITH 5 PLACES AVAILABLE AT \n?50.00 (Fees have been subsidised by 40% from ?580.00).\n\nApplications should be sent to oliverhooker at prstatistics.com and contain\nthe following.\n1.\tFull name\n2.\tInstitute name\n3.\tPhD subject title or Post doc research questions\n4.\tDo you hold a funded position\n5.\t150 words why this course would be relevant to your research or how \nit would help.\n\nApplication deadline is Sunday 3rd September 2017 and decisions will be \nmade by Tuesday 5th September 2017\n\nWe still have ?normal? places available for anyone else interested.\n\nFull course details are given below\n\n\nCourse on \"Reproducible data science for population genetics\" (RDPG01)\n\nThis course will be delivered by Dr. Thibaut Jombart who authors \ntheadegenet package and Dr. Zhian Kamvar.\n\nwww.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg01/\n\nThis course will run from the 23rd - 27th October at Margam discovery \ncentre in Wales, United Kingdom.\n\nCourse Overview:\nWith the increasing availability of various types of genetic and genomic \ndata, population genetics and molecular ecology are becoming largely \ndata driven sciences. Understanding the evolutionary, demographic, and \necological underpinning the genetic makeup of natural populations now \nrelies on a combination of exploratory approaches and models. This \ncourse will provide an in-depth introduction to these techniques, with a \nstrong emphasis on reproducibility though the use of modern analytic \npractices and tools. After an introduction to phylogenetic \nreconstruction, the course will cover a number of multivariate \napproaches for the analysis of genetic patterns, including supervised \nand unsupervised factorial methods, clustering approaches, and advanced \nmethods for describing population diversity and revealing spatial \ngenetic patterns. The approaches introduced will be applicable to most \ngenetic data, including markers such as microsatellites, SNPs, or AFLP, \nas well as nucleotide and amino-acid sequence data. Every day will start \nwith a lecture dedicated to a type of problem and methods, followed by \nan introduction to a specific technique for reproducible data analysis; \nafternoon will be devoted to hands on praticals. The last day will be \ndevoted to open problems, where participants will be able to analyse \ntheir own data.\n\nMonday 23rd ? Classes from 09:00 to 17:00\nIntro to phylogenetic reconstruction\nModule 1a: reconstructing phylogenies from genetic sequence data. Three \nmain approaches covered: distance-based phylogenies; maximum parsimony; \nand likelihood-based approaches.\nModule 1b: reproducible data science using R: an introduction\nPractical 1: phylogenetic reconstruction using R. Three main approaches \nplus rooting a tree; assessing/testing for a molecular clock; and \nbootstrapping.\nMain packages: knitr, ape, phangorn.\n\nTuesday 24th ? Classes from 09:00 to 17:00\nIntroduction to multivariate analysis of genetic data\nModule 2a: key concepts in multivariate analysis. Focus on using \nfactorial methods for genetic data analysis.\nModule 2b: using R to generate high-quality pdf or word documents.\nPractical 2: multivariate analysis of genetic data in R. Topics include: \ndata handling, Hardy-Weinberg tests, measures of diversity, tests of \npopulation structure, principal component analysis (PCA), \nmultidimensional scaling (MDS).\nMain packages: knitr, rmarkdown, adegenet, ade4, pegasa, hierfstat, ape.\n\nWednesday 25th ? Classes from 09:00 to 17:00\nExploring group diversity\nModule 3a: approaches for identifying and describing genetic clusters. \nTopics include: hierarchical clustering, K-means, genetic distances \nbetween populations, supervised factorial methods including \nbetween-group PCA and the Discriminant Analysis of Principal Components \n(DAPC).\nModule 3b: using R to generate beamer and html5 slides.\nPractical 3: applying the approaches covered in morning lecture and \nemphasising their strengths and weaknesses.\nMain packages: rmarkdown, adegenet, ade4, hierfstat.\n\nThursday 26th ? Classes from 09:00 to 17:00\nSpatial genetic structures\nModule 4a: on the origins of spatial genetic patterns, how to test for \nthem, and how to reveal and visualise them.\nModule 4b: asking questions the right way with reproducible code.\nPractical 4: visualising and analysing spatial genetic data. Topics: \nspatial density estimates, univariate and multivariate tests of spatial \nstructure (Moran and Mantel tests), mapping principal components from \nunsupervised methods (PCA), spatial PCA.\nMain packages: reprex, adegenet, spdep, ade4.\n\nFriday 27th ? Classes from 09:00 to 16:00\nReproducible data science for population genetics in practice Open \nproblem day ? analyse your own data using R\nMain packages: knitr, rmarkdown, adegenet, ade4, ape, pegas, phangorn, \nhierfstat, poppr, ggplot2, etc.\n\n\nIf you have any questions please email oliverhooker at prstatistics.com or \nvisit www.prstatistics.com\n\nwww.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg01/\n\nOther up-coming courses are as follows\n\n1.\tECOLOGICAL NICHE MODELLING USING R #ENMR\n16th ? 20th October 2017, Scotland, Dr. Neftali Sillero\nhttp://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr01/\n\n2.\tREPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS\n23rd ? 27th October, Wales, Dr. Thibaut Jombart, Zhian Kavar\nhttp://www.prstatistics.com/course/genetic-data-analysis-exploration-using-r-gdar03/\n\n3.\tSTRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY \nBIOLOGISTS USING R #SEMR\n23rd ? 27th October, Wales, Prof Jarrett Byrnes, Dr. Jon Lefcheck\nhttp://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/\n\n4.\tLANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R #LNDG\n6th ? 10th November, Wales, Prof. Rodney Dyer\nhttp://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg02/\n\n5.\tAPPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS #ABME\n20th - 25th November 2017, Scotland, Prof. Jason Matthiopoulos, Dr. Matt \nDenwood\nhttp://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme03/\n\n6.\tADVANCING IN STATISTICAL MODELLING USING R #ADVR\n11th ? 15th December 2017, Wales, Dr. Luc Bussiere, Dr. Tom Houslay, \nDr. Ane Timenes Laugen,\nhttp://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr07/\n\n7.\tINTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING #IBHM\n29th Jan ? 2nd Feb 2018, Scotland, Dr. Andrew Parnell\nhttp://www.prstatistics.com/course/introduction-to-bayesian-hierarchical-modelling-using-r-ibhm02/\n\n8.\tPHYLOGENETIC DATA ANALYSIS USING R (TBC) #PHYL\n28th Jan ? Feb 2nd Dr. Emmanuel Paradis ? Date and location to be \nconfirmed\nhttps://www.prstatistics.com/course/introduction-to-phylogenetic-analysis-with-r-phyg-phyl02/\n\n9.\tANIMAL MOVEMENT ECOLOGY (ACOUSTIC TELELEMTRY DATA ANALYSIS  (February \n2018) #ANME\n19th ? 23rd February 2018, Wales, Dr Luca Borger, Dr. John Fieberg\n\n01.\tGEOMETRIC MORPHOMETRICS USING R #GMMR\n5th ? 9th June 2017, Scotland, Prof. Dean Adams, Prof. Michael \nCollyer, Dr. Antigoni Kaliontzopoulou\nhttp://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/\n\n11.\tFUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND \nCOMPUTATION #FEER\n5th ? 9th March 2018, Scotland, Dr. Francesco de Bello, Dr. Lars \nG?tzenberger, Dr. Carlos Carmona\nhttp://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/\n\n12.\tINTRODUCTION TO MARXAN FOR PLANNING MPA?S #MRXN\n12TH ? 16TH March 2018, Wales, Jennifer McGowan\nhttps://www.prstatistics.com/course/introduction-to-marxan-mrxn01/\n\n13.\tECOLOGICAL NICHE MODELLING USING R #ENMR\n26th ? 30th March 2018, Wales, Dr. Neftali Sillero\nhttp://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr02/\n\n14.\tNETWORK ANAYLSIS FOR ECOLOGISTS USING R #NTWA\n9th ? 13th April 2018, Scotland, Dr. Marco Scotti\n\n15.\tMULTIVARIATE ANALYSIS OF ECOLOGICAL COMMUNITIES IN R WITH THE VEGAN \nPACKAGE #VGNR\n23rd ? 27th April 2018, Scotland, Prof. Peter Solymos, Dr Guillaume \nBlnachet\n\n16.\tECOLOGICAL AND EVOLUTIONARY BIOGEOGRAPHY #EEBR\n30TH April ? 4th May 2018, Scotland, Dan Warren, Matt Fitzpatrick\n\n17.\tADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA USING R \n#MVSP\n14th ? 18th May 20128, Canada, Prof. Pierre Legendre, Dr. Guillaume \nBlanchet (TBC)\n\n18.\tINTRODUCTIO9N TO MIXED MODELS FOR ECOLOGISTS USING R #IMMR\n28TH May ? 1st June 2018, Canada, Subhash Lele\n\n19.\tMODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R #MBMV0\n8th ? 12th July 2018, Scotland, Prof David Warton\nhttps://www.prstatistics.com/course/model-base-multivariate-analysis-of-abundance-data-using-r-mbmv02/\n\n20.\tSPATIAL ANALYSIS OF ECOLOGICAL DATA USING R #SPAE\nProf. Jason Matthiopoulos, Dr. James Grecian - Date and location to be \nconfirmed\nhttp://www.prstatistics.com/course/spatial-analysis-ecological-data-using-r-spae05/\n\n21.\tSTABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR #SIMM\nDr. Andrew Parnell, Dr. Andrew Jackson ? Date and location to be \nconfirmed\nhttps://www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm03/#\n\n22.\tMULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA #MASE\nProf. Subhash Lele, Dr. Peter Solymos - Date and location to be \nconfirmed\nhttps://www.prstatistics.com/course/multivariate-analysis-of-spatial-ecological-data-using-r-mase01/\n\n23.\tINTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS #IRFB\nDr. Luc Bussiere, Dr Ane Laugen - Date and location to be confirmed\nhttps://www.prstatistics.com/course/introduction-to-statistics-and-r-for-biologists-irfb/\n\n24.\tTIME SERIES MODELS FOR ECOLOGISTS USING R #TSME\nDr. Andrew Parnell ? Date and location to be confirmed\nhttps://www.prstatistics.com/course/time-series-models-foe-ecologists-tsme01/\n\n25.\tMETA-ANALYSIS IN ECOLOGY, EVOLUTION AND ENVIRONMENTAL SCIENCES \n#METR01\nProf. Julia Koricheva, Prof. Elena Kulinskaya - Date and location to be \nconfirmed\nhttps://www.prstatistics.com/course/meta-analysis-in-ecology-evolution-and-environmental-sciences-metr01/\n\n------------------------------------------------------------------------------------------\n\n1.\tINTRODUCTION TO BIOINFORMATICS USING LINUX #IBUL\n16th ? 20th October, Scotland, Dr. Martin Jones\nhttp://www.prstatistics.com/course/introduction-to-bioinformatics-using-linux-ibul02/\n\n2.\tINTRODUCTION TO PYTHON FOR BIOLOGISTS #IPYB\n27th Nov ? 1st Dec, Wales, Dr. Martin Jones\nhttp://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb04/\n\n3.\tINTRODUCTION REMOTE SENSING AND GIS APPLICATIONS FOR ECOLOGISTS #IRMS\n27th Nov ? 1st Dec, Wales, Dr Duccio Rocchini, Dr. Luca Delucchi\nhttp://www.prstatistics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/\n\n4.\tDATA VISUALISATION AND MANIPULATION USING PYTHON #DVMP\n11th ? 15th December 2017, Wales, Dr. Martin Jones\nhttp://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/\n\n5.\tEUKARYOTIC METABARCODING\n23rd ? 27th July 2018, Scotland, Dr. Owen Wangensteen\nhttp://www.prinformatics.com/course/eukaryotic-metabarcoding-eukb01/\n\n6.\tCODING, DATA MANAGEMENT AND SHINY APPLICATIONS USING RSTUDIO FOR \nEVOLUTIONARY BIOLOGISTS AND ECOLOGISTS #CDSR\nDr. Aline Quadros\n\n7.\tBIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS #BIGB\nScotland, Dr. Nic Blouin, Dr. Ian Misner\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2017 publications -\n\nEcosystem size predicts eco-morphological variability in post-glacial \ndiversification. Ecology and Evolution. In press.\n\nThe physiological costs of prey switching reinforce foraging \nspecialization. Journal of animal ecology.\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n3/1, 128 Brunswick Street\nGlasgow\nG1 1TF\n\n+44 (0) 7966500340",
+      "body_snippet": "PARTFUNDED SCHOLARHPS for the course \"Reproducible data science for \npopulation genetics\"\n\nPR STATISTICS ARE PLEASED TO ANNOUNCE THAT THROUGH THEIR FUNDING SCHEME \nTHEY CAN OFFER 5 PART-FUNDED SCHOLAR",
+      "thread_id": "thread-f85ce74da3ef",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-b434c61554fd",
+      "message_id": "<CACg2Sf02cr11Hs8PBkwaPepzy+1MxAmDQ-EWtguG7EGEQwhGmw@mail.gmail.com>",
+      "from_name": "Marc Taylor",
+      "from_email_hash": "8aeb45a8e6f8dd3dc98dfcb1a87835e8d43b3222ba9ac3b362035e1f5f2ab65f",
+      "date": "2017-08-18T09:31:37+02:00",
+      "subject": "[R-sig-eco] Probabilistic maturation reaction norms",
+      "subject_clean": "Probabilistic maturation reaction norms",
+      "in_reply_to": "<CACg2Sf1cP=ocaoeSZk=dhH9rSvurkndkn9ZXxqH3NPuxsHiFSg@mail.gmail.com>",
+      "references": [
+        "<CACg2Sf1cP=ocaoeSZk=dhH9rSvurkndkn9ZXxqH3NPuxsHiFSg@mail.gmail.com>"
+      ],
+      "body_plain": "So, it seems that there is a quite a difference between PMRNs and Maturity\nogives (see Barot et al 2004).\n\nAfter searching high and low, I finally found a good description in\nDieckmann & Heino (2007) (section \"Are maturation ogives and PMRNs\ninterchangeable?\"). They state, \"Maturity (described by maturity ogives) is\nto maturation (described by PMRNs) what size is to growth ... For\nmaturation, an analogous calculation scheme for transforming from ogives to\nPMRNs exists; however, this turns out to be a bit more complicated, and in\ngeneral requires additional information on growth and mortality (Barot et\nal. 2004).\"\n\nSorry to anyone that invested time in answering this question.\n\nCheers, Marc\n\n###\nReferences:\nBarot, S., Heino, M., O?Brien, L., & Dieckmann, U. (2004). Estimating\nreaction norms for age and size at maturation when age at first. *Evolutionary\nEcology Research*, *6*(5), 659-678.\nDieckmann, U., & Heino, M. (2007). Probabilistic maturation reaction norms:\ntheir history, strengths, and limitations. *Marine Ecology Progress Series*,\n*335*, 253-270.\n\n\n\nOn Thu, Aug 17, 2017 at 5:07 PM, Marc Taylor <marchtaylor at gmail.com> wrote:\n\n> I'm having some difficulty getting my head around the concept of\n> 'Probabilistic maturation reaction norms' (PMRN) () - as are often used to\n> describe maturation schedules. These models generally describe when a\n> certain species becomes mature (e.g. as a function of size and age).\n>\n> My issue is not in fitting such a model in R to data (e.g. fit <- glm(mat\n> ~ size + age, family = binomial(link = \"logit\")) ). Rather, I wonder how\n> such a model can be used in simulating a maturity event in an iterative\n> growth model (say for a given individual). The above model can predict the\n> \"probability of *being *mature\" at a given size and age, but what I am\n> more interested for my simulation model is the \"probability of *becoming *mature\"\n> at a given size and age, and during a given period of time. These two\n> points of view do not mean the same thing in my opinion, but it looks as if\n> they may be used interchangeably in the literature. It would seem that the\n> latter perspective involves use of the model's derivative in some way.\n>\n> I would be interested if anyone has any thoughts on how such a model could\n> be correctly applied in a model that simulates a change in maturity for a\n> given individual.\n>\n> If this seems like a question more appropriate to r-sig-dynamic-models, I\n> could also ask there.\n>\n> Cheers, Marc\n>\n>\n>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "So, it seems that there is a quite a difference between PMRNs and Maturity\nogives (see Barot et al 2004).\n\nAfter searching high and low, I finally found a good description in\nDieckmann & Heino (2007) ",
+      "thread_id": "thread-24487e0c650f",
+      "thread_depth": 1,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-932df9a3e560",
+      "message_id": "<CABj7FA1oy1Jb9tFT2EiPXvLLmC4APEu2rXCVn-RZi+Bdr8whDQ@mail.gmail.com>",
+      "from_name": "Andre Rovai",
+      "from_email_hash": "17525109a1c68aaae7ddb2108a3291ccd71f78773a4097f17d61998961b0ddc8",
+      "date": "2017-08-18T10:09:32-05:00",
+      "subject": "[R-sig-eco] How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "subject_clean": "How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi all,\n\nI've been trying to extract values from a single attribute raster (area, in\nm2) that overlaps with lines (that is, a .shp SpatialLines).\n\nThe problem is that, along these lines, my raster sometimes goes from one\nto several contiguous cells in all directions.  Using the\nextract function only values from cells that are touched by the lines are\nextracted.  Thus, when I add up the extracted values from all lines a\nsignificant amount of area (m2) is lost due to cells that were not touched\nby the line and therefore values were not extracted.\n\nI tried to work it around by:\n\nStep 1 - first aggregating my raster to a lower resolution (i.e. increasing\nthe fact argument) and then\nStep 2 - rasterizing the lines using this aggregated raster (created in\nstep 1) as a mold to make sure the rasterized lines would get thick enough\nto cover the horizontal spread of cells in my original resolution raster.\nStep 3 - Then I resample the rasterized lines (created in step 2) back to\nthe original resolution I started with.\nStep 4 - Finally, extracted the values from the resampled rasterized lines\n(created in step 3).\n\nHowever, it didn't quite work as now the total area (m2) varies according\nto the fact=\"\" value I use when first aggregating the raster (in step 1).\n\nI really appreciate if anyone has already dealt with a similar problem and\ncan help me out here.  Here are the codes I've been running to try to get\nit to work:\n\n\n# input raster file\n\ng.025 <- raster(\"ras.asc\")\n\ng.1 <- aggregate(g.025, fact=2, fun=sum)\n\n\n\n# input SpatialLines\n\nSpline1 <- readOGR(\"/Users/xxxxx.shp\")\n\nSpline2 <- readOGR(\"/Users/xxxxx.shp\")\n\nSpline3 <- readOGR(\"/Users/xxxxx.shp\")\n\n\n\n# rasterizing using low resolution raster (aggregated)\n\nc1 <- rasterize(Spline1, g.1, field=Spline1$type, fun=sum)\n\nc2 <- rasterize(Spline2, g.1, field=Spline2$type, fun=sum)\n\nc3 <- rasterize(Spline3, g.1, field=Spline3$type, fun=sum)\n\n\n\n# resampling back to higher resolution\n\nc1 <- resample(c1, g.025)\n\nc2 <- resample(c2, g.025)\n\nc3 <- resample(c3, g.025)\n\n\n\n# preparing to extract area (m2) values from raster ?g.025?\n\nc1tab <- as.data.frame(c1, xy=T)\n\nc2tab <- as.data.frame(c2, xy=T)\n\nc3tab <- as.data.frame(c3, xy=T)\n\nc1tab <- c1tab[which(is.na(c1tab$layer)!=T),]\n\nc2tab <- c2tab[which(is.na(c2tab$layer)!=T),]\n\nc3tab <- c3tab[which(is.na(c3tab$layer)!=T),]\n\n\n\n# extracting area (m2) values from raster ?g.025?\n\nc1tab[,4] <- extract(g.025, c1tab[,1:2])\n\nc2tab[,4] <- extract(g.025, c2tab[,1:2])\n\nc3tab[,4] <- extract(g.025, c3tab[,1:2])\n\nnames(c1tab)[4] <- \"area_m2\"\n\nnames(c2tab)[4] <- \"area_m2\"\n\nnames(c3tab)[4] <- \"area_m2\"\n\n\n\n# sum total area (m2)\n\nc1_area <- sum(c1tab$area_m2)\n\nc2_area <- sum(c2tab$area_m2)\n\nc3_area <- sum(c3tab$area_m2)\n\ntot_area <- sum(c1_area, c2_area, c3_area)\n\n\nThanks!\n\nAndre Rovai\nDepartment of Oceanography and Coastal Sciences\nLouisiana State University\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi all,\n\nI've been trying to extract values from a single attribute raster (area, in\nm2) that overlaps with lines (that is, a .shp SpatialLines).\n\nThe problem is that, along these lines, my raster som",
+      "thread_id": "thread-932df9a3e560",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-107aa198191d",
+      "message_id": "<507db909-26c6-fcfc-d535-9b9dba2732bb@gmail.com>",
+      "from_name": "Bede-Fazekas Ákos",
+      "from_email_hash": "e3ebd50efac1278ec1fe3fd8d1127aa8c4388bb07f6bead5f4628c5377508fdf",
+      "date": "2017-08-18T20:30:54+02:00",
+      "subject": "[R-sig-eco] How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "subject_clean": "How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "in_reply_to": "<CABj7FA1oy1Jb9tFT2EiPXvLLmC4APEu2rXCVn-RZi+Bdr8whDQ@mail.gmail.com>",
+      "references": [
+        "<CABj7FA1oy1Jb9tFT2EiPXvLLmC4APEu2rXCVn-RZi+Bdr8whDQ@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Andre,\nI don't know the answer, but I think you should post your question to \nR-sig-Geo mailing list (R-sig-Geo at r-project.org), where several authors \nof the spatial R-packages and other GIS experts are members and will \nread your post.\nHTH,\n?kos Bede-Fazekas\nHungarian Academy of Sciences\n\n2017.08.18. 17:09 keltez?ssel, Andre Rovai ?rta:\n> Hi all,\n>\n> I've been trying to extract values from a single attribute raster (area, in\n> m2) that overlaps with lines (that is, a .shp SpatialLines).\n>\n> The problem is that, along these lines, my raster sometimes goes from one\n> to several contiguous cells in all directions.  Using the\n> extract function only values from cells that are touched by the lines are\n> extracted.  Thus, when I add up the extracted values from all lines a\n> significant amount of area (m2) is lost due to cells that were not touched\n> by the line and therefore values were not extracted.\n>\n> I tried to work it around by:\n>\n> Step 1 - first aggregating my raster to a lower resolution (i.e. increasing\n> the fact argument) and then\n> Step 2 - rasterizing the lines using this aggregated raster (created in\n> step 1) as a mold to make sure the rasterized lines would get thick enough\n> to cover the horizontal spread of cells in my original resolution raster.\n> Step 3 - Then I resample the rasterized lines (created in step 2) back to\n> the original resolution I started with.\n> Step 4 - Finally, extracted the values from the resampled rasterized lines\n> (created in step 3).\n>\n> However, it didn't quite work as now the total area (m2) varies according\n> to the fact=\"\" value I use when first aggregating the raster (in step 1).\n>\n> I really appreciate if anyone has already dealt with a similar problem and\n> can help me out here.  Here are the codes I've been running to try to get\n> it to work:\n>\n>\n> # input raster file\n>\n> g.025 <- raster(\"ras.asc\")\n>\n> g.1 <- aggregate(g.025, fact=2, fun=sum)\n>\n>\n>\n> # input SpatialLines\n>\n> Spline1 <- readOGR(\"/Users/xxxxx.shp\")\n>\n> Spline2 <- readOGR(\"/Users/xxxxx.shp\")\n>\n> Spline3 <- readOGR(\"/Users/xxxxx.shp\")\n>\n>\n>\n> # rasterizing using low resolution raster (aggregated)\n>\n> c1 <- rasterize(Spline1, g.1, field=Spline1$type, fun=sum)\n>\n> c2 <- rasterize(Spline2, g.1, field=Spline2$type, fun=sum)\n>\n> c3 <- rasterize(Spline3, g.1, field=Spline3$type, fun=sum)\n>\n>\n>\n> # resampling back to higher resolution\n>\n> c1 <- resample(c1, g.025)\n>\n> c2 <- resample(c2, g.025)\n>\n> c3 <- resample(c3, g.025)\n>\n>\n>\n> # preparing to extract area (m2) values from raster ?g.025?\n>\n> c1tab <- as.data.frame(c1, xy=T)\n>\n> c2tab <- as.data.frame(c2, xy=T)\n>\n> c3tab <- as.data.frame(c3, xy=T)\n>\n> c1tab <- c1tab[which(is.na(c1tab$layer)!=T),]\n>\n> c2tab <- c2tab[which(is.na(c2tab$layer)!=T),]\n>\n> c3tab <- c3tab[which(is.na(c3tab$layer)!=T),]\n>\n>\n>\n> # extracting area (m2) values from raster ?g.025?\n>\n> c1tab[,4] <- extract(g.025, c1tab[,1:2])\n>\n> c2tab[,4] <- extract(g.025, c2tab[,1:2])\n>\n> c3tab[,4] <- extract(g.025, c3tab[,1:2])\n>\n> names(c1tab)[4] <- \"area_m2\"\n>\n> names(c2tab)[4] <- \"area_m2\"\n>\n> names(c3tab)[4] <- \"area_m2\"\n>\n>\n>\n> # sum total area (m2)\n>\n> c1_area <- sum(c1tab$area_m2)\n>\n> c2_area <- sum(c2tab$area_m2)\n>\n> c3_area <- sum(c3tab$area_m2)\n>\n> tot_area <- sum(c1_area, c2_area, c3_area)\n>\n>\n> Thanks!\n>\n> Andre Rovai\n> Department of Oceanography and Coastal Sciences\n> Louisiana State University\n>\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Hi Andre,\nI don't know the answer, but I think you should post your question to \nR-sig-Geo mailing list (R-sig-Geo at r-project.org), where several authors \nof the spatial R-packages and other GIS exp",
+      "thread_id": "thread-932df9a3e560",
+      "thread_depth": 1,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-cf2f8fc88450",
+      "message_id": "<CAM9kYqj=icEiUOKG4LpwGOFMUfYfVx2bgQDMX7e6pVD0L_X2fQ@mail.gmail.com>",
+      "from_name": "Philippi, Tom",
+      "from_email_hash": "5e27be090610ad8100a0dce2646f676c682a262690e3337a946afb5d645254f6",
+      "date": "2017-08-18T12:05:24-07:00",
+      "subject": "[R-sig-eco] How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "subject_clean": "How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "in_reply_to": "<507db909-26c6-fcfc-d535-9b9dba2732bb@gmail.com>",
+      "references": [
+        "<CABj7FA1oy1Jb9tFT2EiPXvLLmC4APEu2rXCVn-RZi+Bdr8whDQ@mail.gmail.com>",
+        "<507db909-26c6-fcfc-d535-9b9dba2732bb@gmail.com>"
+      ],
+      "body_plain": "Andre--\nI'm not completely clear on what you are trying to do.  My best guess\ninterpretation of \"my raster sometimes goes from one\nto several contiguous cells in all directions\"  is that you have a raster\nthat you are aggregating into blobs of contiguous cells based on values in\none layer.  You then want to extract (area) values by blob for each blob a\npolyline intersects.\nIf that's close to what you want, there are several approaches that will\nwork, with the most efficient approach dependent on the size of your\nrasters, whether you can use gpu computing for very large rasters, etc.\nI would first create a new thematic (factor) raster layer of blob\nmembership, then aggregate or compute your desired per blob measures with\nthat thematic layer and your other layer(s).  Then, extract blob indices\n(values from the thematic layer) for those intersected by your lines with\nextract:\nblob.hits1 <- extract(blobraster, Spline1,df=TRUE,...), # note using the\npolyline Spline1 not the rasterized version\nThen subset your blob measures by those indices.\n\nEven if I'm completely wrong in my guess of what you are attempting, I\nwould wager that you should use extract with the unrasterized Spline1\nobject.\n\nI hope that this helps, or at least helps you revise your question to get a\nbetter response from R-sig_Geo.\n\nTom 2\n\nOn Fri, Aug 18, 2017 at 11:30 AM, Bede-Fazekas ?kos <bfalevlist at gmail.com>\nwrote:\n\n> Hi Andre,\n> I don't know the answer, but I think you should post your question to\n> R-sig-Geo mailing list (R-sig-Geo at r-project.org), where several authors\n> of the spatial R-packages and other GIS experts are members and will read\n> your post.\n> HTH,\n> ?kos Bede-Fazekas\n> Hungarian Academy of Sciences\n>\n>\n> 2017.08.18. 17:09 keltez?ssel, Andre Rovai ?rta:\n>\n>> Hi all,\n>>\n>> I've been trying to extract values from a single attribute raster (area,\n>> in\n>> m2) that overlaps with lines (that is, a .shp SpatialLines).\n>>\n>> The problem is that, along these lines, my raster sometimes goes from one\n>> to several contiguous cells in all directions.  Using the\n>> extract function only values from cells that are touched by the lines are\n>> extracted.  Thus, when I add up the extracted values from all lines a\n>> significant amount of area (m2) is lost due to cells that were not touched\n>> by the line and therefore values were not extracted.\n>>\n>> I tried to work it around by:\n>>\n>> Step 1 - first aggregating my raster to a lower resolution (i.e.\n>> increasing\n>> the fact argument) and then\n>> Step 2 - rasterizing the lines using this aggregated raster (created in\n>> step 1) as a mold to make sure the rasterized lines would get thick enough\n>> to cover the horizontal spread of cells in my original resolution raster.\n>> Step 3 - Then I resample the rasterized lines (created in step 2) back to\n>> the original resolution I started with.\n>> Step 4 - Finally, extracted the values from the resampled rasterized lines\n>> (created in step 3).\n>>\n>> However, it didn't quite work as now the total area (m2) varies according\n>> to the fact=\"\" value I use when first aggregating the raster (in step 1).\n>>\n>> I really appreciate if anyone has already dealt with a similar problem and\n>> can help me out here.  Here are the codes I've been running to try to get\n>> it to work:\n>>\n>>\n>> # input raster file\n>>\n>> g.025 <- raster(\"ras.asc\")\n>>\n>> g.1 <- aggregate(g.025, fact=2, fun=sum)\n>>\n>>\n>>\n>> # input SpatialLines\n>>\n>> Spline1 <- readOGR(\"/Users/xxxxx.shp\")\n>>\n>> Spline2 <- readOGR(\"/Users/xxxxx.shp\")\n>>\n>> Spline3 <- readOGR(\"/Users/xxxxx.shp\")\n>>\n>>\n>>\n>> # rasterizing using low resolution raster (aggregated)\n>>\n>> c1 <- rasterize(Spline1, g.1, field=Spline1$type, fun=sum)\n>>\n>> c2 <- rasterize(Spline2, g.1, field=Spline2$type, fun=sum)\n>>\n>> c3 <- rasterize(Spline3, g.1, field=Spline3$type, fun=sum)\n>>\n>>\n>>\n>> # resampling back to higher resolution\n>>\n>> c1 <- resample(c1, g.025)\n>>\n>> c2 <- resample(c2, g.025)\n>>\n>> c3 <- resample(c3, g.025)\n>>\n>>\n>>\n>> # preparing to extract area (m2) values from raster ?g.025?\n>>\n>> c1tab <- as.data.frame(c1, xy=T)\n>>\n>> c2tab <- as.data.frame(c2, xy=T)\n>>\n>> c3tab <- as.data.frame(c3, xy=T)\n>>\n>> c1tab <- c1tab[which(is.na(c1tab$layer)!=T),]\n>>\n>> c2tab <- c2tab[which(is.na(c2tab$layer)!=T),]\n>>\n>> c3tab <- c3tab[which(is.na(c3tab$layer)!=T),]\n>>\n>>\n>>\n>> # extracting area (m2) values from raster ?g.025?\n>>\n>> c1tab[,4] <- extract(g.025, c1tab[,1:2])\n>>\n>> c2tab[,4] <- extract(g.025, c2tab[,1:2])\n>>\n>> c3tab[,4] <- extract(g.025, c3tab[,1:2])\n>>\n>> names(c1tab)[4] <- \"area_m2\"\n>>\n>> names(c2tab)[4] <- \"area_m2\"\n>>\n>> names(c3tab)[4] <- \"area_m2\"\n>>\n>>\n>>\n>> # sum total area (m2)\n>>\n>> c1_area <- sum(c1tab$area_m2)\n>>\n>> c2_area <- sum(c2tab$area_m2)\n>>\n>> c3_area <- sum(c3tab$area_m2)\n>>\n>> tot_area <- sum(c1_area, c2_area, c3_area)\n>>\n>>\n>> Thanks!\n>>\n>> Andre Rovai\n>> Department of Oceanography and Coastal Sciences\n>> Louisiana State University\n>>\n>>         [[alternative HTML version deleted]]\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Andre--\nI'm not completely clear on what you are trying to do.  My best guess\ninterpretation of \"my raster sometimes goes from one\nto several contiguous cells in all directions\"  is that you have a ra",
+      "thread_id": "thread-932df9a3e560",
+      "thread_depth": 2,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-c638b2373be0",
+      "message_id": "<6b9779bb-949d-f18d-fe5d-153d07c2ce9c@gmx.net>",
+      "from_name": "Dagmar",
+      "from_email_hash": "32c3f6be4df49638006afcf7644a02926f12da3838c4ec3fc454d9cedd88c81e",
+      "date": "2017-08-24T10:56:31+02:00",
+      "subject": "[R-sig-eco] adehabitatHR: Problem with BRB and sample size (number of fixes)",
+      "subject_clean": "adehabitatHR: Problem with BRB and sample size (number of fixes)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear all,\n\nI want to compare the homerange size between animals based on GPS data \nbut it seems not to work.\n\nHere is what I did:\n\nI calculated the homeranges using the Biased random bridges from \nadehabitat HR.\n\nAnimal_ltraj <- as.ltraj(animalxy, animaltime, id=TierID)\nD_Animal <- BRB.D(Animal_ltraj, Tmax=21600, Lmin=36)\n\nAnimal_Grid <- ascgen(allanimals_xy, cellsize=32)? # I chose 32 because \nit was the smallest cellsize chosen automatically. I thought to compare \nhomerange size between animals I must use the same grid for all of them.\n\nAnimal_BRB <- BRB(Animal_ltraj, D= \nD_Animal,type=c(\"UD\"),Tmax=21600,Lmin=36, hmin=100,grid=Animalgrid)\nkernel.area(Animal_BRB, unout=c(\"km2\"))\n\nMy problem:\n\nI have very different sample sizes (i.e. number of fixes): Most animals \nwere located hourly but two animals were located about each 5 min. This \nresults in sample sizes of about 150 fixes per animals and some animals \ndo have almost 10.000 fixes for the same periods of time.\n\nBecause I want to compare the resulting home range sizes I tested if the \nUD size is related to the number of fixes and unfortunatly (!!) they are.\n\nThat means that I cannot compare homerange sizes between my animals\n\nMy question:\n\n- did I do something wrong?\n\n- is that problem known and is there a way to solve it?\n\nThe only way that I find is to reduce the number of fixes of my \nfrequently located animals artificially / randomly to start with the \nequal number of fixes for all animals. This would be a shame though!\n\nHelp would be very, very, very much appreciated!!!",
+      "body_snippet": "Dear all,\n\nI want to compare the homerange size between animals based on GPS data \nbut it seems not to work.\n\nHere is what I did:\n\nI calculated the homeranges using the Biased random bridges from \nade",
+      "thread_id": "thread-c638b2373be0",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-0620f50a0a9b",
+      "message_id": "<b896f702-a5be-11b3-afd6-50e00e89465e@ase-research.org>",
+      "from_name": "Mathieu Basille",
+      "from_email_hash": "6a3a78c03a8d1842500a9b1d0323e2abe4e081960bcf6ca8d36ae3976b8da97d",
+      "date": "2017-08-27T15:07:35+02:00",
+      "subject": "[R-sig-eco] [AniMov/R-sig-eco] adehabitat HR: Problem with BRB and sample size (number of fixes)",
+      "subject_clean": "[AniMov/R-sig-eco] adehabitat HR: Problem with BRB and sample size (number of fixes)",
+      "in_reply_to": "<968f896a-97ab-fc10-5931-3716983d02f5@gmx.net>",
+      "references": [
+        "<968f896a-97ab-fc10-5931-3716983d02f5@gmx.net>"
+      ],
+      "body_plain": "Hey Dagmar,\n\nWhat do you mean by \"testing if the UD size is related to the number of\nfixes\"? Did you model UD size as a function of number of fixes using all\nfixes for all animals? If that's what you did, you could also check if it's\ntrue by animal too. One way to do it would be to compute UDs for each\nanimal over samples of fixes for instance every 10, 20, 30, 40, 50 and 60\nminutes, and see if there is any relation here. If there is, you may not\nhave other option than subsampling at the hour scale to compare all animals\n(but what does the UD mean if there is such variation related to sampling?\nI'm not familiar enough with BRBs to comment here). If there is no\nrelationship per animal, then you simply have animals with high number of\nfixes AND large UDs!\n\nHope this helps,\nMathieu.\n\n\nOn 08/23/2017 03:59 PM, Dagmar wrote:\n> Dear all,\n> \n> I want to compare the homerange size between animals based on GPS data but\n> it seems not to work.\n> \n> Here is what I did:\n> \n> I calculated the homeranges using the Biased random bridges from adehabitat\n> HR.\n> \n> Animal_ltraj <- as.ltraj(animalxy, animaltime, id=TierID)\n> D_Animal <- BRB.D(Animal_ltraj, Tmax=21600, Lmin=36)\n> \n> Animal_Grid <- ascgen(allanimals_xy, cellsize=32)  # I chose 32 because it\n> was the smallest cellsize chosen automatically. I thought to compare\n> homerange size between animals I must use the same grid for all of them.\n> \n> Animal_BRB <- BRB(Animal_ltraj, D=\n> D_Animal,type=c(\"UD\"),Tmax=21600,Lmin=36, hmin=100,grid=Animalgrid)\n> kernel.area(Animal_BRB, unout=c(\"km2\"))\n> \n> My problem:\n> \n> I have very different sample sizes (i.e. number of fixes): Most animals\n> were located hourly but two animals were located about each 5 min. This\n> results in sample sizes of about 150 fixes per animals and some animals do\n> have almost 10.000 fixes for the same periods of time.\n> \n> Because I want to compare the resulting home range sizes I tested if the UD\n> size is related to the number of fixes and unfortunatly (!!) they are.\n> \n> That means that I cannot compare homerange sizes between my animals\n> \n> My question:\n> \n> - did I do something wrong?\n> \n> - is that problem known and is there a way to solve it?\n> \n> The only way that I find is to reduce the number of fixes of my frequently\n> located animals artificially / randomly to start with the equal number of\n> fixes for all animals. This would be a shame though!\n> \n> Help would be very, very, very much appreciated!!!\n> \n> \n> _______________________________________________\n> AniMov mailing list\n> AniMov at lists.faunalia.it\n> https://lists.faunalia.it/cgi-bin/mailman/listinfo/animov\n\n-- \n\nMathieu Basille\n\nbasille at ufl.edu | http://ase-research.org/basille\n+1 954-577-6314 | University of Florida FLREC\n\n  ? Le tout est de tout dire, et je manque de mots\n  Et je manque de temps, et je manque d'audace. ?\n  ? Paul ?luard",
+      "body_snippet": "Hey Dagmar,\n\nWhat do you mean by \"testing if the UD size is related to the number of\nfixes\"? Did you model UD size as a function of number of fixes using all\nfixes for all animals? If that's what you ",
+      "thread_id": "thread-0620f50a0a9b",
+      "thread_depth": 0,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-881b15f70272",
+      "message_id": "<5404a6c0-e16b-4483-fe15-7cd1063cc163@gmx.net>",
+      "from_name": "Dagmar",
+      "from_email_hash": "32c3f6be4df49638006afcf7644a02926f12da3838c4ec3fc454d9cedd88c81e",
+      "date": "2017-08-29T11:03:08+02:00",
+      "subject": "[R-sig-eco] [AniMov/R-sig-eco] adehabitat HR: Problem with BRB and sample size (number of fixes)",
+      "subject_clean": "[AniMov/R-sig-eco] adehabitat HR: Problem with BRB and sample size (number of fixes)",
+      "in_reply_to": "<b896f702-a5be-11b3-afd6-50e00e89465e@ase-research.org>",
+      "references": [
+        "<968f896a-97ab-fc10-5931-3716983d02f5@gmx.net>",
+        "<b896f702-a5be-11b3-afd6-50e00e89465e@ase-research.org>"
+      ],
+      "body_plain": "Dear Mathieu,\n\nThanks a lot for your answer!!! I did something similar like you \nsuggested: I subsampled my data and tested if there still is a relation:\n\n1) First I subsampled each month for each animal.\n\n2) I took the animal with the lowest number of fixes. For each other \nanimal I randomly chose as many fixes as the animal with the lowest \nnumber had.\n\nI repeated that 20 times.\n\n3) Then I calculated the UD for each of subsampled data.\n\n4) I compared the UD results of those random chosen fixes to the one of \nthe original data which used many fixes. I used linear regression to \ncompare the results.\n\n5) Still there a relation\n\nSo I do have a problem because there is a relation of the number of \nfixes and the UD size. Are there any other ideas than subsampling by \nhourly data?\n\nHelp would be very much appreciated!\n\nDagmar\n\n\n\nAm 27.08.2017 um 15:07 schrieb Mathieu Basille:\n> Hey Dagmar,\n>\n> What do you mean by \"testing if the UD size is related to the number of\n> fixes\"? Did you model UD size as a function of number of fixes using all\n> fixes for all animals? If that's what you did, you could also check if \n> it's\n> true by animal too. One way to do it would be to compute UDs for each\n> animal over samples of fixes for instance every 10, 20, 30, 40, 50 and 60\n> minutes, and see if there is any relation here. If there is, you may not\n> have other option than subsampling at the hour scale to compare all \n> animals\n> (but what does the UD mean if there is such variation related to \n> sampling?\n> I'm not familiar enough with BRBs to comment here). If there is no\n> relationship per animal, then you simply have animals with high number of\n> fixes AND large UDs!\n>\n> Hope this helps,\n> Mathieu.\n>\n>\n> On 08/23/2017 03:59 PM, Dagmar wrote:\n>> Dear all,\n>>\n>> I want to compare the homerange size between animals based on GPS \n>> data but\n>> it seems not to work.\n>>\n>> Here is what I did:\n>>\n>> I calculated the homeranges using the Biased random bridges from \n>> adehabitat\n>> HR.\n>>\n>> Animal_ltraj <- as.ltraj(animalxy, animaltime, id=TierID)\n>> D_Animal <- BRB.D(Animal_ltraj, Tmax=21600, Lmin=36)\n>>\n>> Animal_Grid <- ascgen(allanimals_xy, cellsize=32)? # I chose 32 \n>> because it\n>> was the smallest cellsize chosen automatically. I thought to compare\n>> homerange size between animals I must use the same grid for all of them.\n>>\n>> Animal_BRB <- BRB(Animal_ltraj, D=\n>> D_Animal,type=c(\"UD\"),Tmax=21600,Lmin=36, hmin=100,grid=Animalgrid)\n>> kernel.area(Animal_BRB, unout=c(\"km2\"))\n>>\n>> My problem:\n>>\n>> I have very different sample sizes (i.e. number of fixes): Most animals\n>> were located hourly but two animals were located about each 5 min. This\n>> results in sample sizes of about 150 fixes per animals and some \n>> animals do\n>> have almost 10.000 fixes for the same periods of time.\n>>\n>> Because I want to compare the resulting home range sizes I tested if \n>> the UD\n>> size is related to the number of fixes and unfortunatly (!!) they are.\n>>\n>> That means that I cannot compare homerange sizes between my animals\n>>\n>> My question:\n>>\n>> - did I do something wrong?\n>>\n>> - is that problem known and is there a way to solve it?\n>>\n>> The only way that I find is to reduce the number of fixes of my \n>> frequently\n>> located animals artificially / randomly to start with the equal \n>> number of\n>> fixes for all animals. This would be a shame though!\n>>\n>> Help would be very, very, very much appreciated!!!\n>>\n>>\n>> _______________________________________________\n>> AniMov mailing list\n>> AniMov at lists.faunalia.it\n>> https://lists.faunalia.it/cgi-bin/mailman/listinfo/animov\n\n\nAm 27.08.2017 um 15:07 schrieb Mathieu Basille:\n> Hey Dagmar,\n>\n> What do you mean by \"testing if the UD size is related to the number of\n> fixes\"? Did you model UD size as a function of number of fixes using all\n> fixes for all animals? If that's what you did, you could also check if it's\n> true by animal too. One way to do it would be to compute UDs for each\n> animal over samples of fixes for instance every 10, 20, 30, 40, 50 and 60\n> minutes, and see if there is any relation here. If there is, you may not\n> have other option than subsampling at the hour scale to compare all animals\n> (but what does the UD mean if there is such variation related to sampling?\n> I'm not familiar enough with BRBs to comment here). If there is no\n> relationship per animal, then you simply have animals with high number of\n> fixes AND large UDs!\n>\n> Hope this helps,\n> Mathieu.\n>\n>\n> On 08/23/2017 03:59 PM, Dagmar wrote:\n>> Dear all,\n>>\n>> I want to compare the homerange size between animals based on GPS data but\n>> it seems not to work.\n>>\n>> Here is what I did:\n>>\n>> I calculated the homeranges using the Biased random bridges from adehabitat\n>> HR.\n>>\n>> Animal_ltraj <- as.ltraj(animalxy, animaltime, id=TierID)\n>> D_Animal <- BRB.D(Animal_ltraj, Tmax=21600, Lmin=36)\n>>\n>> Animal_Grid <- ascgen(allanimals_xy, cellsize=32)  # I chose 32 because it\n>> was the smallest cellsize chosen automatically. I thought to compare\n>> homerange size between animals I must use the same grid for all of them.\n>>\n>> Animal_BRB <- BRB(Animal_ltraj, D=\n>> D_Animal,type=c(\"UD\"),Tmax=21600,Lmin=36, hmin=100,grid=Animalgrid)\n>> kernel.area(Animal_BRB, unout=c(\"km2\"))\n>>\n>> My problem:\n>>\n>> I have very different sample sizes (i.e. number of fixes): Most animals\n>> were located hourly but two animals were located about each 5 min. This\n>> results in sample sizes of about 150 fixes per animals and some animals do\n>> have almost 10.000 fixes for the same periods of time.\n>>\n>> Because I want to compare the resulting home range sizes I tested if the UD\n>> size is related to the number of fixes and unfortunatly (!!) they are.\n>>\n>> That means that I cannot compare homerange sizes between my animals\n>>\n>> My question:\n>>\n>> - did I do something wrong?\n>>\n>> - is that problem known and is there a way to solve it?\n>>\n>> The only way that I find is to reduce the number of fixes of my frequently\n>> located animals artificially / randomly to start with the equal number of\n>> fixes for all animals. This would be a shame though!\n>>\n>> Help would be very, very, very much appreciated!!!\n>>\n>>\n>> _______________________________________________\n>> AniMov mailing list\n>> AniMov at lists.faunalia.it\n>> https://lists.faunalia.it/cgi-bin/mailman/listinfo/animov\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear Mathieu,\n\nThanks a lot for your answer!!! I did something similar like you \nsuggested: I subsampled my data and tested if there still is a relation:\n\n1) First I subsampled each month for each ani",
+      "thread_id": "thread-0620f50a0a9b",
+      "thread_depth": 1,
+      "month": "2017-08"
+    },
+    {
+      "id": "msg-149ce78c0730",
+      "message_id": "<CABj7FA3n55cBUR3-H3rAgup55VX5kGKYChsWCosdZKsqKGdZ6Q@mail.gmail.com>",
+      "from_name": "Andre Rovai",
+      "from_email_hash": "17525109a1c68aaae7ddb2108a3291ccd71f78773a4097f17d61998961b0ddc8",
+      "date": "2017-08-31T11:17:01-05:00",
+      "subject": "[R-sig-eco] How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "subject_clean": "How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "in_reply_to": "<xgzinh34uds.fsf@hafogvatn.is>",
+      "references": [
+        "<CABj7FA1oy1Jb9tFT2EiPXvLLmC4APEu2rXCVn-RZi+Bdr8whDQ@mail.gmail.com>",
+        "<xgzinh34uds.fsf@hafogvatn.is>"
+      ],
+      "body_plain": "Hi Julian, apologies for my late feedback to the group. I was able to\nextract the values from adjacent cells using adjacent() function from\nraster package. I must thank Santiago Sanchez for his help after looking up\nmy post.\nBest,\nAndre\n\n*Andre Rovai, Ph.D.*\nResearch Associate V\nDepartment of Oceanography and Coastal Sciences\nEnergy, Coast, and Environment Bldg., Room 3201\nLouisiana State University, Baton Rouge, LA 70803\nPhone: *225 578 6422*, Cell: *225 439 5559*\nEmail: *arovai1 at lsu.edu* <arovai1 at lsu.edu>, *asrovai at gmail.com*\n<asrovai at gmail.com>\noceanography.lsu.edu/twilleylab\n<http://oceanography.lsu.edu/twilleylab/index.html>\nlattes.cnpq.br/3739236195138235\n\n2017-08-31 10:41 GMT-05:00 Julian M. Burgos <julian.burgos at hafogvatn.is>:\n\n> Hi Andre,\n>\n> Your description is very confusing.  Could you clarify exactly what you\n> want?  You have a) a raster, and b) some lines.  What are you trying to\n> do exactly?\n>\n> Julian\n>\n>\n> Andre Rovai writes:\n>\n> > Hi all,\n> >\n> > I've been trying to extract values from a single attribute raster (area,\n> in\n> > m2) that overlaps with lines (that is, a .shp SpatialLines).\n> >\n> > The problem is that, along these lines, my raster sometimes goes from one\n> > to several contiguous cells in all directions.  Using the\n> > extract function only values from cells that are touched by the lines are\n> > extracted.  Thus, when I add up the extracted values from all lines a\n> > significant amount of area (m2) is lost due to cells that were not\n> touched\n> > by the line and therefore values were not extracted.\n> >\n> > I tried to work it around by:\n> >\n> > Step 1 - first aggregating my raster to a lower resolution (i.e.\n> increasing\n> > the fact argument) and then\n> > Step 2 - rasterizing the lines using this aggregated raster (created in\n> > step 1) as a mold to make sure the rasterized lines would get thick\n> enough\n> > to cover the horizontal spread of cells in my original resolution raster.\n> > Step 3 - Then I resample the rasterized lines (created in step 2) back to\n> > the original resolution I started with.\n> > Step 4 - Finally, extracted the values from the resampled rasterized\n> lines\n> > (created in step 3).\n> >\n> > However, it didn't quite work as now the total area (m2) varies according\n> > to the fact=\"\" value I use when first aggregating the raster (in step 1).\n> >\n> > I really appreciate if anyone has already dealt with a similar problem\n> and\n> > can help me out here.  Here are the codes I've been running to try to get\n> > it to work:\n> >\n> >\n> > # input raster file\n> >\n> > g.025 <- raster(\"ras.asc\")\n> >\n> > g.1 <- aggregate(g.025, fact=2, fun=sum)\n> >\n> >\n> >\n> > # input SpatialLines\n> >\n> > Spline1 <- readOGR(\"/Users/xxxxx.shp\")\n> >\n> > Spline2 <- readOGR(\"/Users/xxxxx.shp\")\n> >\n> > Spline3 <- readOGR(\"/Users/xxxxx.shp\")\n> >\n> >\n> >\n> > # rasterizing using low resolution raster (aggregated)\n> >\n> > c1 <- rasterize(Spline1, g.1, field=Spline1$type, fun=sum)\n> >\n> > c2 <- rasterize(Spline2, g.1, field=Spline2$type, fun=sum)\n> >\n> > c3 <- rasterize(Spline3, g.1, field=Spline3$type, fun=sum)\n> >\n> >\n> >\n> > # resampling back to higher resolution\n> >\n> > c1 <- resample(c1, g.025)\n> >\n> > c2 <- resample(c2, g.025)\n> >\n> > c3 <- resample(c3, g.025)\n> >\n> >\n> >\n> > # preparing to extract area (m2) values from raster ?g.025?\n> >\n> > c1tab <- as.data.frame(c1, xy=T)\n> >\n> > c2tab <- as.data.frame(c2, xy=T)\n> >\n> > c3tab <- as.data.frame(c3, xy=T)\n> >\n> > c1tab <- c1tab[which(is.na(c1tab$layer)!=T),]\n> >\n> > c2tab <- c2tab[which(is.na(c2tab$layer)!=T),]\n> >\n> > c3tab <- c3tab[which(is.na(c3tab$layer)!=T),]\n> >\n> >\n> >\n> > # extracting area (m2) values from raster ?g.025?\n> >\n> > c1tab[,4] <- extract(g.025, c1tab[,1:2])\n> >\n> > c2tab[,4] <- extract(g.025, c2tab[,1:2])\n> >\n> > c3tab[,4] <- extract(g.025, c3tab[,1:2])\n> >\n> > names(c1tab)[4] <- \"area_m2\"\n> >\n> > names(c2tab)[4] <- \"area_m2\"\n> >\n> > names(c3tab)[4] <- \"area_m2\"\n> >\n> >\n> >\n> > # sum total area (m2)\n> >\n> > c1_area <- sum(c1tab$area_m2)\n> >\n> > c2_area <- sum(c2tab$area_m2)\n> >\n> > c3_area <- sum(c3tab$area_m2)\n> >\n> > tot_area <- sum(c1_area, c2_area, c3_area)\n> >\n> >\n> > Thanks!\n> >\n> > Andre Rovai\n> > Department of Oceanography and Coastal Sciences\n> > Louisiana State University\n> >\n> >       [[alternative HTML version deleted]]\n> >\n> > _______________________________________________\n> > R-sig-ecology mailing list\n> > R-sig-ecology at r-project.org\n> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n> --\n> Julian Mariano Burgos, PhD\n> Hafranns?knastofnun, ranns?kna- og r??gjafarstofnun hafs og vatna/\n> Marine and Freshwater Research Institute\n> Sk?lagata 4, 121 Reykjav?k, Iceland\n> S?mi/Telephone : +354-5752037\n> Br?fs?mi/Telefax:  +354-5752001\n> Netfang/Email: julian.burgos at hafogvatn.is\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Julian, apologies for my late feedback to the group. I was able to\nextract the values from adjacent cells using adjacent() function from\nraster package. I must thank Santiago Sanchez for his help a",
+      "thread_id": "thread-149ce78c0730",
+      "thread_depth": 0,
+      "month": "2017-08"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-547ec9de99d3",
+      "subject": "Thresholds of Synchrony in R",
+      "message_count": 2,
+      "participants": [
+        "Tania Bird",
+        "Zoltan Botta-Dukat"
+      ],
+      "started": "2017-08-02T19:58:04+03:00",
+      "last_reply": "2017-08-03T09:51:50+02:00",
+      "root_message_id": "msg-547ec9de99d3"
+    },
+    {
+      "id": "thread-b6c6752a0027",
+      "subject": "gridExtra font family",
+      "message_count": 1,
+      "participants": [
+        "Adam Rusk"
+      ],
+      "started": "2017-08-03T09:44:55-05:00",
+      "last_reply": "2017-08-03T09:44:55-05:00",
+      "root_message_id": "msg-b6c6752a0027"
+    },
+    {
+      "id": "thread-d0f30e0c8db3",
+      "subject": "Mac/Linux sharing files to Windows users on github: problems with new lines",
+      "message_count": 2,
+      "participants": [
+        "Robert Rankin",
+        "Thierry Onkelinx"
+      ],
+      "started": "2017-08-06T22:06:20-04:00",
+      "last_reply": "2017-08-07T10:28:21+02:00",
+      "root_message_id": "msg-d0f30e0c8db3"
+    },
+    {
+      "id": "thread-24487e0c650f",
+      "subject": "Probabilistic maturation reaction norms",
+      "message_count": 2,
+      "participants": [
+        "Marc Taylor"
+      ],
+      "started": "2017-08-17T17:07:12+02:00",
+      "last_reply": "2017-08-18T09:31:37+02:00",
+      "root_message_id": "msg-24487e0c650f"
+    },
+    {
+      "id": "thread-f85ce74da3ef",
+      "subject": "SCHOLARSHIPS.UK.ReproducibleDataScienceForPopulationGeneticsUsingR.23-27Oct.",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2017-08-18T00:20:02+01:00",
+      "last_reply": "2017-08-18T00:20:02+01:00",
+      "root_message_id": "msg-f85ce74da3ef"
+    },
+    {
+      "id": "thread-932df9a3e560",
+      "subject": "How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "message_count": 3,
+      "participants": [
+        "Andre Rovai",
+        "Bede-Fazekas Ákos",
+        "Philippi, Tom"
+      ],
+      "started": "2017-08-18T10:09:32-05:00",
+      "last_reply": "2017-08-18T12:05:24-07:00",
+      "root_message_id": "msg-932df9a3e560"
+    },
+    {
+      "id": "thread-c638b2373be0",
+      "subject": "adehabitatHR: Problem with BRB and sample size (number of fixes)",
+      "message_count": 1,
+      "participants": [
+        "Dagmar"
+      ],
+      "started": "2017-08-24T10:56:31+02:00",
+      "last_reply": "2017-08-24T10:56:31+02:00",
+      "root_message_id": "msg-c638b2373be0"
+    },
+    {
+      "id": "thread-0620f50a0a9b",
+      "subject": "[AniMov/R-sig-eco] adehabitat HR: Problem with BRB and sample size (number of fixes)",
+      "message_count": 2,
+      "participants": [
+        "Dagmar",
+        "Mathieu Basille"
+      ],
+      "started": "2017-08-27T15:07:35+02:00",
+      "last_reply": "2017-08-29T11:03:08+02:00",
+      "root_message_id": "msg-0620f50a0a9b"
+    },
+    {
+      "id": "thread-149ce78c0730",
+      "subject": "How to extract values from contiguous raster cells that ate not touched by SpatialLines?",
+      "message_count": 1,
+      "participants": [
+        "Andre Rovai"
+      ],
+      "started": "2017-08-31T11:17:01-05:00",
+      "last_reply": "2017-08-31T11:17:01-05:00",
+      "root_message_id": "msg-149ce78c0730"
+    }
+  ]
+}

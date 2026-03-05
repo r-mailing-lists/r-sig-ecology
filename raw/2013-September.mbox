@@ -1,0 +1,1315 @@
+From elaine.kuo.tw at gmail.com  Fri Sep  6 14:53:33 2013
+From: elaine.kuo.tw at gmail.com (Elaine Kuo)
+Date: Fri, 6 Sep 2013 20:53:33 +0800
+Subject: [R-sig-eco] calculating dissimilarity index of islands (vegan and
+	betapart)
+Message-ID: <CAGJhoDzJJzRY7P2-2YwGPo-54evH-pdaBnFm0kHLH1MJ5tYjnw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130906/e7ee3426/attachment.pl>
+
+From elaine.kuo.tw at gmail.com  Sat Sep  7 15:19:05 2013
+From: elaine.kuo.tw at gmail.com (Elaine Kuo)
+Date: Sat, 7 Sep 2013 21:19:05 +0800
+Subject: [R-sig-eco] NMDS dot number=site number (vegan)
+Message-ID: <CAGJhoDz8ZnG9BmxiZvuccWERJPyP4UCTTGDY=4OVJGK4tep8Rg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130907/18afb585/attachment.pl>
+
+From ucfagls at gmail.com  Mon Sep  9 17:52:37 2013
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Mon, 9 Sep 2013 09:52:37 -0600
+Subject: [R-sig-eco] NMDS dot number=site number (vegan)
+In-Reply-To: <CAGJhoDz8ZnG9BmxiZvuccWERJPyP4UCTTGDY=4OVJGK4tep8Rg@mail.gmail.com>
+References: <CAGJhoDz8ZnG9BmxiZvuccWERJPyP4UCTTGDY=4OVJGK4tep8Rg@mail.gmail.com>
+Message-ID: <CAAHES9xdjVe9PVs9YzTJfWzRcS2qbqOcCXMpVT-AtmhimFEDLQ@mail.gmail.com>
+
+Read `?text.metaMDS` which has the details of the arguments accepted
+by this `text()` method. Specially it has argument `labels` which
+allows you to specify the labels used for the "points". The ordering
+of the scores (i.e. the rows of the score matrix that gives the
+coordinates in ordination space, the coordinates of the pints on the
+plot) is as per the ordering in the original data. If `labels` is not
+supplied then the `text()` method will use the `rownames()` of the
+data matrix.
+
+Because the plotted scores are in data order, it is very simple to
+request the site number (i.e. row number) be used for plotting:
+
+    text(NMDS, display = 'sites', labels = seq_len(nrow(dune)))
+
+Or alternatives, set the rownames to something you want, prior to
+fitting the MDS
+
+    rownames(dune) <- c("blah","foo","bar", ....)
+
+or in your case
+
+    rownames(dune) <- seq_len(nrow(dune))
+
+then refit your ordination.
+
+HTH
+
+G
+
+
+On 7 September 2013 07:19, Elaine Kuo <elaine.kuo.tw at gmail.com> wrote:
+> Dear list,
+>
+>
+> This is Elaine, a postgraduate studying bird distributions in East Asia.
+>
+> I would like to ask how to generate NMDS graphs with the dot number
+> equal to the site number, using R vegan.
+>
+> I read the vegan manual and copied the example code metaMDS.
+> (The code is as below)
+> However, the resulting NMDS graph has the dot number as
+> (site number*site number)/2.
+>
+> Thank you in advance.
+>
+> Code
+> library(MASS)
+>   library(vegan)
+>   NMDS  <-  metaMDS(dune,k=2, distfun  =  betadiver,  distance  =
+>  "sim",trymax=100,zerodist="add")
+>   plot(NMDS,  type  =  "n")
+>
+>   # species as symbols
+>   points(NMDS, display = 'species', pch = '+', cex = 0.6)
+>
+>   # sites as text
+>   text(NMDS, display = 'sites')
+>
+> Elaine
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+Gavin Simpson, PhD
+
+
+From asus4 at uw.edu  Mon Sep  9 19:00:07 2013
+From: asus4 at uw.edu (Alex Thomas)
+Date: Mon, 9 Sep 2013 10:00:07 -0700
+Subject: [R-sig-eco] NMDS dot number=site number (vegan)
+Message-ID: <CANV3hXvtcrcDYsQ9=_Eexy1smDm3-C5ZFCFFzeqHC9oAPoAbmw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130909/a0ac39d7/attachment.pl>
+
+From luysgarcia at gmail.com  Wed Sep 11 03:50:24 2013
+From: luysgarcia at gmail.com (=?ISO-8859-1?Q?Luis_Fernando_Garc=EDa?=)
+Date: Tue, 10 Sep 2013 22:50:24 -0300
+Subject: [R-sig-eco] add mean, SE and SD lines to a non-linear regression
+Message-ID: <CANxP2S7P2kDAH2R-3AQYnzGBHVaLhD_o-0KpyGC9923ctb7sbQ@mail.gmail.com>
+
+Hello R friends,
+
+I have a serious issue on R. I have some data about the functional response
+of a spider, over some prey, I am really needing to plot the data and add
+mean and
+SD and or SE bars to the graph but I have not found out how to do it!
+
+Does some of you have some idea about how to do it?
+
+Here it goes my data and what I have done (data table is attached)
+
+lycosa=read.table("C:\\Users\\Luis Fernando
+Garcia\\R\\RFlycosa.txt",header=T)
+attach(lycosa)
+model<-nls(Eaten~SSmicmen(Density,a,b))
+plot(Density,Eaten,pch=as.numeric(Prey))
+xv<-seq(0,10,1)
+yv<-predict(model,list(Density=xv))
+lines(xv,yv)
+
+please, if somebody knows how to do this I would be very thanked! I would
+like my data could look like the figure 8 of this paper.
+http://www.sciencedirect.com/science/article/pii/S1382668913001312
+
+All the best!
+-------------- next part --------------
+Prey	Density	Eaten		
+Lepidopteran	1	2		
+Lepidopteran	1	3		
+Lepidopteran	1	3		
+Lepidopteran	3	4		
+Lepidopteran	3	5		
+Lepidopteran	3	4		
+Lepidopteran	5	7		
+Lepidopteran	5	5		
+Lepidopteran	5	6		
+Lepidopteran	10	8		
+Lepidopteran	10	10		
+Lepidopteran	10	7		
+				
+				
+				
+				
+				
+				
+				
+				
+
+From stas.malavin at gmail.com  Wed Sep 11 06:06:28 2013
+From: stas.malavin at gmail.com (Stas Malavin)
+Date: Wed, 11 Sep 2013 08:06:28 +0400
+Subject: [R-sig-eco] add mean, SE and SD lines to a non-linear regression
+In-Reply-To: <CANxP2S7P2kDAH2R-3AQYnzGBHVaLhD_o-0KpyGC9923ctb7sbQ@mail.gmail.com>
+References: <CANxP2S7P2kDAH2R-3AQYnzGBHVaLhD_o-0KpyGC9923ctb7sbQ@mail.gmail.com>
+Message-ID: <CALGs198kcqyC8AiULoXYdk2SZH1-+d5h+vYo6Rx6L_Wv2pqA0g@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130911/5695813a/attachment.pl>
+
+From sarah.goslee at gmail.com  Wed Sep 11 08:35:55 2013
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Wed, 11 Sep 2013 02:35:55 -0400
+Subject: [R-sig-eco] add mean, SE and SD lines to a non-linear regression
+In-Reply-To: <CALGs198kcqyC8AiULoXYdk2SZH1-+d5h+vYo6Rx6L_Wv2pqA0g@mail.gmail.com>
+References: <CANxP2S7P2kDAH2R-3AQYnzGBHVaLhD_o-0KpyGC9923ctb7sbQ@mail.gmail.com>
+	<CALGs198kcqyC8AiULoXYdk2SZH1-+d5h+vYo6Rx6L_Wv2pqA0g@mail.gmail.com>
+Message-ID: <CAM_vju=JCb_+fuUme0hNgfaG0rTpu6WQS=0hXTdcctXeRgXzvQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130911/1f8d5e08/attachment.pl>
+
+From luna92803 at yahoo.com  Thu Sep 12 05:53:35 2013
+From: luna92803 at yahoo.com (Liz Kierepka)
+Date: Wed, 11 Sep 2013 20:53:35 -0700 (PDT)
+Subject: [R-sig-eco] Controlling for spatial autocorrelation in distance
+	matrices using ordination {vegan}
+Message-ID: <1378958015.2966.YahooMailNeo@web121005.mail.ne1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130911/7feea636/attachment.pl>
+
+From fernanda_bonetti at hotmail.com  Fri Sep 13 21:38:46 2013
+From: fernanda_bonetti at hotmail.com (Maria Fernanda Bonetti)
+Date: Fri, 13 Sep 2013 19:38:46 +0000
+Subject: [R-sig-eco] merge multi part polygons
+In-Reply-To: <BLU180-W6833D41DADFFAFA7E360ACEA3A0@phx.gbl>
+References: <BLU180-W75108B8486C16299ACD980EA390@phx.gbl>,
+	<CACk-te0fYEQtYQZMJ5b+=gxK+b1Uw9o8hFpCps-psV=_HHtYNg@mail.gmail.com>,
+	<BLU180-W6833D41DADFFAFA7E360ACEA3A0@phx.gbl>
+Message-ID: <BLU180-W735B29917B8ACC4176613EA3B0@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130913/d062d050/attachment.pl>
+
+From tom_philippi at nps.gov  Fri Sep 13 22:31:54 2013
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Fri, 13 Sep 2013 13:31:54 -0700
+Subject: [R-sig-eco] merge multi part polygons
+In-Reply-To: <BLU180-W735B29917B8ACC4176613EA3B0@phx.gbl>
+References: <BLU180-W75108B8486C16299ACD980EA390@phx.gbl>
+	<CACk-te0fYEQtYQZMJ5b+=gxK+b1Uw9o8hFpCps-psV=_HHtYNg@mail.gmail.com>
+	<BLU180-W6833D41DADFFAFA7E360ACEA3A0@phx.gbl>
+	<BLU180-W735B29917B8ACC4176613EA3B0@phx.gbl>
+Message-ID: <CAM9kYqhcfRVku4ZZxMg1DonAo70vww-+q9hha7TvJeNX_OE4Tg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130913/a1e2598a/attachment.pl>
+
+From vaskarnepal at gmail.com  Sun Sep 15 23:53:55 2013
+From: vaskarnepal at gmail.com (Vaskar Nepal KC)
+Date: Sun, 15 Sep 2013 16:53:55 -0500
+Subject: [R-sig-eco] BACI analysis with only one sample before treatment
+	(adonis, simper, indval)
+Message-ID: <CANZkPKdmHzH8EwhdA+b8TC400n5o4v4wsaKeD0m4_D0KKKrF_Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130915/91898168/attachment.pl>
+
+From Kirsty.Lees at uhi.ac.uk  Tue Sep 17 15:55:18 2013
+From: Kirsty.Lees at uhi.ac.uk (Kirsty Lees)
+Date: Tue, 17 Sep 2013 13:55:18 +0000
+Subject: [R-sig-eco] AdehabitatHR
+Message-ID: <9554FB05C4B9FC47B9D47D53C46610B08136AB75@AMSPRD0610MB385.eurprd06.prod.outlook.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130917/6dcd0fde/attachment.pl>
+
+From fernanda_bonetti at hotmail.com  Thu Sep 19 00:08:11 2013
+From: fernanda_bonetti at hotmail.com (Maria Fernanda Bonetti)
+Date: Wed, 18 Sep 2013 22:08:11 +0000
+Subject: [R-sig-eco] function to extract climatic variables from shape file
+	- error
+Message-ID: <BLU180-W847A4DC4614D77BB06A815EA200@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130918/89c96d37/attachment.pl>
+
+From tom_philippi at nps.gov  Thu Sep 19 00:49:57 2013
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Wed, 18 Sep 2013 15:49:57 -0700
+Subject: [R-sig-eco] function to extract climatic variables from shape
+ file - error
+In-Reply-To: <BLU180-W847A4DC4614D77BB06A815EA200@phx.gbl>
+References: <BLU180-W847A4DC4614D77BB06A815EA200@phx.gbl>
+Message-ID: <CAM9kYqgU1sPROFwiiOeMiW8BeM6dEzeCVzu2aXLDUK8kXjFDZQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130918/96a0f675/attachment.pl>
+
+From luysgarcia at gmail.com  Sat Sep 21 00:40:57 2013
+From: luysgarcia at gmail.com (=?ISO-8859-1?Q?Luis_Fernando_Garc=EDa?=)
+Date: Fri, 20 Sep 2013 15:40:57 -0700
+Subject: [R-sig-eco] Post Hoc tests GLM
+Message-ID: <CANxP2S49jQG4ZCaQyzqaunc4-bqK=S9xwf2Ca-pU9aBjTz5quQ@mail.gmail.com>
+
+Dear Fellows,
+
+I am trying to build a model in order to test the influence of the time of
+the day, on sex and behavioural category. After performing several
+modelations I chosen the best model which is
+
+glm(formula = Frec ~ Group+ Hour:Category, family = poisson)
+
+summarizing I have
+
+                    Df Deviance Resid. Df Resid. Dev Pr(>Chi)
+NULL                                   41    6027,36
+Group                 2     6,15        39    6021,21   0,0462
+Category:Hour 13  5972,08        26      49,13  <0,0001
+
+
+I found significative effects of sex and behaviour:time interaction.
+Nevertheless I am having lot of troubles in order to make post hoc
+comparison, specially in the case of Group. Does somebody know how to
+perform post hoc comparisons when using GLM, if so I would really
+appreciate it.
+
+Thanks in advance for your help
+
+
+(attached original data)
+-------------- next part --------------
+Group	Hour	Category	Frec
+Macho	noche	Exploraci?n	160
+Macho	noche	I/acciones 	11
+Macho	noche	Mantenimiento	0
+Macho	noche	Alimentaci?n	140
+Macho	noche	Reproducci?n	13
+Macho	noche	Descanso	141
+Macho	noche	Otros	2
+Macho	D?a	Exploraci?n	55
+Macho	D?a	I/acciones 	4
+Macho	D?a	Mantenimiento	4
+Macho	D?a	Alimentaci?n	12
+Macho	D?a	Reproducci?n	3
+Macho	D?a	Descanso	379
+Macho	D?a	Otros	2
+Hembra	noche	Exploraci?n	186
+Hembra	noche	I/acciones 	10
+Hembra	noche	Mantenimiento	0
+Hembra	noche	Alimentaci?n	90
+Hembra	noche	Reproducci?n	3
+Hembra	noche	Descanso	173
+Hembra	noche	Otros	5
+Hembra	D?a	Exploraci?n	40
+Hembra	D?a	I/acciones 	7
+Hembra	D?a	Mantenimiento	0
+Hembra	D?a	Alimentaci?n	9
+Hembra	D?a	Reproducci?n	2
+Hembra	D?a	Descanso	405
+Hembra	D?a	Otros	1
+Juvenil	noche	Exploraci?n	182
+Juvenil	noche	I/acciones 	12
+Juvenil	noche	Mantenimiento	0
+Juvenil	noche	Alimentaci?n	116
+Juvenil	noche	Reproducci?n	3
+Juvenil	noche	Descanso	191
+Juvenil	noche	Otros	2
+Juvenil	D?a	Exploraci?n	59
+Juvenil	D?a	I/acciones 	7
+Juvenil	D?a	Mantenimiento	0
+Juvenil	D?a	Alimentaci?n	5
+Juvenil	D?a	Reproducci?n	3
+Juvenil	D?a	Descanso	442
+Juvenil	D?a	Otros	1
+
+From Javier.Atalah at cawthron.org.nz  Sat Sep 21 08:05:59 2013
+From: Javier.Atalah at cawthron.org.nz (Javier Atalah)
+Date: Sat, 21 Sep 2013 06:05:59 +0000
+Subject: [R-sig-eco] Post Hoc tests GLM
+In-Reply-To: <CANxP2S49jQG4ZCaQyzqaunc4-bqK=S9xwf2Ca-pU9aBjTz5quQ@mail.gmail.com>
+References: <CANxP2S49jQG4ZCaQyzqaunc4-bqK=S9xwf2Ca-pU9aBjTz5quQ@mail.gmail.com>
+Message-ID: <C21FD1E5422A1242B4594022DB0A3E190B68CC@ci011.cawthron.org.nz>
+
+Hi Luis,
+Try the function testInteractions from the package phia.
+Best regards,
+Javier
+
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] on behalf of Luis Fernando Garc?a [luysgarcia at gmail.com]
+Sent: 21 September 2013 10:40
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Post Hoc tests GLM
+
+Dear Fellows,
+
+I am trying to build a model in order to test the influence of the time of
+the day, on sex and behavioural category. After performing several
+modelations I chosen the best model which is
+
+glm(formula = Frec ~ Group+ Hour:Category, family = poisson)
+
+summarizing I have
+
+                    Df Deviance Resid. Df Resid. Dev Pr(>Chi)
+NULL                                   41    6027,36
+Group                 2     6,15        39    6021,21   0,0462
+Category:Hour 13  5972,08        26      49,13  <0,0001
+
+
+I found significative effects of sex and behaviour:time interaction.
+Nevertheless I am having lot of troubles in order to make post hoc
+comparison, specially in the case of Group. Does somebody know how to
+perform post hoc comparisons when using GLM, if so I would really
+appreciate it.
+
+Thanks in advance for your help
+
+
+(attached original data)
+
+#####################################################################################
+
+Note:
+This message is for the named person's use only.  It may...{{dropped:15}}
+
+
+From jkpeters at princeton.edu  Sun Sep 22 18:55:06 2013
+From: jkpeters at princeton.edu (Jennifer Peterson)
+Date: Sun, 22 Sep 2013 11:55:06 -0500
+Subject: [R-sig-eco] does the kruskalmc posthoc multiple comparison test
+	require equal sample sizes?
+Message-ID: <A20238D9-D0BA-4F72-98E5-37B84F6DFCCD@princeton.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130922/035c3412/attachment.pl>
+
+From botta-dukat.zoltan at okologia.mta.hu  Sun Sep 22 19:57:01 2013
+From: botta-dukat.zoltan at okologia.mta.hu (Zoltan Botta-Dukat)
+Date: Sun, 22 Sep 2013 19:57:01 +0200
+Subject: [R-sig-eco] does the kruskalmc posthoc multiple comparison test
+ require equal sample sizes?
+In-Reply-To: <A20238D9-D0BA-4F72-98E5-37B84F6DFCCD@princeton.edu>
+References: <A20238D9-D0BA-4F72-98E5-37B84F6DFCCD@princeton.edu>
+Message-ID: <523F2F6D.3040300@okologia.mta.hu>
+
+Dear Jenni,
+
+Probably xou need the "oneway_test" function from coin package.
+
+Zoltan
+
+2013.09.22. 18:55 keltez?ssel, Jennifer Peterson ?rta:
+> Do the sample sizes have to be equal to perform a posthoc multiple comparison on nonparamteric data test using kruskalmc? I am unclear on this based on the book excerpt provided on Patrick Giraudoux's website.
+> Also, since the test has no name, how do I site it?
+>
+> Thanks very much!!
+> Jenni
+> --
+> ----------------------------------------------------------------
+> Jennifer K Peterson
+> PhD Candidate
+> Dobson & Graham Groups
+> Dept. of Ecology and Evolution
+> Princeton University
+> jkpeters at princeton.edu
+> www.jennipeterson.com
+> ----------------------------------------------------------------
+>
+>
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+Botta-Duk?t Zolt?n
+--------------------------------
+?kol?giai ?s Botanikai Int?zet
+Magyar Tudom?nyos Akad?mia
+?kol?giai Kutat?k?zpont
+--------------------------------
+2163. V?cr?t?t, Alkotm?ny u. 2-4.
+tel: +36 28 360122/157
+fax: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+Zolt?n BOTTA-Duk?t
+--------------------------------
+Institute of Ecology and Botany
+Hungarian Academy of Sciences
+Centre for Ecological Research
+--------------------------------
+H-2163 V?cr?t?t, Alkom?ny u. 2-4.
+HUNGARY
+Phone: +36 28 360122/157
+Fax..: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+From kersusan.dylann at gmail.com  Mon Sep 23 09:36:09 2013
+From: kersusan.dylann at gmail.com (Dylann Kersusan)
+Date: Mon, 23 Sep 2013 09:36:09 +0200
+Subject: [R-sig-eco] R graphics cookbook
+Message-ID: <CAEcqiB9vGNNO=s_xTer=xsWaqAsw=cTBHqgsXd2eSMEVZaJqyA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130923/13db94db/attachment.pl>
+
+From roman.lustrik at gmail.com  Mon Sep 23 13:48:09 2013
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Mon, 23 Sep 2013 13:48:09 +0200
+Subject: [R-sig-eco] R graphics cookbook
+In-Reply-To: <CAEcqiB9vGNNO=s_xTer=xsWaqAsw=cTBHqgsXd2eSMEVZaJqyA@mail.gmail.com>
+References: <CAEcqiB9vGNNO=s_xTer=xsWaqAsw=cTBHqgsXd2eSMEVZaJqyA@mail.gmail.com>
+Message-ID: <CAHT1vphz9FWp3SKLnJQFoV=vtW8iVpLo-BQBs2foeRvju65zGg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130923/727c6569/attachment.pl>
+
+From jmmartelo at fc.ul.pt  Mon Sep 23 14:11:57 2013
+From: jmmartelo at fc.ul.pt (joana martelo)
+Date: Mon, 23 Sep 2013 13:11:57 +0100
+Subject: [R-sig-eco] fish density in GLMM - experimental design problem
+Message-ID: <00c501ceb856$198f4100$4cadc300$@ul.pt>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130923/e0e6c392/attachment.pl>
+
+From krzysztof.sakrejda at gmail.com  Mon Sep 23 15:11:18 2013
+From: krzysztof.sakrejda at gmail.com (Krzysztof Sakrejda)
+Date: Mon, 23 Sep 2013 09:11:18 -0400
+Subject: [R-sig-eco] fish density in GLMM - experimental design problem
+In-Reply-To: <00c501ceb856$198f4100$4cadc300$@ul.pt>
+References: <00c501ceb856$198f4100$4cadc300$@ul.pt>
+Message-ID: <CAJCSVaDZFCdZE-jr5NoQ61i3j_H0E3w08mzU5mKNR2Wtj7Gf6Q@mail.gmail.com>
+
+On Mon, Sep 23, 2013 at 8:11 AM, joana martelo <jmmartelo at fc.ul.pt> wrote:
+> Dear list
+>
+>
+>
+> I'm trying to model the relationship between prey capture success by fish
+> (binomial variable, 0/1)  and fish length (continuous), fish density (2,4
+> and 6 individuals) and water velocity (8, 12 and 26cm/2) using GLMM with
+> fish.id as a random effect. Capture success was collected during trials that
+> consisted in sending a prey every 2 min, which could be captured or not by
+> individual fish.
+> A total of 20 prey was sent in each trial independently of
+> fish density, therefore the probability of capture is higher in 2 fish
+> trials than in 4 fish trials and any effect of density would be because of
+> the experimental design!
+
+So you have an experiment which measures how competition among individuals
+affects per-individual capture  probability... what are you trying to
+measure?  It's
+hard to say anything useful when we don't know that.
+
+> Do you know of any way I could incorporate this
+> information in my models?
+>
+>
+>
+>
+>
+> Model1<-glmer(capture~ length + density+ velocity +
+> (1|fish.id.),family=binomial,data=cap)
+>
+>
+>
+>
+>
+> Thanks in advance
+>
+>
+>
+> Best regards,
+>
+>
+>
+> Joana Martelo
+>
+>
+>
+>
+>
+>
+>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+
+Krzysztof Sakrejda
+
+Organismic and Evolutionary Biology
+University of Massachusetts, Amherst
+319 Morrill Science Center South
+611 N. Pleasant Street
+Amherst, MA 01003
+
+work #: 413-325-6555
+email: sakrejda at cns.umass.edu
+
+
+From chaco001 at umn.edu  Mon Sep 23 16:39:35 2013
+From: chaco001 at umn.edu (Jeremy Chacon)
+Date: Mon, 23 Sep 2013 09:39:35 -0500
+Subject: [R-sig-eco] R graphics cookbook
+Message-ID: <CAH65v73Kic+6qeE8Av_PcwoWtcp+qZOeOurqQYYArw1rJdwtpA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130923/75783421/attachment.pl>
+
+From laura.lee at ncdenr.gov  Mon Sep 23 17:29:54 2013
+From: laura.lee at ncdenr.gov (Lee, Laura)
+Date: Mon, 23 Sep 2013 15:29:54 +0000
+Subject: [R-sig-eco] convergence problems for zero-inflated model
+Message-ID: <2789D349964A854E9524A3CD0D759E042DBF0EBA@NCWWDITMXMBX35.ad.ncmail>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130923/b4fbd344/attachment.pl>
+
+From solymos at ualberta.ca  Mon Sep 23 18:10:46 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Mon, 23 Sep 2013 10:10:46 -0600
+Subject: [R-sig-eco] convergence problems for zero-inflated model
+In-Reply-To: <2789D349964A854E9524A3CD0D759E042DBF0EBA@NCWWDITMXMBX35.ad.ncmail>
+References: <2789D349964A854E9524A3CD0D759E042DBF0EBA@NCWWDITMXMBX35.ad.ncmail>
+Message-ID: <CAH9coKZZ4KA7vqVhhLEXuqUzHt+DuONqkH7F50bx41s_Sz+KJg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130923/cc7d0c7b/attachment.pl>
+
+From highstat at highstat.com  Tue Sep 24 12:07:01 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Tue, 24 Sep 2013 11:07:01 +0100
+Subject: [R-sig-eco] convergence problems for zero-inflated model
+In-Reply-To: <mailman.1.1380016801.5573.r-sig-ecology@r-project.org>
+References: <mailman.1.1380016801.5573.r-sig-ecology@r-project.org>
+Message-ID: <52416445.5040406@highstat.com>
+
+------------------------------
+
+
+
+Message: 5
+Date: Mon, 23 Sep 2013 15:29:54 +0000
+From: "Lee, Laura" <laura.lee at ncdenr.gov>
+To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Subject: [R-sig-eco] convergence problems for zero-inflated model
+Message-ID:
+	<2789D349964A854E9524A3CD0D759E042DBF0EBA at NCWWDITMXMBX35.ad.ncmail>
+Content-Type: text/plain
+
+Hi all!
+
+I'm using a zero-inflated model using the function 'zeroinfl' and running into convergence
+problems (system is computationally singular). How can I modify the code so it does not calculate a Hessian matrix?
+
+
+
+------
+Hi....I think it is more important that you figure out why you have numerical trouble. Most likely
+your model is too complicated.....or you have included an interaction term for which there is no data...or something like that.
+
+Alain Zuur
+
+-----------
+
+
+
+
+
+Thanks,
+
+Laura
+
+
+From highstat at highstat.com  Tue Sep 24 14:23:45 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Tue, 24 Sep 2013 13:23:45 +0100
+Subject: [R-sig-eco] GAM & GAMM course
+Message-ID: <52418451.1000801@highstat.com>
+
+We would like to announce the following statistics course:
+
+Beginner's Guide to MCMC, GAM and GAMM
+
+When: 10-14 March 2014
+Where: Elche, Alicante, Spain
+
+For details, see: http://www.highstat.com/statscourse.htm
+Course flyer: http://www.highstat.com/Courses/Flyer2014_3ElcheV2.pdf
+
+
+Kind regards,
+
+Alain Zuur
+
+
+-- 
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007)
+2. Mixed effects models and extensions in ecology with R (2009)
+3. A Beginner's Guide to R (2009)
+4. Zero Inflated Models and GLMM with R (2012)
+5. A Beginner's Guide to GAM (2012)
+6. A Beginner's Guide to GLM and GLMM (2013)
+
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From v_coudrain at voila.fr  Tue Sep 24 20:07:58 2013
+From: v_coudrain at voila.fr (v_coudrain at voila.fr)
+Date: Tue, 24 Sep 2013 20:07:58 +0200 (CEST)
+Subject: [R-sig-eco] null model for testing nestedness
+Message-ID: <1121167144.286531380046078873.JavaMail.www@wwinf7125>
+
+Dear all, 
+I would like to implement a null model to test if nestedness of a matrix departs from chance. There is an example in package "bipartite" with the function "nullmodel":
+
+obs <- unlist(networklevel(web, index="weighted NODF"))
+nulls <- nullmodel(web, N=100, method=1)
+null <- unlist(sapply(nulls , networklevel, index="weighted NODF"))
+
+This works well, however, I have the impress that prior to apply the function "networklevel", the initial matrix is being reordered to achieve maximal packing. 
+However, I don't want my matrix to be reordered, but I did not manage to find how to specify it. In the package vegan, there is the function nestednodf with the 
+option "order=FALSE", but I could not implement a null model based on this function (because the output contain multiple attributes).
+
+Any help welcomed
+
+
+___________________________________________________________
+Quiz TV : Vous ?tes fan de la s?rie "Friends" ? 5 questions ici http://tv.voila.fr/quiz/quiz-special-friends_14538959.html
+
+
+From lars at ut.ee  Wed Sep 25 13:07:22 2013
+From: lars at ut.ee (=?UTF-8?B?TGFycyBHw7Z0emVuYmVyZ2Vy?=)
+Date: Wed, 25 Sep 2013 13:07:22 +0200
+Subject: [R-sig-eco] null model for testing nestedness
+	(v_coudrain@voila.fr)
+In-Reply-To: <mailman.1.1380103201.26553.r-sig-ecology@r-project.org>
+References: <mailman.1.1380103201.26553.r-sig-ecology@r-project.org>
+Message-ID: <5242C3EA.6070007@ut.ee>
+
+Hi,
+
+there should be an easy solution to your problem by using the oecosimu 
+function of the vegan package. It allows you to specify your null model 
+and then use the nestednodf function as an argument within the oecusimu 
+function. Simply look up the help for the oecosimu function for more 
+details.
+
+Hope that helps,
+
+Lars G?tzenberger
+
+
+
+On 25.9.2013 12:00 PM, r-sig-ecology-request at r-project.org wrote:
+> Message: 3
+> Date: Tue, 24 Sep 2013 20:07:58 +0200 (CEST)
+> From:v_coudrain at voila.fr
+> To:r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] null model for testing nestedness
+> Message-ID: <1121167144.286531380046078873.JavaMail.www at wwinf7125>
+> Content-Type: text/plain; charset=UTF-8
+>
+> Dear all,
+> I would like to implement a null model to test if nestedness of a matrix departs from chance. There is an example in package "bipartite" with the function "nullmodel":
+>
+> obs <- unlist(networklevel(web, index="weighted NODF"))
+> nulls <- nullmodel(web, N=100, method=1)
+> null <- unlist(sapply(nulls , networklevel, index="weighted NODF"))
+>
+> This works well, however, I have the impress that prior to apply the function "networklevel", the initial matrix is being reordered to achieve maximal packing.
+> However, I don't want my matrix to be reordered, but I did not manage to find how to specify it. In the package vegan, there is the function nestednodf with the
+> option "order=FALSE", but I could not implement a null model based on this function (because the output contain multiple attributes).
+>
+> Any help welcomed
+>
+>
+> ___________________________________________________________
+> Quiz TV : Vous ?tes fan de la s?rie "Friends" ? 5 questions icihttp://tv.voila.fr/quiz/quiz-special-friends_14538959.html
+
+-- 
+Dr Lars G?tzenberger
+Institute of Botany
+Czech Academy of Science
+Dukelsk? 135
+CZ-379 82 T?ebo?
+Czech Republic
+
+email: lars at ut.ee
+website: larsgoetzenberger.wordpress.com
+
+I am currently funded by the plantfellows fellowship program. www.plantfellows.ch
+
+
+From v_coudrain at voila.fr  Wed Sep 25 14:56:18 2013
+From: v_coudrain at voila.fr (v_coudrain at voila.fr)
+Date: Wed, 25 Sep 2013 14:56:18 +0200 (CEST)
+Subject: [R-sig-eco] null model for testing nestedness
+Message-ID: <2083452936.71371380113778780.JavaMail.www@wwinf7130>
+
+Thank you very much. Yes it is working with oecosimu, exept that it does not seem to work for weighted data. There is the possibility to specify "weighted = TRUE": 
+
+oecosimu(matrix,nestednodf, method = "quasiswap", nsimul = 999, order = FALSE, weighted =TRUE)
+
+However, I get only null values and p=1. For weighted = F, I get good values.
+
+Best wishes
+___________________________________________________________
+Quiz TV : Vous ?tes fan de la s?rie "Friends" ? 5 questions ici http://tv.voila.fr/quiz/quiz-special-friends_14538959.html
+
+
+From jari.oksanen at oulu.fi  Wed Sep 25 15:45:41 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 25 Sep 2013 13:45:41 +0000
+Subject: [R-sig-eco] null model for testing nestedness
+In-Reply-To: <2083452936.71371380113778780.JavaMail.www@wwinf7130>
+References: <2083452936.71371380113778780.JavaMail.www@wwinf7130>
+Message-ID: <599E055F-AA31-4CAC-A366-80D91ED58456@oulu.fi>
+
+Valerie,
+
+There are at least two problems here: the way you call oecosimu() and how nestdnodf(..., weighted =TRUE) works with binary data. 
+
+If you specify a *binary* null model as method, then you will get binary data. Even if you supplied quantitative data, they are transformed into 1/0 (presence/absence) data. You specified method = "quasiswap", and that is binary model. Another problem is that nestednodf(..., weighted = TRUE) seems to evaluate the statistics all as zeros if you request weighted (= quantitative data) analysis of non-quantitative data (binary). It cannot perform weighted analysis if there are no weights, but still I think it should return something else than zeros. We'll have a look at that issue. 
+
+You should specify a non-binary null model if you want to have a non-binary (weighted) analysis. Quantitative null models are problematic, and vegan release version does not have much choice here. I think "r2dtable" may be the only one. Development version of vegan in http://www.r-forge.r-project.org/ has a wider gamme of non-binary null models, but I think you need to be brave to use quantitative null models. They are something for people who are not afraid of going to areas where angels fear to tread.
+
+FWIW, weighted nestednodf seems to work in oecosimu if you ask for a quantitative nullmodel ("r2dtable" in my tests) both with the release version (2.0-8 or 2.0-9) and with the development version (2.1-35 or 2.1-36). But you really need to to specify a quantitative null model. Both null models and oecosimu are completely re-written and re-designed in development versions.
+
+Cheers, Jari Oksanen
+
+On 25/09/2013, at 15:56 PM, <v_coudrain at voila.fr>
+ wrote:
+
+> Thank you very much. Yes it is working with oecosimu, exept that it does not seem to work for weighted data. There is the possibility to specify "weighted = TRUE": 
+> 
+> oecosimu(matrix,nestednodf, method = "quasiswap", nsimul = 999, order = FALSE, weighted =TRUE)
+> 
+> However, I get only null values and p=1. For weighted = F, I get good values.
+> 
+> Best wishes
+> ___________________________________________________________
+> Quiz TV : Vous ?tes fan de la s?rie "Friends" ? 5 questions ici http://tv.voila.fr/quiz/quiz-special-friends_14538959.html
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From v_coudrain at voila.fr  Wed Sep 25 16:05:45 2013
+From: v_coudrain at voila.fr (v_coudrain at voila.fr)
+Date: Wed, 25 Sep 2013 16:05:45 +0200 (CEST)
+Subject: [R-sig-eco]  null model for testing nestedness
+In-Reply-To: <599E055F-AA31-4CAC-A366-80D91ED58456@oulu.fi>
+Message-ID: <1263171930.81821380117945371.JavaMail.www@wwinf7130>
+
+Dear Jari,
+
+Thank you very much for this clear answer. I did not get that quasiswap only concerned binary data. After reading your explanations, I think I'll stay to binary 
+data and avoid the issue of weighted ones, which are much less straightforward to interpret. Anyway, I will have a look at the development versions.
+
+Best wishes,
+Val?rie
+
+
+> Message du 25/09/13 ? 15h45
+> De : "Jari Oksanen" 
+> A : "" 
+> Copie ? : "" 
+> Objet : Re: [R-sig-eco] null model for testing nestedness
+> 
+> Valerie,
+> 
+> There are at least two problems here: the way you call oecosimu() and how nestdnodf(..., weighted =TRUE) works with binary data. 
+> 
+> If you specify a *binary* null model as method, then you will get binary data. Even if you supplied quantitative data, they are transformed into 1/0 
+(presence/absence) data. You specified method = "quasiswap", and that is binary model. Another problem is that nestednodf(..., weighted = TRUE) seems to 
+evaluate the statistics all as zeros if you request weighted (= quantitative data) analysis of non-quantitative data (binary). It cannot perform weighted analysis if 
+there are no weights, but still I think it should return something else than zeros. We'll have a look at that issue. 
+> 
+> You should specify a non-binary null model if you want to have a non-binary (weighted) analysis. Quantitative null models are problematic, and vegan release 
+version does not have much choice here. I think "r2dtable" may be the only one. Development version of vegan in http://www.r-forge.r-project.org/ has a wider 
+gamme of non-binary null models, but I think you need to be brave to use quantitative null models. They are something for people who are not afraid of going to 
+areas where angels fear to tread.
+> 
+> FWIW, weighted nestednodf seems to work in oecosimu if you ask for a quantitative nullmodel ("r2dtable" in my tests) both with the release version (2.0-8 or 
+2.0-9) and with the development version (2.1-35 or 2.1-36). But you really need to to specify a quantitative null model. Both null models and oecosimu are 
+completely re-written and re-designed in development versions.
+> 
+> Cheers, Jari Oksanen
+> 
+> On 25/09/2013, at 15:56 PM, 
+> wrote:
+> 
+> > Thank you very much. Yes it is working with oecosimu, exept that it does not seem to work for weighted data. There is the possibility to specify "weighted = 
+TRUE": 
+> > 
+> > oecosimu(matrix,nestednodf, method = "quasiswap", nsimul = 999, order = FALSE, weighted =TRUE)
+> > 
+> > However, I get only null values and p=1. For weighted = F, I get good values.
+> > 
+> > Best wishes
+> > ___________________________________________________________
+> > Quiz TV : Vous ?tes fan de la s?rie "Friends" ? 5 questions ici http://tv.voila.fr/quiz/quiz-special-friends_14538959.html
+> > 
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+___________________________________________________________
+Quiz TV : Vous ?tes fan de la s?rie "Friends" ? 5 questions ici http://tv.voila.fr/quiz/quiz-special-friends_14538959.html
+
+
+From r.knell at qmul.ac.uk  Fri Sep 27 00:40:12 2013
+From: r.knell at qmul.ac.uk (Rob Knell)
+Date: Thu, 26 Sep 2013 23:40:12 +0100
+Subject: [R-sig-eco] Running population models through Shiny
+Message-ID: <41C21FB8-92C4-43F5-AB4D-2DD81AD103CB@qmul.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130926/dc6d2b7e/attachment.pl>
+
+From rahmannorthampton at gmail.com  Fri Sep 27 18:18:39 2013
+From: rahmannorthampton at gmail.com (Lutfor)
+Date: Fri, 27 Sep 2013 09:18:39 -0700 (PDT)
+Subject: [R-sig-eco] kernelUD() function
+In-Reply-To: <CAEcqiB9d4TkBUsoEqJit-1QxMR9nSSOc-a=hLDiLJScn_V1BSA@mail.gmail.com>
+References: <CAEcqiB9d4TkBUsoEqJit-1QxMR9nSSOc-a=hLDiLJScn_V1BSA@mail.gmail.com>
+Message-ID: <1380298719831-7578420.post@n2.nabble.com>
+
+I think if you write R-sig-geo mailing list, someone will might response your
+question.
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/kernelUD-function-tp7578261p7578420.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From tulugaq17 at hotmail.com  Fri Sep 27 21:32:08 2013
+From: tulugaq17 at hotmail.com (shylock holmes)
+Date: Fri, 27 Sep 2013 16:32:08 -0300
+Subject: [R-sig-eco] generating equation (linear or non-linear) from scatter
+	plot data
+Message-ID: <BLU179-W48828D320A18D34EC53DC9A6290@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130927/7a2b39ff/attachment.pl>
+
+From jbaldwin at fs.fed.us  Fri Sep 27 21:42:22 2013
+From: jbaldwin at fs.fed.us (Baldwin, Jim -FS)
+Date: Fri, 27 Sep 2013 19:42:22 +0000
+Subject: [R-sig-eco] generating equation (linear or non-linear) from
+ scatter	plot data
+In-Reply-To: <BLU179-W48828D320A18D34EC53DC9A6290@phx.gbl>
+References: <BLU179-W48828D320A18D34EC53DC9A6290@phx.gbl>
+Message-ID: <DDC5EC9B78340042B0D5A0C3789D456919A1D79E@001FSN2MPN1-061.001f.mgd2.msft.net>
+
+Do you have multiple measurements on individuals?  If so, have you accounted for the "repeated measures"?  If there are no multiple measurements on individuals, then maybe what explains a decrease in body size is a selection bias:  only smaller individuals survive in later time periods resulting in a smaller mean body size in later times.  So you would be seeing a change in mean size rather than individuals shrinking.
+
+Jim Baldwin
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of shylock holmes
+Sent: Friday, September 27, 2013 12:32 PM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] generating equation (linear or non-linear) from scatter plot data
+
+Hi all - I have been looking on-line for an answer but cannot find one thus far, and was hoping anyone could be so kind to assist with some suggestions.
+
+I have biological data of body size (y) over time (x), and after a preliminary inspection using a scatter plot the data suggest the body size is declining. I used a linear regression to confirm this, however, now I would like to examine what sort of underlying regression equation I can use to describe this decline, i.e., how do I get the parameters for the equation and for a more fitting curve (better than the loess)? I could not find anything online on this so far.
+
+The curve is what I call a "reversed growth curve", and I also would like to examine at what year the decline is 5% or greater from the horizontal/asymptote (if that makes sense)......
+
+
+
+
+
+thank you for any suggestions on this......m
+
+        [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+
+This electronic message contains information generated by the USDA solely for the intended recipients. Any unauthorized interception of this message or the use or disclosure of the information it contains may violate the law and subject the violator to civil or criminal penalties. If you believe you have received this message in error, please notify the sender and delete the email immediately.
+
+
+From dmck at u.washington.edu  Fri Sep 27 21:43:37 2013
+From: dmck at u.washington.edu (Don McKenzie)
+Date: Fri, 27 Sep 2013 12:43:37 -0700
+Subject: [R-sig-eco] generating equation (linear or non-linear) from
+	scatter plot data
+In-Reply-To: <BLU179-W48828D320A18D34EC53DC9A6290@phx.gbl>
+References: <BLU179-W48828D320A18D34EC53DC9A6290@phx.gbl>
+Message-ID: <E0311BA0-4833-49FA-84D1-53570EB3C1C6@u.washington.edu>
+
+
+On 27-Sep-13, at 12:32 PM, shylock holmes wrote:
+
+> Hi all - I have been looking on-line for an answer but cannot find  
+> one thus far, and was hoping anyone could be so kind to assist with  
+> some suggestions.
+>
+> I have biological data of body size (y) over time (x), and after a  
+> preliminary inspection using a scatter plot the data suggest the  
+> body size is declining. I used a linear regression to confirm this,  
+> however, now I would like to examine what sort of underlying  
+> regression equation I can use to describe this decline, i.e., how  
+> do I get the parameters for the equation and for a more fitting  
+> curve (better than the loess)? I could not find anything online on  
+> this so far.
+>
+> The curve is what I call a "reversed growth curve", and I also  
+> would like to examine at what year the decline is 5% or greater  
+> from the horizontal/asymptote (if that makes sense)......
+
+To get a meaningful answer you will probably have to specify more  
+clearly the constraints on what you are doing.  For example, if you  
+use a linear regression, *every* year will have the same slope. If I  
+understand your question, the answer will depend sensitively on the  
+type of curve that you fit.
+
+This is not really an R question, and you might want to consult a  
+statistician, or take a look at Ben Bolker's or Frank Harrell's books  
+on regression modeling.
+>
+>
+>
+> thank you for any suggestions on this......m
+>  		 	   		
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+
+Don McKenzie, Research Ecologist
+Pacific Wildland Fire Sciences Lab
+US Forest Service
+phone: 206-732-7824
+
+Affiliate Professor
+School of Environmental and Forest Sciences
+University of Washington
+
+
+From agus.camacho at gmail.com  Sat Sep 28 00:03:39 2013
+From: agus.camacho at gmail.com (Agus Camacho)
+Date: Fri, 27 Sep 2013 19:03:39 -0300
+Subject: [R-sig-eco] getting continuous output from a multinomial model
+	fitting
+Message-ID: <CALsJ7pRcL8CMxZYBhwXar7=Au=Uo-pN7fBybxNsMxm=DcQ_JAQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130927/4f7eccbb/attachment.pl>
+
+From sean at codexdata.com  Sun Sep 29 02:55:26 2013
+From: sean at codexdata.com (Sean Downey)
+Date: Sat, 28 Sep 2013 20:55:26 -0400
+Subject: [R-sig-eco] Wavelet analysis using simulated distribution
+Message-ID: <52477A7E.3040606@codexdata.com>
+
+Dear all,
+
+I am using the biwavelet package to run time series analysis, but I am 
+trying to calculate a 'robust' version of the 95% CI using simulated 
+distribution which I generate under special (non-linear) conditions. 
+Stated differently, the standard 'white' and 'red' noise spectra 
+normally used to calculate CIs in wavelet analysis are not appropriate 
+for my data, but I have a separate simulation process that generates a 
+distribution that is an appropriate null model.
+
+So, I have a vector of observed (M) and simulated data (Si). I can 
+easily perform the wavelet transform on M and extract the power matrix 
+(Mp); similarly, it's also easy enough to iterate through Si and 
+generate a distribution of power matrices for Mp. But is this the right 
+approach? My question is, what is the best approach for calculating and 
+plotting the wavelet CI using my simulated distribution, rather than the 
+red or white noise spectrum?
+
+Any help will be greatly appreciated.
+
+-Sean
+
+
+
+
+-- 
+Sean S. Downey
+Assistant Professor
+Department of Anthropology
+University of Maryland
+1111 Woods Hall
+College Park, MD 20742
+USA
+
+Office: 301-405-1427
+Email: sdowney2 at umd.edu <mailto:sdowney2 at umd.edu>
+
+
+From batsncats at gmail.com  Sun Sep 29 22:38:16 2013
+From: batsncats at gmail.com (Bruce Miller)
+Date: Sun, 29 Sep 2013 16:38:16 -0400
+Subject: [R-sig-eco] Animal movement packages
+Message-ID: <52488FB8.1070803@gmail.com>
+
+Hi all,
+
+I am looking for a (many?) R packages that deal with animal movement 
+data to generate:
+Minimum Convex Polygon, Kernel Home Range Analysis, Harmonic Mean, 
+Circular Stats etc.
+
+I did a quick look at the CRAN Task View: Analysis of Ecological and 
+Environmental Data, maintained by Gavin Simpson but did not find a 
+package that explicitly indicated it could do this.
+
+Possibly Hawthorne Beyer's Geospatial Modeling Environment, now all R 
+code and was Hath's Tools eons ago may do this.
+
+Bruce
+
+
+From basille.web at ase-research.org  Sun Sep 29 22:51:13 2013
+From: basille.web at ase-research.org (Mathieu Basille)
+Date: Sun, 29 Sep 2013 16:51:13 -0400
+Subject: [R-sig-eco] Animal movement packages
+In-Reply-To: <52488FB8.1070803@gmail.com>
+References: <52488FB8.1070803@gmail.com>
+Message-ID: <524892C1.1060509@ase-research.org>
+
+Hi Bruce,
+
+Have a look at adehabitatLT and adehabitatHR and their vignettes:
+
+http://cran.r-project.org/web/packages/adehabitatLT/
+http://cran.r-project.org/web/packages/adehabitatHR/
+
+You'll find a lot of useful stuff in there for the study of movement and 
+home range (probably the most extensive packages for that).
+
+Hope this helps,
+Mathieu.
+
+
+Le 09/29/2013 04:38 PM, Bruce Miller a ?crit :
+> Hi all,
+>
+> I am looking for a (many?) R packages that deal with animal movement data
+> to generate:
+> Minimum Convex Polygon, Kernel Home Range Analysis, Harmonic Mean, Circular
+> Stats etc.
+>
+> I did a quick look at the CRAN Task View: Analysis of Ecological and
+> Environmental Data, maintained by Gavin Simpson but did not find a package
+> that explicitly indicated it could do this.
+>
+> Possibly Hawthorne Beyer's Geospatial Modeling Environment, now all R code
+> and was Hath's Tools eons ago may do this.
+>
+> Bruce
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+
+~$ whoami
+Mathieu Basille, PhD
+
+~$ locate --details
+University of Florida \\
+Fort Lauderdale Research and Education Center
+(+1) 954-577-6314
+http://ase-research.org/basille
+
+~$ fortune
+? Le tout est de tout dire, et je manque de mots
+Et je manque de temps, et je manque d'audace. ?
+  -- Paul ?luard
+
+
+From b.markus.clarin at gmail.com  Mon Sep 30 10:32:29 2013
+From: b.markus.clarin at gmail.com (B.-Markus Clarin)
+Date: Mon, 30 Sep 2013 10:32:29 +0200
+Subject: [R-sig-eco] Animal movement packages
+In-Reply-To: <CA+r--qT93Z8cA-ToTFa82s+ACr8D1qXCrU8eNZsZkTjT1P2VpQ@mail.gmail.com>
+References: <52488FB8.1070803@gmail.com> <524892C1.1060509@ase-research.org>
+	<CA+r--qT93Z8cA-ToTFa82s+ACr8D1qXCrU8eNZsZkTjT1P2VpQ@mail.gmail.com>
+Message-ID: <CA+r--qREswOEv2jXvyyn3PsvaDM8YmNsKpBh_pbcekDQB92TYg@mail.gmail.com>
+
+Hey Bruce,
+
+the package 'move' might also help you. It is quite new (see attachment).
+
+Cheers,
+Mango
+
+
+On 30 September 2013 10:28, B.-Markus Clarin <b.markus.clarin at gmail.com>wrote:
+
+> Hey Bruce,
+>
+> the package 'move' might also help you. It is quite new (see attachment).
+>
+> Cheers,
+> Mango
+>
+>
+> On 29 September 2013 22:51, Mathieu Basille <basille.web at ase-research.org>wrote:
+>
+>> Hi Bruce,
+>>
+>> Have a look at adehabitatLT and adehabitatHR and their vignettes:
+>>
+>> http://cran.r-project.org/web/**packages/adehabitatLT/<http://cran.r-project.org/web/packages/adehabitatLT/>
+>> http://cran.r-project.org/web/**packages/adehabitatHR/<http://cran.r-project.org/web/packages/adehabitatHR/>
+>>
+>> You'll find a lot of useful stuff in there for the study of movement and
+>> home range (probably the most extensive packages for that).
+>>
+>> Hope this helps,
+>> Mathieu.
+>>
+>>
+>> Le 09/29/2013 04:38 PM, Bruce Miller a ?crit :
+>>
+>>  Hi all,
+>>>
+>>> I am looking for a (many?) R packages that deal with animal movement data
+>>> to generate:
+>>> Minimum Convex Polygon, Kernel Home Range Analysis, Harmonic Mean,
+>>> Circular
+>>> Stats etc.
+>>>
+>>> I did a quick look at the CRAN Task View: Analysis of Ecological and
+>>> Environmental Data, maintained by Gavin Simpson but did not find a
+>>> package
+>>> that explicitly indicated it could do this.
+>>>
+>>> Possibly Hawthorne Beyer's Geospatial Modeling Environment, now all R
+>>> code
+>>> and was Hath's Tools eons ago may do this.
+>>>
+>>> Bruce
+>>>
+>>> ______________________________**_________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/**listinfo/r-sig-ecology<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+>>>
+>>
+>> --
+>>
+>> ~$ whoami
+>> Mathieu Basille, PhD
+>>
+>> ~$ locate --details
+>> University of Florida \\
+>> Fort Lauderdale Research and Education Center
+>> (+1) 954-577-6314
+>> http://ase-research.org/**basille <http://ase-research.org/basille>
+>>
+>> ~$ fortune
+>> ? Le tout est de tout dire, et je manque de mots
+>> Et je manque de temps, et je manque d'audace. ?
+>>  -- Paul ?luard
+>>
+>>
+>> ______________________________**_________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/**listinfo/r-sig-ecology<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+>>
+>
+>
+

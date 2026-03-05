@@ -1,0 +1,2734 @@
+From c.damken at auckland.ac.nz  Sat Nov  1 14:27:56 2014
+From: c.damken at auckland.ac.nz (Claas Damken)
+Date: Sat, 1 Nov 2014 13:27:56 +0000
+Subject: [R-sig-eco] R-sig-ecology Digest,
+	(80/1): Binomial GLM: Is it the right way?
+Message-ID: <083E7BEE32A3304994EF5EC4D469626086526F9D@uxcn10-2.UoA.auckland.ac.nz>
+
+Dear Ludovico,
+"the likelihood of colonizing or becoming extinct" is not a binary response as such. For each of your plant species, you actually can run one of two models : "Species A persists on plot YX or goes extinct" or "Species B colonizes plot xy or is still absent". Otherwise you would ignore that a species can be present during both surveys. 
+
+Also, your "PROB_COL" is not really a probability. It is just the number of species with a certain trait that showed up only during the second survey divided by 24. If you would calculate this for each species separately, you would get a fraction (still not a probability).
+
+To me your data look like it should be analysed with some other method. GLMs are more convincing and easier to interpret/plot if your predictors are continuous (e.g., area, elevation, site age, pH, vegetation cover, etc) and not a factor with 12 levels when you have only 24 plots.
+
+More importantly, don't forget that  the probability of a species colonizing a plot not only depends on which life form that particular species has, but also on how many species with the same life form are the regional species pool, i.e. in the draw.
+
+HTH,
+
+Claas   
+
+Claas Damken, Postdoctoral Fellow
+Institute for Biodiversity and Environmental Research
+Universiti Brunei Darussalam
+Brunei Darussalam
+email: c.damken at auckland.ac.nz
+
+________________________________________
+
+
+Today's Topics:
+
+   1. Binomial GLM: Is it the right way? (Ludovico Frate)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Fri, 31 Oct 2014 21:49:26 +0100
+From: Ludovico Frate <ludovicofrate at hotmail.it>
+To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Subject: [R-sig-eco] Binomial GLM: Is it the right way?
+Message-ID: <DUB126-W76C71CD937F919A537C3ECD69A0 at phx.gbl>
+Content-Type: text/plain; charset="UTF-8"
+
+Dear List,
+I'am trying to fit a GLM with a binomial error distribution but I am a little bit confused about the model.
+I have 24 vegetation permanent plots, randomly distributed, sampled two times: 1962 and 2009. I am looking for any changes in vegetation composition and in particular based on plant traits (life forms).For each species, I assessed whether it had colonized (i.e. been in 1962 absent but in 2009 present) or become locally extinct (i.e. been in 1962 present but recently absent) in the plot.I would like to analyze whether a species trait affected the likelihood of colonizing or becoming extinct on a summit.
+example: Colonizing species
+Traits           TOTAL   COLONIZING      PROB_
+COLChF       24              0                       0
+ChC              24              1                       0,041666667
+ChR              24              11                      0,458333333
+ChSC            24              1                       0,041666667
+ChS              24              18                      0,75
+Ph                24              2                       0,083333333
+Geo             24              18                      0,75
+HeB             24              1                       0,041666667
+HeC             24              36                      1,5
+HeR             24              47                      1,958333333
+HeS             24              161                     6,708333333
+Th                24              28                      1,166666667
+
+Traits is the plant trait analyzed, TOTAL is the number of plots and COLONIZING represents the number of new species found in 2009 per plot, PROB_COL is the probability of colonization (COLONIZING/TOT)
+However PROB_COL is >1, so I think that TOTAL should be different (i.e. total number of colonizing species)?
+Any suggestions?Thank you,Ludovico
+
+Ludovico
+Frate
+
+PhD student (University of Molise - Italy)
+Environmetrics Lab
+http://www.distat.unimol.it/STAT/environmetrica/organico/collaboratori/ludovico-frate-1
+Department of Biosciences and Territory - DiBT
+Universit?el Molise.
+Contrada Fonte
+Lappone,
+86090 -  Pesche (IS)
+ITALIA.
+Cel: ++39
+3333767557
+Fax: ++39 (0874) 404123
+E-mail ludovico.frate at unimol.it
+ludovicofrate at hotmail.it
+
+
+        [[alternative HTML version deleted]]
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 80, Issue 1
+********************************************
+
+
+From ludovicofrate at hotmail.it  Sat Nov  1 15:29:29 2014
+From: ludovicofrate at hotmail.it (Ludovico Frate)
+Date: Sat, 1 Nov 2014 07:29:29 -0700 (PDT)
+Subject: [R-sig-eco] R-sig-ecology Digest,
+ (80/1): Binomial GLM: Is it the right way?
+In-Reply-To: <083E7BEE32A3304994EF5EC4D469626086526F9D@uxcn10-2.UoA.auckland.ac.nz>
+References: <083E7BEE32A3304994EF5EC4D469626086526F9D@uxcn10-2.UoA.auckland.ac.nz>
+Message-ID: <1414852169178-7579192.post@n2.nabble.com>
+
+Dear Class, thank you for your reply.
+Maybe I have not been very clear in the exposition. I'll try to reformulate.
+
+"the likelihood of colonizing or becoming extinct" is a proportion so the
+binomial distribution should be still ok!
+
+Considering only colonizing species, or arrivals, for a given plot. This
+means that a species is not new in overall sampled flora but only for that
+plot (i.e. *local* colonizer).
+
+PLOTID;TRAITS;NUMBER OF NEW COLONIZERS;NUMBER OF SUCCESS;PROPORTION
+1;	ChF;	4;	0;	0
+1;	ChC;	4;	0;	0
+1;	ChR;	4;	0;	0
+1;	ChSC;4;	0;	0
+1;	ChS;	4;	1;	0,25
+1;	Ph;	4;	0;	0
+1;	Geo;	4;	0;	0
+1;	HeB;	4;	0;	0
+1;	HeC;	4;	0;	0
+1;	HeR;	4;	0;	0
+1;	HeS;	4;	3;	0,75
+1;	Th;   4;	0;	0
+2;	ChF;	17;	0;	0
+2;	ChC;	17;	0;	0
+2;	ChR;	17;	1;	0,058823529
+2;	ChSC;17;	0;	0
+2;	ChS;	17;	2;	0,117647059
+2;	Ph;	17;	0;	0
+2;	Geo;	17;	1;	0,058823529
+2;	HeB;	17;	0;	0
+2;	HeC;	17;	0;	0
+2;	HeR;	17;	2;	0,117647059
+2;	HeS;	17;	7;	0,411764706
+2;	Th;	17;	4;	0,235294118
+3;	ChF;	16;	0;	0
+3;	ChC;	16;	0;	0
+3;	ChR;	16;	2;	0,125
+3;	ChSC;16;	0;	0
+3;	ChS;	16;	0;	0
+3;	Ph;	16;	0;	0
+3;	Geo;	16;	2;	0,125
+3;	HeB;	16;	0;	0
+3;	HeC;	16;	0;	0
+3;	HeR;	16;	1;	0,0625
+3;	HeS;	16;	9;	0,5625
+3;	Th;	16;	2;	0,125
+.       .       .       .
+.       .       .       .
+.       .       .       .
+24    .       .       .
+
+
+for example, in the table, the plot 1 has 4 new species found of which 1 is
+a ChS and 3 are HeS with a proportion of 0.25 and 0.75 respectively.
+
+In a GLM model, the response variable should be PROPORTION (that I have
+improperly called PROBABILITY)
+
+An hypothetical model could be:
+M0<-glm(PROPORTION~TRAITS, family = binomial, weights = NUMBER OF NEW
+COLONIZERS, data = ...)
+
+
+Does it make sense?
+
+
+For the second question, I agree with you that "the probability of a species
+colonizing a plot not only depends on which life form that particular
+species has".
+
+Regards,
+Ludovico
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Re-R-sig-ecology-Digest-80-1-Binomial-GLM-Is-it-the-right-way-tp7579191p7579192.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From dia.abdoul at gmail.com  Sat Nov  1 16:15:49 2014
+From: dia.abdoul at gmail.com (Abdoul Dia)
+Date: Sat, 01 Nov 2014 11:15:49 -0400
+Subject: [R-sig-eco] R-sig-ecology Digest,
+ (80/1): Binomial GLM: Is it the right way?
+In-Reply-To: <1414852169178-7579192.post@n2.nabble.com>
+References: <083E7BEE32A3304994EF5EC4D469626086526F9D@uxcn10-2.UoA.auckland.ac.nz>
+	<1414852169178-7579192.post@n2.nabble.com>
+Message-ID: <5454F925.2030000@gmail.com>
+
+Dear Frate, I don't know if I do understand well your problem but 
+Binomial suppose that you have a binary response variable. For 
+proportions, you should use other models otherwise you should specifiy 
+proportions of success vs failure.
+
+Hope this could help.
+
+Cheers
+Abdoul
+
+On 14-11-01 10:29 AM, Ludovico Frate wrote:
+> Dear Class, thank you for your reply.
+> Maybe I have not been very clear in the exposition. I'll try to reformulate.
+>
+> "the likelihood of colonizing or becoming extinct" is a proportion so the
+> binomial distribution should be still ok!
+>
+> Considering only colonizing species, or arrivals, for a given plot. This
+> means that a species is not new in overall sampled flora but only for that
+> plot (i.e. *local* colonizer).
+>
+> PLOTID;TRAITS;NUMBER OF NEW COLONIZERS;NUMBER OF SUCCESS;PROPORTION
+> 1;	ChF;	4;	0;	0
+> 1;	ChC;	4;	0;	0
+> 1;	ChR;	4;	0;	0
+> 1;	ChSC;4;	0;	0
+> 1;	ChS;	4;	1;	0,25
+> 1;	Ph;	4;	0;	0
+> 1;	Geo;	4;	0;	0
+> 1;	HeB;	4;	0;	0
+> 1;	HeC;	4;	0;	0
+> 1;	HeR;	4;	0;	0
+> 1;	HeS;	4;	3;	0,75
+> 1;	Th;   4;	0;	0
+> 2;	ChF;	17;	0;	0
+> 2;	ChC;	17;	0;	0
+> 2;	ChR;	17;	1;	0,058823529
+> 2;	ChSC;17;	0;	0
+> 2;	ChS;	17;	2;	0,117647059
+> 2;	Ph;	17;	0;	0
+> 2;	Geo;	17;	1;	0,058823529
+> 2;	HeB;	17;	0;	0
+> 2;	HeC;	17;	0;	0
+> 2;	HeR;	17;	2;	0,117647059
+> 2;	HeS;	17;	7;	0,411764706
+> 2;	Th;	17;	4;	0,235294118
+> 3;	ChF;	16;	0;	0
+> 3;	ChC;	16;	0;	0
+> 3;	ChR;	16;	2;	0,125
+> 3;	ChSC;16;	0;	0
+> 3;	ChS;	16;	0;	0
+> 3;	Ph;	16;	0;	0
+> 3;	Geo;	16;	2;	0,125
+> 3;	HeB;	16;	0;	0
+> 3;	HeC;	16;	0;	0
+> 3;	HeR;	16;	1;	0,0625
+> 3;	HeS;	16;	9;	0,5625
+> 3;	Th;	16;	2;	0,125
+> .       .       .       .
+> .       .       .       .
+> .       .       .       .
+> 24    .       .       .
+>
+>
+> for example, in the table, the plot 1 has 4 new species found of which 1 is
+> a ChS and 3 are HeS with a proportion of 0.25 and 0.75 respectively.
+>
+> In a GLM model, the response variable should be PROPORTION (that I have
+> improperly called PROBABILITY)
+>
+> An hypothetical model could be:
+> M0<-glm(PROPORTION~TRAITS, family = binomial, weights = NUMBER OF NEW
+> COLONIZERS, data = ...)
+>
+>
+> Does it make sense?
+>
+>
+> For the second question, I agree with you that "the probability of a species
+> colonizing a plot not only depends on which life form that particular
+> species has".
+>
+> Regards,
+> Ludovico
+>
+>
+>
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Re-R-sig-ecology-Digest-80-1-Binomial-GLM-Is-it-the-right-way-tp7579191p7579192.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From josie.galbraith at gmail.com  Tue Nov  4 03:18:29 2014
+From: josie.galbraith at gmail.com (Josie Galbraith)
+Date: Tue, 4 Nov 2014 15:18:29 +1300
+Subject: [R-sig-eco] Adonis model help
+Message-ID: <CAGb-hRp50RLJftnO6KoRXatsvuPoLdZLzzyr44nZGW29ogfJcw@mail.gmail.com>
+
+Hi all,
+
+I'm new to community data analysis in R and was hoping to get some feedback
+on my intended approach using adonis.
+
+The primary aim is to test the effect of treatment group (FOOD: F or N) on
+community assemblage.  I have repeated measures data so I have included
+SITE ID as a random factor and constrained permutations to within sites
+(using the ?strata? argument).  I want to include survey month (categorical
+factor) as a fixed effect in the models to look at temporal variability,
+and also want to include 2 other variables as random factors: vegetation
+and background feeding level. (Structure of data given below).
+
+Is the following appropriate?
+
+adonis(Dmatrx ~TREAT*MONTH + VEG + BKF + SITE, data=Dmetadata,
+strata=Dmetadata$SITE, permutations = 999)
+
+Thanks in advance,
+Josie
+
+
+'data.frame':    413 obs. of  6 variables:
+ $ MONTH  : Factor w/ 18 levels "5","6","7","8",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ SITE   : Factor w/ 23 levels "ABER","BAYS",..: 1 9 22 19 6 14 15 4 23 18
+...
+ $ FOOD   : Factor w/ 2 levels "F","N": 2 1 1 2 2 1 2 1 1 2 ...
+ $ VEG    : Factor w/ 3 levels "1","2","3": 3 1 2 1 2 1 1 2 2 3 ...
+ $ BKF    : Factor w/ 3 levels "High","Low","Med": 3 3 3 3 1 3 3 1 1 3 ...
+
+
+-- 
+*Josie Galbraith*
+PhD student
+*University of Auckland *
+Joint Graduate School in Biodiversity and Biosecurity ? School of
+Biological Sciences ? Tamaki Campus ? Private Bag 92019 ? Auckland 1142* ?
+P:* 09-373 7599 ext. 83132
+
+	[[alternative HTML version deleted]]
+
+
+From peterhouk at gmail.com  Tue Nov  4 13:30:01 2014
+From: peterhouk at gmail.com (peterhouk1 .)
+Date: Tue, 4 Nov 2014 22:30:01 +1000
+Subject: [R-sig-eco] ANCOVA with random effects for slope and intercept
+Message-ID: <CAOxzVJ2f4VFtsQd1JxgWfBssjPFSqQdWYL7xuDGg-dVuTnbkTw@mail.gmail.com>
+
+Greetings -
+
+Looking for advice and insight into ANCOVA models that allow for random
+slope and intercept effects.  I have been using lme and lmer, but I can't
+seem to figure out where I've gone wrong.  I have a grouping factor,
+predictor, and response.  The response~predictor relationship should be
+nested within grouping factor, with a desire to allow for random effects of
+the slope and y-intercept.  Data and my code are found below, greatly
+appreciate insight.
+
+I get the same response from both approaches:
+
+Mlme1<-lme(response~predictor,
+           random = list(group_factor = ~1 | predictor), data=mydata)
+
+Second approach
+
+Mlmer1<-lmer(response~predictor + (1 + predictor|group_factor), data=mydata)
+
+Taking both approaches, I get the same results as a simple linear model
+that does not account for nesting within the group factor.
+
+mydata
+
+  group_factor predictor response  1 13.75584744 -0.257259794  1 3.059971584
+0.703113472  1 14.00447296 -0.260892287  1 6.705509001 -0.33269593  1
+6.592728067 0.053814446  1 9.211047122 -0.002776485  2 12.50497696
+0.22727311  2 7.059077939 0.18586719  2 6.617249805 -0.022951714  2
+1.559557719 0.833397702  2 12.1962121 -0.57159955  2 11.29647955
+-0.963754818  2 15.54334219 0.489700014  3 8.93626518 -0.421471799  3
+1.681675438 0.383260174  3 13.43826892 -0.330882653  3 10.8971089 0.47675377
+3 7.600869443 -0.227033926  3 15.004137 0.104257183  4 12.61327214
+0.131460302  4 3.788474342 0.079758467  4 14.37299098 0.294254076  4
+3.564225024 -0.006581881  4 13.63301652 -0.498890965  5 4.36777119
+0.90215334  5 5.150130473 0.098069832  5 7.875920526 0.468166528  5
+13.91344257 -0.291551635  5 10.1061938 -0.35162982  5 13.32810817
+0.133439251  5 15.64845612 -0.439418202  5 1.857959976 -0.468857357  5
+11.31495202 -0.050371938  6 7.851162116 0.126588358  6 5.285251391
+0.212699384  6 15.82353883 -0.202005195  6 11.90209318 0.34412633  6
+5.547563146 -0.446233668  6 5.645270991 -0.303913602  6 8.668938138
+0.268738394  7 15.66063395 -0.194882955  7 11.11830972 0.196309336  7
+3.174056086 0.188199892  7 12.39006821 0.222261643  7 3.034014836
+0.039201594  7 13.13551529 -0.451089511  8 9.990570964 -0.128411654  8
+2.382739273 0.145897042  8 4.870002628 0.875223363  8 5.99541207 0.155610264
+8 16.56247927 -0.461697164  8 14.58286908 -0.514244888  8 12.72137648
+-0.072376963  9 7.436676598 -0.306969441  9 5.196390457 -0.222063871  9
+7.213670545 -0.411344562  9 9.243636562 0.095582355  9 7.029863529
+0.31586562  9 6.074354561 0.459471079  9 8.282168564 0.632851023  9
+13.85105359 -0.298326302  9 5.972744894 -0.180974348  9 14.09541111
+-0.084091553  10 5.304552826 0.265618935  10 4.089248332 0.270559629  10
+7.482418571 0.049764287  10 16.44388769 0.008163962  10 13.78009474
+-0.594106812  11 10.34249094 -0.206619307  11 4.491492572 -0.207263365  11
+7.350436798 0.083703414  11 8.38636562 0.330179258
+
+-- 
+
+Peter Houk, PhD
+Assistant Professor
+University of Guam Marine Laboratory
+http://www.guammarinelab.com/peterhouk.html
+www.pacmares.com
+www.micronesianfishing.com
+
+	[[alternative HTML version deleted]]
+
+
+From mbrooks at ufl.edu  Tue Nov  4 13:41:23 2014
+From: mbrooks at ufl.edu (Mollie Brooks)
+Date: Tue, 4 Nov 2014 13:41:23 +0100
+Subject: [R-sig-eco] ANCOVA with random effects for slope and intercept
+In-Reply-To: <CAOxzVJ2f4VFtsQd1JxgWfBssjPFSqQdWYL7xuDGg-dVuTnbkTw@mail.gmail.com>
+References: <CAOxzVJ2f4VFtsQd1JxgWfBssjPFSqQdWYL7xuDGg-dVuTnbkTw@mail.gmail.com>
+Message-ID: <504AAD9E-5EFC-46F6-8AAF-9E6C3C86BEA6@ufl.edu>
+
+Hi Dr. Houk,
+
+You say you get the same result from the lmer model as a linear model. 
+Can you show us the summary of both models so that we might help you interpret it?
+
+Thanks,
+Mollie
+------------------------
+Mollie Brooks, PhD
+Postdoctoral Researcher, Population Ecology Research Group
+Institute of Evolutionary Biology & Environmental Studies, University of Z?rich
+http://www.popecol.org/team/mollie-brooks/
+
+
+> On 4Nov 2014, at 13:30, peterhouk1 . <peterhouk at gmail.com> wrote:
+> 
+> Greetings -
+> 
+> Looking for advice and insight into ANCOVA models that allow for random
+> slope and intercept effects.  I have been using lme and lmer, but I can't
+> seem to figure out where I've gone wrong.  I have a grouping factor,
+> predictor, and response.  The response~predictor relationship should be
+> nested within grouping factor, with a desire to allow for random effects of
+> the slope and y-intercept.  Data and my code are found below, greatly
+> appreciate insight.
+> 
+> I get the same response from both approaches:
+> 
+> Mlme1<-lme(response~predictor,
+>           random = list(group_factor = ~1 | predictor), data=mydata)
+> 
+> Second approach
+> 
+> Mlmer1<-lmer(response~predictor + (1 + predictor|group_factor), data=mydata)
+> 
+> Taking both approaches, I get the same results as a simple linear model
+> that does not account for nesting within the group factor.
+> 
+> mydata
+> 
+>  group_factor predictor response  1 13.75584744 -0.257259794  1 3.059971584
+> 0.703113472  1 14.00447296 -0.260892287  1 6.705509001 -0.33269593  1
+> 6.592728067 0.053814446  1 9.211047122 -0.002776485  2 12.50497696
+> 0.22727311  2 7.059077939 0.18586719  2 6.617249805 -0.022951714  2
+> 1.559557719 0.833397702  2 12.1962121 -0.57159955  2 11.29647955
+> -0.963754818  2 15.54334219 0.489700014  3 8.93626518 -0.421471799  3
+> 1.681675438 0.383260174  3 13.43826892 -0.330882653  3 10.8971089 0.47675377
+> 3 7.600869443 -0.227033926  3 15.004137 0.104257183  4 12.61327214
+> 0.131460302  4 3.788474342 0.079758467  4 14.37299098 0.294254076  4
+> 3.564225024 -0.006581881  4 13.63301652 -0.498890965  5 4.36777119
+> 0.90215334  5 5.150130473 0.098069832  5 7.875920526 0.468166528  5
+> 13.91344257 -0.291551635  5 10.1061938 -0.35162982  5 13.32810817
+> 0.133439251  5 15.64845612 -0.439418202  5 1.857959976 -0.468857357  5
+> 11.31495202 -0.050371938  6 7.851162116 0.126588358  6 5.285251391
+> 0.212699384  6 15.82353883 -0.202005195  6 11.90209318 0.34412633  6
+> 5.547563146 -0.446233668  6 5.645270991 -0.303913602  6 8.668938138
+> 0.268738394  7 15.66063395 -0.194882955  7 11.11830972 0.196309336  7
+> 3.174056086 0.188199892  7 12.39006821 0.222261643  7 3.034014836
+> 0.039201594  7 13.13551529 -0.451089511  8 9.990570964 -0.128411654  8
+> 2.382739273 0.145897042  8 4.870002628 0.875223363  8 5.99541207 0.155610264
+> 8 16.56247927 -0.461697164  8 14.58286908 -0.514244888  8 12.72137648
+> -0.072376963  9 7.436676598 -0.306969441  9 5.196390457 -0.222063871  9
+> 7.213670545 -0.411344562  9 9.243636562 0.095582355  9 7.029863529
+> 0.31586562  9 6.074354561 0.459471079  9 8.282168564 0.632851023  9
+> 13.85105359 -0.298326302  9 5.972744894 -0.180974348  9 14.09541111
+> -0.084091553  10 5.304552826 0.265618935  10 4.089248332 0.270559629  10
+> 7.482418571 0.049764287  10 16.44388769 0.008163962  10 13.78009474
+> -0.594106812  11 10.34249094 -0.206619307  11 4.491492572 -0.207263365  11
+> 7.350436798 0.083703414  11 8.38636562 0.330179258
+> 
+> -- 
+> 
+> Peter Houk, PhD
+> Assistant Professor
+> University of Guam Marine Laboratory
+> http://www.guammarinelab.com/peterhouk.html
+> www.pacmares.com
+> www.micronesianfishing.com
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+	[[alternative HTML version deleted]]
+
+
+From peterhouk at gmail.com  Tue Nov  4 14:11:28 2014
+From: peterhouk at gmail.com (peterhouk1 .)
+Date: Tue, 4 Nov 2014 23:11:28 +1000
+Subject: [R-sig-eco] ANCOVA with random effects for slope and intercept
+In-Reply-To: <504AAD9E-5EFC-46F6-8AAF-9E6C3C86BEA6@ufl.edu>
+References: <CAOxzVJ2f4VFtsQd1JxgWfBssjPFSqQdWYL7xuDGg-dVuTnbkTw@mail.gmail.com>
+	<504AAD9E-5EFC-46F6-8AAF-9E6C3C86BEA6@ufl.edu>
+Message-ID: <CAOxzVJ0mHHuUhCK5JtB8KRpyyeDtwmuAw_mYpR4OuO=g_S1+2Q@mail.gmail.com>
+
+Greetings Mollie -
+
+Sure, the first general approach without explicitly telling R of my
+grouping factor (not sure if that makes a difference, but second example
+below does this).  My best guess is that the full model has significance,
+but the random effects model does not.  However, simple partial
+correlations show that within many grouping factors the relationship holds,
+but not in all.  If this were the case, why would our Corr = 0?
+
+Mlme1<-lme(response ~ predictor,
+           random = ~1 + predictor | group_factor, data=mydata)
+
+Linear mixed-effects model fit by REML
+ Data: mydata
+       AIC      BIC    logLik
+  74.80524 88.29622 -31.40262
+
+Random effects:
+ Formula: ~1 + predictor | group_factor
+ Structure: General positive-definite, Log-Cholesky parametrization
+            StdDev       Corr
+(Intercept) 1.106112e-05 (Intr)
+predictor   1.577405e-10 0
+Residual    3.492176e-01
+
+Fixed effects: response ~ predictor
+                  Value  Std.Error DF   t-value p-value
+(Intercept)  0.29852308 0.09774997 60  3.053945  0.0034
+predictor   -0.03258404 0.00970759 60 -3.356554  0.0014
+ Correlation:
+          (Intr)
+predictor -0.907
+
+Standardized Within-Group Residuals:
+         Min           Q1          Med           Q3          Max
+-2.560560620 -0.688713759 -0.008759271  0.710084444  2.136060167
+
+Number of Observations: 72
+Number of Groups: 11
+
+
+
+Second example where I explicitly tell R of the grouping factor:
+
+mydata$fgroup_factor <- factor(mydata$group_factor)
+
+Mlme1<-lme(response ~ predictor,
+           random = ~1 + predictor | fgroup_factor, data=mydata)
+
+Linear mixed-effects model fit by REML
+ Data: mydata
+       AIC      BIC    logLik
+  74.80524 88.29622 -31.40262
+
+Random effects:
+ Formula: ~1 + predictor | fgroup_factor
+ Structure: General positive-definite, Log-Cholesky parametrization
+            StdDev       Corr
+(Intercept) 1.106112e-05 (Intr)
+predictor   1.577405e-10 0
+Residual    3.492176e-01
+
+Fixed effects: response ~ predictor
+                  Value  Std.Error DF   t-value p-value
+(Intercept)  0.29852308 0.09774997 60  3.053945  0.0034
+predictor   -0.03258404 0.00970759 60 -3.356554  0.0014
+ Correlation:
+          (Intr)
+predictor -0.907
+
+Standardized Within-Group Residuals:
+         Min           Q1          Med           Q3          Max
+-2.560560620 -0.688713759 -0.008759271  0.710084444  2.136060167
+
+Number of Observations: 72
+Number of Groups: 11
+
+On Tue, Nov 4, 2014 at 10:41 PM, Mollie Brooks <mbrooks at ufl.edu> wrote:
+
+> Hi Dr. Houk,
+>
+> You say you get the same result from the lmer model as a linear model.
+> Can you show us the summary of both models so that we might help you
+> interpret it?
+>
+> Thanks,
+> Mollie
+> ------------------------
+> Mollie Brooks, PhD
+> Postdoctoral Researcher, Population Ecology Research Group
+> Institute of Evolutionary Biology & Environmental Studies, University of
+> Z?rich
+> http://www.popecol.org/team/mollie-brooks/
+>
+>
+> On 4Nov 2014, at 13:30, peterhouk1 . <peterhouk at gmail.com> wrote:
+>
+> Greetings -
+>
+> Looking for advice and insight into ANCOVA models that allow for random
+> slope and intercept effects.  I have been using lme and lmer, but I can't
+> seem to figure out where I've gone wrong.  I have a grouping factor,
+> predictor, and response.  The response~predictor relationship should be
+> nested within grouping factor, with a desire to allow for random effects of
+> the slope and y-intercept.  Data and my code are found below, greatly
+> appreciate insight.
+>
+> I get the same response from both approaches:
+>
+> Mlme1<-lme(response~predictor,
+>           random = list(group_factor = ~1 | predictor), data=mydata)
+>
+> Second approach
+>
+> Mlmer1<-lmer(response~predictor + (1 + predictor|group_factor),
+> data=mydata)
+>
+> Taking both approaches, I get the same results as a simple linear model
+> that does not account for nesting within the group factor.
+>
+> mydata
+>
+>  group_factor predictor response  1 13.75584744 -0.257259794  1 3.059971584
+> 0.703113472  1 14.00447296 -0.260892287  1 6.705509001 -0.33269593  1
+> 6.592728067 0.053814446  1 9.211047122 -0.002776485  2 12.50497696
+> 0.22727311  2 7.059077939 0.18586719  2 6.617249805 -0.022951714  2
+> 1.559557719 0.833397702  2 12.1962121 -0.57159955  2 11.29647955
+> -0.963754818  2 15.54334219 0.489700014  3 8.93626518 -0.421471799  3
+> 1.681675438 0.383260174  3 13.43826892 -0.330882653  3 10.8971089
+> 0.47675377
+> 3 7.600869443 -0.227033926  3 15.004137 0.104257183  4 12.61327214
+> 0.131460302  4 3.788474342 0.079758467  4 14.37299098 0.294254076  4
+> 3.564225024 -0.006581881  4 13.63301652 -0.498890965  5 4.36777119
+> 0.90215334  5 5.150130473 0.098069832  5 7.875920526 0.468166528  5
+> 13.91344257 -0.291551635  5 10.1061938 -0.35162982  5 13.32810817
+> 0.133439251  5 15.64845612 -0.439418202  5 1.857959976 -0.468857357  5
+> 11.31495202 -0.050371938  6 7.851162116 0.126588358  6 5.285251391
+> 0.212699384  6 15.82353883 -0.202005195  6 11.90209318 0.34412633  6
+> 5.547563146 -0.446233668  6 5.645270991 -0.303913602  6 8.668938138
+> 0.268738394  7 15.66063395 -0.194882955  7 11.11830972 0.196309336  7
+> 3.174056086 0.188199892  7 12.39006821 0.222261643  7 3.034014836
+> 0.039201594  7 13.13551529 -0.451089511  8 9.990570964 -0.128411654  8
+> 2.382739273 0.145897042  8 4.870002628 0.875223363  8 5.99541207
+> 0.155610264
+> 8 16.56247927 -0.461697164  8 14.58286908 -0.514244888  8 12.72137648
+> -0.072376963  9 7.436676598 -0.306969441  9 5.196390457 -0.222063871  9
+> 7.213670545 -0.411344562  9 9.243636562 0.095582355  9 7.029863529
+> 0.31586562  9 6.074354561 0.459471079  9 8.282168564 0.632851023  9
+> 13.85105359 -0.298326302  9 5.972744894 -0.180974348  9 14.09541111
+> -0.084091553  10 5.304552826 0.265618935  10 4.089248332 0.270559629  10
+> 7.482418571 0.049764287  10 16.44388769 0.008163962  10 13.78009474
+> -0.594106812  11 10.34249094 -0.206619307  11 4.491492572 -0.207263365  11
+> 7.350436798 0.083703414  11 8.38636562 0.330179258
+>
+> --
+>
+> Peter Houk, PhD
+> Assistant Professor
+> University of Guam Marine Laboratory
+> http://www.guammarinelab.com/peterhouk.html
+> www.pacmares.com
+> www.micronesianfishing.com
+>
+> [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+
+
+-- 
+
+Peter Houk, PhD
+Assistant Professor
+University of Guam Marine Laboratory
+http://www.guammarinelab.com/peterhouk.html
+www.pacmares.com
+www.micronesianfishing.com
+
+	[[alternative HTML version deleted]]
+
+
+From bbolker at gmail.com  Thu Nov  6 03:15:46 2014
+From: bbolker at gmail.com (Ben Bolker)
+Date: Thu, 6 Nov 2014 02:15:46 +0000 (UTC)
+Subject: [R-sig-eco] ANCOVA with random effects for slope and intercept
+References: <CAOxzVJ2f4VFtsQd1JxgWfBssjPFSqQdWYL7xuDGg-dVuTnbkTw@mail.gmail.com>
+	<504AAD9E-5EFC-46F6-8AAF-9E6C3C86BEA6@ufl.edu>
+	<CAOxzVJ0mHHuUhCK5JtB8KRpyyeDtwmuAw_mYpR4OuO=g_S1+2Q@mail.gmail.com>
+Message-ID: <loom.20141106T031353-152@post.gmane.org>
+
+peterhouk1 . <peterhouk at ...> writes:
+
+> 
+> Greetings Mollie -
+> 
+> Sure, the first general approach without explicitly telling R of my
+> grouping factor (not sure if that makes a difference, but second example
+> below does this).  My best guess is that the full model has significance,
+> but the random effects model does not.  However, simple partial
+> correlations show that within many grouping factors
+> the relationship holds,
+> but not in all.  If this were the case, why would our Corr = 0?
+
+  There are a few things going on here.
+
+* Plotting your data (see below), it looks pretty clear that
+you've already mean-corrected it (all groups have mean value
+of zero at the center point of the data) -- you probably want
+to take this into account in your model.
+
+* Even with this correction, you still get an estimate of zero
+for the variance in slopes among groups.  This is not terribly
+surprising for small-to-moderate sized, fairly
+noisy (large residual variance) data sets.  This does indeed
+mean that you will get essentially the same answer from a
+plain old linear model.
+
+* I did the stuff below with lmer, but I'd expect similar answers
+from lme  . I used lmerTest for easy access to denominator df
+approximates.
+
+* The overall effect is not super-strong (R^2 ~ 0.12), but
+very clearly statistically significant (depending on how you
+do the calculation, p-value ranges from 0.001 to 0.009 ...)
+
+## get data, draw pictures
+mydata <- read.table(header=TRUE,"houk.txt")
+library("ggplot2"); theme_set(theme_bw())
+
+## make grouping variable into a factor; not totally necessary
+## but doesn't hurt/probably a good idea
+mydata <- transform(mydata,group_factor=factor(group_factor))
+meanpred <- mean(mydata$predictor)
+ggplot(mydata,aes(predictor,response,colour=group_factor))+geom_point()+
+    geom_smooth(method="lm",se=FALSE)+
+        geom_vline(xintercept=meanpred)
+
+## centered version of predictor
+mydata <- transform(mydata,cpred=predictor-meanpred)
+library("lme4")
+
+## original random-slopes model
+(m1 <- lmer(response~predictor+(predictor|group_factor), data=mydata))
+
+## model with centered predictor; suppress among-group variation in
+## intercept
+(m2 <- lmer(response~cpred+(cpred-1|group_factor), data=mydata))
+
+summary(m2B <- lm(response~cpred, data=mydata))
+
+## get p-value, using common-sense/classical value of 10 for denominator df
+(cc1 <- coef(summary(m2)))
+tval <- cc1["cpred","t value"]
+pt(abs(tval),df=10,lower.tail=FALSE)
+
+## refit model with lmerTest for convenient access to df estimates
+detach("package:lme4")
+library("lmerTest")
+(m3 <- lmer(response~cpred+(cpred-1|group_factor), data=mydata))
+anova(m3,ddf="Kenward-Roger")  ## gives denDF=8.67, p-value=0.0097
+anova(m3,ddf="Satterthwaite")  ## gives denDF=69.9 (?), p-value=0.001
+## essentially equivalent to lm() because denDF are estimated to be large
+
+detach("package:lmerTest")
+
+> 
+> Mlme1<-lme(response ~ predictor,
+>            random = ~1 + predictor | group_factor, data=mydata)
+> 
+> Linear mixed-effects model fit by REML
+>  Data: mydata
+>        AIC      BIC    logLik
+>   74.80524 88.29622 -31.40262
+> 
+> Random effects:
+>  Formula: ~1 + predictor | group_factor
+>  Structure: General positive-definite, Log-Cholesky parametrization
+>             StdDev       Corr
+> (Intercept) 1.106112e-05 (Intr)
+> predictor   1.577405e-10 0
+> Residual    3.492176e-01
+> 
+> Fixed effects: response ~ predictor
+>                   Value  Std.Error DF   t-value p-value
+> (Intercept)  0.29852308 0.09774997 60  3.053945  0.0034
+> predictor   -0.03258404 0.00970759 60 -3.356554  0.0014
+>  Correlation:
+>           (Intr)
+> predictor -0.907
+> 
+> Standardized Within-Group Residuals:
+>          Min           Q1          Med           Q3          Max
+> -2.560560620 -0.688713759 -0.008759271  0.710084444  2.136060167
+> 
+> Number of Observations: 72
+> Number of Groups: 11
+> 
+> Second example where I explicitly tell R of the grouping factor:
+> 
+> mydata$fgroup_factor <- factor(mydata$group_factor)
+> 
+> Mlme1<-lme(response ~ predictor,
+>            random = ~1 + predictor | fgroup_factor, data=mydata)
+> 
+> Linear mixed-effects model fit by REML
+>  Data: mydata
+>        AIC      BIC    logLik
+>   74.80524 88.29622 -31.40262
+> 
+> Random effects:
+>  Formula: ~1 + predictor | fgroup_factor
+>  Structure: General positive-definite, Log-Cholesky parametrization
+>             StdDev       Corr
+> (Intercept) 1.106112e-05 (Intr)
+> predictor   1.577405e-10 0
+> Residual    3.492176e-01
+> 
+> Fixed effects: response ~ predictor
+>                   Value  Std.Error DF   t-value p-value
+> (Intercept)  0.29852308 0.09774997 60  3.053945  0.0034
+> predictor   -0.03258404 0.00970759 60 -3.356554  0.0014
+>  Correlation:
+>           (Intr)
+> predictor -0.907
+> 
+> Standardized Within-Group Residuals:
+>          Min           Q1          Med           Q3          Max
+> -2.560560620 -0.688713759 -0.008759271  0.710084444  2.136060167
+> 
+> Number of Observations: 72
+> Number of Groups: 11
+> 
+> On Tue, Nov 4, 2014 at 10:41 PM, Mollie Brooks <mbrooks <at> ufl.edu> wrote:
+> 
+> > Hi Dr. Houk,
+> >
+> > You say you get the same result from the lmer model as a linear model.
+> > Can you show us the summary of both models so that we might help you
+> > interpret it?
+> >
+> > Thanks,
+> > Mollie
+> > ------------------------
+> > Mollie Brooks, PhD
+> > Postdoctoral Researcher, Population Ecology Research Group
+> > Institute of Evolutionary Biology & Environmental Studies, University of
+> > Z?rich
+> > http://www.popecol.org/team/mollie-brooks/
+> >
+> >
+> > On 4Nov 2014, at 13:30, peterhouk1 . <peterhouk <at> gmail.com> wrote:
+> >
+> > Greetings -
+> >
+> > Looking for advice and insight into ANCOVA models that allow for random
+> > slope and intercept effects.  I have been using lme and lmer, but I can't
+> > seem to figure out where I've gone wrong.  I have a grouping factor,
+> > predictor, and response.  The response~predictor relationship should be
+> > nested within grouping factor, with a desire to allow for random effects of
+> > the slope and y-intercept.  Data and my code are found below, greatly
+> > appreciate insight.
+> >
+> > I get the same response from both approaches:
+> >
+> > Mlme1<-lme(response~predictor,
+> >           random = list(group_factor = ~1 | predictor), data=mydata)
+> >
+> > Second approach
+> >
+> > Mlmer1<-lmer(response~predictor + (1 + predictor|group_factor),
+> > data=mydata)
+> >
+> > Taking both approaches, I get the same results as a simple linear model
+> > that does not account for nesting within the group factor.
+> >
+> > mydata
+> >
+> >  group_factor predictor response  1 13.75584744 -0.257259794  1 3.059971584
+> > 0.703113472  1 14.00447296 -0.260892287  1 6.705509001 -0.33269593  1
+> > 6.592728067 0.053814446  1 9.211047122 -0.002776485  2 12.50497696
+> > 0.22727311  2 7.059077939 0.18586719  2 6.617249805 -0.022951714  2
+> > 1.559557719 0.833397702  2 12.1962121 -0.57159955  2 11.29647955
+> > -0.963754818  2 15.54334219 0.489700014  3 8.93626518 -0.421471799  3
+> > 1.681675438 0.383260174  3 13.43826892 -0.330882653  3 10.8971089
+> > 0.47675377
+> > 3 7.600869443 -0.227033926  3 15.004137 0.104257183  4 12.61327214
+> > 0.131460302  4 3.788474342 0.079758467  4 14.37299098 0.294254076  4
+> > 3.564225024 -0.006581881  4 13.63301652 -0.498890965  5 4.36777119
+> > 0.90215334  5 5.150130473 0.098069832  5 7.875920526 0.468166528  5
+> > 13.91344257 -0.291551635  5 10.1061938 -0.35162982  5 13.32810817
+> > 0.133439251  5 15.64845612 -0.439418202  5 1.857959976 -0.468857357  5
+> > 11.31495202 -0.050371938  6 7.851162116 0.126588358  6 5.285251391
+> > 0.212699384  6 15.82353883 -0.202005195  6 11.90209318 0.34412633  6
+> > 5.547563146 -0.446233668  6 5.645270991 -0.303913602  6 8.668938138
+> > 0.268738394  7 15.66063395 -0.194882955  7 11.11830972 0.196309336  7
+> > 3.174056086 0.188199892  7 12.39006821 0.222261643  7 3.034014836
+> > 0.039201594  7 13.13551529 -0.451089511  8 9.990570964 -0.128411654  8
+> > 2.382739273 0.145897042  8 4.870002628 0.875223363  8 5.99541207
+> > 0.155610264
+> > 8 16.56247927 -0.461697164  8 14.58286908 -0.514244888  8 12.72137648
+> > -0.072376963  9 7.436676598 -0.306969441  9 5.196390457 -0.222063871  9
+> > 7.213670545 -0.411344562  9 9.243636562 0.095582355  9 7.029863529
+> > 0.31586562  9 6.074354561 0.459471079  9 8.282168564 0.632851023  9
+> > 13.85105359 -0.298326302  9 5.972744894 -0.180974348  9 14.09541111
+> > -0.084091553  10 5.304552826 0.265618935  10 4.089248332 0.270559629  10
+> > 7.482418571 0.049764287  10 16.44388769 0.008163962  10 13.78009474
+> > -0.594106812  11 10.34249094 -0.206619307  11 4.491492572 -0.207263365  11
+> > 7.350436798 0.083703414  11 8.38636562 0.330179258
+> >
+> > --
+> >
+> > Peter Houk, PhD
+> > Assistant Professor
+> > University of Guam Marine Laboratory
+> > http://www.guammarinelab.com/peterhouk.html
+> > www.pacmares.com
+> > www.micronesianfishing.com
+> >
+> > [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology <at> r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> >
+> >
+>
+
+
+From arne.erpenbach at gmx.de  Thu Nov  6 18:12:17 2014
+From: arne.erpenbach at gmx.de (Arne Erpenbach)
+Date: Thu, 06 Nov 2014 18:12:17 +0100
+Subject: [R-sig-eco] mrpp()  / meandist() confusion
+Message-ID: <545BABF1.300@gmx.de>
+
+Dear list,
+
+I'm looking through some old code and I'm confused.
+I'd be glad if someone would help me out.
+
+I've got paired-samples repeated measures design. I used a distance
+matrix of a community and calculated MRPP statistics for two groups,
+with stratified permutations by samplings. I then had a look at the mean
+within group distances.
+
+MRPP gives me a (significant) effect size of A=0.02, with an observed
+delta of 0.79 and an expected delta of 0.81. Class means are given as
+0.81 and 0.7766, respectively. My interpretation was, according to my
+own notes, and that groups were significantly different (but the effect
+size was rather small). I also noted down than the first group showed a
+slightly higher within-group beta-diversity.
+
+However, I did *not* note anything on the meandist() results.
+The mean within-group dissimilarities are 0.785, and 0.796, respectively.
+
+I noticed this when going through the code today, and think it would
+mean that the beta-diversity in the first group is actually a tiny bit
+lower than in the second. I then did look at each sampling seperately,
+but the pattern persists: mrpp() shows a *larger* class mean, and
+meandist() a *smaller* mean of within-group distances.
+
+Now I'm confused by looking at my own results.
+
+Can anybody help me out?
+(Really sorry if I'm just being stupid here.)
+
+Regards,
+  arne
+
+
+From monica.abrudan at gmail.com  Fri Nov  7 12:53:09 2014
+From: monica.abrudan at gmail.com (monica abrudan)
+Date: Fri, 7 Nov 2014 13:53:09 +0200
+Subject: [R-sig-eco] neighbourhood in a grid
+Message-ID: <CALBE=tqkRHAqSiTsugHymMK72wnoWzNHX=P8Fogu10GwosdSqw@mail.gmail.com>
+
+Dear all,
+
+I have a squared, toroidal grid populated by individuals of different types
+(number of types=n). All cells of the grid are populated. A simplified
+version of my grid, with dimensions 6x3 and n=4, looks like this
+[1 1 1 1 2 3;
+ 1 3 2 1 1 1;
+ 1  1 1 4 1 1]
+
+I want to check whether a type has a preference for any other type, that
+is, is it more likely that a type i is neighbouring type j, than it is
+neighbouring type k? In my example, type 3 is preferring more type 2 than
+it is preferring type 4.
+
+Is there a function or package in R that would deal with this problem? Or
+could you suggest an algorithm for solving this problem? Thank you
+
+Monica
+
+	[[alternative HTML version deleted]]
+
+
+From marchtaylor at gmail.com  Fri Nov  7 13:52:54 2014
+From: marchtaylor at gmail.com (Marc Taylor)
+Date: Fri, 7 Nov 2014 13:52:54 +0100
+Subject: [R-sig-eco] neighbourhood in a grid
+In-Reply-To: <CALBE=tqkRHAqSiTsugHymMK72wnoWzNHX=P8Fogu10GwosdSqw@mail.gmail.com>
+References: <CALBE=tqkRHAqSiTsugHymMK72wnoWzNHX=P8Fogu10GwosdSqw@mail.gmail.com>
+Message-ID: <CACg2Sf3wwt-XEy3HMFCi60GeVUH6oX_m0uNaLB6r6Ex6h3X+pw@mail.gmail.com>
+
+Hi Monica,
+
+I did something similar in the past, where I had to find the neighboring
+matrix positions for each position. I think I have adapted the code
+correctly to wraparound  - what I think you mean by a toroid grid (i.e.
+left of column 1 is column 6 in your example). The following code gives you
+the position numbers of the neighboring cells and then summarizes all
+neighbors in 4 directions:
+
+# populated toroidal grid
+M <- matrix(c(1,1,1,1,2,3,1,3,2,1,1,1,1,1,1,4,1,1), 3, 6, byrow=TRUE)
+M
+
+#make results data.frame
+grd <- cbind(pos=seq(M), expand.grid(row=seq(nrow(M)), col=seq(ncol(M))))
+grd$val <- c(M)
+head(grd)
+
+#Get neighbors
+pos <- array(grd$pos, dim=dim(M))
+#down
+down <- pos*NaN
+down[-nrow(pos),] <- pos[-1,]
+down[nrow(pos),] <- pos[1,]
+grd$down.pos <- c(down)
+grd$down.val <- grd$val[grd$down.pos]
+#left
+left <- pos*NaN
+left[,-1] <- pos[,-ncol(pos)]
+left[,1] <- pos[,ncol(pos)]
+grd$left.pos <- c(left)
+grd$left.val <- grd$val[grd$left.pos]
+#up
+up <- pos*NaN
+up[-1,] <- pos[-nrow(pos),]
+up[1,] <- pos[nrow(pos),]
+grd$up.pos <- c(up)
+grd$up.val <- grd$val[grd$up.pos]
+#right
+right <- pos*NaN
+right[,-ncol(pos)] <- pos[,-1]
+right[,ncol(pos)] <- pos[,1]
+grd$right.pos <- c(right)
+grd$right.val <- grd$val[grd$right.pos]
+
+# summarize neighbors
+grd$neighbors <- paste(grd$down.val, grd$left.val, grd$up.val,
+grd$right.val, sep=",")
+grd
+
+
+I hope that helps.
+
+Cheers, Marc
+
+
+On Fri, Nov 7, 2014 at 12:53 PM, monica abrudan <monica.abrudan at gmail.com>
+wrote:
+
+> Dear all,
+>
+> I have a squared, toroidal grid populated by individuals of different types
+> (number of types=n). All cells of the grid are populated. A simplified
+> version of my grid, with dimensions 6x3 and n=4, looks like this
+> [1 1 1 1 2 3;
+>  1 3 2 1 1 1;
+>  1  1 1 4 1 1]
+>
+> I want to check whether a type has a preference for any other type, that
+> is, is it more likely that a type i is neighbouring type j, than it is
+> neighbouring type k? In my example, type 3 is preferring more type 2 than
+> it is preferring type 4.
+>
+> Is there a function or package in R that would deal with this problem? Or
+> could you suggest an algorithm for solving this problem? Thank you
+>
+> Monica
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From rab.mahnaz at gmail.com  Sat Nov  8 09:58:34 2014
+From: rab.mahnaz at gmail.com (Mahnaz Rabbaniha)
+Date: Sat, 8 Nov 2014 12:28:34 +0330
+Subject: [R-sig-eco] gis
+Message-ID: <CANLCanX1jse0zTeg-MOa37fM7aSpELH2oMzbC7Q4Z7OHeNzs7g@mail.gmail.com>
+
+Dear all
+
+in using of GIS  codes after the install the packages and add the
+ (FieldSamples.csv):
+
+
+*samps <- read.csv("FieldSamples.csv") *
+
+  I revised this message:
+
+
+Error in file(file, "rt") : cannot open the connection
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file 'FieldSamples.csv': No such file or directory
+
+what is meaning, could you please help me to dissolve?
+
+all the best
+Mahnaz
+
+	[[alternative HTML version deleted]]
+
+
+From roman.lustrik at gmail.com  Sat Nov  8 11:21:30 2014
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Sat, 8 Nov 2014 11:21:30 +0100
+Subject: [R-sig-eco] gis
+In-Reply-To: <CANLCanX1jse0zTeg-MOa37fM7aSpELH2oMzbC7Q4Z7OHeNzs7g@mail.gmail.com>
+References: <CANLCanX1jse0zTeg-MOa37fM7aSpELH2oMzbC7Q4Z7OHeNzs7g@mail.gmail.com>
+Message-ID: <CAHT1vpih3a2wSdMAnPGqzkPETAj=zx=ew5_8QhLV49HeJafuXw@mail.gmail.com>
+
+The data (.csv) is not in your working directory. Either set it to reflect
+the location of the data set or specify full path.
+For instance, if the file is in c:/gis/, you should either:
+
+setwd("c:/gis")
+samps <- read.table(...)
+
+or
+
+samps <- read.table("c:/gis/data.csv", ...)
+
+Cheers,
+Roman
+
+
+On Sat, Nov 8, 2014 at 9:58 AM, Mahnaz Rabbaniha <rab.mahnaz at gmail.com>
+wrote:
+
+> Dear all
+>
+> in using of GIS  codes after the install the packages and add the
+>  (FieldSamples.csv):
+>
+>
+> *samps <- read.csv("FieldSamples.csv") *
+>
+>   I revised this message:
+>
+>
+> Error in file(file, "rt") : cannot open the connection
+> In addition: Warning message:
+> In file(file, "rt") :
+>   cannot open file 'FieldSamples.csv': No such file or directory
+>
+> what is meaning, could you please help me to dissolve?
+>
+> all the best
+> Mahnaz
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+In God we trust, all others bring data.
+
+	[[alternative HTML version deleted]]
+
+
+From jdhollan at purdue.edu  Sun Nov  9 00:24:06 2014
+From: jdhollan at purdue.edu (Holland, Jeffrey D)
+Date: Sat, 8 Nov 2014 23:24:06 +0000
+Subject: [R-sig-eco] adonis with blocking (not nesting)
+Message-ID: <30A9CCE0A986F74C837D6F87F9C581862806F42B@WPVEXCMBX01.purdue.lcl>
+
+Dear R for ecology experts,
+I have found many discussions online about blocking and nesting in adonis, but no answers for blocking.  I have community data with abundances within 42 aquatic genera (final.fd[,9:36]) from 2 types of streams (type).  Stream samples were paired (pair) as a blocking factor.  So the individual samples (n=12; I know, permuations will be limited) are one of two types and blocked within pairs.  I am using strata to restrict permuations within the blocking factor. However, I haven't found a way to specify the blocking in the data structure.
+   If I use paired=T, how do I specify the pairing variable?  
+adonis(final.fd[,9:42] ~ final.fd$type, paired=T, method = "bray", strata=final.fd$pair)
+   If there is another way to set the blocking factor, what is it?
+Much appreciated all,
+Jeff
+
+Jeffrey D. Holland, jdhollan at purdue.edu
+Assoc. Prof., Dept. of Entomology
+Purdue University
+
+
+From jsgro at jcu.edu  Tue Nov 11 05:08:20 2014
+From: jsgro at jcu.edu (jsgro)
+Date: Mon, 10 Nov 2014 21:08:20 -0700 (MST)
+Subject: [R-sig-eco] envfit permutation significance
+Message-ID: <1415678900237-7579206.post@n2.nabble.com>
+
+I have fitted a vector (a variable) using envfit to an RDA of sites, species,
+and environmental variables. The envfit permutation (999 permutations) was
+not significant, but envfit placed the vector on the RDA plot. How exactly
+do I interpret this plot? Is the placement of the vector meaningless (just
+random) because the permutation result was not significant? or does the
+vector placement have meaning, but it just cannot be predicted from the RDA
+with confidence?
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/envfit-permutation-significance-tp7579206.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From ucfagls at gmail.com  Tue Nov 11 05:49:43 2014
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Mon, 10 Nov 2014 22:49:43 -0600
+Subject: [R-sig-eco] envfit permutation significance
+In-Reply-To: <1415678900237-7579206.post@n2.nabble.com>
+References: <1415678900237-7579206.post@n2.nabble.com>
+Message-ID: <CAAHES9yxedA+DGay=QttysKepB9p7O3r144kio8dwnHCtEf9VA@mail.gmail.com>
+
+Well, just because the vector(s) in question don't hit some a priori
+specified statistical significance doesn't mean the vector doesn't exist;
+we can still plot it.
+
+As for interpretation, the length of the vector is not unusual when
+considered against a null distribution of r values generated by
+permutation. This doesn't mean the vector is random, just that it is no
+more "important" than a vector in ordination space where there was no
+relationship between the axis scores and the variable for which the vector
+is being tested.
+
+You need to ask yourself whether the permutation test is valid - are you
+allowed to permute the things you permuted? - and whether you have
+sufficient power to detect an "effect", which usually boils down to having
+enough unique permutations to get a "significant" p value.
+
+If you want to restrict the plot to only those vectors that are
+"significant", then look at the `p.max` argument in `?plot.envfit
+
+HTH
+
+Gavin
+
+On 10 November 2014 22:08, jsgro <jsgro at jcu.edu> wrote:
+
+> I have fitted a vector (a variable) using envfit to an RDA of sites,
+> species,
+> and environmental variables. The envfit permutation (999 permutations) was
+> not significant, but envfit placed the vector on the RDA plot. How exactly
+> do I interpret this plot? Is the placement of the vector meaningless (just
+> random) because the permutation result was not significant? or does the
+> vector placement have meaning, but it just cannot be predicted from the RDA
+> with confidence?
+>
+>
+>
+> --
+> View this message in context:
+> http://r-sig-ecology.471788.n2.nabble.com/envfit-permutation-significance-tp7579206.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Gavin Simpson, PhD
+
+	[[alternative HTML version deleted]]
+
+
+From jsgro at jcu.edu  Tue Nov 11 15:49:54 2014
+From: jsgro at jcu.edu (jsgro)
+Date: Tue, 11 Nov 2014 07:49:54 -0700 (MST)
+Subject: [R-sig-eco] envfit permutation significance
+In-Reply-To: <CAAHES9yxedA+DGay=QttysKepB9p7O3r144kio8dwnHCtEf9VA@mail.gmail.com>
+References: <1415678900237-7579206.post@n2.nabble.com>
+	<CAAHES9yxedA+DGay=QttysKepB9p7O3r144kio8dwnHCtEf9VA@mail.gmail.com>
+Message-ID: <CAHJQbp8RwWLevXpF-DXR1Q9R09oLJyeWfLAdqQJ6Xq79r-c_-Q@mail.gmail.com>
+
+Thanks very much Gavin. I guess to distill your comments you would agree
+with my last thought...the envfit vector placement has meaning, it just
+can't be predicted from the RDA with great confidence.
+
+On Mon, Nov 10, 2014 at 11:50 PM, Gavin Simpson-2 [via r-sig-ecology] <
+ml-node+s471788n7579207h25 at n2.nabble.com> wrote:
+
+> Well, just because the vector(s) in question don't hit some a priori
+> specified statistical significance doesn't mean the vector doesn't exist;
+> we can still plot it.
+>
+> As for interpretation, the length of the vector is not unusual when
+> considered against a null distribution of r values generated by
+> permutation. This doesn't mean the vector is random, just that it is no
+> more "important" than a vector in ordination space where there was no
+> relationship between the axis scores and the variable for which the vector
+> is being tested.
+>
+> You need to ask yourself whether the permutation test is valid - are you
+> allowed to permute the things you permuted? - and whether you have
+> sufficient power to detect an "effect", which usually boils down to having
+> enough unique permutations to get a "significant" p value.
+>
+> If you want to restrict the plot to only those vectors that are
+> "significant", then look at the `p.max` argument in `?plot.envfit
+>
+> HTH
+>
+> Gavin
+>
+> On 10 November 2014 22:08, jsgro <[hidden email]
+> <http://user/SendEmail.jtp?type=node&node=7579207&i=0>> wrote:
+>
+> > I have fitted a vector (a variable) using envfit to an RDA of sites,
+> > species,
+> > and environmental variables. The envfit permutation (999 permutations)
+> was
+> > not significant, but envfit placed the vector on the RDA plot. How
+> exactly
+> > do I interpret this plot? Is the placement of the vector meaningless
+> (just
+> > random) because the permutation result was not significant? or does the
+> > vector placement have meaning, but it just cannot be predicted from the
+> RDA
+> > with confidence?
+> >
+> >
+> >
+> > --
+> > View this message in context:
+> >
+> http://r-sig-ecology.471788.n2.nabble.com/envfit-permutation-significance-tp7579206.html
+> > Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > [hidden email] <http://user/SendEmail.jtp?type=node&node=7579207&i=1>
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+>
+>
+>
+> --
+> Gavin Simpson, PhD
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> [hidden email] <http://user/SendEmail.jtp?type=node&node=7579207&i=2>
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> ------------------------------
+>  If you reply to this email, your message will be added to the discussion
+> below:
+>
+> http://r-sig-ecology.471788.n2.nabble.com/envfit-permutation-significance-tp7579206p7579207.html
+>  To unsubscribe from envfit permutation significance, click here
+> <http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=unsubscribe_by_code&node=7579206&code=anNncm9AamN1LmVkdXw3NTc5MjA2fDIwMTU5MzQ2NTM=>
+> .
+> NAML
+> <http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=macro_viewer&id=instant_html%21nabble%3Aemail.naml&base=nabble.naml.namespaces.BasicNamespace-nabble.view.web.template.NabbleNamespace-nabble.view.web.template.NodeNamespace&breadcrumbs=notify_subscribers%21nabble%3Aemail.naml-instant_emails%21nabble%3Aemail.naml-send_instant_email%21nabble%3Aemail.naml>
+>
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/envfit-permutation-significance-tp7579206p7579208.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+	[[alternative HTML version deleted]]
+
+
+From Jonas.Persson at niva.no  Tue Nov 11 16:29:39 2014
+From: Jonas.Persson at niva.no (Jonas.Persson at niva.no)
+Date: Tue, 11 Nov 2014 16:29:39 +0100
+Subject: [R-sig-eco] =?iso-8859-1?q?AUTO=3A_Jonas_Persson_er_ikke_til_sted?=
+ =?iso-8859-1?q?e_p=E5_kontoret_=28returning_04=2E11=2E2014=29?=
+Message-ID: <OF61B38906.C0E89386-ONC1257D8D.00551CF1-C1257D8D.00551CF1@LocalDomain>
+
+
+I am out of the office until 04.11.2014.
+
+Field work, unlikely to check mail much
+
+
+Note: This is an automated response to your message  "R-sig-ecology Digest,
+Vol 80, Issue 9" sent on 11.11.2014 12:00:01.
+
+This is the only notification you will receive while this person is away.
+
+
+From mariojosebr at yahoo.com.br  Wed Nov 12 13:36:23 2014
+From: mariojosebr at yahoo.com.br (=?UTF-8?B?TWFyaW8gSm9zw6kgTWFycXVlcw==?=)
+Date: Wed, 12 Nov 2014 10:36:23 -0200
+Subject: [R-sig-eco] Doubt about mle2, optim and convergence
+Message-ID: <54635447.9050507@yahoo.com.br>
+
+Hi all!
+
+I am working with species abundance distribution using biomass as
+abundance measure. For this, I am trying to fit models gamma, weibull
+and lognormal to my data.
+
+I have problems specially with gamma and weibull. When I try fit this
+models, the mle2 fit without error, but the fit not converge. When I try
+plot profile with profile function, this function return that have found
+a better fit to data. Then I use this mles found by profile and try fit
+with mle2 again. I do this three or four times until no have problems to
+use profile to plot mles found.
+
+I read Bolker text (2014 bbmle; Maximum likelihood estimation and
+analysis with the bbmle package) and found the parameters control and
+parscale (parameters of optim) that solve the problem to fit. I did this:
+
+# Search for mle. Without convergence
+g1_gamma <- fitgamma(g1, trueLL = FALSE, start.value = mlegamma(g1))
+
+# Search for mle. Converged
+g1_gamma <- fitgamma(g1, trueLL = FALSE,
+control=list(parscale=mlegamma(g1)))
+
+I am using sads package that use mle2 to fit model to data. Function
+mlegamma calculate the start values to mle2 and fitgamma use mle2 with
+dgamma to search mles. (the problem is the same if I use only mle2
+without function of sads package).
+
+I can not understand what control parameters do. I read something, but
+not understood at all. Could someone explain or recommend me some text
+to understand that?
+
+Thank you and best regards!
+
+
+
+Mario Jos?
+...................................................
+Doctoral student in Ecology
+Institute of Biology, Dept. Plant Biology
+State University of Campinas - UNICAMP
+Campinas, S?o Paulo, Brazil
+
+
+From szoecs at uni-landau.de  Wed Nov 12 14:27:11 2014
+From: szoecs at uni-landau.de (=?UTF-8?B?RWR1YXJkIFN6w7Zjcw==?=)
+Date: Wed, 12 Nov 2014 14:27:11 +0100
+Subject: [R-sig-eco] Doubt about mle2, optim and convergence
+In-Reply-To: <54635447.9050507@yahoo.com.br>
+References: <54635447.9050507@yahoo.com.br>
+Message-ID: <5463602F.4050806@uni-landau.de>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hai Mario,
+
+take a look at Ben Bolkers 'Ecological Models and Data in R'. The
+chapter 'Optimization and all that' therein should be a good reference.
+
+Cheers,
+
+Eduard Sz?cs
+
+
+
+On 12/11/14 13:36, Mario Jos? Marques wrote:
+> Hi all!
+> 
+> I am working with species abundance distribution using biomass as
+> abundance measure. For this, I am trying to fit models gamma, weibull
+> and lognormal to my data.
+> 
+> I have problems specially with gamma and weibull. When I try fit this
+> models, the mle2 fit without error, but the fit not converge. When I try
+> plot profile with profile function, this function return that have found
+> a better fit to data. Then I use this mles found by profile and try fit
+> with mle2 again. I do this three or four times until no have problems to
+> use profile to plot mles found.
+> 
+> I read Bolker text (2014 bbmle; Maximum likelihood estimation and
+> analysis with the bbmle package) and found the parameters control and
+> parscale (parameters of optim) that solve the problem to fit. I did this:
+> 
+> # Search for mle. Without convergence
+> g1_gamma <- fitgamma(g1, trueLL = FALSE, start.value = mlegamma(g1))
+> 
+> # Search for mle. Converged
+> g1_gamma <- fitgamma(g1, trueLL = FALSE,
+> control=list(parscale=mlegamma(g1)))
+> 
+> I am using sads package that use mle2 to fit model to data. Function
+> mlegamma calculate the start values to mle2 and fitgamma use mle2 with
+> dgamma to search mles. (the problem is the same if I use only mle2
+> without function of sads package).
+> 
+> I can not understand what control parameters do. I read something, but
+> not understood at all. Could someone explain or recommend me some text
+> to understand that?
+> 
+> Thank you and best regards!
+> 
+> 
+> 
+> Mario Jos?
+> ...................................................
+> Doctoral student in Ecology
+> Institute of Biology, Dept. Plant Biology
+> State University of Campinas - UNICAMP
+> Campinas, S?o Paulo, Brazil
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+- -- 
+Eduard Sz?cs
+Quantitative Landscape Ecology
+Institute for Environmental Sciences
+University Koblenz-Landau
+Fortstrasse 7
+76829 Landau
+Germany
+http://www.uni-koblenz-landau.de/campus-landau/faculty7/environmental-sciences/landscape-ecology/Staff/eduardszoecs
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBAgAGBQJUY2AvAAoJEK3OBW85la/OMw8H/0Y0YjThHCfgJzFzjEJ1TCaL
+gIQxQJNQctobbjeAGbP8hep3e8vGalEo1sYHba21pCCJkNbZ1YhyMAt8AxwoY+Vy
+v/eLVZPLLciPjwn5R5kLx3sE9vzdWJltiDibm0PJs2GM0cBppPilpPQDl+A6Z8xN
+TQuXuLB6KCMPPXDNOOPAT6eBGt7EnsVUyhyJzKT0yVq7cc7To1O8KRwpD/IpwCyU
+QVbT+FbH+f1RR+EgmjeFN4u3ircnNp0n6qaQgbJjTML+2czbPDjq9sLsbYVqrS4k
+IYIGiyTj6okZP1LGYLtHO8pgqQZO7somjY0nX/sMm5scgsWeJNZ8etpA3OwBvfg=
+=/z/u
+-----END PGP SIGNATURE-----
+
+
+From mariojosebr at yahoo.com.br  Thu Nov 13 15:06:50 2014
+From: mariojosebr at yahoo.com.br (=?UTF-8?B?TWFyaW8gSm9zw6kgTWFycXVlcw==?=)
+Date: Thu, 13 Nov 2014 12:06:50 -0200
+Subject: [R-sig-eco] Doubt about mle2, optim and convergence
+In-Reply-To: <5463602F.4050806@uni-landau.de>
+References: <54635447.9050507@yahoo.com.br> <5463602F.4050806@uni-landau.de>
+Message-ID: <5464BAFA.3030506@yahoo.com.br>
+
+Thank you Eduard!
+
+I understood now! One of the methods of optim use derivative method, but
+with finite deltax. By default deltax=0.001. Using parscale you chance
+scale of deltax (parscale*deltax) (page 300 of the book).
+
+Best regards!
+
+Mario
+
+
+
+On 12-11-2014 11:27, Eduard Sz?cs wrote:
+> Hai Mario,
+> 
+> take a look at Ben Bolkers 'Ecological Models and Data in R'. The
+> chapter 'Optimization and all that' therein should be a good reference.
+> 
+> Cheers,
+> 
+> Eduard Sz?cs
+> 
+> 
+> 
+> On 12/11/14 13:36, Mario Jos? Marques wrote:
+>> Hi all!
+> 
+>> I am working with species abundance distribution using biomass as
+>> abundance measure. For this, I am trying to fit models gamma, weibull
+>> and lognormal to my data.
+> 
+>> I have problems specially with gamma and weibull. When I try fit this
+>> models, the mle2 fit without error, but the fit not converge. When I try
+>> plot profile with profile function, this function return that have found
+>> a better fit to data. Then I use this mles found by profile and try fit
+>> with mle2 again. I do this three or four times until no have problems to
+>> use profile to plot mles found.
+> 
+>> I read Bolker text (2014 bbmle; Maximum likelihood estimation and
+>> analysis with the bbmle package) and found the parameters control and
+>> parscale (parameters of optim) that solve the problem to fit. I did this:
+> 
+>> # Search for mle. Without convergence
+>> g1_gamma <- fitgamma(g1, trueLL = FALSE, start.value = mlegamma(g1))
+> 
+>> # Search for mle. Converged
+>> g1_gamma <- fitgamma(g1, trueLL = FALSE,
+>> control=list(parscale=mlegamma(g1)))
+> 
+>> I am using sads package that use mle2 to fit model to data. Function
+>> mlegamma calculate the start values to mle2 and fitgamma use mle2 with
+>> dgamma to search mles. (the problem is the same if I use only mle2
+>> without function of sads package).
+> 
+>> I can not understand what control parameters do. I read something, but
+>> not understood at all. Could someone explain or recommend me some text
+>> to understand that?
+> 
+>> Thank you and best regards!
+> 
+> 
+> 
+>> Mario Jos?
+>> ...................................................
+>> Doctoral student in Ecology
+>> Institute of Biology, Dept. Plant Biology
+>> State University of Campinas - UNICAMP
+>> Campinas, S?o Paulo, Brazil
+> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From chandratr at gmail.com  Sun Nov 16 11:04:45 2014
+From: chandratr at gmail.com (Chandrasekhar Rudrappa)
+Date: Sun, 16 Nov 2014 15:34:45 +0530
+Subject: [R-sig-eco] Help in code for fitting a growth model in R
+Message-ID: <CAMSabZQWUes3SqWSYMDHLMZxrRzBnKx-31hQiBOu6L4z=p-0ZQ@mail.gmail.com>
+
+I have to fit a model to growth data of Hevea (rubber) trees. The details
+are outlined in the attached docx file.  Kind help is solicited.
+
+-- 
+Dr. TR Chandrasekhar, M.Sc., M. Tech., Ph. D.,
+Sr. Scientist
+Rubber Research Institute of India
+Hevea Breeding Sub Station
+Kadaba - 574 221
+DK Dt., Karnataka
+Phone-Land: 08251-214336
+Mobile: 9448780118
+
+From roman.lustrik at gmail.com  Sun Nov 16 11:50:54 2014
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Sun, 16 Nov 2014 11:50:54 +0100
+Subject: [R-sig-eco] Help in code for fitting a growth model in R
+In-Reply-To: <CAMSabZQWUes3SqWSYMDHLMZxrRzBnKx-31hQiBOu6L4z=p-0ZQ@mail.gmail.com>
+References: <CAMSabZQWUes3SqWSYMDHLMZxrRzBnKx-31hQiBOu6L4z=p-0ZQ@mail.gmail.com>
+Message-ID: <CAHT1vpjiW+WMdy2AhrbbK+O_nqWpi9goGuksFmz+n75njnG_fA@mail.gmail.com>
+
+There is no file attached. If you're using R, consider using an .R script
+with comments (or better yet, a Rmd/Rnw with all the relevant data) and
+desired result. Make sure your example is reproducible.
+
+Cheers,
+Roman
+
+On Sun, Nov 16, 2014 at 11:04 AM, Chandrasekhar Rudrappa <
+chandratr at gmail.com> wrote:
+
+> I have to fit a model to growth data of Hevea (rubber) trees. The details
+> are outlined in the attached docx file.  Kind help is solicited.
+>
+> --
+> Dr. TR Chandrasekhar, M.Sc., M. Tech., Ph. D.,
+> Sr. Scientist
+> Rubber Research Institute of India
+> Hevea Breeding Sub Station
+> Kadaba - 574 221
+> DK Dt., Karnataka
+> Phone-Land: 08251-214336
+> Mobile: 9448780118
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+-- 
+In God we trust, all others bring data.
+
+	[[alternative HTML version deleted]]
+
+
+From chandratr at gmail.com  Sun Nov 16 12:46:54 2014
+From: chandratr at gmail.com (Chandrasekhar Rudrappa)
+Date: Sun, 16 Nov 2014 17:16:54 +0530
+Subject: [R-sig-eco] Help in code for fitting a growth model in R
+Message-ID: <CAMSabZTdC1TxfrRd9sez72qBg1eXBb1tGDzCaKVyiiYdqoJFHQ@mail.gmail.com>
+
+I have to fit a model to growth data of Hevea (rubber) trees. The details
+are outlined in the attached docx file.  Kind help is solicited.
+-- 
+Dr. TR Chandrasekhar, M.Sc., M. Tech., Ph. D.,
+Sr. Scientist
+Rubber Research Institute of India
+Hevea Breeding Sub Station
+Kadaba - 574 221
+DK Dt., Karnataka
+Phone-Land: 08251-214336
+Mobile: 9448780118
+
+From ucfagls at gmail.com  Sun Nov 16 18:58:06 2014
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Sun, 16 Nov 2014 11:58:06 -0600
+Subject: [R-sig-eco] Help in code for fitting a growth model in R
+In-Reply-To: <CAMSabZTdC1TxfrRd9sez72qBg1eXBb1tGDzCaKVyiiYdqoJFHQ@mail.gmail.com>
+References: <CAMSabZTdC1TxfrRd9sez72qBg1eXBb1tGDzCaKVyiiYdqoJFHQ@mail.gmail.com>
+Message-ID: <CAAHES9zR7n030iDDTBnRGevRA6iC=f_=jqRJs1gtVwd=bx9dWw@mail.gmail.com>
+
+You *can't* send docx files as attachments to this list; most attachments
+get stripped. Consider doing something useful with the content of the docx
+and put the content as plain text into an email and send that.
+
+HTH
+
+G
+
+On 16 November 2014 05:46, Chandrasekhar Rudrappa <chandratr at gmail.com>
+wrote:
+
+> I have to fit a model to growth data of Hevea (rubber) trees. The details
+> are outlined in the attached docx file.  Kind help is solicited.
+> --
+> Dr. TR Chandrasekhar, M.Sc., M. Tech., Ph. D.,
+> Sr. Scientist
+> Rubber Research Institute of India
+> Hevea Breeding Sub Station
+> Kadaba - 574 221
+> DK Dt., Karnataka
+> Phone-Land: 08251-214336
+> Mobile: 9448780118
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+-- 
+Gavin Simpson, PhD
+
+	[[alternative HTML version deleted]]
+
+
+From chandratr at gmail.com  Mon Nov 17 08:01:22 2014
+From: chandratr at gmail.com (Chandrasekhar Rudrappa)
+Date: Mon, 17 Nov 2014 12:31:22 +0530
+Subject: [R-sig-eco] Help in code for fitting a growth model in R
+Message-ID: <CAMSabZTWL0_=kTs6qEfcqZSkJREDXOAR71h+XCDG=Lw06DyUiw@mail.gmail.com>
+
+Hi All,
+
+I have to fit the following model to growth data of Hevea (rubber) trees.
+[image: a = a - (a - b){e^{ - \,\,\frac{2}{T}(F(t) - F({t_0}))}}] where [image:
+F(t) = t + \frac{A}{{2\pi }}\sin 2\pi (t - {t_1})], [image: F({t_0}) =
+{t_0} + \frac{A}{{2\pi }}\sin 2\pi ({t_0} - {t_1})], and *t1* signifies the
+maximum point of . Thus the equation becomes:
+[image: a = a - (a - b){e^{ - \,\,\frac{2}{T}((t + \frac{A}{{2\pi }}\sin
+2\pi (t - {t_1})) - ({t_0} + \frac{A}{{2\pi }}\sin 2\pi ({t_0} - {t_1})))}}]
+
+
+Up to this step, I have succeeded very well.
+
+*My problem is with the following model for which I need help. *
+
+The same equation is further developed into a seasonal cessation model by
+deriving equivalent equations to replace *F(t)*. For the purpose of
+seasonal cessation model *F(t)* is derived as:
+
+[image: F(t) = \left\{ \begin{array}{l} n(1 - T) + S(t - n) & & (n \le t <
+n + {t_2}),\\ n(1 - T) + S({t_2}) & & & (n + {t_2} \le t < n + {t_3}),\\
+n(1 - T) + S(t - n - T) & & (n + {t_3} \le t < n + 1), \end{array} \right.]
+
+[image: F(t) =] [image: \begin{array}{l} n(1 - T) + S(t - n) & & (n \le t <
+n + {t_2}),\\ n(1 - T) + S({t_2}) & & & (n + {t_2} \le t < n + {t_3}),\\
+n(1 - T) + S(t - n - T) & & (n + {t_3} \le t < n + 1), \end{array}]
+
+[image: F(t) = \left\{ \begin{array}{l} n(1 - T) + S(t - n) & & (n \le t <
+n + {t_2}),\\ n(1 - T) + S({t_2}) & & & (n + {t_2} \le t < n + {t_3}),\\
+n(1 - T) + S(t - n - T) & & (n + {t_3} \le t < n + 1), \end{array} \right.]
+ where, [image: S(t) = t + \frac{{1 - T}}{{2\pi }}\sin 2\pi \frac{{(t -
+{t_1})}}{{1 - T}}], n=integral part of t, [image: {t_2} = {t_1} + \frac{{1
+- T}}{2},{t_3} = {t_1} + \frac{{1 + T}}{2},\,\,\,\,\,\int \begin{array}{l}
+1\\ 0 \end{array} \,\,f(t)dt = 1 - T,\,\,\,T = no\,growth\,period] Similarly
+the above equations have to be modified for [image: F({t_0})] . These have
+to be integrated in to:  [image: a = a - (a - b){e^{ - \,\,\frac{2}{T}(F(t)
+- F({t_0}))}}]
+ Kindly help with a suitable code to fit the above model to my data.
+
+
+
+References: 1. Akamine, T (1993). A New Standard Formula for Seasonal
+Growth of Fish in Population Dynamics. Nippon Suisan Gakkaishi
+59(11):1857-1863.  2.  Akamine, T (2009). Non-linear and graphical methods
+for fish stock analysis with statistical modelling. Aqua-BioScience
+Monographs VOL. 2 NO. 3:1-45.
+
+
+-- 
+Dr. TR Chandrasekhar, M.Sc., M. Tech., Ph. D.,
+Sr. Scientist
+Rubber Research Institute of India
+Hevea Breeding Sub Station
+Kadaba - 574 221
+DK Dt., Karnataka
+Phone-Land: 08251-214336
+Mobile: 9448780118
+
+	[[alternative HTML version deleted]]
+
+
+From Jason.Law at portlandoregon.gov  Wed Nov 19 21:57:05 2014
+From: Jason.Law at portlandoregon.gov (Law, Jason)
+Date: Wed, 19 Nov 2014 20:57:05 +0000
+Subject: [R-sig-eco] data structures for ecological data
+Message-ID: <649982b08eab4d3a8cf8c3b129c514ae@BY2PR09MB0293.namprd09.prod.outlook.com>
+
+Hello all,
+
+This is a general question about data structures for what I'll call generically 'organism occurrence data'. Most of the packages for dealing with ecology/phylogenetic data in R deal with some combination of occurrence data (sample unit x taxa), site/sample data (data about the sampling units), trait data (data about the taxa), and taxonomic (some kind of tree, taxonomic or phylogenetic). I started to look around and see if there was a package that provided data structures and some generic functionality for manipulating this kind of data in R; I think I'm looking for the "organism occurrence" equivalent of the "sp" package for spatial data. The mefa package does some of this, but the idea of 'segments' appears to introduce some limitations. And it doesn't have things like accessors that I would expect for data structures (coords for SpatialDataFrames). The phylobase package does this for phylogenetic data, but I'm looking for something that would include occurrence data.
+
+Is there currently a package that provides data structures (other than mefa) for this type of data. If not, has anyone ever talked about trying to put something like this together?
+
+Jason Law
+Statistician, City of Portland
+Water Pollution Control Laboratory
+6543 N Burlington Ave,
+Portland, OR
+
+503-823-1038
+jason.law at portlandoregon.gov
+
+
+	[[alternative HTML version deleted]]
+
+
+From hyatt.green at gmail.com  Wed Nov 19 22:26:40 2014
+From: hyatt.green at gmail.com (Hyatt Green)
+Date: Wed, 19 Nov 2014 16:26:40 -0500
+Subject: [R-sig-eco] data structures for ecological data
+In-Reply-To: <649982b08eab4d3a8cf8c3b129c514ae@BY2PR09MB0293.namprd09.prod.outlook.com>
+References: <649982b08eab4d3a8cf8c3b129c514ae@BY2PR09MB0293.namprd09.prod.outlook.com>
+Message-ID: <CAH48iiOh672h492vXM0VEz-fbzZk6va9HFL8NapYuC9a14i-EQ@mail.gmail.com>
+
+Check out the picante package. That might help...
+
+Good luck,
+Hyatt
+
+On Wed, Nov 19, 2014 at 3:57 PM, Law, Jason <Jason.Law at portlandoregon.gov>
+wrote:
+
+> Hello all,
+>
+> This is a general question about data structures for what I'll call
+> generically 'organism occurrence data'. Most of the packages for dealing
+> with ecology/phylogenetic data in R deal with some combination of
+> occurrence data (sample unit x taxa), site/sample data (data about the
+> sampling units), trait data (data about the taxa), and taxonomic (some kind
+> of tree, taxonomic or phylogenetic). I started to look around and see if
+> there was a package that provided data structures and some generic
+> functionality for manipulating this kind of data in R; I think I'm looking
+> for the "organism occurrence" equivalent of the "sp" package for spatial
+> data. The mefa package does some of this, but the idea of 'segments'
+> appears to introduce some limitations. And it doesn't have things like
+> accessors that I would expect for data structures (coords for
+> SpatialDataFrames). The phylobase package does this for phylogenetic data,
+> but I'm looking for something that would include occurrence data.
+>
+> Is there currently a package that provides data structures (other than
+> mefa) for this type of data. If not, has anyone ever talked about trying to
+> put something like this together?
+>
+> Jason Law
+> Statistician, City of Portland
+> Water Pollution Control Laboratory
+> 6543 N Burlington Ave,
+> Portland, OR
+>
+> 503-823-1038
+> jason.law at portlandoregon.gov
+>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Hyatt Green, PhD
+Assistant Professor of Microbiology
+Department of Environmental and Forest Biology
+SUNY-ESF
+1 Forestry Drive
+Syracuse, NY 13210
+
+	[[alternative HTML version deleted]]
+
+
+From solymos at ualberta.ca  Wed Nov 19 22:38:39 2014
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Wed, 19 Nov 2014 14:38:39 -0700
+Subject: [R-sig-eco] data structures for ecological data
+In-Reply-To: <CAH48iiOh672h492vXM0VEz-fbzZk6va9HFL8NapYuC9a14i-EQ@mail.gmail.com>
+References: <649982b08eab4d3a8cf8c3b129c514ae@BY2PR09MB0293.namprd09.prod.outlook.com>
+	<CAH48iiOh672h492vXM0VEz-fbzZk6va9HFL8NapYuC9a14i-EQ@mail.gmail.com>
+Message-ID: <CAH9coKaxby1kgHOszgaDiKtPNVSYz6GEis6uNRPgwk9RoaW0HQ@mail.gmail.com>
+
+Jason,
+
+The segments in 'mefa' just add a 3rd dimension to the object, but that
+does not limit accessing the stored information. Sample attributes can have
+spatial information, but it is not specifically designed to support spatial
+analysis. More concrete feature requests are welcome.
+
+There is an update of 'mefa' called 'mefa4', and also Steve Walker's
+'multitable' package, none of them comes with pre-built spatial analytics
+capabilities but might worth checking out.
+
+Cheers,
+
+Peter
+
+--
+P?ter S?lymos
+780-492-8534 | solymos at ualberta.ca | https://sites.google.com/site/psolymos/
+Alberta Biodiversity Monitoring Institute http://www.abmi.ca
+Boreal Avian Modelling Project http://www.borealbirds.ca
+
+On Wed, Nov 19, 2014 at 2:26 PM, Hyatt Green <hyatt.green at gmail.com> wrote:
+
+> Check out the picante package. That might help...
+>
+> Good luck,
+> Hyatt
+>
+> On Wed, Nov 19, 2014 at 3:57 PM, Law, Jason <Jason.Law at portlandoregon.gov>
+> wrote:
+>
+> > Hello all,
+> >
+> > This is a general question about data structures for what I'll call
+> > generically 'organism occurrence data'. Most of the packages for dealing
+> > with ecology/phylogenetic data in R deal with some combination of
+> > occurrence data (sample unit x taxa), site/sample data (data about the
+> > sampling units), trait data (data about the taxa), and taxonomic (some
+> kind
+> > of tree, taxonomic or phylogenetic). I started to look around and see if
+> > there was a package that provided data structures and some generic
+> > functionality for manipulating this kind of data in R; I think I'm
+> looking
+> > for the "organism occurrence" equivalent of the "sp" package for spatial
+> > data. The mefa package does some of this, but the idea of 'segments'
+> > appears to introduce some limitations. And it doesn't have things like
+> > accessors that I would expect for data structures (coords for
+> > SpatialDataFrames). The phylobase package does this for phylogenetic
+> data,
+> > but I'm looking for something that would include occurrence data.
+> >
+> > Is there currently a package that provides data structures (other than
+> > mefa) for this type of data. If not, has anyone ever talked about trying
+> to
+> > put something like this together?
+> >
+> > Jason Law
+> > Statistician, City of Portland
+> > Water Pollution Control Laboratory
+> > 6543 N Burlington Ave,
+> > Portland, OR
+> >
+> > 503-823-1038
+> > jason.law at portlandoregon.gov
+> >
+> >
+> >         [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+>
+>
+>
+> --
+> Hyatt Green, PhD
+> Assistant Professor of Microbiology
+> Department of Environmental and Forest Biology
+> SUNY-ESF
+> 1 Forestry Drive
+> Syracuse, NY 13210
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From rshepard at appl-ecosys.com  Thu Nov 20 23:08:44 2014
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Thu, 20 Nov 2014 14:08:44 -0800 (PST)
+Subject: [R-sig-eco] Minimum Number of Observations for pcaCoDa?
+Message-ID: <alpine.LNX.2.11.1411201357570.14797@localhost>
+
+   The compositional data sets have few observations: 4 to 7 rows each, but
+there are 5 parts (columns) for each row.
+
+   I tried to use the robCompositions function pcaCoDa(). There was an error
+and warning generated:
+
+( winters.biplot <- pcaCoDa(winters.coda) )
+Error in princomp.default(xilr, covmat = cv, cor = FALSE) :
+   covariance matrix is not non-negative definite
+In addition: Warning message:
+In covMcd(xilr, cor = FALSE) :
+   n < 2 * p, i.e., possibly too small sample size
+
+   The matrix for winters.code has the counts:
+
+   filter gather graze predate shred
+1      3     27     3      11     1
+2      3     28     3      13     2
+3      3     43     7      15     1
+4      4     54     6      24     3
+5      3     26     4      22     5
+6      1     39     2      18     2
+
+   Same results with the data file winters.acomp:
+
+          filter    gather      graze   predate      shred
+[1,] 0.06666667 0.6000000 0.06666667 0.2444444 0.02222222
+[2,] 0.06122449 0.5714286 0.06122449 0.2653061 0.04081633
+[3,] 0.04347826 0.6231884 0.10144928 0.2173913 0.01449275
+[4,] 0.04395604 0.5934066 0.06593407 0.2637363 0.03296703
+[5,] 0.05000000 0.4333333 0.06666667 0.3666667 0.08333333
+[6,] 0.01612903 0.6290323 0.03225806 0.2903226 0.03225806
+attr(,"class")
+[1] "acomp"
+
+   Is there a minimum number of observations for PCA or was I using the
+incorrect data format?
+
+Rich
+
+
+From jari.oksanen at oulu.fi  Fri Nov 21 10:18:55 2014
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 21 Nov 2014 09:18:55 +0000
+Subject: [R-sig-eco] Minimum Number of Observations for pcaCoDa?
+In-Reply-To: <alpine.LNX.2.11.1411201357570.14797@localhost>
+References: <alpine.LNX.2.11.1411201357570.14797@localhost>
+Message-ID: <7d3204a9947e4ecfb1be9019b349f726@nippu11.univ.yo.oulu.fi>
+
+Rich,
+
+It seems that the robust covariance matrix (? I assume it is that) is not non-negative definite... 
+
+Function robCompositios::pcaCoDa seems to use function princomp of base R (or its stats package) as the engine to get the principal components. If that function is used for raw data, it stops with error message ("'princomp' can only be used with more units than variables") if the number of columns is larger than the number of rows. However, it seems that it may still be able to handle these cases if you use covariance matrix, and the last (ncol > nrow) eigenvalues will be numerically zero -- that is: the covariance matrix is non-negative definite. Normal covariance matrices normally satisfy this (with provision of numerical precision), but it seems that the robust covariance matrix does not.
+
+Actually, the warning is very clear and says: "n < 2 * p, i.e., possibly too small sample size". The condition I put above was only that n < p, but this seems to require that the number of rows is two times higher than the number of columns. Because this was not case, the warning came true and you got an error. So yes, you need more data if you wish to use this tool. 
+
+Cheers, Jari Oksanen
+________________________________________
+From: r-sig-ecology-bounces at r-project.org <r-sig-ecology-bounces at r-project.org> on behalf of Rich Shepard <rshepard at appl-ecosys.com>
+Sent: 21 November 2014 00:08
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Minimum Number of Observations for pcaCoDa?
+
+   The compositional data sets have few observations: 4 to 7 rows each, but
+there are 5 parts (columns) for each row.
+
+   I tried to use the robCompositions function pcaCoDa(). There was an error
+and warning generated:
+
+( winters.biplot <- pcaCoDa(winters.coda) )
+Error in princomp.default(xilr, covmat = cv, cor = FALSE) :
+   covariance matrix is not non-negative definite
+In addition: Warning message:
+In covMcd(xilr, cor = FALSE) :
+   n < 2 * p, i.e., possibly too small sample size
+
+   The matrix for winters.code has the counts:
+
+   filter gather graze predate shred
+1      3     27     3      11     1
+2      3     28     3      13     2
+3      3     43     7      15     1
+4      4     54     6      24     3
+5      3     26     4      22     5
+6      1     39     2      18     2
+
+   Same results with the data file winters.acomp:
+
+          filter    gather      graze   predate      shred
+[1,] 0.06666667 0.6000000 0.06666667 0.2444444 0.02222222
+[2,] 0.06122449 0.5714286 0.06122449 0.2653061 0.04081633
+[3,] 0.04347826 0.6231884 0.10144928 0.2173913 0.01449275
+[4,] 0.04395604 0.5934066 0.06593407 0.2637363 0.03296703
+[5,] 0.05000000 0.4333333 0.06666667 0.3666667 0.08333333
+[6,] 0.01612903 0.6290323 0.03225806 0.2903226 0.03225806
+attr(,"class")
+[1] "acomp"
+
+   Is there a minimum number of observations for PCA or was I using the
+incorrect data format?
+
+Rich
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From jkpeters at princeton.edu  Tue Nov 25 00:34:30 2014
+From: jkpeters at princeton.edu (Jennifer Peterson)
+Date: Mon, 24 Nov 2014 15:34:30 -0800
+Subject: [R-sig-eco] DemoInfo {primer} output -lambda the same as RV
+Message-ID: <A5F4221A-7C79-40BE-8345-323CA2FA8FB5@princeton.edu>
+
+Hello,
+
+I am using the DemoInfo function in the primer package in R to calculate individual fitness for insects at different ages that are infected with different parasites. 
+
+The time is set in months, and insects only reproduce in their 2nd and 3rd months out of 4 months. I am constructing the matrix as described in Caswell 2001 and in McGraw and Caswell 1998.
+
+ In running the models, the lambda value is always the same as the reproductive value for the 2nd month, except when the insect didn't reproduce until it's 3rd month, in which case the lamda is negative. 
+ It seems strange that reproduction in the 3rd month doesn't influence the lambda.
+
+Could anyone tell me if this is normal ( I mean the laymen's definition of normal)?
+
+Here are 2 examples:
+
+Example 1
+
+con9  <- matrix(c(0,27,23,0,1,0,0,0,0,1,0,0,0,0,1,0),byrow=TRUE,nrow=4)
+DemoInfo(con9)
+
+$lambda
+[1] 5.578778
+
+$SSD
+[1] 0.821597491 0.147271940 0.026398601 0.004731968
+
+$RV
+[1] 1.000000 5.578778 4.122767 0.000000
+
+$Sensitivities
+          [,1]       [,2]       [,3]        [,4]
+[1,] 0.4689402 0.08405788 0.01506743 0.002700848
+[2,] 2.6161136 0.46894024 0.08405788 0.015067434
+[3,] 1.9333311 0.34655099 0.06211951 0.011134967
+[4,] 0.0000000 0.00000000 0.00000000 0.000000000
+
+$Elasticities
+          [,1]       [,2]       [,3] [,4]
+[1,] 0.0000000 0.40682073 0.06211951    0
+[2,] 0.4689402 0.00000000 0.00000000    0
+[3,] 0.0000000 0.06211951 0.00000000    0
+[4,] 0.0000000 0.00000000 0.00000000    0
+
+$PPM
+     [,1] [,2] [,3] [,4]
+[1,]    0   27   23    0
+[2,]    1    0    0    0
+[3,]    0    1    0    0
+[4,]    0    0    1    0
+
+Example 2
+
+con16 <- matrix(c(0,0,15,0,1,0,0,0,0,1,0,0,0,0,1,0),byrow=TRUE,nrow=4)
+DemoInfo(con16)
+
+$lambda
+[1] -1.233106
+
+$SSD
+[1]  1.19406646 -0.13010412 -0.14356677  0.07960443
+
+$RV
+[1] 1.000000 2.466212 6.082202 0.000000
+
+$Sensitivities
+              [,1]         [,2]         [,3]          [,4]
+[1,] -3.585065e+15 3.906246e+14 4.310448e+14 -2.390043e+14
+[2,] -8.841530e+15 9.633630e+14 1.063048e+15 -5.894353e+14
+[3,] -2.180509e+16 2.375858e+15 2.621702e+15 -1.453673e+15
+[4,]  0.000000e+00 0.000000e+00 0.000000e+00  0.000000e+00
+
+$Elasticities
+            [,1]          [,2]          [,3] [,4]
+[1,] 0.00000e+00  0.000000e+00 -5.243404e+15    0
+[2,] 7.17013e+15  0.000000e+00  0.000000e+00    0
+[3,] 0.00000e+00 -1.926726e+15  0.000000e+00    0
+[4,] 0.00000e+00  0.000000e+00  0.000000e+00    0
+
+$PPM
+     [,1] [,2] [,3] [,4]
+[1,]    0    0   15    0
+[2,]    1    0    0    0
+[3,]    0    1    0    0
+[4,]    0    0    1    0
+
+
+
+Thank you very much for your help.
+
+All the best,
+Jennifer Peterson
+--
+----------------------------------------------------------------
+Jennifer K Peterson
+PhD Candidate
+Dobson & Graham Groups
+Dept. of Ecology and Evolution
+Princeton University
+jkpeters at princeton.edu
+www.jennipeterson.com
+----------------------------------------------------------------
+
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From patili_buergi at hotmail.com  Fri Nov 28 19:30:24 2014
+From: patili_buergi at hotmail.com (=?Windows-1252?B?TGluZGEgQvxyZ2k=?=)
+Date: Fri, 28 Nov 2014 10:30:24 -0800
+Subject: [R-sig-eco] Family and population level variation in mixed model
+In-Reply-To: <BLU175-W37466DA822E9FF2F9B8890977E0@phx.gbl>
+References: <BLU175-W37466DA822E9FF2F9B8890977E0@phx.gbl>
+Message-ID: <BLU175-W37BA2DB7D156E2E0C5E51D977E0@phx.gbl>
+
+Hello! I'm looking for advice on how to determine the significance/ contribution of family and population level variation using a mixed effects model with the following data structure:
+
+- We used 100 different moth families from 10 populations in 2 regions
+(5 populations per region, 2-15 families per population)
+
+- Each family was set up in a cage with 25 individuals per family
+
+- We wanted to test the effect of: host plant (2 levels), disease (2 levels), moth origin (2 regions)
+
+
+- We exposed 1 family to only one combination of treatments (e.g.
+family 1 is from region 1, has disease level 2 and was put on host plant 1; family 2 is from region 2, has disease level 2 and was put on host plant 2, ... ), resulting in 5-15 reps (families) per treatment combination
+
+
+- Survival as response variable (#alive, #dead) (always adds up
+to 25)
+
+- Model: lmer((#dead,#alive) ~ host plant * region + disease +(1|family)
++(1|population), family = binomial)
+
+
+Research question (apart from fixed level significance):
+which level (family or population) contributes more to variation?
+
+But: by including family as a random factor, we have ?nothing
+left for error?. Am I overparameterizing the model and/or does model output even make sense? Would it be better to try some
+bootstrapping method? I?ve never done that, any pointers to text books or
+publications? 
+And: can I use AIC of model with and without random factors to determine significance of random factors? 
+
+Model output:Generalized linear mixed model fit by maximum likelihood ['glmerMod']
+ Family: binomial ( logit )
+Formula: y ~ pla * lo + nos + (1 | population) + (1 | family) 
+
+      AIC       BIC    logLik  deviance 
+ 526.6389  544.2915 -256.3195  512.6389 
+
+Random effects:
+ Groups Name              Variance Std.Dev.
+ family        (Intercept) 3.1057   1.7623  
+ population    (Intercept) 0.2328   0.4825  
+Number of obs: 92, groups: lot, 92; pop, 11
+
+Fixed effects:
+            Estimate Std. Error z value Pr(>|z|)  
+(Intercept) -0.67657    0.60726  -1.114   0.2652  
+plantS        -1.50391    0.83761  -1.796   0.0726 .
+regionV         -0.01176    0.69456  -0.017   0.9865  
+diseasey        -0.31352    0.44933  -0.698   0.4853  
+plantS:regionV    -0.75070    0.96990  -0.774   0.4389  
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+
+Correlation of Fixed Effects:
+         (Intr) plaS   loV    nosy  
+plantS     -0.591                     
+regionV      -0.796  0.502              
+diseasey     -0.250  0.046 -0.093       
+plantS:regionV  0.517 -0.865 -0.571 -0.065
+
+
+AIC for random factor significance: 
+
+mo<-lmer(y~plant*region + disease +(1|population)+(1|family), family=binomial)
+mo1<-lmer(y~plant*region + disease +(1|family), family=binomial)   
+mo2<-glm(y~plant*region + disease , family=binomial)
+
+AIC(mo)  526.6389
+AIC(mo1) 525.5622
+AIC(mo2) 1001.55
+
+
+Thanks already for your help! 		 	   		   		 	   		  
+	[[alternative HTML version deleted]]
+
+
+From scoyoc at gmail.com  Sat Nov 29 02:35:57 2014
+From: scoyoc at gmail.com (Matthew Van Scoyoc)
+Date: Fri, 28 Nov 2014 18:35:57 -0700
+Subject: [R-sig-eco] Can I weight LS means estimates by elevation in
+	lme4/lmerTest packages?
+Message-ID: <CALx9ERWyBsWqQsr5zGhspxnSYxK4kTrXpd4oZm5wfggrbOXC8Q@mail.gmail.com>
+
+Good afternoon r-sig-ecology,
+
+I'm running linear mixed models using the lme4 and lmerTest packages to
+examine ecosystem structure in grasslands and shrublands. The grasslands
+are located at lower elevations than the shrublands, and I would like to
+weight the estimates from LS means to reflect the differences in
+elevations. My colleague says there is an easy way to do it in SAS, but I
+haven't found a way to do it in R.
+
+There is an example dataset and workflow. Here I would be examining grass
+cover differences between the two ecosystems, the quality of the
+ecosystems, and examining the interaction between ecosystem and quality. I
+am also interested in systematic changes throughout the study area (not
+represented in this example) so I don't want to run separate analyses on
+for each ecosystem. I just want to adjust the LS means estimates to reflect
+the differences in elevation and not a mean elevation of the sampled plots.
+
+>library("lme4")
+>library("lmerTest")
+>
+> df = data.frame(PlotID = rep(c(paste0("G", 1:30), paste0("S", 1:30)), 2),
++                 SamplePeriod = as.factor(c(rep(2012, 30), rep(2014,
+30))),
++                 Ecosystem = rep(c(rep("Grassland", 30), rep("Shrubland",
+30)), 2),
++                 Quality = rep(rep(c(rep("Good", 10), rep("Moderate", 10),
+rep("Poor", 10)), 2), 2),
++                 GrassCover = c(runif(10, min = 0.50, max = 0.85), # 2012
+Grassland Good
++                                runif(10, min = 0.50, max = 0.60), # 2012
+Grassland Moderate
++                                runif(10, min = 0.30, max = 0.40), # 2012
+Grassland Poor
++                                runif(10, min = 0.25, max = 0.60), # 2012
+Shrubland Good
++                                runif(10, min = 0.20, max = 0.45), # 2012
+Shrubland Moderate
++                                runif(10, min = 0.05, max = 0.25), # 2012
+Shrubland Poor
++                                runif(10, min = 0.50, max = 0.90), # 2014
+Grassland Good
++                                runif(10, min = 0.50, max = 0.55), # 2014
+Grassland Moderate
++                                runif(10, min = 0.30, max = 0.30), # 2014
+Grassland Poor
++                                runif(10, min = 0.25, max = 0.60), # 2014
+Shrubland Good
++                                runif(10, min = 0.20, max = 0.30), # 2014
+Shrubland Moderate
++                                runif(10, min = 0.05, max = 0.15))) # 2014
+Shrubland Poor
+> Elevation = c(sample(1200:1700, size = 30, replace = T),
+sample(1800:3000, size = 30,
+>                    replace = T))
+> df$Elevation = c(Elevation, Elevation); rm(Elevation)
+>
+> lmm = lmer(GrassCover ~ Ecosystem*Quality + Elevation + (1|PlotID), data
+= df, REML = T)
+> anova(lmm,  ddf = "Satterthwaite", type = 3, method.grad = "Richardson")
+Analysis of Variance Table of type 3  with  Satterthwaite
+approximation for degrees of freedom
+                         Sum Sq      Mean Sq      NumDF      DenDF
+ F.value    Pr(>F)
+Ecosystem           1.68172     1.68172     1              113
+ 51.239    8.79e-11 ***
+Quality               1.97119     0.98560     2               113
+152.611   < 2.2e-16 ***
+Elevation             0.00311     0.00311     1              113
+ 0.016      0.89978
+Ecosystem:Quality 0.04201    0.02101     2              113          3.604
+     0.03039 *
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+> lsms = lsmeans(lmm, method.grad = "Richardson")
+>estimates = lsms[[1]]$Estimate
+
+At this point I would be plotting the estimates of the significant response
+variables and interactions to look at the differences. As I understand, the
+ecosystem effect and the interaction between ecosystem and quality are with
+an average elevation for all plots, and this could exaggerate LS means
+estimate.  Correcting for elevation would provide more accurate
+estimations. Right?
+
+Okay, thanks for you help.
+Cheers,
+MVS
+=====
+Matthew Van Scoyoc
+
+<https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=mvanscoyoc at aggiemail.usu.edu>
+https://sites.google.com/site/scoyoc/
+=====
+Think SNOW!
+
+	[[alternative HTML version deleted]]
+
+
+From tom_philippi at nps.gov  Sat Nov 29 07:30:29 2014
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Fri, 28 Nov 2014 22:30:29 -0800
+Subject: [R-sig-eco] Can I weight LS means estimates by elevation in
+ lme4/lmerTest packages?
+In-Reply-To: <CALx9ERWyBsWqQsr5zGhspxnSYxK4kTrXpd4oZm5wfggrbOXC8Q@mail.gmail.com>
+References: <CALx9ERWyBsWqQsr5zGhspxnSYxK4kTrXpd4oZm5wfggrbOXC8Q@mail.gmail.com>
+Message-ID: <CAM9kYqhd2CvCYHRKfH7EMyzDQM0s-gAd9d9NSXToU4rX=-nC1Q@mail.gmail.com>
+
+Matthew--
+Do you get what you want in terms of estimated effect of ecosystem type by
+dropping Elevation from your model?  That difference would include the
+component of the response to the difference in mean elevation.
+
+If not, from a pure parameter estimation perspective, if your simulated
+data are representative, you have elevation ranging from 1200:1700 (m) in
+grassland ecosystems, but 1800:3000 in shrublands.  Therefore, you have 2
+df for elevation: a linear effect (Elevation) plus a step effect
+(Ecosystem) split at 1750m, so forced parallel lines that don't overlap.
+Your estimated effect for ecosystem is the offset of those parallel lines.
+However, any nonlinearities in grass cover as a function of elevation will
+be forced into that step (ecosystem) parameter, which could be misleading
+or masking.
+
+Is a linear effect of elevation reasonable for your range of elevations, or
+are there likely to be curved or unimodal relationships where too low gets
+too dry and too high gets too cold for grasses?  Before I did any model
+fitting, I would plot 6 gam or loess lines of grass cover by elevation for
+the 6 ecosystem * quality combinations.
+
+I hope that this gives you food for thought, or alternatively that I'm way
+off base and someone provides you with exactly the narrow answer you
+requested.
+
+Tom 2
+
+
+On Fri, Nov 28, 2014 at 5:35 PM, Matthew Van Scoyoc <scoyoc at gmail.com>
+wrote:
+
+> Good afternoon r-sig-ecology,
+>
+> I'm running linear mixed models using the lme4 and lmerTest packages to
+> examine ecosystem structure in grasslands and shrublands. The grasslands
+> are located at lower elevations than the shrublands, and I would like to
+> weight the estimates from LS means to reflect the differences in
+> elevations. My colleague says there is an easy way to do it in SAS, but I
+> haven't found a way to do it in R.
+>
+> There is an example dataset and workflow. Here I would be examining grass
+> cover differences between the two ecosystems, the quality of the
+> ecosystems, and examining the interaction between ecosystem and quality. I
+> am also interested in systematic changes throughout the study area (not
+> represented in this example) so I don't want to run separate analyses on
+> for each ecosystem. I just want to adjust the LS means estimates to reflect
+> the differences in elevation and not a mean elevation of the sampled plots.
+>
+> >library("lme4")
+> >library("lmerTest")
+> >
+> > df = data.frame(PlotID = rep(c(paste0("G", 1:30), paste0("S", 1:30)), 2),
+> +                 SamplePeriod = as.factor(c(rep(2012, 30), rep(2014,
+> 30))),
+> +                 Ecosystem = rep(c(rep("Grassland", 30), rep("Shrubland",
+> 30)), 2),
+> +                 Quality = rep(rep(c(rep("Good", 10), rep("Moderate", 10),
+> rep("Poor", 10)), 2), 2),
+> +                 GrassCover = c(runif(10, min = 0.50, max = 0.85), # 2012
+> Grassland Good
+> +                                runif(10, min = 0.50, max = 0.60), # 2012
+> Grassland Moderate
+> +                                runif(10, min = 0.30, max = 0.40), # 2012
+> Grassland Poor
+> +                                runif(10, min = 0.25, max = 0.60), # 2012
+> Shrubland Good
+> +                                runif(10, min = 0.20, max = 0.45), # 2012
+> Shrubland Moderate
+> +                                runif(10, min = 0.05, max = 0.25), # 2012
+> Shrubland Poor
+> +                                runif(10, min = 0.50, max = 0.90), # 2014
+> Grassland Good
+> +                                runif(10, min = 0.50, max = 0.55), # 2014
+> Grassland Moderate
+> +                                runif(10, min = 0.30, max = 0.30), # 2014
+> Grassland Poor
+> +                                runif(10, min = 0.25, max = 0.60), # 2014
+> Shrubland Good
+> +                                runif(10, min = 0.20, max = 0.30), # 2014
+> Shrubland Moderate
+> +                                runif(10, min = 0.05, max = 0.15))) # 2014
+> Shrubland Poor
+> > Elevation = c(sample(1200:1700, size = 30, replace = T),
+> sample(1800:3000, size = 30,
+> >                    replace = T))
+> > df$Elevation = c(Elevation, Elevation); rm(Elevation)
+> >
+> > lmm = lmer(GrassCover ~ Ecosystem*Quality + Elevation + (1|PlotID), data
+> = df, REML = T)
+> > anova(lmm,  ddf = "Satterthwaite", type = 3, method.grad = "Richardson")
+> Analysis of Variance Table of type 3  with  Satterthwaite
+> approximation for degrees of freedom
+>                          Sum Sq      Mean Sq      NumDF      DenDF
+>  F.value    Pr(>F)
+> Ecosystem           1.68172     1.68172     1              113
+>  51.239    8.79e-11 ***
+> Quality               1.97119     0.98560     2               113
+> 152.611   < 2.2e-16 ***
+> Elevation             0.00311     0.00311     1              113
+>  0.016      0.89978
+> Ecosystem:Quality 0.04201    0.02101     2              113          3.604
+>      0.03039 *
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+> > lsms = lsmeans(lmm, method.grad = "Richardson")
+> >estimates = lsms[[1]]$Estimate
+>
+> At this point I would be plotting the estimates of the significant response
+> variables and interactions to look at the differences. As I understand, the
+> ecosystem effect and the interaction between ecosystem and quality are with
+> an average elevation for all plots, and this could exaggerate LS means
+> estimate.  Correcting for elevation would provide more accurate
+> estimations. Right?
+>
+> Okay, thanks for you help.
+> Cheers,
+> MVS
+> =====
+> Matthew Van Scoyoc
+>
+> <
+> https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=mvanscoyoc at aggiemail.usu.edu
+> >
+> https://sites.google.com/site/scoyoc/
+> =====
+> Think SNOW!
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From mlupatini at gmail.com  Sat Nov 29 19:55:20 2014
+From: mlupatini at gmail.com (Manoeli Lupatini)
+Date: Sat, 29 Nov 2014 19:55:20 +0100
+Subject: [R-sig-eco] help radfit()
+Message-ID: <CAPis3Y_dF5+v-J1htb55NKOKQ3L1rWdJwQk1b+hsJQV1hPFPoQ@mail.gmail.com>
+
+Dear all,
+
+I am working with radfit() function in vegan with a df which contains a big
+amount of zeros. When is not zero, I have numbers with comma, which
+represent proportions. I am using the family Gamma. I got negative values
+for some models. Below an example of the output:
+
+      Null  Preemption   Lognormal        Zipf  Mandelbrot
+37  694.8004  -413.17581  -565.23622  492.945299  -482.93299
+38  415.2763  -340.93024  -363.86510  469.338760  -379.28155
+39 1221.0254  -310.94620 -1490.60959 1131.261212  -342.56346
+40 1448.9174  -328.61790  -794.12383  761.840479  -439.40301
+41 1007.8350  -376.34689  -493.21855  455.072273  -486.60574
+
+Someone can explain if is a problema to get this negative values?
+
+Thanks for your help,
+
+Manoeli
+
+
+-- 
+
+Manoeli Lupatini
+
+Eng. Agr?noma
+Ms. em Ci?ncia do Solo,
+Doutoranda em Ci?ncia do Solo
+Programa de P?s-gradua??o em Ci?ncia do Solo
+Departamento de Solos, UFSM, Santa Maria
+(55)81262295
+
+	[[alternative HTML version deleted]]
+
+
+From jari.oksanen at oulu.fi  Sat Nov 29 21:17:46 2014
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Sat, 29 Nov 2014 20:17:46 +0000
+Subject: [R-sig-eco] help radfit()
+In-Reply-To: <CAPis3Y_dF5+v-J1htb55NKOKQ3L1rWdJwQk1b+hsJQV1hPFPoQ@mail.gmail.com>
+References: <CAPis3Y_dF5+v-J1htb55NKOKQ3L1rWdJwQk1b+hsJQV1hPFPoQ@mail.gmail.com>
+Message-ID: <9442D17C-BB87-4755-9D7E-8B95301CDA02@oulu.fi>
+
+Negative values of what? If it is AIC, it is not a problem. With AIC, only differences are meaningful. The observed values can be negative.
+
+Cheers, Jari Oksanen
+
+Sent from my iPad
+
+> On 29.11.2014, at 19.56, Manoeli Lupatini <mlupatini at gmail.com> wrote:
+> 
+> Dear all,
+> 
+> I am working with radfit() function in vegan with a df which contains a big
+> amount of zeros. When is not zero, I have numbers with comma, which
+> represent proportions. I am using the family Gamma. I got negative values
+> for some models. Below an example of the output:
+> 
+>      Null  Preemption   Lognormal        Zipf  Mandelbrot
+> 37  694.8004  -413.17581  -565.23622  492.945299  -482.93299
+> 38  415.2763  -340.93024  -363.86510  469.338760  -379.28155
+> 39 1221.0254  -310.94620 -1490.60959 1131.261212  -342.56346
+> 40 1448.9174  -328.61790  -794.12383  761.840479  -439.40301
+> 41 1007.8350  -376.34689  -493.21855  455.072273  -486.60574
+> 
+> Someone can explain if is a problema to get this negative values?
+> 
+> Thanks for your help,
+> 
+> Manoeli
+> 
+> 
+> -- 
+> 
+> Manoeli Lupatini
+> 
+> Eng. Agr?noma
+> Ms. em Ci?ncia do Solo,
+> Doutoranda em Ci?ncia do Solo
+> Programa de P?s-gradua??o em Ci?ncia do Solo
+> Departamento de Solos, UFSM, Santa Maria
+> (55)81262295
+> 
+>    [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+

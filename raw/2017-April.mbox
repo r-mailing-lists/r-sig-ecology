@@ -1,0 +1,647 @@
+From asrovai at gmail.com  Tue Apr  4 21:54:44 2017
+From: asrovai at gmail.com (Andre Rovai)
+Date: Tue, 4 Apr 2017 14:54:44 -0500
+Subject: [R-sig-eco] Reading attribute from high resolution raster using low
+ resolution raster as boundary
+Message-ID: <CABj7FA2E1GUoPxdwe72nzsE1caxPYSQQjchHJFBk1phin2GLTQ@mail.gmail.com>
+
+Dear friends,
+
+I have 2 raster files, one with very high resolution (each degree-cell is
+30x30m) and the other with coarser resolution (0.25 degree-cells).
+
+The high resolution raster has info on forest cover area.  The low
+resolution raster has info on species abundance.  My end goal is to
+determine abundance per area.  That entails determining the forest cover
+area (high res raster) within each one of low res raster degree-cells.
+
+Is it possible to overlay both rasters and retrieve the area atribute from
+high res raster for each one the degree-cells in the low res raster?  I
+guess another way to do it it would be to determine the number of
+degree-cells from the high resolution raster that lie within each one of
+the degree-ceils from the coarser resolution raster?
+
+Any help is much appreciated.  I have been stuck with this for a couple of
+weeks..!!
+
+Thanks!
+
+Andre
+
+
+
+
+*Andre Rovai, Ph.D.*
+Research Associate V
+Department of Oceanography and Coastal Sciences
+Energy, Coast, and Environment Bldg., Room 3201
+Louisiana State University
+Baton Rouge, LA 70803
+Phone: 225 578 6422 <(225)%20578-6422>
+Cell: 225 439 5559 <(225)%20439-5559>
+Email: arovai1 at lsu.edu
+           asrovai at gmail.com
+
+	[[alternative HTML version deleted]]
+
+
+From chaco001 at umn.edu  Tue Apr  4 22:39:13 2017
+From: chaco001 at umn.edu (Jeremy Chacon)
+Date: Tue, 4 Apr 2017 15:39:13 -0500
+Subject: [R-sig-eco] Reading attribute from high resolution raster using
+ low resolution raster as boundary
+In-Reply-To: <CABj7FA2E1GUoPxdwe72nzsE1caxPYSQQjchHJFBk1phin2GLTQ@mail.gmail.com>
+References: <CABj7FA2E1GUoPxdwe72nzsE1caxPYSQQjchHJFBk1phin2GLTQ@mail.gmail.com>
+Message-ID: <CAH65v73mrQeHq8K7aTkSeiT+seNUE8=o+u2Z0C+NdYLodCRJuA@mail.gmail.com>
+
+Hi Andre,
+
+Are the dimensions of the low- and high-res images the same? If so, an easy
+approach would be to up-scale the low-res image to be the same size as the
+high-resolution image.
+
+You can use EBImage from bioconductor to scale the low-res image with
+nearest-neighbor interpolation, and then just grab the data from each
+image. See code below.
+
+Note that nearest-neighbor scaling is quite simple, so if the dimensions
+were different, or the x- resolution was different than the y-resolution,
+you could probably hack together an implementation.
+
+# fake data
+low_res = matrix(runif(100), 10, 10)
+high_res = matrix(rnorm(10000), 100, 100)
+
+source("http://bioconductor.org/biocLite.R")
+biocLite("EBImage")
+library(EBImage)
+
+# nearest-neighbor scaling
+upscaled_low_res = resize(low_res, w = nrow(high_res), h = ncol(high_res),
+filter = "none")
+
+# look same
+par(mfrow = c(1,2))
+image(low_res)
+image(upscaled_low_res)
+
+# naively put it together with loops
+# (faster methods avail., but loops are easy to read)
+all_dat = data.frame()
+for (i in 1:nrow(high_res)){
+  for (j in 1:nrow(high_res)){
+    all_dat = rbind(all_dat,
+                    data.frame(x = i,y = j, forest_cover = high_res[i,j],
+abundance = upscaled_low_res[i,j]))
+  }
+}
+
+
+On Tue, Apr 4, 2017 at 2:54 PM, Andre Rovai <asrovai at gmail.com> wrote:
+
+> Dear friends,
+>
+> I have 2 raster files, one with very high resolution (each degree-cell is
+> 30x30m) and the other with coarser resolution (0.25 degree-cells).
+>
+> The high resolution raster has info on forest cover area.  The low
+> resolution raster has info on species abundance.  My end goal is to
+> determine abundance per area.  That entails determining the forest cover
+> area (high res raster) within each one of low res raster degree-cells.
+>
+> Is it possible to overlay both rasters and retrieve the area atribute from
+> high res raster for each one the degree-cells in the low res raster?  I
+> guess another way to do it it would be to determine the number of
+> degree-cells from the high resolution raster that lie within each one of
+> the degree-ceils from the coarser resolution raster?
+>
+> Any help is much appreciated.  I have been stuck with this for a couple of
+> weeks..!!
+>
+> Thanks!
+>
+> Andre
+>
+>
+>
+>
+> *Andre Rovai, Ph.D.*
+> Research Associate V
+> Department of Oceanography and Coastal Sciences
+> Energy, Coast, and Environment Bldg., Room 3201
+> Louisiana State University
+> Baton Rouge, LA 70803
+> Phone: 225 578 6422 <(225)%20578-6422>
+> Cell: 225 439 5559 <(225)%20439-5559>
+> Email: arovai1 at lsu.edu
+>            asrovai at gmail.com
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+
+*___________________________________________________________________________Jeremy
+M. Chacon, Ph.D.*
+
+*Post-Doctoral Associate, Harcombe Lab*
+*University of Minnesota*
+*Ecology, Evolution and Behavior*
+
+	[[alternative HTML version deleted]]
+
+
+From ManuelEsteban.Lucas at uclm.es  Mon Apr 10 20:47:00 2017
+From: ManuelEsteban.Lucas at uclm.es (MANUEL ESTEBAN LUCAS BORJA)
+Date: Mon, 10 Apr 2017 18:47:00 +0000
+Subject: [R-sig-eco] mixed models for soil erosion analyses
+Message-ID: <AM4PR01MB1780CA7805543651DC5742A1E7010@AM4PR01MB1780.eurprd01.prod.exchangelabs.com>
+
+Dear all, 
+
+I am starting using R (no very familiar for the moment) and I want to statistically study a soil erosion experiment (Please see enclosed the dataset).
+
+The experiment was developed in two forested areas, one mainly composed by pinus and the other by quercus. Inside each forested area four sediment fenced and runoff tanks were set up. So, two sites and four sediment fences/runoff tanks by site. 
+
+I wonder which is the best way to analyse the data and how to make it using R. As far as I know, I think mixed model should be the best way to use, with species as fixed factor, sediment fenced or runoff tank and rainy event as random effects. Also I should consider the interaction species x rainy event. I guess neither General linear models or generalized linear models nor ANOVA/MANOVA are appropriate. 
+
+I would be very grateful with you if you could share you know with me about which approach to use and how to do it using R. 
+
+Thanks a lot for your time and cooperation. 
+
+Sincerely, 
+
+Manuel  
+
+
+
+From swamp at blarg.net  Mon Apr 10 21:59:28 2017
+From: swamp at blarg.net (Michael Marsh)
+Date: Mon, 10 Apr 2017 12:59:28 -0700
+Subject: [R-sig-eco] extent of graphic image in graph pane
+In-Reply-To: <mailman.1.1415530801.1426.r-sig-ecology@r-project.org>
+References: <mailman.1.1415530801.1426.r-sig-ecology@r-project.org>
+Message-ID: <05deb29f-b9f8-fb43-4b23-54f221e02f22@blarg.net>
+
+
+
+I've been using mvpart with graphic output (a tree displaying env. data 
+governing splits), augmented by rpart.pca, to explore environmental 
+relations of vegetation data on my old Toshiba satellite computer with R 
+version 2.15.0 (x32).
+I've loaded R version 3.3.3 (x64) on a Surface Book.
+Graphic images on the old computer appeared to extend to the limits of 
+the graphic pane, but with the identical script in R 3.3.3, they are 
+confined to the upper left corner of the pane as if the pane was ready 
+to accept 3 more images of the same size. This makes it difficult to 
+copy and paste a usable sized image into a Word document
+I have searched the graphics chapter of R-Intro without success.
+
+
+From oliverhooker at prstatistics.com  Tue Apr 11 16:16:21 2017
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Tue, 11 Apr 2017 15:16:21 +0100
+Subject: [R-sig-eco] PART FUNDED SCHOLARSHIPS - Coding, data management,
+ and Shiny applications using RStudio for evolutionary biologists
+ and ecologists - May 2017
+Message-ID: <10e754c06f3e2a6e7fa593a5cad148fd@prstatistics.com>
+
+PR STATISTICS ARE PLEASED TO ANNOUNCE THAT THROUGH THEIR FUNDING SCHEME 
+THEY CAN OFFER 5 PART-FUNDED SCHOLARSHIPS FOR OUR UP-COMING COURSE
+
+?Coding, data management, and Shiny applications using RStudio for 
+evolutionary biologists and ecologists (CDSR01)"
+
+SCHOLARSHIPS CONTRIBUTE TOWARDS TUITION FEES AND ACCOMMODATION WITH 5 
+?ALL INCLUSIVE PLACES? AVAILABLE AT ?490.00 (Fees have been 
+subsidised by 35% from ?755.00).
+
+Applications should be sent to oliverhooker at prstatistics.com and contain
+the following.
+1.	Full name
+2.	Institute name
+3.	PhD subject title or Post doc research questions
+4.	Do you hold a funded position
+5.	150 words why this course would be relevant to your research or how 
+it would help.
+
+Application deadline is Tuesday 17th April 2017
+
+We still have ?normal? places available for anyone else interested.
+
+Full course details are given below
+
+http://www.prstatistics.com/course/coding-data-management-and-shiny-applications-using-rstudio-for-evolutionary-biologists-and-ecologists-cdsr01/
+
+This course will run from 15th - 19th May at SCENE field station, 
+Scotland.
+
+The course will introduce programming logic using the R syntax. The 
+participants will be able to solve problems involving heterogeneous 
+biological datasets and the combined use of different statistical 
+packages, so the advantages of learning programming skills can be 
+demonstrated. The RMarkdown syntax will be used to illustrate the 
+advantages of literate programming and the possibilities of code sharing 
+and archiving. In the sequence, participants will learn how to design 
+relational databases (RDB) which can be used to manage and analyse large 
+biological datasets. They will learn the basics of the SQL language and 
+how to use it with R with the package {RMySQL}.
+
+To finalise, they will use the Shiny tool (R Studio) to build 
+interactive applications to analyse and display data depending on user 
+inputs. Throughout the course we will emphasise data, code and analyses 
+best practices that could foster reproducibility and transparency in 
+science, and the long-term availability of scientific data. At the end 
+of the course the participants are expected to be able to develop small, 
+tailored applications, to read and analyse datasets using a variety of 
+statistics tools.
+
+Monday 15th
+Module 1: Programming Logic
+R syntax (Variable types ? operators ? conditionals ? loops ? 
+writing functions)
+Programming and commenting code with RMarkdown
+
+Tuesday 16th
+Module 2: Data structures
+R syntax (arrays, lists, data frames, matrices)
+Data wrangling with {dplyr} and {tidyr}; the {ff} package and data 
+tables for large datasets (e.g. transcriptomics; whole-genome data)
+Best practices of data acquisition, organization and storage
+
+Wednesday 17th
+Module 3: Relational databases
+Introduction to the SQL language and MySQL (open-source RDB freeware)
+Accessing and analysing large datasets using the package {RMySQL}
+As an example, we will combine DNA sequence datasets with IUCN Red List 
+data illustrate the use of RDB to biological datasets.
+
+Thursday 18th
+Module 4: Introduction to Shiny (R Studio)
+Shiny ? Server and user interface commands
+As an example we will use Shiny to develop a small application where 
+users can select different species and genes and run/visualize 
+phylogenetic trees using {ape} running in the background.
+
+Friday 19th
+Module 5: Wrapping-up
+Development and presentation of individual projects combining data 
+wrangling skills and user inputs using Shiny (R Studio)
+
+Please feel free to distribute this material anywhere you feel is 
+suitable.
+
+Upcoming courses - email for details oliverhooker at prstatistics.com
+
+1.	ADVANCING IN STATISTICAL MODELLING FOR EVOLUTIONARY BIOLOGISTS AND 
+ECOLOGISTS USING R #ADVR
+17th ? 21st April 2017, Scotland, Dr. Luc Bussiere, Dr. Ane Timenes 
+Laugen
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr06/
+
+2.	CODING, DATA MANAGEMENT AND SHINY APPLICATIONS USING RSTUDIO FOR 
+EVOLUTIONARY BIOLOGISTS AND ECOLOGISTS #CDSR
+15th - 19th May, Scotland Dr. Aline Quadros
+http://www.prstatistics.com/course/coding-data-management-and-shiny-applications-using-rstudio-for-evolutionary-biologists-and-ecologists-cdsr01/
+
+3.	GEOMETRIC MORPHOMETRICS USING R #GMMR
+5th ? 9th June 2017, Scotland, Prof. Dean Adams, Prof. Michael 
+Collyer, Dr. Antigoni Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/
+
+4.	MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA #MASE
+19th ? 23rd June, Canada, Prof. Subhash Lele, Dr. Peter Solymos
+http://www.prstatistics.com/course/multivariate-analysis-of-spatial-ecological-data-using-r-mase01/
+
+5.	TIME SERIES MODELS FOR ECOLOGISTS USING R (JUNE 2017 #TSME
+26th ? 30th June, Canada, Dr. Andrew Parnell
+http://www.prstatistics.com/course/time-series-models-foe-ecologists-tsme01/
+
+6.	BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS #BIGB
+3rd ? 7th July 2017, Scotland, Dr. Nic Blouin, Dr. Ian Misner
+http://www.prstatistics.com/course/bioinformatics-for-geneticists-and-biologists-bigb02/
+
+7.	META-ANALYSIS IN ECOLOGY, EVOLUTION AND ENVIRONMENTAL SCIENCES 
+#METR01
+24th ? 28th July, Scotland, Prof. Julia Koricheva, Prof. Elena 
+Kulinskaya
+http://www.prstatistics.com/course/meta-analysis-in-ecology-evolution-and-environmental-sciences-metr01/
+
+8.	SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R #SPAE
+7th ? 12th August 2017, Scotland, Prof. Jason Matthiopoulos, Dr. James 
+Grecian
+http://www.prstatistics.com/course/spatial-analysis-ecological-data-using-r-spae05/
+
+9.	ECOLOGICAL NICHE MODELLING USING R #ENMR
+16th ? 20th October 2017, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr01/
+
+10.	INTRODUCTION TO BIOINFORMATICS USING LINUX #IBUL
+16th ? 20th October, Scotland, Dr. Martin Jones
+http://www.prstatistics.com/course/introduction-to-bioinformatics-using-linux-ibul02/
+
+11.	GENETIC DATA ANALYSIS AND EXPLORATION USING R #GDAR
+23rd ? 27th October, Wales, Dr. Thibaut Jombart, Zhian Kavar
+http://www.prstatistics.com/course/genetic-data-analysis-exploration-using-r-gdar03/
+
+12.	STRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY 
+BIOLOGISTS USING R #SEMR
+23rd ? 27th October, Wales, Prof Jarrett Byrnes, Dr. Jon Lefcheck
+http://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr01/
+
+13.	LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R #LNDG
+6th ? 10th November, Wales, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg02/
+
+14.	APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS #ABME
+20th - 25th November 2017, Scotland, Prof. Jason Matthiopoulos, Dr. Matt 
+Denwood
+http://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-epidemiologists-abme03/
+
+15.	INTRODUCTION REMOTE SENSING AND GIS APPLICATIONS FOR ECOLOGISTS 
+#IRMS
+27th Nov ? 1st Dec, Wales, Dr Duccio Rocchini, Dr. Luca Delucchi
+http://www.prstatistics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/
+
+16.	INTRODUCTION TO PYTHON FOR BIOLOGISTS #IPYB
+27th Nov ? 1st Dec, Wales, Dr. Martin Jones
+http://www.prstatistics.com/course/introduction-to-python-for-biologists-ipyb04/
+
+17.	DATA VISUALISATION AND MANIPULATION USING PYTHON #DVMP
+11th ? 15th December 2017, Wales, Dr. Martin Jones
+http://www.prstatistics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+18.	ADVANCING IN STATISTICAL MODELLING USING R #ADVR
+11th ? 15th December 2017, Wales, Dr. Luc Bussiere, Dr. Tom Houslay, 
+Dr. Ane Timenes Laugen,
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr07/
+
+19.	INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING #IBHM
+29th Jan ? 2nd Feb 2018, Scotland, Dr. Andrew Parnell
+http://www.prstatistics.com/course/introduction-to-bayesian-hierarchical-modelling-using-r-ibhm02/
+
+20.	ANIMAL MOVEMENT ECOLOGY (February 2018) #ANME
+19th - 23rd February 2018, Wales, Dr Luca Borger, Dr. John Fieberg
+
+21.	AQUATIC TELEMENTRY DATA ANALYSIS USIR R (TBC) #ATDAR
+??th - ??th February 2018, Wales,
+
+22.	FUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND 
+COMPUTATION #FEER
+5th ? 9th March 2018, Scotland, Dr. Francesco de Bello, Dr. Lars 
+G?tzenberger, Dr. Carlos Carmona
+http://www.prstatistics.com/course/functional-ecology-from-organism-to-ecosystem-theory-and-computation-feer01/
+
+23.	ADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA USING R 
+#MVSP
+Prof. Pierre Legendre, Dr. Olivier Gauthier - Date and location to be 
+confirmed
+
+24.	STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR #SIMM
+Dr. Andrew Parnell, Dr. Andrew Jackson ? Date and location to be 
+confirmed
+
+25.	NETWORK ANAYLSIS FOR ECOLOGISTS USING R #NTWA
+Dr. Marco Scotti - Date and location to be confirmed
+
+26.	MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R #MBMV0
+Prof David Warton - Date and location to be confirmed
+
+27.	ADVANCED PYTHON FOR BIOLOGISTS #APYB
+Dr. Martin Jones - Date and location to be confirmed
+
+28.	PHYLOGENETIC DATA ANALYSIS USING R (TBC) #PHYL
+Dr. Emmanuel Paradis ? Date and location to be confirmed
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2017 publications -
+
+Ecosystem size predicts eco-morphological variability in post-glacial 
+diversification. Ecology and Evolution. In press.
+
+The physiological costs of prey switching reinforce foraging 
+specialization. Journal of animal ecology.
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+3/1, 128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+
+From gsargeant at usgs.gov  Tue Apr 11 17:40:27 2017
+From: gsargeant at usgs.gov (Sargeant, Glen)
+Date: Tue, 11 Apr 2017 10:40:27 -0500
+Subject: [R-sig-eco] extent of graphic image in graph pane
+In-Reply-To: <05deb29f-b9f8-fb43-4b23-54f221e02f22@blarg.net>
+References: <mailman.1.1415530801.1426.r-sig-ecology@r-project.org>
+ <05deb29f-b9f8-fb43-4b23-54f221e02f22@blarg.net>
+Message-ID: <CAATPAJYzPd+C0jgbqCwFu1skGy+Z+EE6C9vV=R2gz_MEcjvFew@mail.gmail.com>
+
+In your shoes, I might suspect that I changed default settings for
+graphical parameters.  They are very easy to check and change.
+
+The first two I would check are "mfrow" and "plt."
+
+If you want just one plot on your output device, you should see this...
+
+> par("mfrow")
+[1] 1 1
+
+... and values somewhat close to these:
+
+> par("plt")
+[1] 0.07819868 0.95994702 0.14866397 0.88048583
+
+For a help file that lists and describes all of the graphical parameters:
+
+> ?plt
+
+Good luck!
+
+Glen
+
+
+On Mon, Apr 10, 2017 at 2:59 PM, Michael Marsh <swamp at blarg.net> wrote:
+
+>
+>
+> I've been using mvpart with graphic output (a tree displaying env. data
+> governing splits), augmented by rpart.pca, to explore environmental
+> relations of vegetation data on my old Toshiba satellite computer with R
+> version 2.15.0 (x32).
+> I've loaded R version 3.3.3 (x64) on a Surface Book.
+> Graphic images on the old computer appeared to extend to the limits of the
+> graphic pane, but with the identical script in R 3.3.3, they are confined
+> to the upper left corner of the pane as if the pane was ready to accept 3
+> more images of the same size. This makes it difficult to copy and paste a
+> usable sized image into a Word document
+> I have searched the graphics chapter of R-Intro without success.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+-- 
+Glen Sargeant, Ph.D.
+Research Wildlife Biologist/Statistician
+USGS Northern Prairie Wildlife Research Center
+E-mail: gsargeant at usgs.gov
+Phone: (701) 253-5528
+
+	[[alternative HTML version deleted]]
+
+
+From hmariam.abrha at aau.edu.et  Fri Apr 28 11:39:23 2017
+From: hmariam.abrha at aau.edu.et (HMariam Abrha)
+Date: Fri, 28 Apr 2017 02:39:23 -0700
+Subject: [R-sig-eco] beeswarm plot
+Message-ID: <CAGOrOZvYoUtwjdy+3-OXSPDU66ewvPAK3j0HgJ2ZX1F0sco2iA@mail.gmail.com>
+
+Hello,
+I am a PhD student at UNISA, South Africa. I wanted to analyze an
+environmental data using R. I actually wanted to plot a beeswarm just to
+show a distribution of my data in relative to certain factor. I have 4
+drugs and their concentration in influent and effluent wastewater from
+wastewater treatment plant. I have tried to read the examples online and I
+can not get it (I can not plot it).
+I saved my data as...Occurrence in local disk "C" and folder called "R".
+I entered the following command
+beeswarm(Concentration~drug, data=Occurrence, log=TRUE, pch=42,
+col=rainbow(8))
+and I am getting the following error
+"Error in eval(m$data, parent.frame()) : object 'Occurrence' not found"
+
+ Can you please help as to how I should save my data and enter the command
+so that I will be able to plot? I have tried many ways by just looking at
+the examples given online.
+ Please find my data attached.
+Best regards,
+-- 
+Hailemariam Abrha (M.Sc)
+Lecturer, Department of Pharmaceutical Chemistry and Pharmacognosy
+College of Health Sciences, Addis Ababa University
+P.O.Box-1176
+and
+PhD student at , NanoWS,UNISA, South Africa
+
+email: hmariam.abrha at aau.edu.et or hailye34 at yahoo.com
+-------------- next part --------------
+	KTZ		FCZ		CLZ		MCZ														
+Influent	Effluent	Influent	Effluent	Influent	Effluent	Influent	Effluent														
+2	2	20	16	6.7	2.7	78.9	35.7														
+7	2.3	20	28	11	3	337.9	3														
+16	8	32	28	12	5	54.9	0.89														
+18.8	10	34	31	23	5	67.6	4.6														
+19.5	12.4	39	35	25	5	19.2	1.6														
+44	15	41	36	30	5.9	69.4	2.27														
+51.6	17	42	37	31	6	38.8	0.5														
+55	21.2	46	39	31	6	38.3	11														
+56.3	23	54	40	33	8	1.1	12														
+58	27	59	42	33	8	30	12														
+58.1	34	61	48	39	8	20	15														
+66.6	34.8	65.1	52	42	9	43	0.25														
+72	36	83	61.1	43	9.4	55	0.87														
+73	70	85	63	44	9.4	30	0.25														
+77	NA	86	67	47	9.7	80	0.9														
+90	NA	88	69	48	10	6	3.2														
+91.6	NA	90	70	49	10.6	11.3	2.5														
+102	NA	90	72	71	11	6	9														
+110	NA	93	83	74	11.5	11.3	9														
+191	NA	94.9	95	78	12.7	16.5	NA														
+NA	NA	109	100	80	12.9	12.5	NA														
+NA	NA	120	100	232	14	NA	NA														
+NA	NA	158.5	140	500	14.1	NA	NA														
+NA	NA	163.3	151.3	650	14.6	NA	NA														
+NA	NA	167.5	162.5	900	15	NA	NA														
+NA	NA	388	163	NA	16.7	NA	NA														
+NA	NA	448	793	NA	19.6	NA	NA														
+NA	NA	583	NA	NA	21.2	NA	NA														
+NA	NA	1710	NA	NA	21.6	NA	NA														
+NA	NA	NA	NA	NA	24.2	NA	NA														
+NA	NA	NA	NA	NA	26.2	NA	NA														
+NA	NA	NA	NA	NA	27	NA	NA														
+NA	NA	NA	NA	NA	27.8	NA	NA														
+NA	NA	NA	NA	NA	29	NA	NA														
+NA	NA	NA	NA	NA	30.6	NA	NA														
+NA	NA	NA	NA	NA	30.7	NA	NA														
+NA	NA	NA	NA	NA	31.1	NA	NA														
+NA	NA	NA	NA	NA	34	NA	NA														
+NA	NA	NA	NA	NA	300	NA	NA														
+NA	NA	NA	NA	NA	475	NA	NA														
+NA	NA	NA	NA	NA	1200	NA	NA														
+NA	NA	NA	NA	NA	8650	NA	NA														
+
+From bfalevlist at gmail.com  Fri Apr 28 16:35:47 2017
+From: bfalevlist at gmail.com (=?UTF-8?Q?Bede-Fazekas_=c3=81kos?=)
+Date: Fri, 28 Apr 2017 16:35:47 +0200
+Subject: [R-sig-eco] beeswarm plot
+In-Reply-To: <CAGOrOZvYoUtwjdy+3-OXSPDU66ewvPAK3j0HgJ2ZX1F0sco2iA@mail.gmail.com>
+References: <CAGOrOZvYoUtwjdy+3-OXSPDU66ewvPAK3j0HgJ2ZX1F0sco2iA@mail.gmail.com>
+Message-ID: <83c48c37-d3dd-c835-183b-af8eb01f5cdd@gmail.com>
+
+Hello,
+
+you should do the following steps:
+1) edit your txt file. It should have only one title row containing 
+unique names (i.e. the column names)
+2) load the dataset (the txt file) to R, e.g. by the read.table() function:
+https://stat.ethz.ch/R-manual/R-devel/library/utils/html/read.table.html
+3) be sure that the loaded dataset is named as 'Occurrence' and has the 
+following columns: 'Concentration', 'drug'
+
+HTH,
+?kos Bede-Fazekas
+Hungarian Academy of Sciences
+
+2017.04.28. 11:39 keltez?ssel, HMariam Abrha ?rta:
+> Hello,
+> I am a PhD student at UNISA, South Africa. I wanted to analyze an
+> environmental data using R. I actually wanted to plot a beeswarm just to
+> show a distribution of my data in relative to certain factor. I have 4
+> drugs and their concentration in influent and effluent wastewater from
+> wastewater treatment plant. I have tried to read the examples online and I
+> can not get it (I can not plot it).
+> I saved my data as...Occurrence in local disk "C" and folder called "R".
+> I entered the following command
+> beeswarm(Concentration~drug, data=Occurrence, log=TRUE, pch=42,
+> col=rainbow(8))
+> and I am getting the following error
+> "Error in eval(m$data, parent.frame()) : object 'Occurrence' not found"
+>
+>   Can you please help as to how I should save my data and enter the command
+> so that I will be able to plot? I have tried many ways by just looking at
+> the examples given online.
+>   Please find my data attached.
+> Best regards,
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+

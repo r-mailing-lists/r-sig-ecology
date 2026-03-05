@@ -1,0 +1,1006 @@
+From rmp.iit.kgp at gmail.com  Wed Jul  2 15:09:29 2014
+From: rmp.iit.kgp at gmail.com (Rajendra Mohan panda)
+Date: Wed, 2 Jul 2014 18:39:29 +0530
+Subject: [R-sig-eco] Terrain Complexity Index for Raster DEM
+Message-ID: <CAGTzHJuG0N8hdtQkSxOs6adr5iM9icYYWmfun9V_c9RMJrHvZQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140702/8d622a39/attachment.pl>
+
+From sbierwag at hawaii.edu  Thu Jul  3 05:19:46 2014
+From: sbierwag at hawaii.edu (Stacy Bierwagen)
+Date: Wed, 2 Jul 2014 17:19:46 -1000
+Subject: [R-sig-eco] Plotting DBBMM over a map projection using movedata
+Message-ID: <CAGHZjtanQEn-KUBVMjn3OmuiV4dgqQPb1=Q5_ZvZefp5goouOA@mail.gmail.com>
+
+I have been using R to calculate KUD and MCP estimation for a series of
+tracks for fish in a reef system. I have successfully calculated these
+using adehabitat and the move package in R, but I am having difficulty
+plotting them over a map projection.
+
+I have been able to plot tracks using ggplot for geom_line but there is no
+way for ggplot to handle movedata DBBMM stack contours and every time I
+split the stack to try and plot a single individual it doesn't recognize
+the class.
+
+I need something for geo-referencing and I know there are other methods
+such as transfering shapefiles for ArcGIS but every time I save a shapefile
+the projection doesn't export so the plots do not line up.
+
+I attached the DBBMM plots for each individual along with the projected map
+image I am trying to overlay the plots on. I can give you the code I have
+been working with as well if anyone has had an easier time accomplishing
+what I am attempting.
+
+Thanks,
+Stacy
+
+From laura.lee at ncdenr.gov  Thu Jul  3 21:34:11 2014
+From: laura.lee at ncdenr.gov (Lee, Laura)
+Date: Thu, 3 Jul 2014 19:34:11 +0000
+Subject: [R-sig-eco] lognormal gamlss with censored data
+Message-ID: <2789D349964A854E9524A3CD0D759E0436F0483F@NCWWDITMXMBX35.ad.ncmail>
+
+Hello all!
+
+I am fitting censored data with the 'gamlss' and 'survival' packages and assuming a lognormal distribution. Do I need to transform or back-transform the fitted values?
+
+cy <- with(data, ifelse(NUMBERS>=Limit, Limit, NUMBERS))
+ci <- with(data, ifelse(NUMBERS>=Limit, 0, 1))
+
+data <- data.frame(data, cy, ci)
+rm(cy,ci)
+
+gen.cens("LOGNO",type="right")
+cfit <- gamlss(Surv(cy, ci) ~ fyear + newWater, data=data, family=LOGNOrc)
+
+Thanks for your help,
+
+Laura
+
+
+From laura.lee at ncdenr.gov  Thu Jul  3 22:17:05 2014
+From: laura.lee at ncdenr.gov (Lee, Laura)
+Date: Thu, 3 Jul 2014 20:17:05 +0000
+Subject: [R-sig-eco] help with censored regression model
+Message-ID: <2789D349964A854E9524A3CD0D759E0436F0489E@NCWWDITMXMBX35.ad.ncmail>
+
+Hello all!
+
+I am trying to model censored catch-per-unit-effort (CPUE) data. The data are censored by trip limits that vary by year. I am using the 'gamlss' and 'survival' packages. My model covariates are Year and newWater. I need to get annual trends in CPUE by waterbody (newWater). After running the model and computing the index, I find the trends are the same among all water bodies--the magnitude is slightly different. I would not expect the trends to be the same among the different areas. I would appreciate any assistance. Code is below.
+
+cy <- with(data, ifelse(NUMBERS>=Limit, Limit, NUMBERS))
+ci <- with(data, ifelse(NUMBERS>=Limit, 0, 1))
+data <- data.frame(data, cy, ci)
+rm(cy,ci)
+gen.cens("LOGNO",type="right")
+cfit <- gamlss(Surv(cy, ci) ~ YEAR + newWater, data=data, family=LOGNOrc)
+data$y <- exp(fitted(cfit))
+out <- with(data, tapply(y, list(YEAR,newWater), mean))
+
+Thanks again for your help,
+
+Laura
+
+
+From yair.levy at mow.vlaanderen.be  Fri Jul  4 10:43:03 2014
+From: yair.levy at mow.vlaanderen.be (Levy, Yair)
+Date: Fri, 4 Jul 2014 10:43:03 +0200
+Subject: [R-sig-eco] Plotting DBBMM over a map projection using movedata
+In-Reply-To: <CAGHZjtanQEn-KUBVMjn3OmuiV4dgqQPb1=Q5_ZvZefp5goouOA@mail.gmail.com>
+References: <CAGHZjtanQEn-KUBVMjn3OmuiV4dgqQPb1=Q5_ZvZefp5goouOA@mail.gmail.com>
+Message-ID: <FFB4E658B7DD2F46BD4E6E9555AE1492E0687E3BD0@WCV010001V.alfa.top.vlaanderen.be>
+
+Hi Stacey,
+
+
+How we meet again... You could re-project your data by using package sp with function:
+
+spTransform
+
+The only thing you need is to define the coordinate reference system of your input spatial object when creating it using the input "projection-less" shapefile and then to define the coordinate reference system of the data to export/plot/project.
+
+Cheers,
+
+
+
+
+ Ya?r Levy
+Researcher
+Flemish Government
+Mobility and Public Works Department 
+Flanders? Hydraulics
+Berchemlei 115 - 2140 Antwerp - Belgium
+T. 03 224 61 89 - C. 0476 75 47 25 - F. 03 224 60 36
+www.watlab.be  
+                ? Before printing, think about the environment!
+
+
+
+-----Oorspronkelijk bericht-----
+Van: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] Namens Stacy Bierwagen
+Verzonden: donderdag 3 juli 2014 5:20
+Aan: r-sig-ecology at r-project.org
+Onderwerp: [R-sig-eco] Plotting DBBMM over a map projection using movedata
+
+I have been using R to calculate KUD and MCP estimation for a series of tracks for fish in a reef system. I have successfully calculated these using adehabitat and the move package in R, but I am having difficulty plotting them over a map projection.
+
+I have been able to plot tracks using ggplot for geom_line but there is no way for ggplot to handle movedata DBBMM stack contours and every time I split the stack to try and plot a single individual it doesn't recognize the class.
+
+I need something for geo-referencing and I know there are other methods such as transfering shapefiles for ArcGIS but every time I save a shapefile the projection doesn't export so the plots do not line up.
+
+I attached the DBBMM plots for each individual along with the projected map image I am trying to overlay the plots on. I can give you the code I have been working with as well if anyone has had an easier time accomplishing what I am attempting.
+
+Thanks,
+Stacy
+
+From cadeb at usgs.gov  Mon Jul  7 16:18:33 2014
+From: cadeb at usgs.gov (Cade, Brian)
+Date: Mon, 7 Jul 2014 08:18:33 -0600
+Subject: [R-sig-eco] help with censored regression model
+In-Reply-To: <2789D349964A854E9524A3CD0D759E0436F0489E@NCWWDITMXMBX35.ad.ncmail>
+References: <2789D349964A854E9524A3CD0D759E0436F0489E@NCWWDITMXMBX35.ad.ncmail>
+Message-ID: <CAM5M9BRtzQVa+H0SYrOZLMOJTRCht6=sxmrqK5DgRTUg1SvsHw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140707/1eb6c2a9/attachment.pl>
+
+From prado at ib.usp.br  Tue Jul  8 04:14:18 2014
+From: prado at ib.usp.br (Paulo Prado)
+Date: Mon, 7 Jul 2014 19:14:18 -0700 (PDT)
+Subject: [R-sig-eco] sads: R package for species abundance distributions
+Message-ID: <1404785658859-7578974.post@n2.nabble.com>
+
+Dear colleagues
+
+Our R package to fit species abundance distributions is now available on
+CRAN.
+
+Please check http://piklprado.github.io/sads/ for more information. Your
+feedback is very welcome.
+
+Hope it can be useful.
+
+Best regards
+
+Paulo In?cio Prado
+Murilo Miranda
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/sads-R-package-for-species-abundance-distributions-tp7578974.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From alexsouza at cb.ufrn.br  Wed Jul  9 22:38:13 2014
+From: alexsouza at cb.ufrn.br (Alexandre Fadigas de Souza)
+Date: Wed, 9 Jul 2014 17:38:13 -0300 (BRT)
+Subject: [R-sig-eco] Limits of the Moran correlogram?
+Message-ID: <654193247.75005.1404938293446.JavaMail.zimbra@cb.ufrn.br>
+
+Dear friends,
+
+   I am using the function correlog in the ncf package to generate univariate correlograms of abiotic variables in my study area (nutrients, topographic variables, canopy openness).
+
+   The resulting correlation values, however, frequently exceed 1.0. I am intrigued by that, since Moran's autocorrelation values vary between -1.0 and 1.0. Am I setting something wrong?
+
+   Here is my command line:
+
+moranslope = correlog(Long, Lat, Slope, increment = 100, latlon = F, resamp = 50)
+
+   I set latlon = F despite my x and y values are Latitude and Longitude in UTM, because when I set latlon = T values in the x axis become quite larger than the ones that make sense to my dataset (up to ca 4000 m).
+
+   Thank you in advance for any help,
+
+   Alexandre
+
+Dr. Alexandre F. Souza 
+Professor Adjunto II, Departamento de Ecologia  Universidade Federal do Rio Grande do Norte (UFRN)
+Caixa Postal 1524, Campus Universitario Lagoa Nova
+CEP 59078-970 http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+
+
+From bbolker at gmail.com  Fri Jul 11 09:16:49 2014
+From: bbolker at gmail.com (Ben Bolker)
+Date: Fri, 11 Jul 2014 07:16:49 +0000 (UTC)
+Subject: [R-sig-eco] Nested factors in GLMER
+References: <53B12EFF.40006@nateko.lu.se>
+	<CAMrwhV9MPiCCpXxuEyejtHc6771BNztQtgPZ4o09ifwE5OOZkw@mail.gmail.com>
+Message-ID: <loom.20140711T091611-657@post.gmane.org>
+
+Phillips Perry <pcp35 at ...> writes:
+
+> 
+> Hi Thomas,
+> 
+> I'm anxious to see what more experienced folks say, but in the mean time,
+> as I understand it, your first model is the right one:
+> 
+> glmer(species richness ~ Ca + (year|plot), family=poisson, data=data)
+> 
+> In this model, "year" is a fixed variable and "plot" is the random variable
+> and you're testing for an interaction between "year" and "plot".
+> 
+
+  You might want to try r-sig-mixed-models at r-project.org with this one.
+(Do mention that you tried r-sig-ecology first)
+
+  Ben Bolker
+
+
+From thomas.mockel at nateko.lu.se  Fri Jul 11 11:58:30 2014
+From: thomas.mockel at nateko.lu.se (=?ISO-8859-1?Q?Thomas_M=F6ckel?=)
+Date: Fri, 11 Jul 2014 11:58:30 +0200
+Subject: [R-sig-eco] PLSR: negative R2
+Message-ID: <53BFB546.5070009@nateko.lu.se>
+
+Dear list members,
+I try to predict indicator values by means of spectral reflectance. I 
+use the plsr function of the pls package with a leave-one-out 
+validation. For one model I receive negative R2_CV values. I know that 
+they mean that the model is bad in model my values. But when I test the 
+model on a separate test dataset I get positive R2 values and the RMSEP 
+is also not absolutely bad.
+My question is:
+How can it be that the R2_CV is bad but the R2_test is OK?
+Is it a valid procedure to test a model with negative R2_CV values on a 
+test dataset or should I rather stop after the LOO validation and say 
+that it was not possible to build a reliable model for this variable?
+
+Thank you very much for your answers!
+
+-- 
+*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+Thomas M?ckel, PhD student
+
+Department of Earth and Ecosystem Science
+Lund University
+S?lvegatan 12
+SE-223 62 Lund
+Sweden
+
+Tel:+46 (0)46 - 222 4887
+E-mail: Thomas.Mockel at nateko.lu.se
+
+
+From highstat at highstat.com  Wed Jul 16 12:03:55 2014
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Wed, 16 Jul 2014 11:03:55 +0100
+Subject: [R-sig-eco] New book: Beginner's Guide to GAMM with R
+Message-ID: <53C64E0B.40500@highstat.com>
+
+
+We are please to announce the following book:
+
+Title: Beginner's Guide to GAMM with R.
+Authors: Zuur, Saveliev, Ieno
+
+
+Book website: http://www.highstat.com/BGGAMM.htm
+Paperback, hardcover or EBook can be order (exclusively) from: 
+http://www.highstat.com/bookorder.htm
+Table of Contents: http://www.highstat.com/BGS/GAMM/TOC_7_12.pdf
+
+Keywords:
+In this book we take the reader on an exciting voyage into the world of 
+generalised additive mixed effects models (GAMM). Keywords are GAM, 
+mgcv, gamm4, random effects, Poisson and negative binomial GAMM, gamma 
+GAMM, binomial GAMM, negative binomial-P models, GAMMs with generalised 
+extreme value distributions, overdispersion, underdispersion, 
+two-dimensional smoothers, zero-inflated GAMMs, spatial correlation, 
+INLA, Markov chain Monte Carlo techniques, JAGS, and two-way nested 
+GAMMs. The book includes three chapters on the analysis of zero-inflated 
+data.
+
+
+Kind regards,
+
+Alain Zuur
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From chaco001 at umn.edu  Wed Jul 16 17:59:20 2014
+From: chaco001 at umn.edu (Jeremy Chacon)
+Date: Wed, 16 Jul 2014 10:59:20 -0500
+Subject: [R-sig-eco] comparison of binned rates across treatment
+Message-ID: <CAH65v706zd270qD5T88iqA4_504xTcLHeSHoSTiUVBuoMCpR8A@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140716/cf5e92d8/attachment.pl>
+
+From manthasa_26 at hotmail.com  Mon Jul 21 19:52:28 2014
+From: manthasa_26 at hotmail.com (Samantha PameLa)
+Date: Mon, 21 Jul 2014 17:52:28 +0000
+Subject: [R-sig-eco] deviance as a goodness of fit in GLM
+In-Reply-To: <BLU176-W38BF0801E755E9B12FD2F599F00@phx.gbl>
+References: <BLU176-W38B25CEC2618846A22BC8099F00@phx.gbl>,
+	<BLU176-W38BF0801E755E9B12FD2F599F00@phx.gbl>
+Message-ID: <BLU176-W3254B1DACC52EC58B21AFF99F00@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140721/daaf3795/attachment.pl>
+
+From pacolipe at gmail.com  Mon Jul 21 21:25:32 2014
+From: pacolipe at gmail.com (Pedro Pequeno)
+Date: Mon, 21 Jul 2014 15:25:32 -0400
+Subject: [R-sig-eco] deviance as a goodness of fit in GLM
+In-Reply-To: <BLU176-W3254B1DACC52EC58B21AFF99F00@phx.gbl>
+References: <BLU176-W38B25CEC2618846A22BC8099F00@phx.gbl>
+	<BLU176-W38BF0801E755E9B12FD2F599F00@phx.gbl>
+	<BLU176-W3254B1DACC52EC58B21AFF99F00@phx.gbl>
+Message-ID: <CAC4PjDubWo4D4BMY4o-4ZAiByyNE_THwdKMp7==dUCHr0OE-Sg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140721/d5734671/attachment.pl>
+
+From luysgarcia at gmail.com  Tue Jul 22 02:11:18 2014
+From: luysgarcia at gmail.com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Mon, 21 Jul 2014 21:11:18 -0300
+Subject: [R-sig-eco] Color Analysis R
+Message-ID: <CANxP2S4OaY7gPc2c5Q7cBdDzf2Vhev+F5wUTerjR2vhTFm77QQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140721/a0e6d893/attachment.pl>
+
+From bohara at senckenberg.de  Tue Jul 22 10:59:57 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Tue, 22 Jul 2014 10:59:57 +0200
+Subject: [R-sig-eco] deviance as a goodness of fit in GLM
+In-Reply-To: <BLU176-W3254B1DACC52EC58B21AFF99F00@phx.gbl>
+References: <BLU176-W38B25CEC2618846A22BC8099F00@phx.gbl>,
+	<BLU176-W38BF0801E755E9B12FD2F599F00@phx.gbl>
+	<BLU176-W3254B1DACC52EC58B21AFF99F00@phx.gbl>
+Message-ID: <53CE280D.8010502@senckenberg.de>
+
+On 21/07/14 19:52, Samantha PameLa wrote:
+> Good day everybody,
+>   
+> I'm a marine biologist student, working on my bachelor thesis and I'm stucked with a statistical doubt in the process, I hope someone here could help me. My thesis aims to understand which biological and environmental factors influences the male aggressive rate of male California sea lions. For that purpose I'm using GLM?s where the response variable is the male aggressive rate. Right now I am testing the goodness of fit of the global models and for that I'm using the deviances as a goodness of fit test. I calculated pseudoR2 (Zuur, 2009) in order to know the percentage of explanation of each candidate model. However I?m not sure how to choose the ?good models?; since I am not sure over which percent of explanation indicates a ?model with good fit?. For my data I am working with three different scenarios, and it seems that 20%, is a good value to could indicate the best models, but I?m not sure how to choose the value.
+>   
+> I thank you in advance for your time and the help you can give me.
+>   
+> Best regards,
+>   
+Just to follow up, AIC isn't a measure of model fit either: it's a 
+measure of model adequacy, and can be used to compare different models.
+
+For model fit, you can (usually) compare the residual deviance to the 
+degrees of freedom (they should be approximately equal, and you can use 
+a chi-squared test, if you feel the need to generate a p-value). This 
+doesn't work if your response is binomial with a small N (and psuedo R2 
+doesn't work terribly well for this case either).
+
+A better approach to checking if the model fits is to check to see if 
+the residuals have any gross patterns in them, by plotting them against 
+the fitted values and also against covariates.
+
+If you'll excuse my self-promotion, PNAS recently gave me an excuse to 
+show some residual plots to the general public: 
+<http://www.theguardian.com/science/grrlscientist/2014/jun/04/hurricane-gender-name-bias-sexism-statistics> 
+(my explanation for why this is not just gratuitous self-promotion is 
+that I linked to the R code to generate the plots too, so you have 
+something to work from).
+
+Bob
+
+-- 
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From highstat at highstat.com  Tue Jul 22 11:22:12 2014
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Tue, 22 Jul 2014 10:22:12 +0100
+Subject: [R-sig-eco] 2 remaining seats on stats course at Murdoch University
+Message-ID: <53CE2D44.3080805@highstat.com>
+
+There are 2 remaining seats on the following course:
+
+
+Course:         Data exploration, regression, GLM & GAM with 
+introduction to R.
+Location:       Murdoch University. Murdoch. Australia
+When:           28 July - 1 August, 2014
+Course flyer: http://www.highstat.com/Courses/Flyer2014_08Murdoch.pdf
+Registration: http://www.highstat.com/CourseReg1.htm
+Course website: http://www.highstat.com/statscourse.htm
+
+Kind regards,
+
+Alain
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From rpcoelho at ualg.pt  Tue Jul 22 12:31:12 2014
+From: rpcoelho at ualg.pt (Rui Coelho)
+Date: Tue, 22 Jul 2014 11:31:12 +0100
+Subject: [R-sig-eco] deviance as a goodness of fit in GLM
+In-Reply-To: <mailman.1.1406023201.22787.r-sig-ecology@r-project.org>
+References: <mailman.1.1406023201.22787.r-sig-ecology@r-project.org>
+Message-ID: <!&!AAAAAAAAAAAYAAAAAAAAAMnyjRWDu05KrFMNa8KJ9FfCgAAAEAAAADA+AUUutPpAuR0UoS7WYaEBAAAAAA==@ualg.pt>
+
+Hi Samantha,
+
+Following what was already said before, you can also build your models by
+testing step-by-step which explanatory variables should be included, for
+example by using a Likelihood Ratio Test to compare each univariate model to
+the null model (intersect only). With that (determining which explanatory
+variables are significant) you can then build a multivariate simple effects
+models (using the significant explanatory variables only), and then start to
+experiment with interactions, again comparing each model with interactions
+to the simple effects model. By following these steps, you should get to the
+most parsimonious model. Along the way, and as already said by others, you
+should check the residuals and can also use something as AIC (or BIC) to
+compare all the candidate models.
+
+Another option additional to this, is to use a cross-validation technique to
+compare candidate models (see for example function cv.glm in library boot).
+
+I hope this helps.
+
+Best regards,
+Rui
+
+=========================
+Rui Coelho, PhD
+
+Centre of Marine Sciences of Algarve (CCMAR)
+University of Algarve, Campus de Gambelas, FCT Ed.7 
+8005-139 Faro, Portugal 
+Web: http://www.ccmar.ualg.pt
+
+Portuguese Institute for the Ocean and Atmosphere, I.P. (IPMA)
+Av. 5 de Outubro s/n
+8700-305 Olh?o, Portugal
+Web: http://www.ipma.pt
+
+
+
+Message: 1
+Date: Mon, 21 Jul 2014 17:52:28 +0000
+From: Samantha PameLa <manthasa_26 at hotmail.com>
+To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Subject: [R-sig-eco] deviance as a goodness of fit in GLM
+Message-ID: <BLU176-W3254B1DACC52EC58B21AFF99F00 at phx.gbl>
+Content-Type: text/plain
+
+Good day everybody, 
+ 
+I'm a marine biologist student, working on my bachelor thesis and I'm
+stucked with a statistical doubt in the process, I hope someone here could
+help me. My thesis aims to understand which biological and environmental
+factors influences the male aggressive rate of male California sea lions.
+For that purpose I'm using GLMs where the response variable is the male
+aggressive rate. Right now I am testing the goodness of fit of the global
+models and for that I'm using the deviances as a goodness of fit test. I
+calculated pseudoR2 (Zuur, 2009) in order to know the percentage of
+explanation of each candidate model. However Im not sure how to choose the
+good models; since I am not sure over which percent of explanation
+indicates a model with good fit. For my data I am working with three
+different scenarios, and it seems that 20%, is a good value to could
+indicate the best models, but Im not sure how to choose the value.
+ 
+I thank you in advance for your time and the help you can give me.
+ 
+Best regards,
+ 
+Samantha.
+
+
+            
+ 
+
+	[[alternative HTML version deleted]]
+
+
+From jano at rjb.csic.es  Tue Jul 22 12:55:43 2014
+From: jano at rjb.csic.es (Alejandro =?utf-8?b?R29uesOhbGV6?=)
+Date: Tue, 22 Jul 2014 12:55:43 +0200
+Subject: [R-sig-eco] Color Analysis R
+In-Reply-To: <mailman.1.1406023201.22787.r-sig-ecology@r-project.org>
+References: <mailman.1.1406023201.22787.r-sig-ecology@r-project.org>
+Message-ID: <20140722125543.Horde.TL2cfe4aJe9M9a20769Fhw1@webmail.csic.es>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140722/43c16973/attachment.pl>
+
+From eric.howe at ontario.ca  Wed Jul 23 22:15:51 2014
+From: eric.howe at ontario.ca (Howe, Eric (MNR))
+Date: Wed, 23 Jul 2014 20:15:51 +0000
+Subject: [R-sig-eco] von Bertalanffy growth model with explanatory variables
+ and repeated measures
+Message-ID: <338F9863C8568F4DA24A1CF1BB680C1C12287A@CTSPIGDCAPMXS42.cihs.ad.gov.on.ca>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140723/d4cbec8e/attachment.pl>
+
+From clark.tim.r at gmail.com  Thu Jul 24 16:59:14 2014
+From: clark.tim.r at gmail.com (clarkbar)
+Date: Thu, 24 Jul 2014 07:59:14 -0700 (PDT)
+Subject: [R-sig-eco] Using NADA and rkt for seasonal Mann Kendall tests for
+ censored datasets
+Message-ID: <1406213954792-7578989.post@n2.nabble.com>
+
+I have recently put together some code for running trend analyses on censored
+datasets with shifting Method Detection Limits (MDLs). I have applied the
+NADA package to determine the log mean and log standard deviation; these are
+then used to generate log-normal random numbers which then replace the <MDL
+observations. From this, I apply the rkt package for seasonal Mann-Kendall
+trend test to determine. 
+I know the NADA package has cenken, but that has limited covariate and
+seasonal capabilities, and I believe my approach below is more conservative. 
+
+I'm sorry if the code is sloppy, but I'm pretty new to all this.. going on
+nearly 2 months now. 
+I would really appreciate your feedback and ideas. I think my method is
+similar to &lt;a
+href=&quot;http://dugi-doc.udg.edu/bitstream/handle/10256/708/Olea.pdf?sequence=1&quot;>Olea's,
+but I could never get ILR to cooperate with me. 
+
+Thanks in advance. 
+
+#example data creation - probably not the best way to do this... 
+test<-matrix(c(rep(1:7,each=20,1),rep(1:2,each=70), 
+         rep(rlnorm(10,-5.6,.2),2), 
+         rep(rlnorm(10,-5.6,.3)*1.2,2), 
+         rep(rlnorm(10,-5.6,.3)*1.22,2), 
+         rep(rlnorm(10,-5.6,.2)*1.25,2), 
+         rep(rlnorm(10,-5.6,.3)*1.3,2), 
+         rep(rlnorm(10,-5.6,.35)*1.4,2), 
+         rep(rlnorm(10,-5.6,.35)*1.4,2)), 
+         ncol=3) 
+colnames(test)<-c('Year',"Season","Obs") 
+
+test<-as.data.frame(test) 
+with(test,rkt(Year,Obs,Season,correct=T,rep='a')) 
+with(test,plot(Obs~Year)) 
+
+#function below 
+require("NADA") 
+require("rkt") 
+MDL_fix<-function(value,detection,year,block,CV,month,plot_title) 
+  #Observed Value vector, Detection Limit Vector,Block Vector for seasonal
+MannKendall,covariate,month,Plot title 
+{ 
+  YearMonth=year+month/12 
+  #using NADA package, determine log-mean of and log-standard deviation of
+the observed valued 
+  #if(mean(value)<1) {#determine if log or -log should be used (cenfit has
+issues with negatives) 
+  #lmeanvalue<-{sum(summary(cenmle(value,value<detection))[[9]][1:2])} 
+  #lsdvalue&lt;-{summary(cenmle(value,value&lt;detection))[[6]]} 
+  #} 
+  #if(mean(value)>=1) {#determine if log or -log should be used (cenfit has
+issues with negatives) 
+  if(length(which(value<detection))/length(value)>.50){ 
+    return("ERROR: TOO MANY POINTS BELOW MDL")} 
+  lmeanvalue<-{(median(cenfit((log(value)),value<detection))[[1]])} 
+    lsdvalue&lt;-{(sd(cenfit(log(value),value&lt;detection)))[[1]]} 
+  #} 
+  if(length(which(value&lt;detection))/length(value)>.05){ #only pursue MDL
+fix if >5% of data censored, otherewise: do 1/2 MDL method 
+    #create matrix to fill with Mann-Kendall Output 
+    rkt_1<-matrix(1,runs,12) 
+    colnames(rkt_1)<- c('2-sided
+p-value','Score',"Slope","Var(Score)",'2-sided
+p-value_corrected','Var(Score)_corrected', 
+                        'Partial Score', 'Partial 2-sided p-value', "Partial
+Var(Score)", "Partial 2-sided p-value_corrected" 
+                        , 'Partial Var(Score)_corrected',"Tau") 
+    for(i in seq(1:runs)) { 
+{ 
+  xj<-1:length(value) #create random number vector 
+  MDL_fixed<-1:length(value) #create final value vector 
+  for(j in seq(1:length(value))) { 
+{ 
+  if(value[j]<detection[j]) #only pursue number generation if the observed
+value is below the detection limit 
+{ 
+    #create a random number (distributed log-normally based on lmean and
+lsd) that is below the detection limit 
+    repeat { 
+      xj[j]&lt;-rlnorm(1,lmeanvalue,lsdvalue) 
+      if(xj[j]&lt;detection[j]) {break} 
+    } 
+  } 
+} 
+    MDL_fixed[j]&lt;-ifelse(value[j]&lt;detection[j],xj[j],value[j])
+#replace values below the detection limit with generated number 
+  } 
+} 
+if(!missing(CV)&amp; !missing(block)) { #if covariate and block present, do
+seasonal mann-kendall 
+rkt_1[i,]&lt;-as.vector(unlist(rkt(year,MDL_fixed,block,CV,correct=T,rep=&quot;a&quot;)))
+#run MK for each random number generation 
+} 
+if(missing(block) | missing(CV)){  #if covariate and block mising, do
+mann-kendall 
+ 
+rkt_1[i,]&lt;-as.vector(unlist(rkt(year,MDL_fixed,correct=F,rep=&quot;a&quot;)))
+#run MK for each random number generation 
+} 
+    } 
+#plot final iteration of MDL_fixed 
+plot(YearMonth,MDL_fixed,
+log='y',main=as.character(substitute(plot_title)),xlab=&quot;Year&quot;,ylab='Concentration(ppm)') 
+yaxis&lt;-10^(par('usr')[c(3,4)]) #grab axis size 
+#draw first quartile slope and intercept 
+abline(a=median(value[which(value>detection)])-fivenum(rkt_1[,"Slope"])[2]*median(year[which(value>detection)]),b=fivenum(rkt_1[,"Slope"])[2],
+untf=TRUE, col="red") 
+#draw median slope and intercept 
+abline(a=median(value[which(value>detection)])-fivenum(rkt_1[,"Slope"])[3]*median(year[which(value>detection)]),b=fivenum(rkt_1[,"Slope"])[3],
+untf=TRUE, col="blue") 
+#draw third quartile slope and intercept 
+abline(a=median(value[which(value>detection)])-fivenum(rkt_1[,"Slope"])[4]*median(year[which(value>detection)]),b=fivenum(rkt_1[,"Slope"])[4],
+untf=TRUE, col="green") 
+par(new=T) #hold on 
+#plot detection limit 
+plot(YearMonth,detection, ylim=yaxis,
+log='y',type='l',axes=F,xlab='',ylab='',lty=3) 
+par(new=F) #hold off 
+return(rkt_1) #return matrix of iterations 
+  } 
+else{ 
+  value_half_MDL<-ifelse(value>detection,value,0.5*detection) 
+  if(!missing(CV)& !missing(block)) {#if covariate and block present, do
+seasonal mann-kendall 
+ 
+rkt_noMDL=as.vector(unlist(rkt(year,value_half_MDL,block,CV,correct=T,rep="a")))#run
+MK w/o num geneartion 
+  } 
+  if(missing(CV)| missing(block)) {#if covariate and block mising, do
+mann-kendall 
+   
+rkt_noMDL=as.vector(unlist(rkt(year,value_half_MDL,correct=F,rep="a")))#run
+MK w/o num geneartion 
+  } 
+  #plot value over time 
+  plot(YearMonth,value_half_MDL,
+log='y',main=as.character(substitute(plot_title)),xlab="Year",ylab='Concentration(ppm)') 
+  yaxis<-10^(par('usr')[c(3,4)])#grab axis size 
+  par(new=T) 
+  plot(YearMonth,detection, ylim=yaxis,
+log='y',type='l',axes=F,xlab='',ylab='',lty=3) 
+  par(new=F) 
+ 
+abline(a=median(value[which(value>detection)])-rkt_noMDL[3]*median(year[which(value>detection)]),b=rkt_noMDL[3],
+untf=TRUE, col="red") 
+  
+  return(rkt_noMDL) #return vector of Mann Kendall 
+} 
+} ##MDL fixing code for log-normal 
+
+runs=100 
+summary(with(test,MDL_fix(Obs,detection=c(rep(.005,80),rep(.002,60)),Year,Season,,month=rep(12,140)),"hello"))
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Using-NADA-and-rkt-for-seasonal-Mann-Kendall-tests-for-censored-datasets-tp7578989.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From tom_philippi at nps.gov  Thu Jul 24 17:27:21 2014
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Thu, 24 Jul 2014 09:27:21 -0600
+Subject: [R-sig-eco] Using NADA and rkt for seasonal Mann Kendall tests
+ for censored datasets
+In-Reply-To: <1406213954792-7578989.post@n2.nabble.com>
+References: <1406213954792-7578989.post@n2.nabble.com>
+Message-ID: <CAM9kYqhW=a3HH8GC+g5SuQEyJMT025z=p5wr740EBd0cY_GEXQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140724/788a1d12/attachment.pl>
+
+From pdixon at iastate.edu  Mon Jul 28 14:17:31 2014
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Mon, 28 Jul 2014 12:17:31 +0000
+Subject: [R-sig-eco] Seasonal Mann Kendall with multiple detection limits
+Message-ID: <177582f2396c478db26a3b7553acb549@DM2PR04MB350.namprd04.prod.outlook.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140728/b1f802f2/attachment.pl>
+
+From lorenz at usgs.gov  Mon Jul 28 14:56:00 2014
+From: lorenz at usgs.gov (Lorenz, David)
+Date: Mon, 28 Jul 2014 07:56:00 -0500
+Subject: [R-sig-eco] Seasonal Mann Kendall with multiple detection limits
+In-Reply-To: <177582f2396c478db26a3b7553acb549@DM2PR04MB350.namprd04.prod.outlook.com>
+References: <177582f2396c478db26a3b7553acb549@DM2PR04MB350.namprd04.prod.outlook.com>
+Message-ID: <CALxY2LfYRznu8XxG3KiBz73ikqZwqZb2cbZxVCL7=JD-za27vA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140728/bc43e57f/attachment.pl>
+
+From batsncats at gmail.com  Wed Jul 30 15:10:33 2014
+From: batsncats at gmail.com (Bruce Miller)
+Date: Wed, 30 Jul 2014 09:10:33 -0400
+Subject: [R-sig-eco] Question on unexpected regression results
+Message-ID: <53D8EEC9.1070608@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140730/3e7d738f/attachment.pl>
+
+From mspinola10 at gmail.com  Wed Jul 30 15:19:51 2014
+From: mspinola10 at gmail.com (=?UTF-8?Q?Manuel_Sp=C3=ADnola?=)
+Date: Wed, 30 Jul 2014 07:19:51 -0600
+Subject: [R-sig-eco] Question on unexpected regression results
+In-Reply-To: <53D8EEC9.1070608@gmail.com>
+References: <53D8EEC9.1070608@gmail.com>
+Message-ID: <CABkCotSmAw0esFxmTPu37XjA-v=cr0aH9wQaD0Duvj35KrjDdg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140730/4684efc6/attachment.pl>
+
+From rshepard at appl-ecosys.com  Wed Jul 30 15:39:17 2014
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Wed, 30 Jul 2014 06:39:17 -0700 (PDT)
+Subject: [R-sig-eco] Question on unexpected regression results
+In-Reply-To: <53D8EEC9.1070608@gmail.com>
+References: <53D8EEC9.1070608@gmail.com>
+Message-ID: <alpine.LNX.2.11.1407300627490.24708@localhost>
+
+On Wed, 30 Jul 2014, Bruce Miller wrote:
+
+> I have valid ranges for the known species FA (forearm measurements) and
+> Fc(minimum) and Fc (maximum). So I do two separate runs with the data
+> using the lm model one with FA~Fcmin and one FA~Fcmax.
+>
+> The goal is to provide the predicted (estimated) values for the species
+> with known FA values but w/o verified Fc value ranges.
+
+> My concern is that the predicted values returned are much lower than the
+> true values for the verified species.  Therefore I am not confident the
+> predicted values for those w/o verified Fc ranges are useful.
+
+Bruce,
+
+   Since linear regression provides interscts and slopes for the _mean_ value
+of the response variable across the range of explanatory variables, your
+conundrum might be resolved by using quantile regression (R package
+quantreg).
+
+   Quantile regression looks at the relationship of the explantory
+variable(s) at specified (your choice) quantiles of the response variable.
+It might well be that the relationshop of Fc to FA is quite different at the
+5% Fc quantile than it is at the 50% or 95% quantile.
+
+   A starting point is Cade and Noon. 2003. A gentle introduction to quantile
+regression for ecologists. Frontiers in Ecology and Environment 1:412--420.
+
+HTH,
+
+Rich
+
+-- 
+Richard B. Shepard, Ph.D.
+Applied Ecosystem Services, Inc. | Troutdale, OR 97060 USA
+www.appl-ecosys.com      Voice: 503-667-4517         Fax: 503-667-8863
+
+
+From bohara at senckenberg.de  Wed Jul 30 15:41:58 2014
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Wed, 30 Jul 2014 15:41:58 +0200
+Subject: [R-sig-eco] Question on unexpected regression results
+In-Reply-To: <53D8EEC9.1070608@gmail.com>
+References: <53D8EEC9.1070608@gmail.com>
+Message-ID: <53D8F626.2080201@senckenberg.de>
+
+Manuel is right - you're fitting a saturated model (i.e. each data point 
+has one parameter, so hte model fits perfectly).
+
+Once you've fixed that, if you still have problems then start by 
+plotting the data, and looking at it to see what's going on. It may be 
+that the relationship isn't a straight line.
+
+Bob
+
+On 30/07/14 15:10, Bruce Miller wrote:
+> Hi all,
+>
+> Sorry this is a bit long, but the explanation of what I want to do needs
+> to be clear to avoid  issues such as this quote..."It is impossible to
+> speak in such a way that you cannot be misunderstood." Karl Popper.
+>
+> I am running linear regression models, but I am getting expected results.
+> I wonder what else I might try to derive an estimated value of bat
+> echolocation parameters based on forearm measurements.  It is known that
+> the size of the bat is negatively related to the characteristic
+> frequency (Fc) of their echolocation calls (decades of my field work) .
+> So in general larger guys have lower frequency calls and smaller guys
+> have higher frequency calls.
+>
+> I have run the regressions based on the FA (valid forearm measurements)
+> and the known and valid Fc ranges for a dozen species or so and using
+> the lm models to "predict" Fc values for a few species that have FA
+> values but have not yet been recorded.  Hence there are no valid
+> echolocation call parameters.  R Code used is below discussion.
+>
+> I have valid ranges for the known species FA (forearm measurements) and
+> Fc(minimum) and Fc (maximum).  So I  do two separate runs with the data
+> using the lm model one with FA~Fcmin and one FA~Fcmax.
+>
+> The goal is to provide the predicted (estimated) values for the species
+> with known FA values but w/o verified Fc value ranges.
+>
+> My concern is that the predicted values returned are much lower than the
+> true values for the verified species.  Therefore I am not confident the
+> predicted values for those w/o verified Fc ranges are useful.
+>
+> One very helpful person looked at one simple data set I sent and showed
+> that the statistical differences between the true values and predicted
+> were not significant.
+>
+> However Krebs' admonishment to students eons ago "Do not confuse
+> statistical significance with ecological significance" is true here.
+> The values of the predicted ranges are far lower than reality so the few
+> species that do not have field recorded Fc values  are suspect.  These
+> differences in predicted values from a true range will will make a
+> difference for potentially IDing the unknown calls.  A difference of
+> 10kHz Fc generally suggests a different species, albeit some are much
+> closer and may only have a 5 kHz difference.
+>
+> I am looking at acoustic data sets of calls from South America and there
+> are  many "sonospecies."
+> These are clearly separate species based on echolocation call parameters
+> that have yet had "faces & voices" matched.  We know that call
+> parameters are diagnostic for families and genera even when the species
+> is unknown.  It is then the Fc values that assist in identifying the
+> species within a cluster of calls from the same genus.
+>
+> Sample of R code used:
+>
+> Bats <- dget('C:/=Bat data working/Acoustic
+> Parameters/_Working/=Vespertilionidae/Bats.robj')
+>
+> model.lm <- lm(formula=Fc ~ as.factor(FA),data=Bats,na.action=na.omit)
+>   > Anova(model.lm,type='II') Error in solve.default(L %*% V %*% t(L)) :
+> system is computationally singular: reciprocal condition number = 0
+>   > summary(model.lm)
+>
+> Call:
+> lm(formula = Fc ~ as.factor(FA), data = Bats, na.action = na.omit)
+>
+> Residuals:
+> ALL 5 residuals are 0: no residual degrees of freedom!
+>
+> Coefficients:
+>                     Estimate Std. Error t value Pr(>|t|)
+> (Intercept)           53.3         NA      NA       NA
+> as.factor(FA)34.4     -4.6         NA      NA       NA
+> as.factor(FA)35.4      2.3         NA      NA       NA
+> as.factor(FA)35.5      9.0         NA      NA       NA
+> as.factor(FA)40.5     -7.3         NA      NA       NA
+>
+> Residual standard error: NaN on 0 degrees of freedom
+>     (2 observations deleted due to missingness)
+> Multiple R-squared:     1,    Adjusted R-squared:   NaN
+> F-statistic:   NaN on 4 and 0 DF,  p-value: NA
+>
+>   > tmp<-predict(model.lm)
+>   > Bats[names(tmp),"predicted"]<-tmp
+>   > rm('tmp')
+>   > rm('model.lm')
+>   >
+>
+>> model.lm  <- lm(formula= Fc~ FA,data=Bats,na.action=na.omit)
+>> Anova(model.lm,type='II')
+>> summary(model.lm)
+>> tmp<-predict(model.lm,Bats)
+>> Bats[names(tmp),"Predicted.Fc"]<-tmp
+>> rm('tmp')
+>> rm('model.lm')
+> With the results it can be seen that the predicted Fc values on right
+> are not close to the true Fc values on left and then make me hesitant to
+> accept the 2 with NA predicted values. FYI Species are simple 6 letter
+> coded for genus and species.
+> Species 	FA 	Fcmin 	Fcmax 	FcMinpredic 	FcMaxpredic
+> Myoalb 	35.3 	45.7 	48.7 	51.73 	55.26
+> Myoata 	37 	NA 	NA 	49.52 	52.59
+> Myokea 	33.7 	57.8 	61.3 	53.80 	57.77
+> Myonig 	34.5 	51.6 	55.7 	52.77 	56.52
+> Myooxy 	40.5 	45.7 	47.6 	44.98 	47.09
+> Myorip 	36 	53.3 	57.5 	50.82 	54.16
+> Myosim 	38 	NA 	NA 	48.23 	51.02
+>
+>
+> Perhaps simple linear regression is not the method to use?
+> Thanks for any additional suggestions.
+>
+> Bruce
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From christoph.redwitz at uni-rostock.de  Thu Jul 31 14:29:13 2014
+From: christoph.redwitz at uni-rostock.de (Christoph Eberhard Freiherr von Redwitz)
+Date: Thu, 31 Jul 2014 12:29:13 +0000
+Subject: [R-sig-eco] equilibrium circle in RDA ordination?
+Message-ID: <CD3BA13216175B4190B57B8CC02C42040107AEDE41@mbx3.uni-rostock.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20140731/12dd6d27/attachment.pl>
+

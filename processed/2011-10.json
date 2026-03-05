@@ -1,0 +1,1304 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2011-10",
+  "messages": [
+    {
+      "id": "msg-37d5da32e602",
+      "message_id": "<CAP_TsuCmz+FpGYy610SYVGyOvDdEx11G2x_3p-b2YgwK2bvACw@mail.gmail.com>",
+      "from_name": "Lien Sim",
+      "from_email_hash": "17c846d9c3b828aee02f9e98538726fe8b1ade6e67ba327ea128419e7ea94c4e",
+      "date": "2011-10-03T12:57:23+11:00",
+      "subject": "[R-sig-eco] Repeated measures RDA in vegan",
+      "subject_clean": "Repeated measures RDA in vegan",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111003/60de40bc/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111003/60de40bc/attachment.pl>",
+      "thread_id": "thread-37d5da32e602",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-09ac5a0d0803",
+      "message_id": "<1317722380.25196.35.camel@prometheus.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-04T10:59:40+01:00",
+      "subject": "[R-sig-eco] Repeated measures RDA in vegan",
+      "subject_clean": "Repeated measures RDA in vegan",
+      "in_reply_to": "<CAP_TsuCmz+FpGYy610SYVGyOvDdEx11G2x_3p-b2YgwK2bvACw@mail.gmail.com>",
+      "references": [
+        "<CAP_TsuCmz+FpGYy610SYVGyOvDdEx11G2x_3p-b2YgwK2bvACw@mail.gmail.com>"
+      ],
+      "body_plain": "On Mon, 2011-10-03 at 12:57 +1100, Lien Sim wrote:\n> Hi,\n> \n> I am trying to run a repeated measures RDA in vegan but am unsure about how\n> to implement this, and whether I also need to use the permute package to run\n> permutations.\n\nTechnically yes, you should be using a restricted, but as yet we vegan\ndevelopers have not hooked permute into most of the functions in the\npackage that use permutation tests, like the anova() method for cca\nobjects.\n\nUntil we do this, the best you can do is use the strata argument to at\nleast stratify the permutations on your 9 sites (i.e. samples will only\nbe exchanged within a site, not between sites.) When we get permute\nfully hooked into vegan, you would still use strata, but keep the Block\nlevel (strata) fixed and set the Within level to use cyclic shift\npermutations rather than randomisation.\n\nThe change you need to make to permutest.cca is relatively simple, if\nyou know the workings of that function and permute and only want to\nimplement this one type of permutation.\n\nDoing this in general for all the types of permutation offered is a\nlittle bit more work and is something I will be embarking upon next\nmonth.\n\nYou should split the Site/Date info out into a Site factor and a Date.\npermute doesn't know anything about Dates/Times, so you will need to put\nthe samples into temporal order within Sites. As I develop permute and\nlearn from the experiences of getting vegan to use it more, we may be\nable to expand the API to allow you to specify a variable that indicates\nthe ordering.\n\nI'm quite busy with work and teaching till the end of October, so I\ncan't guarantee I will be able to help quickly, but if you would like\nsome help producing a local/personal version of permutest.cca for this\none type of permutation, please email me off list with the data and I'll\nsee about writing a version for you.\n\nHTH\n\nG\n\n> I have time series data  - one data frame with community composition data\n> (aquatic invertebrates) for 9 sites sampled on 16 dates (not all site/dates\n> combinations have data), then another data frame with environmental\n> constraints (water quality data) for the same 9 sites and 16 dates. At first\n> I ran the analysis as a fairly simple RDA using\n> JInvRDA <- rda(JInvHel ~ ., JEnvT.stand, na=na.omit, subset =\n> complete.cases(JInvHel), scale=TRUE)\n> \n> where JInvHel - Hellinger-transformed invertebrate data\n> JEnvT.stand - transformed and standardised environmental data\n> \n> I then ran permutation tests on the output using\n> anova.cca (JInvRDA, step=1000)\n> \n> However, I have since realised that since my data are time series and likely\n> to be temporally autocorrelated, that I should be using a repeated measures\n> type RDA e.g. a split plot design in which permutations are performed within\n> each block of plots (sites). In my searching I have seen lots of mention of\n> the two references below, which outline examples of this analysis using\n> CANOCO, but am not sure how to do this in R.\n> \n> Lep?, J. 1999. Nutrient status, disturbance and composition: an experimental\n> test of relationships in a wet meadow. J. Veg. Sci. 10: 219?230.\n> Leps, J. & Smilauer, P. 2003. Multivariate analysis of ecological data using\n> CANOCO. Cambridge University Press, Cambridge, UK.\n> \n> I am unsure about whether I need to reorganise my data frames (currently\n> samples (first column) are coded with a combined site/date code - does this\n> need to be split so that sites and dates are separate - into two columns?)\n> and also about how to structure the analysis so that the time component is\n> incorporated correctly. Finally, when I want to run permutation tests,\n> should I be using the permute package, and how should this be structured?\n> \n> Many thanks,\n> Lien\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Mon, 2011-10-03 at 12:57 +1100, Lien Sim wrote:\n> Hi,\n> \n> I am trying to run a repeated measures RDA in vegan but am unsure about how\n> to implement this, and whether I also need to use the permut",
+      "thread_id": "thread-37d5da32e602",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-42830a310ca1",
+      "message_id": "<6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>",
+      "from_name": "Emma Gothe",
+      "from_email_hash": "923980f2017aa13010f70dab763d5e9c89d9813c88e3a1fa38820c9d8acf4d43",
+      "date": "2011-10-05T10:25:12+02:00",
+      "subject": "[R-sig-eco] Help PCNM analysis",
+      "subject_clean": "Help PCNM analysis",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear list members!\n\nI am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial ecological data analysis with R). I recently ran into a problem. I have a triangular distance matrix based on the shortest distance between my sampling points which I am using in the PCNM function instead of geographic coordinates. When I tried to perform the analysis on this distance matrix I got an error message (see below) that says I have \"empty neighbor sites\". I have used the same code and the exactly same type of distance matrices before and I did not have any problem. I have also searched my distance matrix for ev. missing values/other obvious errors and tried to search for a solution online but without any luck.\n\nThe file \"Eucl stream order1.txt\" is attached and my code is:\n\n> dist.matr <- read.delim(\"Eucl stream order1.txt\",row.names=1)\n> dist <- as.dist(dist.matr)\n> PCNM.auto=PCNM(dist)\nTruncation level = 1092.48\nError in as.matrix(listw2sn(nb2listw(nb))[, 1:2]) :\n  error in evaluating the argument 'x' in selecting a method for function 'as.matrix': Error in nb2listw(nb) : Empty neighbour sets found\nTiming stopped at: 0.01 0 0.02\n\nIf anyone could help me to figure this out, and have suggestions for a solution I would be very greatful!\n\nBest Emma\n\n_______________________________________\n\nEmma G?the, PhD-student\nDepartment of Aquatic Sciences and Assessment\nSwedish University of Agricultural Sciences\nBox 7050\n750 07 Uppsala\n\nTel: +46-(0)18-673138\nFax: +46-(0)18-673156\nOBS! New E-mail: emma.gothe at slu.se<mailto:emma.gothe at slu.se>\n\n-------------- next part --------------\nAn embedded and charset-unspecified text was scrubbed...\nName: Eucl stream order1.txt\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/b33c7679/attachment.txt>",
+      "body_snippet": "Dear list members!\n\nI am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial ecological data analysis with R). I recently ran into a prob",
+      "thread_id": "thread-42830a310ca1",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-42f7e3575183",
+      "message_id": "<1317811585.3715.1.camel@tagine>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2011-10-05T13:46:25+03:00",
+      "subject": "[R-sig-eco] Help PCNM analysis",
+      "subject_clean": "Help PCNM analysis",
+      "in_reply_to": "<6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>",
+      "references": [
+        "<6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>"
+      ],
+      "body_plain": "On Wed, 2011-10-05 at 10:25 +0200, Emma Gothe wrote:\n> Dear list members!\n> \n> I am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial ecological data analysis with R). I recently ran into a problem. I have a triangular distance matrix based on the shortest distance between my sampling points which I am using in the PCNM function instead of geographic coordinates. When I tried to perform the analysis on this distance matrix I got an error message (see below) that says I have \"empty neighbor sites\". I have used the same code and the exactly same type of distance matrices before and I did not have any problem. I have also searched my distance matrix for ev. missing values/other obvious errors and tried to search for a solution online but without any luck.\n> \n> The file \"Eucl stream order1.txt\" is attached and my code is:\n> \n> > dist.matr <- read.delim(\"Eucl stream order1.txt\",row.names=1)\n> > dist <- as.dist(dist.matr)\n> > PCNM.auto=PCNM(dist)\n> Truncation level = 1092.48\n> Error in as.matrix(listw2sn(nb2listw(nb))[, 1:2]) :\n>   error in evaluating the argument 'x' in selecting a method for function 'as.matrix': Error in nb2listw(nb) : Empty neighbour sets found\n> Timing stopped at: 0.01 0 0.02\n> \n> If anyone could help me to figure this out, and have suggestions for a solution I would be very greatful!\n> \nEmma,\n\nI don't know about the PCNM package, but the matrix goes smoothly true\nvegan::pcnm:\n\n> library(vegan)\nLoading required package: permute\nThis is vegan 2.0-0\n> dist.matr <- read.delim(\"Eucl stream order1.txt\",row.names=1)\n> dist <- as.dist(dist.matr)\n> p <- pcnm(dist)\n> str(p)\nList of 4\n $ vectors  : num [1:30, 1:19] -0.2245 -0.2239 -0.2249 -0.2907\n-0.0212 ...\n  ..- attr(*, \"dimnames\")=List of 2\n  .. ..$ : chr [1:30] \"A2\" \"A3\" \"A4\" \"A5\" ...\n  .. ..$ : chr [1:19] \"PCNM1\" \"PCNM2\" \"PCNM3\" \"PCNM4\" ...\n $ values   : num [1:29] 71640230 66080002 58129580 29179643\n16447538 ...\n $ weights  : num [1:30] 1 1 1 1 1 1 1 1 1 1 ...\n $ threshold: num 1092\n - attr(*, \"class\")= chr \"pcnm\"\n\nCheers, Jari Oksanen",
+      "body_snippet": "On Wed, 2011-10-05 at 10:25 +0200, Emma Gothe wrote:\n> Dear list members!\n> \n> I am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial e",
+      "thread_id": "thread-42830a310ca1",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-368bbe4d4154",
+      "message_id": "<6CA0B71E0995194A91434060D9C7031615D8E1E383@exmbx1.ad.slu.se>",
+      "from_name": "Emma Gothe",
+      "from_email_hash": "923980f2017aa13010f70dab763d5e9c89d9813c88e3a1fa38820c9d8acf4d43",
+      "date": "2011-10-05T14:23:44+02:00",
+      "subject": "[R-sig-eco] Help PCNM analysis",
+      "subject_clean": "Help PCNM analysis",
+      "in_reply_to": "<1317811585.3715.1.camel@tagine>",
+      "references": [
+        "<6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>",
+        "<1317811585.3715.1.camel@tagine>"
+      ],
+      "body_plain": "Thank you Jari for a fast reply!\n\nI will try the vegan function asap as it seems to work smoothly. I am still wondering what causes the problem in the PCNM () function though... If anyone else knows, then please let me know. \n\nBest Emma \n\n-----Ursprungligt meddelande-----\nFr?n: Jari Oksanen [mailto:jari.oksanen at oulu.fi] \nSkickat: den 5 oktober 2011 12:46\nTill: Emma Gothe\nKopia: r-sig-ecology at r-project.org\n?mne: Re: [R-sig-eco] Help PCNM analysis\n\nOn Wed, 2011-10-05 at 10:25 +0200, Emma Gothe wrote:\n> Dear list members!\n> \n> I am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial ecological data analysis with R). I recently ran into a problem. I have a triangular distance matrix based on the shortest distance between my sampling points which I am using in the PCNM function instead of geographic coordinates. When I tried to perform the analysis on this distance matrix I got an error message (see below) that says I have \"empty neighbor sites\". I have used the same code and the exactly same type of distance matrices before and I did not have any problem. I have also searched my distance matrix for ev. missing values/other obvious errors and tried to search for a solution online but without any luck.\n> \n> The file \"Eucl stream order1.txt\" is attached and my code is:\n> \n> > dist.matr <- read.delim(\"Eucl stream order1.txt\",row.names=1)\n> > dist <- as.dist(dist.matr)\n> > PCNM.auto=PCNM(dist)\n> Truncation level = 1092.48\n> Error in as.matrix(listw2sn(nb2listw(nb))[, 1:2]) :\n>   error in evaluating the argument 'x' in selecting a method for function 'as.matrix': Error in nb2listw(nb) : Empty neighbour sets found\n> Timing stopped at: 0.01 0 0.02\n> \n> If anyone could help me to figure this out, and have suggestions for a solution I would be very greatful!\n> \nEmma,\n\nI don't know about the PCNM package, but the matrix goes smoothly true\nvegan::pcnm:\n\n> library(vegan)\nLoading required package: permute\nThis is vegan 2.0-0\n> dist.matr <- read.delim(\"Eucl stream order1.txt\",row.names=1)\n> dist <- as.dist(dist.matr)\n> p <- pcnm(dist)\n> str(p)\nList of 4\n $ vectors  : num [1:30, 1:19] -0.2245 -0.2239 -0.2249 -0.2907\n-0.0212 ...\n  ..- attr(*, \"dimnames\")=List of 2\n  .. ..$ : chr [1:30] \"A2\" \"A3\" \"A4\" \"A5\" ...\n  .. ..$ : chr [1:19] \"PCNM1\" \"PCNM2\" \"PCNM3\" \"PCNM4\" ...\n $ values   : num [1:29] 71640230 66080002 58129580 29179643\n16447538 ...\n $ weights  : num [1:30] 1 1 1 1 1 1 1 1 1 1 ...\n $ threshold: num 1092\n - attr(*, \"class\")= chr \"pcnm\"\n\nCheers, Jari Oksanen",
+      "body_snippet": "Thank you Jari for a fast reply!\n\nI will try the vegan function asap as it seems to work smoothly. I am still wondering what causes the problem in the PCNM () function though... If anyone else knows, ",
+      "thread_id": "thread-42830a310ca1",
+      "thread_depth": 2,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-00b84008f7c7",
+      "message_id": "<608BF773-D9AA-4CFD-A5C1-2C510ED0344A@gmail.com>",
+      "from_name": "matteo dossena",
+      "from_email_hash": "138679d41572dedaf07eec775ca8974672bdc49c2364f71e0f281e74cc2932bf",
+      "date": "2011-10-05T18:19:46+01:00",
+      "subject": "[R-sig-eco] trouble in fitting a distirbution",
+      "subject_clean": "trouble in fitting a distirbution",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/2da4ab37/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/2da4ab37/attachment.pl>",
+      "thread_id": "thread-00b84008f7c7",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-b19c8cb63f76",
+      "message_id": "<CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>",
+      "from_name": "Cory Redman",
+      "from_email_hash": "6462d14d403873e23aff5e7ff5d5152d6a501770ef825cce45aaf56f8531e513",
+      "date": "2011-10-05T12:42:30-05:00",
+      "subject": "[R-sig-eco] Calculating an AIC for the Fisher's log series.....",
+      "subject_clean": "Calculating an AIC for the Fisher's log series.....",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/f33e5846/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/f33e5846/attachment.pl>",
+      "thread_id": "thread-b19c8cb63f76",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-5c33229189d3",
+      "message_id": "<CAH9coKZq+udb4w=dkPr0ym2wCZCH2FPpvPYXbLqUejCcy--Qig@mail.gmail.com>",
+      "from_name": "Peter Solymos",
+      "from_email_hash": "3e4e5c37645041a11f505cbd9ee9456181aeea94ae29ebbc2f9032bc9b3633e1",
+      "date": "2011-10-05T14:03:02-06:00",
+      "subject": "[R-sig-eco] Calculating an AIC for the Fisher's log series.....",
+      "subject_clean": "Calculating an AIC for the Fisher's log series.....",
+      "in_reply_to": "<CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>",
+      "references": [
+        "<CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>"
+      ],
+      "body_plain": "Cory,\n\nThere is a profile method for fisherfit. If that's not enough, you can\nhave a look inside of fisherfit, and you'll see the Dev.logseries\ninternal function and how it is used in nlm to get estimate of alpha.\nThe same function can be used for manual profiling to get likelihood\nvalues for a sequence of alphas. Note that Dev.logseries returns minus\nlog-likelihood. You get AIC as -2*logLik+2*p, or just define a logLik\nmethod for fisherfit as\n\nlogLik.fisherfit <- function(object, ...) {\n    ll <- -object$minimum\n    attr(ll, \"df\") <- length(object$estimate)\n    attr(ll, \"nobs\") <- length(object$fisher)\n    class(ll) <- \"logLik\"\n    ll\n}\n\nThis way, AIC, BIC, etc will work naturally:\n\ndata(BCI)\nmod <- fisherfit(BCI[5,])\nlogLik(mod)\nAIC(mod)\nBIC(mod)\n\nCheers,\n\nPeter\n\nP?ter S?lymos\nAlberta Biodiversity Monitoring Institute\nand Boreal Avian Modelling project\nDepartment of Biological Sciences\nCW 405, Biological Sciences Bldg\nUniversity of Alberta\nEdmonton, Alberta, T6G 2E9, Canada\nPhone: 780.492.8534\nFax: 780.492.7635\nemail <- paste(\"solymos\", \"ualberta.ca\", sep = \"@\")\nhttp://www.abmi.ca\nhttp://www.borealbirds.ca\nhttp://sites.google.com/site/psolymos\n\n\n\nOn Wed, Oct 5, 2011 at 11:42 AM, Cory Redman <corymredman at gmail.com> wrote:\n> I am trying to calculate an AIC for my Fisher's log series (fisherfit). ?In\n> order to do this I need the log likelihood. ?Does anyone know how to\n> calculate the log likelihood for a specific alpha value. ?I know that the\n> second derivative of the log-likelihood is used to calculate the standard\n> error of alpha, but does anyone know how to retrieve these values (Oksanen,\n> Vegan: ecological diversity).\n>\n> Cheers,\n> ? ? Cory\n>\n> --\n> __________________________________\n> Cory M. Redman\n> Doctoral Candidate\n> Texas A&M University\n> Department of Geology & Geophysics\n> 3115 TAMU\n> College Station, TX ?77843-3115\n>\n> Your point of view of the world depends greatly on where you stand and what\n> you had to do to get there.\n>\n> ? ? ? ?[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>",
+      "body_snippet": "Cory,\n\nThere is a profile method for fisherfit. If that's not enough, you can\nhave a look inside of fisherfit, and you'll see the Dev.logseries\ninternal function and how it is used in nlm to get estim",
+      "thread_id": "thread-b19c8cb63f76",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-85bf35b22a18",
+      "message_id": "<CAB296FA.18DD2%jari.oksanen@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2011-10-05T23:21:30+03:00",
+      "subject": "[R-sig-eco] Calculating an AIC for the Fisher's log series.....",
+      "subject_clean": "Calculating an AIC for the Fisher's log series.....",
+      "in_reply_to": "<CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>",
+      "references": [],
+      "body_plain": "On 5/10/11 20:42 PM, \"Cory Redman\" <corymredman at gmail.com> wrote:\n\n> I am trying to calculate an AIC for my Fisher's log series (fisherfit).  In\n> order to do this I need the log likelihood.  Does anyone know how to\n> calculate the log likelihood for a specific alpha value.  I know that the\n> second derivative of the log-likelihood is used to calculate the standard\n> error of alpha, but does anyone know how to retrieve these values (Oksanen,\n> Vegan: ecological diversity).\n> \nCory,\n\nPeter Solymos already told you how to write the logLik.fisherfit() function.\nHowever, I think it is difficult to find a legitimate use for this function:\nwhat would you do with the AIC? Log-likelihood and AIC defined only up to an\nadditive constant, and those constants do vary. You need a model where\nlog-likelihood is defined in with the same additive constant. The function\nused in fisherfit() ignores constant terms of type -log(2 * pi) since these\ndo not influence the point estimates or estimates of their standard errors,\nbut these would influence the level of AIC. What ever you do, don't use the\nAIC to compare your Fisher models to models fit with different addtivie\nconstants.\n\nCheers, Jari Oksanen\n\n-- \nJari Oksanen, Dept Biology, Univ Oulu, 90014 Finland\njari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa",
+      "body_snippet": "On 5/10/11 20:42 PM, \"Cory Redman\" <corymredman at gmail.com> wrote:\n\n> I am trying to calculate an AIC for my Fisher's log series (fisherfit).  In\n> order to do this I need the log likelihood.  Does ",
+      "thread_id": "thread-b19c8cb63f76",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-6fb2256f484f",
+      "message_id": "<CACpb48QX4wgTnU7pg1z5Wpo5KFGRW_g8xX-MFZtdZ_Q3m_+j5g@mail.gmail.com>",
+      "from_name": "François Gillet",
+      "from_email_hash": "73429d4327bbaaa531aabfc2a951c99d220302b55a2968518c4318d10071181f",
+      "date": "2011-10-05T23:59:08+02:00",
+      "subject": "[R-sig-eco] Help PCNM analysis",
+      "subject_clean": "Help PCNM analysis",
+      "in_reply_to": "<6CA0B71E0995194A91434060D9C7031615D8E1E383@exmbx1.ad.slu.se>",
+      "references": [
+        "<6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>",
+        "<1317811585.3715.1.camel@tagine>",
+        "<6CA0B71E0995194A91434060D9C7031615D8E1E383@exmbx1.ad.slu.se>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/ca84e25a/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/ca84e25a/attachment.pl>",
+      "thread_id": "thread-42830a310ca1",
+      "thread_depth": 3,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-b180769d28b7",
+      "message_id": "<63F107BCC37AEA49A75FD94AA3E07CB0091EC65D@pacpbsex01.pac.dfo-mpo.ca>",
+      "from_name": "Edwards, Andrew",
+      "from_email_hash": "f591802e1c0a5b675238c7fb1ffcda7cf20035f11b9840d8b28cb236917274c1",
+      "date": "2011-10-06T17:20:24-07:00",
+      "subject": "[R-sig-eco] trouble in fitting a distirbution (matteo dossena)",
+      "subject_clean": "trouble in fitting a distirbution (matteo dossena)",
+      "in_reply_to": "<mailman.1.1317895201.21152.r-sig-ecology@r-project.org>",
+      "references": [],
+      "body_plain": "Dear Matteo,\n\nI haven't looked into the details of the mle2 code, but three potential issues spring to mind.\n\n1. It looks like you're trying to find the maximum likelihood estimate (MLE) for each of the two parameters of the Pareto distribution (for which the probability density function is a power-law above some value, call it a, and zero elsewhere). I'll write the probability density function as\n\nf(x) = C x^(- mu), x >= a, where C is the normalisation constant; C = (mu - 1) a^(mu - 1).\n\nThe MLEs can be found analytically, you don't need do it numerically. The MLE for mu is just\n \n1 - n / (n log a - sum (log x_i) )\n\nwhere x_i are the data with sample size n.\n\nThe MLE for a is just the minimum of your x_i.\n\n2. Trying to estimate the MLE for a numerically may be what's causing trouble. The likelihood function value won't be have a zero gradient at the MLE (unlike what usually happens), because the gradient is always positive.\n\nTo see this, I actually have the log-likelihood function given as equation (4) in a recent paper (Using likelihood to test for L?vy flight search patterns and for general power-law distributions in nature, Journal of Animal Ecology 77:1212-1222. If you take that equation and differentiate with respect to a (which I presume is the same as your 'location' parameter), you just get\n\nn (mu - 1) / a  \n\nwhere n is the sample size and mu>1 is the power-law exponent term (I think the negative of your shape parameter). This derivative is therefore always positive, so does not have a local maximum, and so the maximum likelihood attainable happens when a is as large as possible. However, since a is, by definition, the minimum value of the distribution, the maximum value it can take is the minimum value of your data (since otherwise you would invalidate an assumption of your distribution).  \n\nSo if your numerical procedure is looking for a zero gradient of the likelihood function, it won't find it with respect to a, as the gradient is always positive.\n\n3. I'm wondering if the - sign in your line:\n\n> \tdensity <- -(location+1)*(location^(shape+1))*x^shape\n\nis correct, as I would have thought density should be positive.\n\nI hope this helps. People across several fields have made fitting Pareto distributions much more complicated than it needs to be, but you're on the right track using likelihood. It's just that you can do it analytically, so there's no need for any optimisation. \n\nAlso useful might be: \nWhite, E.P., Enquist, B.J., & Green, J.L. (2008) On estimating the exponent of power-law frequency distributions. Ecology, 89, 905-912.\n\nEdwards, A.M. (2011) Overturning conclusions of L?vy flight movement patterns by fishing boats and foraging animals. Ecology, 92(6):1247-1257. \n\nwhich both also discuss bounded distributions (which can't be solved analytically).\n\nI hope that this helps,\n\nAndy\n\n-- \nDr. Andrew Edwards \nAndrew.Edwards at dfo-mpo.gc.ca  **NEW** \nhttp://www.chebucto.ns.ca/~english \n\nPacific Biological Station, \nFisheries and Oceans Canada, \n3190 Hammond Bay Road, \nNanaimo, British Columbia, \nV9T 6N7, Canada. \nTel: +1 250-756-7146 \nFax: +1 250 756-7053 \n\n> ------------------------------\n> \n> Message: 3\n> Date: Wed, 5 Oct 2011 18:19:46 +0100\n> From: matteo dossena <matteo.dossena at gmail.com>\n> To: r-sig-ecology at r-project.org\n> Subject: [R-sig-eco] trouble in fitting a distirbution\n> Message-ID: <608BF773-D9AA-4CFD-A5C1-2C510ED0344A at gmail.com>\n> Content-Type: text/plain\n> \n> Hi All,\n> \n> I'm trying to fit a theoretical distribution to some data, \n> following the procedure on Bolker's Ecological Models and \n> Data in R, but I'm having some problem... could someone \n> please point me out what I'm doing  wrong?\n> \n> here is the code\n> \n> #create a random variable \n> x <- sort(rpareto(100,1,0.5))\n> \n> #the pdf\n> pdf.pareto <- function(x,location,shape){\n> \tdensity <- -(location+1)*(location^(shape+1))*x^shape\n> \treturn(density)}\n> \n> #predict the probability according to my pdf\n> y <- pdf.pareto(x,1,0.5)\n> \n> #check that pdf function does what it should\n> plot(x,y,typ=\"l\")\n> \n> #the negative log-likelihood function\n> NLL.pareto <- function(location,shape){\n> \tdensity <- pdf.pareto(x,location,shape)\n> \t-sum(dpareto(density,location=location,shape=shape,log=TRUE))}\n>  \n> #run the optimisation with mle2 to derive the parameters of the pdf\n> fit.pareto <- mle2(NLL.pareto,start=list(location=1,shape=0.5))\n> \n> \n> when i run it, I get this message:\n> Error in optim(par = c(1, 0.5), fn = function (p)  : \n>   initial value in 'vmmin' is not finite\n> \n> I was almost convinced that the reasoning behind was correct, \n> and to show it to myself i did the same thing with a less \n> \"exotic\" distribution. In that case the code doesn't crash \n> but the estimate i get are pretty weird...I'm starting to \n> think that I'm trying to do something totally wrong...  \n> really appreciate any help\n> thanks\n> matteo\n>",
+      "body_snippet": "Dear Matteo,\n\nI haven't looked into the details of the mle2 code, but three potential issues spring to mind.\n\n1. It looks like you're trying to find the maximum likelihood estimate (MLE) for each of t",
+      "thread_id": "thread-b180769d28b7",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-d9d71fdcfe6b",
+      "message_id": "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>",
+      "from_name": "Dr N.A. Cutler",
+      "from_email_hash": "7316b1c7f018bbb610e5ddac9ce52f2ba5caf70bf3dd1c29f08d063a27b6f54d",
+      "date": "2011-10-07T15:51:30+01:00",
+      "subject": "[R-sig-eco] Multivariate ANOVA/repeated measures",
+      "subject_clean": "Multivariate ANOVA/repeated measures",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear All,\n\nI have a query about multivariate analysis of community data.\n\nIn my experiment, 24 microbial communities in different locations were \nsampled using Sampling Technique 1 (ST1). A site X species matrix was then \nderived by molecular analysis.\n\nThe same 24 locations were then sampled again using a different sampling \ntechnique (ST2) and a second site X species matrix was derived. It is \nassumed that community structure remains intact after sampling by Technique \n1 i.e. the two techniques can sample from the same pool of organisms.\n\nI want to compare the results of the two sampling exercises in order to \ntest the performance of the two sampling techniques. My research question \nis: does Technique 1 produce a similar signal to Technique 2? Or do the \ndifferent techniques give significantly different pictures of community \nstructure? The null hypotheses is that there is no significant difference \nbetween the two sampling techniques i.e. they both capture community \nstructure with the same degree of accuracy.\n\nIt occurred to be that I could use a multivariate ANOVA technique (e.g. \nAdonis) to distinguish between the results of the two sampling exercises, \nusing sampling technique as a factor. But I am not sure how to deal with \nthe obvious correlation between sample pairs. Should this situation be \naddressed as a repeated measures experiment with two time steps? If so, \nwhat is the best technique to use (a mixed model, perhaps?)\n\nAny advice would be gratefully received.\n\nBest wishes,\n\nNick Cutler",
+      "body_snippet": "Dear All,\n\nI have a query about multivariate analysis of community data.\n\nIn my experiment, 24 microbial communities in different locations were \nsampled using Sampling Technique 1 (ST1). A site X spe",
+      "thread_id": "thread-d9d71fdcfe6b",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-03134f41182f",
+      "message_id": "<FE18F009-BACD-41B0-AB5A-0DF0201EC7C7@gmail.com>",
+      "from_name": "matteo dossena",
+      "from_email_hash": "138679d41572dedaf07eec775ca8974672bdc49c2364f71e0f281e74cc2932bf",
+      "date": "2011-10-07T16:21:35+01:00",
+      "subject": "[R-sig-eco] trouble in fitting a distirbution (matteo dossena)",
+      "subject_clean": "trouble in fitting a distirbution (matteo dossena)",
+      "in_reply_to": "<63F107BCC37AEA49A75FD94AA3E07CB0091EC65D@pacpbsex01.pac.dfo-mpo.ca>",
+      "references": [
+        "<63F107BCC37AEA49A75FD94AA3E07CB0091EC65D@pacpbsex01.pac.dfo-mpo.ca>"
+      ],
+      "body_plain": "> Thanks Andy, thats really helpful..\n> \n> I'm moving my first step into MLE, so far i've been using the binning method and fit linear regression using a mixed effect model to derive the average exponent across my replicates, but i'm not very happy with this approach, i need a more accurate way yo estimate the exponent. So i followed White et al 2008 and solved the MLE for mu (or lambda). I'm happy with that.. but my concern, and what's pointed me toward the approach i outlined in the previous post, is once i get the estimate of the exponent of the distribution of my variable for each replicate, would i be doing right if i compare it across treatments, and also i would asses the goodness of my fits?\n> \n> but as i said I'm a beginner in all this, so i might miss out something rally obvious..i might find the answer in your works...\n> \n> By the way the way the real data I'm trying to fit the distribution to are actually a body size distributions, which i assume is bounded (if bounded means with a lower and upper limits...actually the distribution i have to fit is a truncated pareto), so as you said can't be solved analytically..\n> but I'll read your papers to make clearer to myself what I'm trying to do, and if you don't mind, let you know how the process goes on..\n> \n> with regard to point 3, i apologise but there are errors in that line, as what i called location (which actually is a) and shape (which actually is lambda), were messed up the right way would have been \n> \n> density <- -(lambda+1)*(a^(lambda+1))*x^lambda\n> \n> about the minus sign instead is there in the White et al 2007 tab. 1, which is from where i got the function of the PDF... but yes you are right, how can the density be negative...i might got this wrong too\n> \n> thanks al lot\n> m. \n\n\nIl giorno 7 Oct 2011, alle ore 01:20, Edwards, Andrew ha scritto:\n\n> Dear Matteo,\n> \n> I haven't looked into the details of the mle2 code, but three potential issues spring to mind.\n> \n> 1. It looks like you're trying to find the maximum likelihood estimate (MLE) for each of the two parameters of the Pareto distribution (for which the probability density function is a power-law above some value, call it a, and zero elsewhere). I'll write the probability density function as\n> \n> f(x) = C x^(- mu), x >= a, where C is the normalisation constant; C = (mu - 1) a^(mu - 1).\n> \n> The MLEs can be found analytically, you don't need do it numerically. The MLE for mu is just\n> \n> 1 - n / (n log a - sum (log x_i) )\n> \n> where x_i are the data with sample size n.\n> \n> The MLE for a is just the minimum of your x_i.\n> \n> 2. Trying to estimate the MLE for a numerically may be what's causing trouble. The likelihood function value won't be have a zero gradient at the MLE (unlike what usually happens), because the gradient is always positive.\n> \n> To see this, I actually have the log-likelihood function given as equation (4) in a recent paper (Using likelihood to test for L?vy flight search patterns and for general power-law distributions in nature, Journal of Animal Ecology 77:1212-1222. If you take that equation and differentiate with respect to a (which I presume is the same as your 'location' parameter), you just get\n> \n> n (mu - 1) / a  \n> \n> where n is the sample size and mu>1 is the power-law exponent term (I think the negative of your shape parameter). This derivative is therefore always positive, so does not have a local maximum, and so the maximum likelihood attainable happens when a is as large as possible. However, since a is, by definition, the minimum value of the distribution, the maximum value it can take is the minimum value of your data (since otherwise you would invalidate an assumption of your distribution).  \n> \n> So if your numerical procedure is looking for a zero gradient of the likelihood function, it won't find it with respect to a, as the gradient is always positive.\n> \n> 3. I'm wondering if the - sign in your line:\n> \n>> \tdensity <- -(location+1)*(location^(shape+1))*x^shape\n> \n> is correct, as I would have thought density should be positive.\n> \n> I hope this helps. People across several fields have made fitting Pareto distributions much more complicated than it needs to be, but you're on the right track using likelihood. It's just that you can do it analytically, so there's no need for any optimisation. \n> \n> Also useful might be: \n> White, E.P., Enquist, B.J., & Green, J.L. (2008) On estimating the exponent of power-law frequency distributions. Ecology, 89, 905-912.\n> \n> Edwards, A.M. (2011) Overturning conclusions of L?vy flight movement patterns by fishing boats and foraging animals. Ecology, 92(6):1247-1257. \n> \n> which both also discuss bounded distributions (which can't be solved analytically).\n> \n> I hope that this helps,\n> \n> Andy\n> \n> -- \n> Dr. Andrew Edwards \n> Andrew.Edwards at dfo-mpo.gc.ca  **NEW** \n> http://www.chebucto.ns.ca/~english \n> \n> Pacific Biological Station, \n> Fisheries and Oceans Canada, \n> 3190 Hammond Bay Road, \n> Nanaimo, British Columbia, \n> V9T 6N7, Canada. \n> Tel: +1 250-756-7146 \n> Fax: +1 250 756-7053 \n> \n>> ------------------------------\n>> \n>> Message: 3\n>> Date: Wed, 5 Oct 2011 18:19:46 +0100\n>> From: matteo dossena <matteo.dossena at gmail.com>\n>> To: r-sig-ecology at r-project.org\n>> Subject: [R-sig-eco] trouble in fitting a distirbution\n>> Message-ID: <608BF773-D9AA-4CFD-A5C1-2C510ED0344A at gmail.com>\n>> Content-Type: text/plain\n>> \n>> Hi All,\n>> \n>> I'm trying to fit a theoretical distribution to some data, \n>> following the procedure on Bolker's Ecological Models and \n>> Data in R, but I'm having some problem... could someone \n>> please point me out what I'm doing  wrong?\n>> \n>> here is the code\n>> \n>> #create a random variable \n>> x <- sort(rpareto(100,1,0.5))\n>> \n>> #the pdf\n>> pdf.pareto <- function(x,location,shape){\n>> \tdensity <- -(location+1)*(location^(shape+1))*x^shape\n>> \treturn(density)}\n>> \n>> #predict the probability according to my pdf\n>> y <- pdf.pareto(x,1,0.5)\n>> \n>> #check that pdf function does what it should\n>> plot(x,y,typ=\"l\")\n>> \n>> #the negative log-likelihood function\n>> NLL.pareto <- function(location,shape){\n>> \tdensity <- pdf.pareto(x,location,shape)\n>> \t-sum(dpareto(density,location=location,shape=shape,log=TRUE))}\n>> \n>> #run the optimisation with mle2 to derive the parameters of the pdf\n>> fit.pareto <- mle2(NLL.pareto,start=list(location=1,shape=0.5))\n>> \n>> \n>> when i run it, I get this message:\n>> Error in optim(par = c(1, 0.5), fn = function (p)  : \n>>  initial value in 'vmmin' is not finite\n>> \n>> I was almost convinced that the reasoning behind was correct, \n>> and to show it to myself i did the same thing with a less \n>> \"exotic\" distribution. In that case the code doesn't crash \n>> but the estimate i get are pretty weird...I'm starting to \n>> think that I'm trying to do something totally wrong...  \n>> really appreciate any help\n>> thanks\n>> matteo\n>> \n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "> Thanks Andy, thats really helpful..\n> \n> I'm moving my first step into MLE, so far i've been using the binning method and fit linear regression using a mixed effect model to derive the average expon",
+      "thread_id": "thread-b180769d28b7",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-fd00476c0e0d",
+      "message_id": "<4E931397.3040200@ecology.msu.montana.edu>",
+      "from_name": "Dave Roberts",
+      "from_email_hash": "3229d32e357888923e00c65f487e6e1cd3028403c9c7a37830ffec8cd93222ad",
+      "date": "2011-10-10T09:47:35-06:00",
+      "subject": "[R-sig-eco] Multivariate ANOVA/repeated measures",
+      "subject_clean": "Multivariate ANOVA/repeated measures",
+      "in_reply_to": "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>",
+      "references": [
+        "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>"
+      ],
+      "body_plain": "On 10/07/2011 08:51 AM, Dr N.A. Cutler wrote:\n> Dear All,\n>\n> I have a query about multivariate analysis of community data.\n>\n> In my experiment, 24 microbial communities in different locations were\n> sampled using Sampling Technique 1 (ST1). A site X species matrix was\n> then derived by molecular analysis.\n>\n> The same 24 locations were then sampled again using a different sampling\n> technique (ST2) and a second site X species matrix was derived. It is\n> assumed that community structure remains intact after sampling by\n> Technique 1 i.e. the two techniques can sample from the same pool of\n> organisms.\n>\n> I want to compare the results of the two sampling exercises in order to\n> test the performance of the two sampling techniques. My research\n> question is: does Technique 1 produce a similar signal to Technique 2?\n> Or do the different techniques give significantly different pictures of\n> community structure? The null hypotheses is that there is no significant\n> difference between the two sampling techniques i.e. they both capture\n> community structure with the same degree of accuracy.\n>\n> It occurred to be that I could use a multivariate ANOVA technique (e.g.\n> Adonis) to distinguish between the results of the two sampling\n> exercises, using sampling technique as a factor. But I am not sure how\n> to deal with the obvious correlation between sample pairs. Should this\n> situation be addressed as a repeated measures experiment with two time\n> steps? If so, what is the best technique to use (a mixed model, perhaps?)\n>\n> Any advice would be gratefully received.\n>\n> Best wishes,\n>\n> Nick Cutler\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\nNick,\n\n    I would try something pretty direct.  Any appeal to differences in \ndissimilarities confounds the effects with the particular \ndissimilarity/distance matrix you use.  Assuming the samples and species \nare in the same order, and that the data.frames are the same size, you \nmight try\n\n > actual <- sum((ST1-ST2)^2)\n\nand then permute one of the two matrices numerous times\n\nres <- rep(NA,999)\nfor (i in 1:999) {\n      res[i] <- sum((ST1-ST2[sample(1:nrow(ST2),replace=FALSE),])^2)\n}\nfinal <- (sum(res <= actual) + 1)/1000\n\nand see what fraction of the permuted matrices are as similar.\n\nHopefully Gavin will weigh in with a better randomization.\n\n    If you do go with a multivariate approach I might try a procrustes \nanalysis of PCO ordinations.\n\nDave\n-- \n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nDavid W. Roberts                                     office 406-994-4548\nProfessor and Head                                      FAX 406-994-3190\nDepartment of Ecology                         email droberts at montana.edu\nMontana State University\nBozeman, MT 59717-3460",
+      "body_snippet": "On 10/07/2011 08:51 AM, Dr N.A. Cutler wrote:\n> Dear All,\n>\n> I have a query about multivariate analysis of community data.\n>\n> In my experiment, 24 microbial communities in different locations were\n>",
+      "thread_id": "thread-d9d71fdcfe6b",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-3b40b35c3607",
+      "message_id": "<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>",
+      "from_name": "Rich Shepard",
+      "from_email_hash": "fae16a7dbae64fd8dac1e2b7eb51dd8c7aa1e1ecad85248ae3b54421c4e0babc",
+      "date": "2011-10-10T09:11:07-07:00",
+      "subject": "[R-sig-eco] Multivariate ANOVA/repeated measures",
+      "subject_clean": "Multivariate ANOVA/repeated measures",
+      "in_reply_to": "<4E931397.3040200@ecology.msu.montana.edu>",
+      "references": [
+        "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>",
+        "<4E931397.3040200@ecology.msu.montana.edu>"
+      ],
+      "body_plain": "On Mon, 10 Oct 2011, Dave Roberts wrote:\n\n>> I want to compare the results of the two sampling exercises in order to\n>> test the performance of the two sampling techniques.\n\n>   I would try something pretty direct. Any appeal to differences in\n> dissimilarities confounds the effects with the particular\n> dissimilarity/distance matrix you use. Assuming the samples and species\n> are in the same order, and that the data.frames are the same size, you\n> might try\n\n   I did not read the original message, so I hope you'll allow me to join the\nthread. My recommendation is to use univariate tree models, particularly a\nclassification tree (for ordinal explanatory variables; i.e., ST1 and ST2).\n\n   This is fully, carefully, and non-technically explained in Chapter 9\n(particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith \"Analysing\nEcological Data.\" For that matter, I highly recommend reading the whole\nbook.\n\nRich",
+      "body_snippet": "On Mon, 10 Oct 2011, Dave Roberts wrote:\n\n>> I want to compare the results of the two sampling exercises in order to\n>> test the performance of the two sampling techniques.\n\n>   I would try something ",
+      "thread_id": "thread-d9d71fdcfe6b",
+      "thread_depth": 2,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-2facd9545e87",
+      "message_id": "<1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-10T21:15:23+01:00",
+      "subject": "[R-sig-eco] Multivariate ANOVA/repeated measures",
+      "subject_clean": "Multivariate ANOVA/repeated measures",
+      "in_reply_to": "<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>",
+      "references": [
+        "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>",
+        "<4E931397.3040200@ecology.msu.montana.edu>",
+        "<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>"
+      ],
+      "body_plain": "On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:\n> On Mon, 10 Oct 2011, Dave Roberts wrote:\n> \n> >> I want to compare the results of the two sampling exercises in order to\n> >> test the performance of the two sampling techniques.\n> \n> >   I would try something pretty direct. Any appeal to differences in\n> > dissimilarities confounds the effects with the particular\n> > dissimilarity/distance matrix you use. Assuming the samples and species\n> > are in the same order, and that the data.frames are the same size, you\n> > might try\n> \n>    I did not read the original message, so I hope you'll allow me to join the\n> thread. My recommendation is to use univariate tree models, particularly a\n> classification tree (for ordinal explanatory variables; i.e., ST1 and ST2).\n\nBut the response here is *multivariate* - of course, one could use Glen\nDe'Ath's multivariate regression trees (despite the name it is really a\nconstrained clustering/classification) - but I think there are better\nways of solving this particular problem. And unless one has many 100s of\nobservations, the model will need some sort of variance reduction\napplied (via bagging, or some such) as the one fitted model is\npotentially highly unstable.\n\nG\n\n>    This is fully, carefully, and non-technically explained in Chapter 9\n> (particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith \"Analysing\n> Ecological Data.\" For that matter, I highly recommend reading the whole\n> book.\n> \n> Rich\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:\n> On Mon, 10 Oct 2011, Dave Roberts wrote:\n> \n> >> I want to compare the results of the two sampling exercises in order to\n> >> test the performa",
+      "thread_id": "thread-d9d71fdcfe6b",
+      "thread_depth": 3,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-b6b4b74c2cc4",
+      "message_id": "<4E93647D.8070901@ecology.msu.montana.edu>",
+      "from_name": "Dave Roberts",
+      "from_email_hash": "3229d32e357888923e00c65f487e6e1cd3028403c9c7a37830ffec8cd93222ad",
+      "date": "2011-10-10T15:32:45-06:00",
+      "subject": "[R-sig-eco] Multivariate ANOVA/repeated measures",
+      "subject_clean": "Multivariate ANOVA/repeated measures",
+      "in_reply_to": "<1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>",
+      "references": [
+        "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>",
+        "<4E931397.3040200@ecology.msu.montana.edu>",
+        "<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>",
+        "<1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>"
+      ],
+      "body_plain": "On 10/10/2011 02:15 PM, Gavin Simpson wrote:\n> On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:\n>> On Mon, 10 Oct 2011, Dave Roberts wrote:\n>>\n>>>> I want to compare the results of the two sampling exercises in order to\n>>>> test the performance of the two sampling techniques.\n>>\n>>>    I would try something pretty direct. Any appeal to differences in\n>>> dissimilarities confounds the effects with the particular\n>>> dissimilarity/distance matrix you use. Assuming the samples and species\n>>> are in the same order, and that the data.frames are the same size, you\n>>> might try\n>>\n>>     I did not read the original message, so I hope you'll allow me to join the\n>> thread. My recommendation is to use univariate tree models, particularly a\n>> classification tree (for ordinal explanatory variables; i.e., ST1 and ST2).\n>\n> But the response here is *multivariate* - of course, one could use Glen\n> De'Ath's multivariate regression trees (despite the name it is really a\n> constrained clustering/classification) - but I think there are better\n> ways of solving this particular problem. And unless one has many 100s of\n> observations, the model will need some sort of variance reduction\n> applied (via bagging, or some such) as the one fitted model is\n> potentially highly unstable.\n>\n> G\n>\n>>     This is fully, carefully, and non-technically explained in Chapter 9\n>> (particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith \"Analysing\n>> Ecological Data.\" For that matter, I highly recommend reading the whole\n>> book.\n>>\n>> Rich\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\nIt would be fairly simple to boil down to a univariate question.  You \ncould do something as simple as a paired t-test of plot-level species \nrichness or the number of individuals sampled (to compare sampling \nefficiency), but I still don't see an independent and a dependent variable.\n\nDave\n-- \n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nDavid W. Roberts                                     office 406-994-4548\nProfessor and Head                                      FAX 406-994-3190\nDepartment of Ecology                         email droberts at montana.edu\nMontana State University\nBozeman, MT 59717-3460",
+      "body_snippet": "On 10/10/2011 02:15 PM, Gavin Simpson wrote:\n> On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:\n>> On Mon, 10 Oct 2011, Dave Roberts wrote:\n>>\n>>>> I want to compare the results of the two sampl",
+      "thread_id": "thread-d9d71fdcfe6b",
+      "thread_depth": 4,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-45b60418c5d0",
+      "message_id": "<1318284670.2739.29.camel@chrysothemis.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-10T23:11:10+01:00",
+      "subject": "[R-sig-eco] Multivariate ANOVA/repeated measures",
+      "subject_clean": "Multivariate ANOVA/repeated measures",
+      "in_reply_to": "<4E93647D.8070901@ecology.msu.montana.edu>",
+      "references": [
+        "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>",
+        "<4E931397.3040200@ecology.msu.montana.edu>",
+        "<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>",
+        "<1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>",
+        "<4E93647D.8070901@ecology.msu.montana.edu>"
+      ],
+      "body_plain": "On Mon, 2011-10-10 at 15:32 -0600, Dave Roberts wrote:\n> \n> On 10/10/2011 02:15 PM, Gavin Simpson wrote:\n> > On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:\n> >> On Mon, 10 Oct 2011, Dave Roberts wrote:\n> >>\n> >>>> I want to compare the results of the two sampling exercises in order to\n> >>>> test the performance of the two sampling techniques.\n> >>\n> >>>    I would try something pretty direct. Any appeal to differences in\n> >>> dissimilarities confounds the effects with the particular\n> >>> dissimilarity/distance matrix you use. Assuming the samples and species\n> >>> are in the same order, and that the data.frames are the same size, you\n> >>> might try\n> >>\n> >>     I did not read the original message, so I hope you'll allow me to join the\n> >> thread. My recommendation is to use univariate tree models, particularly a\n> >> classification tree (for ordinal explanatory variables; i.e., ST1 and ST2).\n> >\n> > But the response here is *multivariate* - of course, one could use Glen\n> > De'Ath's multivariate regression trees (despite the name it is really a\n> > constrained clustering/classification) - but I think there are better\n> > ways of solving this particular problem. And unless one has many 100s of\n> > observations, the model will need some sort of variance reduction\n> > applied (via bagging, or some such) as the one fitted model is\n> > potentially highly unstable.\n> >\n> > G\n> >\n> >>     This is fully, carefully, and non-technically explained in Chapter 9\n> >> (particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith \"Analysing\n> >> Ecological Data.\" For that matter, I highly recommend reading the whole\n> >> book.\n> >>\n> >> Rich\n> >>\n> >> _______________________________________________\n> >> R-sig-ecology mailing list\n> >> R-sig-ecology at r-project.org\n> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> >\n> \n> It would be fairly simple to boil down to a univariate question.  You \n> could do something as simple as a paired t-test of plot-level species \n> richness or the number of individuals sampled (to compare sampling \n> efficiency), but I still don't see an independent and a dependent variable.\n> \n> Dave\n\nIndeed, but species richness is quite a different \"comparison\" of the\ntwo sampling strategies. The original Q was quite broad so might be what\nthe OP wants.\n\nThe predictor would be the sampling strategy I guess - can you\nexplain/cluster the data on the basis of sampling strategy?\n\nCompositionally, adonis() would seem to be an appropriate technique here\n- it would be effectively a multivariate t-test - and would test if the\nmultivariate centroids of the species compositions in the two samples\nare similar or not (difference of centroids is 0). Of course, if that\nNull is rejected, you must test if the difference in centroids is due to\na difference in multivariate dispersions (the spread of the points about\nthe centroid), which can be done via betadisper().\n\nThe issue I'm still thinking about is the permutation - at first look,\nyour randomisation seems appropriate, especially if the two sampling\nstrategies can be considered random sampling methods - i.e. all sites\nhave equal chance of being selected, /and/ that there is no underlying\nclustering in the population that should be respected.\n\nThe Null hypothesis seems to be that ST1 and ST2 are just two random\nsamples of some population of species composition/samples that would\narise if you did lots of sampling using ST2.\n\nG\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Mon, 2011-10-10 at 15:32 -0600, Dave Roberts wrote:\n> \n> On 10/10/2011 02:15 PM, Gavin Simpson wrote:\n> > On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:\n> >> On Mon, 10 Oct 2011, Dave Rober",
+      "thread_id": "thread-d9d71fdcfe6b",
+      "thread_depth": 5,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-ab40dae841cd",
+      "message_id": "<1318334052.22039.44.camel@prometheus.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-11T12:54:12+01:00",
+      "subject": "[R-sig-eco] Multivariate ANOVA/repeated measures",
+      "subject_clean": "Multivariate ANOVA/repeated measures",
+      "in_reply_to": "<4E931397.3040200@ecology.msu.montana.edu>",
+      "references": [
+        "<Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>",
+        "<4E931397.3040200@ecology.msu.montana.edu>"
+      ],
+      "body_plain": "On Mon, 2011-10-10 at 09:47 -0600, Dave Roberts wrote:\n</ snip>\n> \n> Nick,\n> \n>     I would try something pretty direct.  Any appeal to differences in \n> dissimilarities confounds the effects with the particular \n> dissimilarity/distance matrix you use.  Assuming the samples and species \n> are in the same order, and that the data.frames are the same size, you \n> might try\n> \n>  > actual <- sum((ST1-ST2)^2)\n> \n> and then permute one of the two matrices numerous times\n> \n> res <- rep(NA,999)\n> for (i in 1:999) {\n>       res[i] <- sum((ST1-ST2[sample(1:nrow(ST2),replace=FALSE),])^2)\n> }\n> final <- (sum(res <= actual) + 1)/1000\n> \n> and see what fraction of the permuted matrices are as similar.\n> \n> Hopefully Gavin will weigh in with a better randomization.\n\nI guess it does depend on what is exchangeable under the Null\nHypothesis? I suppose that technically, we should condition the\npermutation on the 24 sampling locations. Under the Null, we are\nassuming that ST1 and ST2 are equivalent and therefore drawn from the\nsame population of samples that doing lots of ST2 sampling would produce\nif it were repeated many times. However, the samples from an individual\nlocation are not necessarily exchangeable between locations; we need to\nrespect the clustering inherent in the data.\n\nIf the samples for ST1 were collected at the same time, and the ones for\nST2 were also collected together at another time point, we could be very\npedantic and say that all sampling locations \"experienced\" the same\n\"time\" process and that we have to use the same permutation in each\nsampling location. That would suck as then you would only have two valid\npermutations; the observed one and the samples in the other order. So we\ncould perhaps relax that assumption... or give up now :-)\n\nAnyway - if you want to condition the permutation on the sampling\nlocations in adonis(), include that as a factor via the `strata`\nargument and the permutation test will put the samples in random order\nwithin sampling location but allow for different ordering (ST1 then ST2,\nor ST2 then ST1) within each location during each permutation. To my\nmind this does capture the proposed Null; ST1 and ST2 are exchangeable\nas we are testing the hypothesis that they are from the same population,\nbut samples are not exchangeable between sampling locations as we have\nrepeated measures.\n\n>     If you do go with a multivariate approach I might try a procrustes \n> analysis of PCO ordinations.\n\nThat is a good suggestion, Dave. I would add that this will test the\nsimilarity of the configuration of points in ordination space. adonis()\nwill test if the two sampling methods are drawn from populations with\nthe same mean species \"composition\". These are two different aspects of\nthe problem. I would probably try both i) adonis() and ii) separate\nordinations of the ST1 and ST2 species matrices followed by a procrustes\nrotation of the two configurations - see ?procrustes for the latter.\nboth need the `strata` argument supplying to get the correct NULL.\n\n> Dave\n\nG\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Mon, 2011-10-10 at 09:47 -0600, Dave Roberts wrote:\n</ snip>\n> \n> Nick,\n> \n>     I would try something pretty direct.  Any appeal to differences in \n> dissimilarities confounds the effects with the",
+      "thread_id": "thread-d9d71fdcfe6b",
+      "thread_depth": 2,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-92e8e4df2b26",
+      "message_id": "<7947b90f.12eb7.132f636091a.Coremail.winnie56100@163.com>",
+      "from_name": "沈勇",
+      "from_email_hash": "d3960aeeaa3107f4e0b700977b0e7b00aca945be0ee72e340010ddd2c2d5796f",
+      "date": "2011-10-12T11:38:48+08:00",
+      "subject": "[R-sig-eco] K function",
+      "subject_clean": "K function",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/edd4c35b/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/edd4c35b/attachment.pl>",
+      "thread_id": "thread-92e8e4df2b26",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-a42825a70055",
+      "message_id": "<201110121143570303639@gmail.com>",
+      "from_name": "刘朔孺",
+      "from_email_hash": "ff90ae9a85a5f4f06c19b99af0b68a769054dc50316e9c30660e07dd2067bf24",
+      "date": "2011-10-12T11:44:00+08:00",
+      "subject": "[R-sig-eco] How can get P value of regression tree and LOWESS in R.",
+      "subject_clean": "How can get P value of regression tree and LOWESS in R.",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/787baf59/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/787baf59/attachment.pl>",
+      "thread_id": "thread-a42825a70055",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-d9dfcac50ec5",
+      "message_id": "<1318408901.24607.7.camel@prometheus.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-12T09:41:41+01:00",
+      "subject": "[R-sig-eco] How can get P value of regression tree and LOWESS in R.",
+      "subject_clean": "How can get P value of regression tree and LOWESS in R.",
+      "in_reply_to": "<201110121143570303639@gmail.com>",
+      "references": [
+        "<201110121143570303639@gmail.com>"
+      ],
+      "body_plain": "On Wed, 2011-10-12 at 11:44 +0800, ??? wrote:\n> Dear all,\n> I want to use Regression tree and Lowess methods for calculating\n> ecological threshold. but I don't know that what codes did I use to\n> get P value. \n> Thanks for your time, best wishes. \n\nRegression trees, in the spirit of the CART book by Breiman et al, are\navailable in recommended package rpart. It doesn't give p-values, but\nrather focusses on building the best model from a set of features as\nmeasured by some concept of deviance (MSE). This predictive ability is\nassessed via k-fold cross-validation during fitting or an independent\ntest set.\n\nIf you want p-values here, and know what conditional inference trees\nare, then try the party package.\n\nLO[W]?ESS is available in lowess() or loess() (the latter is more modern\nand feature-rich). Again, these don't give p-values\n\nIf you want p-values here, perhaps try the additive model framework in\nrecommended package mgcv or package gam. The latter can include loess\nsmooths but mgcv contains a better suite of functions for fitting GAMs.\n\nThat said - it all you are interested in are the p-values, then I might\nsuggest you find interest in some other aspects of the\nmodelling/statistics. Plugging data into these techniques to churn out\np-values is a recipe for getting bitten.\n\nG\n\n> \n> 2011-10-12 \n> \n> \n> \n> ?\n> ????\n> ???\n> ????\n>  ? ?1 \n> \n>  \n> Liu Shouru\n> Department of Entomology\n> Nanjing Agricultural University\n> Nanjing, Jiangsu Province 210095\n> P. R. China\n> \n> \t[[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Wed, 2011-10-12 at 11:44 +0800, ??? wrote:\n> Dear all,\n> I want to use Regression tree and Lowess methods for calculating\n> ecological threshold. but I don't know that what codes did I use to\n> get",
+      "thread_id": "thread-a42825a70055",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-e73f8c523697",
+      "message_id": "<mvthPK9i.1318411395.0197430.marcelino.delacruz@upm.es>",
+      "from_name": "marcelino.delacruz at upm.es",
+      "from_email_hash": "f2f0d38d5ba83ada9808ded312f97417ac4b3affff47651eee7d90629396044b",
+      "date": "2011-10-12T10:23:15+01:00",
+      "subject": "[R-sig-eco] K function",
+      "subject_clean": "K function",
+      "in_reply_to": "<7947b90f.12eb7.132f636091a.Coremail.winnie56100@163.com>",
+      "references": [],
+      "body_plain": "Hi Yong,\n\nYou are talking about two different things.\n\nUsually, analyzing the spatial pattern of tree mortality involves testing\nagainst the random labeling  hypothesis (i.e., testing against random\nmortality). For this you should go through the following steps:\n\n1) build a marked point pattern, e.g.,\n\ntrees <- ppp(x= yourXcoordinates, y=yourYcoordinates,\nmarks=yourmortalitydata, window=yourwindow)\n\nThe mortality data should be a factor with two levels like yes/no,\ndead/alive, etc.\n\n2)Compute a summary statistics (e.g. the K-cross function, although you\ncould use the simple K-function with more scripting) and compute\nenvelopes simulating from the random labelling null model:\n\nmortality.test <- envelope(trees, Kcross, i=\"death\", j=\"alive\",\nnsim=99, simulation=expression(rlabel(trees)))\n\nThe important thing for your test here is the simulation that you get\nwith the rlabel function\n\n3) plot the results, e.g.\n\nplot(mortality.test, sqrt(./pi)-r~r, ylabel=expression(L[d,a](r)))\n\nI published some \"new\" approaches for testing spatial patterns of\nmortality in a paper in Ecography (2008) and included some functions for\nthis  in the R package \"ecespa\" (for example functions K012 and K1K2)\nthat you may also consider.\n\nTo \"test\" the patterns of tree recruitment, it depends on the\nhypotehsis that you want to test. The old one was the CSR hipothesis,\njust\n\nenvelope (recruitedtrees, Kest)\n\nbut this is not much informative.\n\nHTH,\n\nMarcelino\n\n\n\nCon fecha 12/10/2011, \"????\" <winnie56100 at 163.com> escribi?:\n\n>Hi all,\n>  I have a question for using the K  function (package \"spatstat\", spatial pattern), I want to test the spatial pattern of mortality tree using K function, is it the same as testing the spatial pattern of tree? Random simulation by removing the points which number is equal to the mortality tree from the original data set, are there any functions can implement this analysis? Or I should write a programming to perform it? And if I want to test the spatial pattern of recruitment tree, how to perform that? Thank you very much!\n>Best wishes!\n>                                                                                                                                                         Yong\n>\t[[alternative HTML version deleted]]\n>\n>_______________________________________________\n>R-sig-ecology mailing list\n>R-sig-ecology at r-project.org\n>https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Hi Yong,\n\nYou are talking about two different things.\n\nUsually, analyzing the spatial pattern of tree mortality involves testing\nagainst the random labeling  hypothesis (i.e., testing against random\nm",
+      "thread_id": "thread-92e8e4df2b26",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-290851684733",
+      "message_id": "<4E956E5A.20009@gmail.com>",
+      "from_name": "Alexandre Villers",
+      "from_email_hash": "d12d8fb3d86ca1a5cd0dbfd261e8fc29fac7a1c7cdf041c710221d47a940f454",
+      "date": "2011-10-12T13:39:22+03:00",
+      "subject": "[R-sig-eco] number of pixels in a circular window for GRASS r.neighbors function",
+      "subject_clean": "number of pixels in a circular window for GRASS r.neighbors function",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/c200e17d/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/c200e17d/attachment.pl>",
+      "thread_id": "thread-290851684733",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-6b5bbac8e589",
+      "message_id": "<7CAD6F5F-43D7-41A9-9647-AFE1EA36F90B@pdx.edu>",
+      "from_name": "cparker at pdx.edu",
+      "from_email_hash": "2027c0f71786e7cc3b3177f36c97181dd7990668efc9f7519b8ff86ce3eed8da",
+      "date": "2011-10-12T06:40:34-07:00",
+      "subject": "[R-sig-eco] number of pixels in a circular window for GRASS r.neighbors function",
+      "subject_clean": "number of pixels in a circular window for GRASS r.neighbors function",
+      "in_reply_to": "<4E956E5A.20009@gmail.com>",
+      "references": [
+        "<4E956E5A.20009@gmail.com>"
+      ],
+      "body_plain": "I am going out on a limb here as I have never uses this function but based on what you wrote you could probably just change function=sum to function=mean. I am assuming (based on what you said) that the function (r.neighbors) imposes the condition first (eg x==1) and then sums the resulting 0s and 1s to get the number equal to 1. If that's the case you can change sum to mean to get the proportion. \n\n\n\nOn Oct 12, 2011, at 3:39 AM, Alexandre Villers <villers.alexandre at gmail.com> wrote:\n\n> Dear list,\n> \n> I have calculated the number of pixels whose value=1 for different radii \n> using the r.neighbors function (method= circular, function=sum). I would \n> like to compute the proportion of cells with this value and for that,  \n> I'm trying to figure out the effective number of pixels that are used \n> for each radius. From the documentation \n> <http://grass.osgeo.org/gdp/html_grass64/r.neighbors.html>, above a \n> diameter of d = 9 cells, the result seems to be d^2-  4 * (d-1)  cells \n> but I was wondering if someone could confirm this to me? Is this \n> relationship conserved for larger diameter.\n> \n> Thanks for any hint\n> \n> Alexandre\n> \n> \n> P.S.: I already posted this message on the Grass stats list but maybe I \n> wasn't clear enough and as a result didn't get any answer\n> \n>    [[alternative HTML version deleted]]\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "I am going out on a limb here as I have never uses this function but based on what you wrote you could probably just change function=sum to function=mean. I am assuming (based on what you said) that t",
+      "thread_id": "thread-290851684733",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-1180975a942e",
+      "message_id": "<54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>",
+      "from_name": "Maria Zwart",
+      "from_email_hash": "b5dab79b56434ab91e6cda71430e95b61786421f62d2fbc4c0d07eb30ed445c2",
+      "date": "2011-10-13T11:20:37+01:00",
+      "subject": "[R-sig-eco] adehabitat: GNESFA - first and last axes",
+      "subject_clean": "adehabitat: GNESFA - first and last axes",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear list,\n\nI am looking at habitat selection in chaffinches with point data (type I study).\nI am trying to do the GNESFA (package adehabitatHS). All goes well up to where the function asks to choose the number of first and last axes. Although there is some information about this in the supplied manual supplied by the package (see below), my knowledge of the function is not enough to be able to understand which axes to choose.\n\n\"The first axes correspond to the directions where the utilization distribution as a whole is the furthest from the centroid of the availability distribution (these directions often correspond to directions where the marginality is strong; i.e. the criterion y1 defined previously is maximized). The last axes correspond to the directions where the width of the utilization distribution is the smallest relative to the width of the availability distribution (these directions often correspond to directions where the specialization is strong, i.e. the criterion y1 defined previously is minimized).\"\n\nAttached are the eigenvalues plots that I get. My interpertation is that for the first axes I have to choose 3, because after that there is a huge drop. And for the last axes I choose 16, because there is an increase there. The results indicate that they select coniferous woodland and mixed woodland, which makes sense since chaffinches are usually found in those habitats. Any advice is greatly appreciated!\n\nCode:\ncp <- count.points(locs, towlaw_spdf) #locs are the coordinates of the locations where the chaffinches are. towlaw_spdf is a SpatialPixelsDataFrame, a map with the different habitat variables.\ntab <- slot(towlaw_spdf, \"data\")\npr <- slot(cp, \"data\")[, 1]\nhistniche(tab, pr)\npc <- dudi.pca(tab, scannf = FALSE)\ngn <- gnesfa(pc, Focus = pr)\n\nMany thanks,\n\nMieke\nMaria Zwart\nPhD student\nRoom 4.65\nSchool of Biology\nRidley 2\nNewcastle University\nNewcastle upon Tyne\nNE1 7RU\nUnited Kingdom",
+      "body_snippet": "Dear list,\n\nI am looking at habitat selection in chaffinches with point data (type I study).\nI am trying to do the GNESFA (package adehabitatHS). All goes well up to where the function asks to choose ",
+      "thread_id": "thread-1180975a942e",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-3c537f92fc3c",
+      "message_id": "<1318616579468-6893550.post@n2.nabble.com>",
+      "from_name": "Sami Rabei",
+      "from_email_hash": "1bd3a817961750e80b93d0f7d396621ea84a47f79476696062fb52f26978681c",
+      "date": "2011-10-14T11:22:59-07:00",
+      "subject": "[R-sig-eco] TWINSPAN file format",
+      "subject_clean": "TWINSPAN file format",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear All\n\nAll my greeting for the all.\n\nCan any one show and send me how I can use TWINSPAN which include : \n\n          1 : input file format\n          2 : analysis\n          3 : output interpretation\n\nI have the program\n\nTWINSPAN \nWinTWINS \n\n \nThanks in advance\n\nall the best\n\nsami\n\n--\nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/TWINSPAN-file-format-tp6893550p6893550.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Dear All\n\nAll my greeting for the all.\n\nCan any one show and send me how I can use TWINSPAN which include : \n\n          1 : input file format\n          2 : analysis\n          3 : output interpretation",
+      "thread_id": "thread-3c537f92fc3c",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-a278d3c99d08",
+      "message_id": "<1318617010.2750.1.camel@chrysothemis.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-14T19:30:10+01:00",
+      "subject": "[R-sig-eco] TWINSPAN file format",
+      "subject_clean": "TWINSPAN file format",
+      "in_reply_to": "<1318616579468-6893550.post@n2.nabble.com>",
+      "references": [
+        "<1318616579468-6893550.post@n2.nabble.com>"
+      ],
+      "body_plain": "On Fri, 2011-10-14 at 11:22 -0700, Sami Rabei wrote:\n> Dear All\n> \n> All my greeting for the all.\n> \n> Can any one show and send me how I can use TWINSPAN which include : \n> \n>           1 : input file format\n>           2 : analysis\n>           3 : output interpretation\n> \n> I have the program\n> \n> TWINSPAN \n> WinTWINS \n\nThis *is* a list for R, not WinTwins nor Twinspan.\n\nInvariably they take cornel formatted files, e.g. cornel condensed\nformats. As for the other two Q, that is beyond the scope of a mailing\nlist dedicated to the use of R in ecology.\n\nG\n\n>  \n> Thanks in advance\n> \n> all the best\n> \n> sami\n> \n> --\n> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/TWINSPAN-file-format-tp6893550p6893550.html\n> Sent from the r-sig-ecology mailing list archive at Nabble.com.\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Fri, 2011-10-14 at 11:22 -0700, Sami Rabei wrote:\n> Dear All\n> \n> All my greeting for the all.\n> \n> Can any one show and send me how I can use TWINSPAN which include : \n> \n>           1 : input fil",
+      "thread_id": "thread-3c537f92fc3c",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-0789cb11cbe9",
+      "message_id": "<CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>",
+      "from_name": "Manuel Spínola",
+      "from_email_hash": "c67b4a8f4e027cf75cc3544d4e04791324bee3c4417f2f5edf4561a1da2f995b",
+      "date": "2011-10-14T17:09:56-06:00",
+      "subject": "[R-sig-eco] Predict with 2 factors in an additive model",
+      "subject_clean": "Predict with 2 factors in an additive model",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111014/0125e802/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111014/0125e802/attachment.pl>",
+      "thread_id": "thread-0789cb11cbe9",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-c4f6392d36aa",
+      "message_id": "<E120E5F1-7025-42BC-ACB3-830E3E576437@pdx.edu>",
+      "from_name": "cparker at pdx.edu",
+      "from_email_hash": "2027c0f71786e7cc3b3177f36c97181dd7990668efc9f7519b8ff86ce3eed8da",
+      "date": "2011-10-14T17:50:37-07:00",
+      "subject": "[R-sig-eco] Predict with 2 factors in an additive model",
+      "subject_clean": "Predict with 2 factors in an additive model",
+      "in_reply_to": "<CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>",
+      "references": [
+        "<CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111014/5128f2da/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111014/5128f2da/attachment.pl>",
+      "thread_id": "thread-0789cb11cbe9",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-c45210901095",
+      "message_id": "<1318669571.2794.1.camel@chrysothemis.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-15T10:06:11+01:00",
+      "subject": "[R-sig-eco] Predict with 2 factors in an additive model",
+      "subject_clean": "Predict with 2 factors in an additive model",
+      "in_reply_to": "<CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>",
+      "references": [
+        "<CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>"
+      ],
+      "body_plain": "On Fri, 2011-10-14 at 17:09 -0600, Manuel Sp?nola wrote:\n> Dear list members,\n> \n> I have an additive linear model (see below fro a reproducible example) and I\n> want to use the function \"predict\" to have the value of the response\n> variable for each level of factor f1 and each level of factor f2 in the\n> additive model (not interaction). When I did predict I only get 2 values.\n\nBecause there are only two rows in `newdata`! If you want f1-a with f2-a\nand f1-a with f2-b, and f1-b with f2-a and f1-b with f2-b, that\nnecessitates four rows in `newdata` to contain the combinations.\n\nG\n\n> y=rnorm(40,1,1)\n> \n> f1=c(rep(\"a\",20),rep(\"b\",20))\n> f2=c(rep(\"a\",10),rep(\"b\",10),rep(\"a\",10),rep(\"b\",10))\n> \n> data=data.frame(y,f1,f2)\n> \n> mod1 = lm(y ~ f1 + f2, data=data)\n> \n> summary(mod1)\n> \n> newData = data.frame(f1 = factor(c(\"a\", \"b\")), f2 = factor(c(\"b\", \"a\")))\n> \n> > predict(mod1, newdata = newData, appendData  =  TRUE)\n>         1         2\n> 1.0460148 0.9468983\n> \n> Thank you very much in advance.\n> \n> Best,\n> \n> Manuel\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Fri, 2011-10-14 at 17:09 -0600, Manuel Sp?nola wrote:\n> Dear list members,\n> \n> I have an additive linear model (see below fro a reproducible example) and I\n> want to use the function \"predict\" to ",
+      "thread_id": "thread-0789cb11cbe9",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-fcd388d1ab7f",
+      "message_id": "<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>",
+      "from_name": "Johannes Radinger",
+      "from_email_hash": "5ec8ef8f8356feff238541c7ccfe6b673f733a8f7404b20b93fa62b90e3995ac",
+      "date": "2011-10-16T13:45:19+02:00",
+      "subject": "[R-sig-eco] Calculate Prediction Interval for Regression by hand...",
+      "subject_clean": "Calculate Prediction Interval for Regression by hand...",
+      "in_reply_to": "<54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>",
+      "references": [
+        "<54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>"
+      ],
+      "body_plain": "Hi UseRs,\n\nI calculated with lm(Y~X1+X2) successfully a linear regression.\nBased on this linear regression with multiple independent variables\nI'd like to calculate manually prediction intervals. Therefore I have a few\nquestions:\n\n1) I want a prediction interval for Y (like Y+-PI) for a given value\nfor X1 and X2.\n2) I want to calculate the predicition intervall for Y by hand (either\nwith the mathematical functions of R or with python etc.\n\nSo I think I have to extract the prediction interval for the single\nregression parameters (intercept and slopes) from the lm model.\n\nI tried to google for a simple solution but wasn't succesfully yet.\nI think following link: Prediction interval in Regression analysis explains very well\nwhat I want to do.\n\nThere it says: \"...one may use the standard error of the estimates for the intercept and slope ( and ) to compute a prediction interval\". So is that the right approach?\nIf yes how can I get the standard error for a and b and which formula\nhas to used for the calculation?\n\n\nThank you very much in advance\n\nHave a nice sunday!\n\ncheers\nJohannes",
+      "body_snippet": "Hi UseRs,\n\nI calculated with lm(Y~X1+X2) successfully a linear regression.\nBased on this linear regression with multiple independent variables\nI'd like to calculate manually prediction intervals. Ther",
+      "thread_id": "thread-1180975a942e",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-760314e5b372",
+      "message_id": "<b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>",
+      "from_name": "Chris Howden",
+      "from_email_hash": "bf0d499799bf682ad766b5f0eb9281d96f29beb8672c5fe4ecc682773847fcbb",
+      "date": "2011-10-17T10:36:35+11:00",
+      "subject": "[R-sig-eco] Calculate Prediction Interval for Regression by hand...",
+      "subject_clean": "Calculate Prediction Interval for Regression by hand...",
+      "in_reply_to": "<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>",
+      "references": [
+        "<54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>",
+        "<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>"
+      ],
+      "body_plain": "Hi Johannes,\n\npredict() will give u SE's and confidence intervals.\n\nU can either use the original data as an input and get a prediction for\nall the original data points. Or create an input data set and get\npredictions for them.\n\nIf your doing an ANOVA type analysis with discrete factors I often use\nexpand.grid to quickly get a matrix for all combinations. So something\nlike this\n(predict.ci <- data.frame(expand.grid(model$xlevels), predict(model,\nexpand.grid(model$xlevels), interval=\"conf\")))\n\n\nThere's also confint() which is for single parameters.\n\n\nChris Howden B.Sc. (Hons) GStat.\nFounding Partner\nEvidence Based Strategic Development, IP Commercialisation and Innovation,\nData Analysis, Modelling and Training\n(mobile) 0410 689 945\n(fax) +612 4782 9023\nchris at trickysolutions.com.au\n\n\n\n\nDisclaimer: The information in this email and any attachments to it are\nconfidential and may contain legally privileged information.?If you are\nnot the named or intended recipient, please delete this communication and\ncontact us immediately.?Please note you are not authorised to copy, use or\ndisclose this communication or any attachments without our consent.\nAlthough this email has been checked by anti-virus software, there is a\nrisk that email messages may be corrupted or infected by viruses or other\ninterferences. No responsibility is accepted for such interference. Unless\nexpressly stated, the views of the writer are not those of the company.\nTricky Solutions always does our best to provide accurate forecasts and\nanalyses based on the data supplied, however it is possible that some\nimportant predictors were not included in the data sent to us. Information\nprovided by us should not be solely relied upon when making decisions and\nclients should use their own judgement.\n\n\n-----Original Message-----\nFrom: r-sig-ecology-bounces at r-project.org\n[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Johannes\nRadinger\nSent: Sunday, 16 October 2011 10:45 PM\nTo: r-sig-ecology at r-project.org\nSubject: [R-sig-eco] Calculate Prediction Interval for Regression by\nhand...\n\nHi UseRs,\n\nI calculated with lm(Y~X1+X2) successfully a linear regression.\nBased on this linear regression with multiple independent variables\nI'd like to calculate manually prediction intervals. Therefore I have a\nfew\nquestions:\n\n1) I want a prediction interval for Y (like Y+-PI) for a given value\nfor X1 and X2.\n2) I want to calculate the predicition intervall for Y by hand (either\nwith the mathematical functions of R or with python etc.\n\nSo I think I have to extract the prediction interval for the single\nregression parameters (intercept and slopes) from the lm model.\n\nI tried to google for a simple solution but wasn't succesfully yet.\nI think following link: Prediction interval in Regression analysis\nexplains very well\nwhat I want to do.\n\nThere it says: \"...one may use the standard error of the estimates for the\nintercept and slope ( and ) to compute a prediction interval\". So is that\nthe right approach?\nIf yes how can I get the standard error for a and b and which formula\nhas to used for the calculation?\n\n\nThank you very much in advance\n\nHave a nice sunday!\n\ncheers\nJohannes\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Hi Johannes,\n\npredict() will give u SE's and confidence intervals.\n\nU can either use the original data as an input and get a prediction for\nall the original data points. Or create an input data set an",
+      "thread_id": "thread-1180975a942e",
+      "thread_depth": 2,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-fe0494946b76",
+      "message_id": "<f8d189fb32fd84b16682ec7ae1e9e61f@mail.gmail.com>",
+      "from_name": "Chris Howden",
+      "from_email_hash": "bf0d499799bf682ad766b5f0eb9281d96f29beb8672c5fe4ecc682773847fcbb",
+      "date": "2011-10-17T10:47:08+11:00",
+      "subject": "[R-sig-eco] Predict with 2 factors in an additive model",
+      "subject_clean": "Predict with 2 factors in an additive model",
+      "in_reply_to": "<E120E5F1-7025-42BC-ACB3-830E3E576437@pdx.edu>",
+      "references": [
+        "<CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>",
+        "<E120E5F1-7025-42BC-ACB3-830E3E576437@pdx.edu>"
+      ],
+      "body_plain": "Expand.grid() is also an easy way to get all the different combination for\ninput factors.\n\nChris Howden B.Sc. (Hons) GStat.\nFounding Partner\nEvidence Based Strategic Development, IP Commercialisation and Innovation,\nData Analysis, Modelling and Training\n(mobile) 0410 689 945\n(fax) +612 4782 9023\nchris at trickysolutions.com.au\n\n\n\n\nDisclaimer: The information in this email and any attachments to it are\nconfidential and may contain legally privileged information.?If you are\nnot the named or intended recipient, please delete this communication and\ncontact us immediately.?Please note you are not authorised to copy, use or\ndisclose this communication or any attachments without our consent.\nAlthough this email has been checked by anti-virus software, there is a\nrisk that email messages may be corrupted or infected by viruses or other\ninterferences. No responsibility is accepted for such interference. Unless\nexpressly stated, the views of the writer are not those of the company.\nTricky Solutions always does our best to provide accurate forecasts and\nanalyses based on the data supplied, however it is possible that some\nimportant predictors were not included in the data sent to us. Information\nprovided by us should not be solely relied upon when making decisions and\nclients should use their own judgement.\n\n\n\n-----Original Message-----\nFrom: r-sig-ecology-bounces at r-project.org\n[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of cparker at pdx.edu\nSent: Saturday, 15 October 2011 11:51 AM\nTo: Manuel Sp?nola\nCc: r-sig-ecology at r-project.org\nSubject: Re: [R-sig-eco] Predict with 2 factors in an additive model\n\nTry this\n\nnewData = data.frame(f1 = factor(c(\"a\",\"a\",\"b\",\"b\")), f2 = factor(c(\"b\",\n\"a\",\"b\",\"a\")))\n\nAnd use that newData in your predict statement\n\nOn Oct 14, 2011, at 4:09 PM, Manuel SpC-nola <mspinola10 at gmail.com> wrote:\n\n> newData = data.frame(f1 = factor(c(\"a\", \"b\")), f2 = factor(c(\"b\", \"a\")))\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Expand.grid() is also an easy way to get all the different combination for\ninput factors.\n\nChris Howden B.Sc. (Hons) GStat.\nFounding Partner\nEvidence Based Strategic Development, IP Commercialisation ",
+      "thread_id": "thread-0789cb11cbe9",
+      "thread_depth": 2,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-b8c8a38ee7f0",
+      "message_id": "<20111017085942.99510@gmx.net>",
+      "from_name": "Johannes Radinger",
+      "from_email_hash": "dcc8f92dde1742e0988f76faef2873b72244689b5254578a7f5d5dae1bc4aaf2",
+      "date": "2011-10-17T10:59:42+02:00",
+      "subject": "[R-sig-eco] Calculate Prediction Interval for Regression by hand...",
+      "subject_clean": "Calculate Prediction Interval for Regression by hand...",
+      "in_reply_to": "<b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>",
+      "references": [
+        "<54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>",
+        "<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>",
+        "<b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>"
+      ],
+      "body_plain": "Hi again,\n\nthank you all for you tips with predict, predict.lm etc.\n>From summary(lm-model), I can get the Estimate and the Standard\nError for intercept and slopes. With confint I can get confidence\nintervals (?) for these parameters for different levels.\n\nI want to calculate it by hand, rather then by using R's predict\nfunction, due to some reasons:\n\n1) I want to get the mathematical background\n2) I want to use it in a model outside of grass (python-model, and\nI don't want to use a direct interaction python-R)\n3) I want to calculate it with simple programming languages (e.g. simplest form of basic etc.)\n\nIn wikipedia it says that it is possible to calculate the prediction interval from the standard error of the parameters. So how is that done exactly? Can anyone guide me to the formula? Or is it just \n\nY=b+Intercept + (a1+SE(a1))*X1+(a2+SE(a2)*X2 (of course with all variations in plus and minus SE)?\n\nYour help is greatly appreciated!\n\n/johannes\n\n-------- Original-Nachricht --------\n> Datum: Mon, 17 Oct 2011 10:36:35 +1100\n> Von: Chris Howden <chris at trickysolutions.com.au>\n> An: Johannes Radinger <jradinger at gmx.at>, r-sig-ecology at r-project.org\n> Betreff: RE: [R-sig-eco] Calculate Prediction Interval for Regression by hand...\n\n> Hi Johannes,\n> \n> predict() will give u SE's and confidence intervals.\n> \n> U can either use the original data as an input and get a prediction for\n> all the original data points. Or create an input data set and get\n> predictions for them.\n> \n> If your doing an ANOVA type analysis with discrete factors I often use\n> expand.grid to quickly get a matrix for all combinations. So something\n> like this\n> (predict.ci <- data.frame(expand.grid(model$xlevels), predict(model,\n> expand.grid(model$xlevels), interval=\"conf\")))\n> \n> \n> There's also confint() which is for single parameters.\n> \n> \n> Chris Howden B.Sc. (Hons) GStat.\n> Founding Partner\n> Evidence Based Strategic Development, IP Commercialisation and Innovation,\n> Data Analysis, Modelling and Training\n> (mobile) 0410 689 945\n> (fax) +612 4782 9023\n> chris at trickysolutions.com.au\n> \n> \n> \n> \n> Disclaimer: The information in this email and any attachments to it are\n> confidential and may contain legally privileged information.?If you are\n> not the named or intended recipient, please delete this communication and\n> contact us immediately.?Please note you are not authorised to copy, use\n> or\n> disclose this communication or any attachments without our consent.\n> Although this email has been checked by anti-virus software, there is a\n> risk that email messages may be corrupted or infected by viruses or other\n> interferences. No responsibility is accepted for such interference. Unless\n> expressly stated, the views of the writer are not those of the company.\n> Tricky Solutions always does our best to provide accurate forecasts and\n> analyses based on the data supplied, however it is possible that some\n> important predictors were not included in the data sent to us. Information\n> provided by us should not be solely relied upon when making decisions and\n> clients should use their own judgement.\n> \n> \n> -----Original Message-----\n> From: r-sig-ecology-bounces at r-project.org\n> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Johannes\n> Radinger\n> Sent: Sunday, 16 October 2011 10:45 PM\n> To: r-sig-ecology at r-project.org\n> Subject: [R-sig-eco] Calculate Prediction Interval for Regression by\n> hand...\n> \n> Hi UseRs,\n> \n> I calculated with lm(Y~X1+X2) successfully a linear regression.\n> Based on this linear regression with multiple independent variables\n> I'd like to calculate manually prediction intervals. Therefore I have a\n> few\n> questions:\n> \n> 1) I want a prediction interval for Y (like Y+-PI) for a given value\n> for X1 and X2.\n> 2) I want to calculate the predicition intervall for Y by hand (either\n> with the mathematical functions of R or with python etc.\n> \n> So I think I have to extract the prediction interval for the single\n> regression parameters (intercept and slopes) from the lm model.\n> \n> I tried to google for a simple solution but wasn't succesfully yet.\n> I think following link: Prediction interval in Regression analysis\n> explains very well\n> what I want to do.\n> \n> There it says: \"...one may use the standard error of the estimates for the\n> intercept and slope ( and ) to compute a prediction interval\". So is that\n> the right approach?\n> If yes how can I get the standard error for a and b and which formula\n> has to used for the calculation?\n> \n> \n> Thank you very much in advance\n> \n> Have a nice sunday!\n> \n> cheers\n> Johannes\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n--",
+      "body_snippet": "Hi again,\n\nthank you all for you tips with predict, predict.lm etc.\n>From summary(lm-model), I can get the Estimate and the Standard\nError for intercept and slopes. With confint I can get confidence\ni",
+      "thread_id": "thread-1180975a942e",
+      "thread_depth": 3,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-377ca1d8f810",
+      "message_id": "<20111017133318.143740@gmx.net>",
+      "from_name": "Kerstin Kober",
+      "from_email_hash": "4c513c8a3a8229ae053c2f464092c545bf4b92edc32daa4d170266455256ae24",
+      "date": "2011-10-17T15:33:18+02:00",
+      "subject": "[R-sig-eco] (no subject)",
+      "subject_clean": "(no subject)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi,\nThis is a question from an R-newby! \nI?ve got a very extensive data set and will need to run a large number of Mann-Whitney U tests (in R: wilcox.test) between several sets of data. I am trying to automate this as far as possible so I won?t need to run each test one by one. I asked already somebody for help which provided a short piece of code which enables me to run several tests one after another. However, I will need to re-adjust this code as there are missing values and it stops every time it encounters this.\n\n\nThe data (I?ve attached a small file with some example data, so you can have an idea how it looks like and run code on it):\nWe?ve got bird density data from various locations, collected over the course of several years. One location (?0?) is our control, which is supposed to be tested against each of the other locations (?1? ? ?3?). We would like to run this test only on data collected during the same year, so we would test ?0? vs ?1? in 1980, ?0? vs ?1? in 1981 etc.\n\nThis is the code I?ve got so far and which works fine as long as there exists data from all years in all locations:\n\nfor(i in 1980:1983){\n    for(j in 1:3){ \n        tmp<- d[d$year == i & d$hotspot %in% c(0, j), ]\n        print(c(i, j))\n        print(wilcox.test(densities~factor(hotspot), data= tmp))\n    }\n}\n\nNow, the problem is, that I don?t have data from all years in all locations: during some years some locations are missing and some years are missing entirely.\n\nI tried to find my way through the R help files, but because I am not quite sure where exactly I would need to insert information about the dealing with missing values (is the problem with the for-loop or in the wilcox.test, possibly in both???), I am not entirely sure how to do this.\n\nIf anybody has an idea how to do this, please let me know.\nThank you very much for your help!!!\n\nKerstin\n\n-- \nDr. Kerstin Kober\nJoint Nature Conservation Committee\n7 Thistle Place\nAberdeen\nAB10 1UZ\nUnited Kingdom\n\ne-mail: kerstin.kober at jncc.gov.uk",
+      "body_snippet": "Hi,\nThis is a question from an R-newby! \nI?ve got a very extensive data set and will need to run a large number of Mann-Whitney U tests (in R: wilcox.test) between several sets of data. I am trying to",
+      "thread_id": "thread-377ca1d8f810",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-2a9e581cb480",
+      "message_id": "<1318859948.17723.90.camel@prometheus.geog.ucl.ac.uk>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "de29578fbbb79e6883c8203a1faebef3fddd10c08cc122f35e5ad109dc250099",
+      "date": "2011-10-17T14:59:08+01:00",
+      "subject": "[R-sig-eco] (no subject)",
+      "subject_clean": "(no subject)",
+      "in_reply_to": "<20111017133318.143740@gmx.net>",
+      "references": [
+        "<20111017133318.143740@gmx.net>"
+      ],
+      "body_plain": "On Mon, 2011-10-17 at 15:33 +0200, Kerstin Kober wrote:\n> Hi,\n> This is a question from an R-newby! \n> I?ve got a very extensive data set and will need to run a large number of Mann-Whitney U tests (in R: wilcox.test) between several sets of data. I am trying to automate this as far as possible so I won?t need to run each test one by one. I asked already somebody for help which provided a short piece of code which enables me to run several tests one after another. However, I will need to re-adjust this code as there are missing values and it stops every time it encounters this.\n> \n> \n> The data (I?ve attached a small file with some example data, so you can have an idea how it looks like and run code on it):\n> We?ve got bird density data from various locations, collected over the course of several years. One location (?0?) is our control, which is supposed to be tested against each of the other locations (?1? ? ?3?). We would like to run this test only on data collected during the same year, so we would test ?0? vs ?1? in 1980, ?0? vs ?1? in 1981 etc.\n> \n> This is the code I?ve got so far and which works fine as long as there exists data from all years in all locations:\n> \n> for(i in 1980:1983){\n>     for(j in 1:3){ \n>         tmp<- d[d$year == i & d$hotspot %in% c(0, j), ]\n>         print(c(i, j))\n>         print(wilcox.test(densities~factor(hotspot), data= tmp))\n>     }\n> }\n\nTwo options (not immediately clear where the missingness issue arises):\n\n1) From ?wilcox.test we note that the formula method accepts (as is\ncommon to most R functions that employ a formula interface) an na.action\nargument.\n\nTry:\n\nprint(wilcox.test(densities~factor(hotspot), data= tmp, \n                  na.action = na.omit))\n\nfor example. See ?na.omit for details and other possible options. But\nthis should have defaulted to na.omit. What does:\n\n> getOption(\"na.action\")\n[1] \"na.omit\"\n\nreturn for you?\n\n2) If the problem is that the `tmp` you are creating contains no rows or\ncertain locations are missing, then wrap the `print(wilcox.test(....))`\nin `try(....)`. This will try to evaluate the function and catch any\nerrors, allowing your loop to continue should an error happen.\n\nHaving given you the rope, duty demands that I at least mention that\nthis seems a strange, if not downright dangerous, thing to be doing. Not\nleast because you are not doing any adjustment of p-values. I most\ncertainly wouldn't believe that the p-values printed in the output have\ntheir usual meaning. Especially if the number of tests performed is, as\nyou say, large.\n\nIf you save each of the wilcox.test objects you could grab the p-values\nlater and adjust them: ?p.adjust\n\nHTH\n\nG\n\n> Now, the problem is, that I don?t have data from all years in all locations: during some years some locations are missing and some years are missing entirely.\n> \n> I tried to find my way through the R help files, but because I am not quite sure where exactly I would need to insert information about the dealing with missing values (is the problem with the for-loop or in the wilcox.test, possibly in both???), I am not entirely sure how to do this.\n> \n> If anybody has an idea how to do this, please let me know.\n> Thank you very much for your help!!!\n> \n> Kerstin\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n-- \n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%",
+      "body_snippet": "On Mon, 2011-10-17 at 15:33 +0200, Kerstin Kober wrote:\n> Hi,\n> This is a question from an R-newby! \n> I?ve got a very extensive data set and will need to run a large number of Mann-Whitney U tests (i",
+      "thread_id": "thread-377ca1d8f810",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-ebe5c9f32818",
+      "message_id": "<CAFErUnDKOdqW2mM-mr+jjY=gh-QicLZ-Qn2YOuo0ezpfy53mgw@mail.gmail.com>",
+      "from_name": "Renato Filogonio",
+      "from_email_hash": "c5bcd6facd8cf4fca745278dee531ff36511379fc7d6352e0206ce24b983b2c3",
+      "date": "2011-10-20T10:18:49-02:00",
+      "subject": "[R-sig-eco] 3-way ANOVA with 2 repeated measures",
+      "subject_clean": "3-way ANOVA with 2 repeated measures",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111020/4d4d4f28/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111020/4d4d4f28/attachment.pl>",
+      "thread_id": "thread-ebe5c9f32818",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-b8507132f419",
+      "message_id": "<CAHT1vpiFhtBnEorvNKkNU0H9e0EKOQC_t1T3JWfiTMBjKTYp3A@mail.gmail.com>",
+      "from_name": "Roman Luštrik",
+      "from_email_hash": "c0075bee7cf180735267468677bcb6c0b494c84c39ebc7ec1c97688bee0fa3df",
+      "date": "2011-10-20T15:28:46+02:00",
+      "subject": "[R-sig-eco] 3-way ANOVA with 2 repeated measures",
+      "subject_clean": "3-way ANOVA with 2 repeated measures",
+      "in_reply_to": "<CAFErUnDKOdqW2mM-mr+jjY=gh-QicLZ-Qn2YOuo0ezpfy53mgw@mail.gmail.com>",
+      "references": [
+        "<CAFErUnDKOdqW2mM-mr+jjY=gh-QicLZ-Qn2YOuo0ezpfy53mgw@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111020/a1ba3f63/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111020/a1ba3f63/attachment.pl>",
+      "thread_id": "thread-ebe5c9f32818",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-795016f1e9e0",
+      "message_id": "<7366ed6a.20e.13322cc9ffa.Coremail.lgj200306@163.com>",
+      "from_name": "lgj200306",
+      "from_email_hash": "9b3598dbc8c16d3f60e48c7dab7a90fd97a1eb07ba7b9ba9ccaf06f128dce112",
+      "date": "2011-10-21T03:26:35+08:00",
+      "subject": "[R-sig-eco] NaNs produced in the process of maximum likelihood",
+      "subject_clean": "NaNs produced in the process of maximum likelihood",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111021/d261d1fc/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111021/d261d1fc/attachment.pl>",
+      "thread_id": "thread-795016f1e9e0",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-6e19459c8ccc",
+      "message_id": "<1d4f37f.15a.13322fcbbb6.Coremail.lgj200306@163.com>",
+      "from_name": "lgj200306",
+      "from_email_hash": "9b3598dbc8c16d3f60e48c7dab7a90fd97a1eb07ba7b9ba9ccaf06f128dce112",
+      "date": "2011-10-21T04:19:08+08:00",
+      "subject": "[R-sig-eco] NaNs produced in the process of maximum likelihood",
+      "subject_clean": "NaNs produced in the process of maximum likelihood",
+      "in_reply_to": "<CAAy4ZDTt5jRAurMUfPFiZepmdUjy7DHDRCRPVkzgxDcUvAxWag@mail.gmail.com>",
+      "references": [
+        "<CAAy4ZDTt5jRAurMUfPFiZepmdUjy7DHDRCRPVkzgxDcUvAxWag@mail.gmail.com>",
+        "<7366ed6a.20e.13322cc9ffa.Coremail.lgj200306@163.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111021/18934035/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111021/18934035/attachment.pl>",
+      "thread_id": "thread-795016f1e9e0",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-78fa759a707e",
+      "message_id": "<1319317595.29357.YahooMailNeo@web110208.mail.gq1.yahoo.com>",
+      "from_name": "Augusto Silva Costa",
+      "from_email_hash": "1556fec29599e475349418dc5d7f0d2013bb885c45c9177dfa97b4be10ebb2ba",
+      "date": "2011-10-22T14:06:35-07:00",
+      "subject": "[R-sig-eco] vegan cca",
+      "subject_clean": "vegan cca",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111022/88bcc5e5/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111022/88bcc5e5/attachment.pl>",
+      "thread_id": "thread-78fa759a707e",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-ac07232e0c4d",
+      "message_id": "<CAA280MxkJKF1aBbeSsVhLJmSri2353BQtn1Dns6oNXJ6AOjiJQ@mail.gmail.com>",
+      "from_name": "Pedro Higuchi",
+      "from_email_hash": "630e839291b31cc273c06de50381ea8c927576b3a29a86d144ae8e9559c56781",
+      "date": "2011-10-22T19:51:58-02:00",
+      "subject": "[R-sig-eco] vegan cca",
+      "subject_clean": "vegan cca",
+      "in_reply_to": "<1319317595.29357.YahooMailNeo@web110208.mail.gq1.yahoo.com>",
+      "references": [
+        "<1319317595.29357.YahooMailNeo@web110208.mail.gq1.yahoo.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111022/e093118f/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111022/e093118f/attachment.pl>",
+      "thread_id": "thread-78fa759a707e",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-cd875bf2d3ed",
+      "message_id": "<loom.20111024T030140-666@post.gmane.org>",
+      "from_name": "Ben Bolker",
+      "from_email_hash": "18f6c2b0b79bec76f7afe0fad5e36fffd27297982eaee9a3a21101b9461258e5",
+      "date": "2011-10-24T01:05:51Z",
+      "subject": "[R-sig-eco] NaNs produced in the process of maximum likelihood",
+      "subject_clean": "NaNs produced in the process of maximum likelihood",
+      "in_reply_to": null,
+      "references": [
+        "<CAAy4ZDTt5jRAurMUfPFiZepmdUjy7DHDRCRPVkzgxDcUvAxWag@mail.gmail.com>",
+        "<7366ed6a.20e.13322cc9ffa.Coremail.lgj200306@163.com>",
+        "<1d4f37f.15a.13322fcbbb6.Coremail.lgj200306@163.com>"
+      ],
+      "body_plain": "lgj200306 <lgj200306 at ...> writes:\n\n> \n> Thaks David very much, but how can I \n>  improve my model? Should I change my likelihood function \n> or do some thing else?\n> Best wishes for all list members!\n\n  Your choices are:\n\n (1) if the final result looks sensible, and none of the final\npredicted values lead to NA/NaN results, you can *probably* ignore these\nwarnings\n\n (2) depending on your model, you may be able to bound\nsome of the parameters (e.g. using method=\"L-BFGS-B\"\nand specifying lower/upper values) *or* fit them on a different scale\n(e.g. the log scale) to prevent zero/negative predicted\nvalues of lambda (predicted values of zero will be OK\nas long as they always go with observed values of zero --\notherwise you'll get infinite (negative) log-likelihood\nvalues. There are some simple examples of bounded optimization\nin the ?mle2 examples ...\n\n> \n> At 2011-10-21 04:05:10,\"David Valentim Dias\" \n> <dvdscripter <at> gmail.com> wrote:\n> Should be a bad parameter like you get from dpois(1, -1)\n> \n> 2011/10/20 lgj200306<lgj200306 <at> 163.com>\n> Hi, all\n> I have a problem about the log maximum likelihood.\n> I want to estimate several parameters using \n> log maximum likelihood method (mle2() in package \"bbmle\" ),\n> and the likelihood fucton was based on poisson distribution.\n> When finished, there were some warnings said that:\n>  >In dpois(x, lambda, log) : NaNs produced\n> Will this situation influence my result of \n> parameters estimating or not? If my parameters estimated have\n> been influenced, how can I improve my R code \n> or data to achieve a exact estimating?\n> Thanks for you attention and best wishes for all of you!\n> Guojun Lin\n> South China Botanical Garden, Chinese Academy of Science, China\n> Department of Renewable Resources, University of Alberta, Canada",
+      "body_snippet": "lgj200306 <lgj200306 at ...> writes:\n\n> \n> Thaks David very much, but how can I \n>  improve my model? Should I change my likelihood function \n> or do some thing else?\n> Best wishes for all list member",
+      "thread_id": "thread-795016f1e9e0",
+      "thread_depth": 2,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-6e883807c72f",
+      "message_id": "<loom.20111024T030814-339@post.gmane.org>",
+      "from_name": "Ben Bolker",
+      "from_email_hash": "18f6c2b0b79bec76f7afe0fad5e36fffd27297982eaee9a3a21101b9461258e5",
+      "date": "2011-10-24T01:10:53Z",
+      "subject": "[R-sig-eco] Confidence intervals in lmer",
+      "subject_clean": "Confidence intervals in lmer",
+      "in_reply_to": null,
+      "references": [
+        "<CALQiR0_y12p4WgHdmEE4p7XTs3SOy1_KKGBzVdTDpWCGODHLgg@mail.gmail.com>",
+        "<1929208526897803633@unknownmsgid>"
+      ],
+      "body_plain": "Chris Howden <chris at ...> writes:\n\n> \n> U could try the predict function with se.fit=true. I believe this\n> should give u the predicted score and se and u can calculate CI from\n> there.\n> \n> U'll have to create an input matrix with the score u want to predict for.\n\n  Unfortunately, predict() doesn't currently exist for lmer models,\nand se.fit doesn't even work for lme models.\n\n  There's some code on http://glmm.wikidot.com/faq for computing\npredictions and standard errors of predictions.  Note, however,\nthat these recipes do not take into account the uncertainty in the \nestimates of the random-effects variance (something that as far\nas I can tell no-one has a recipe for).\n\n> \n> Chris Howden\n> \n> On 27/09/2011, at 23:23, Adam Hayward <a.hayward at ...> wrote:\n> \n> > Dear list members,\n> >\n> > I have a significant interaction between two continuous variables (it\n> > happens to be a mixed model in lmer, but I imagine the same is applicable to\n> > a glm). The interaction tells me that the relationship between z and y\n> > changes as a function of x, but I want to know whether y has a significant\n> > effect on z at a given value of x. For instance, the interaction might show\n> > that the relationship between body weight and fitness changes with age, but\n> > I want to know if the association between body weight and fitness is\n> > significantly positive at the age of 1. Therefore, I'd like to estimate 95%\n> > CIs or SEs around the association between body weight and fitness at a given\n> > age, but have yet to work out how to do it. Any suggestions would be greatly\n> > appreciated.\n> >\n> > Best wishes,\n> > Adam\n> >\n> >",
+      "body_snippet": "Chris Howden <chris at ...> writes:\n\n> \n> U could try the predict function with se.fit=true. I believe this\n> should give u the predicted score and se and u can calculate CI from\n> there.\n> \n> U'll ha",
+      "thread_id": "thread-6e883807c72f",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-df544b5f1106",
+      "message_id": "<loom.20111025T040757-473@post.gmane.org>",
+      "from_name": "Ben Bolker",
+      "from_email_hash": "18f6c2b0b79bec76f7afe0fad5e36fffd27297982eaee9a3a21101b9461258e5",
+      "date": "2011-10-25T02:20:23Z",
+      "subject": "[R-sig-eco] Calculate Prediction Interval for Regression by hand...",
+      "subject_clean": "Calculate Prediction Interval for Regression by hand...",
+      "in_reply_to": null,
+      "references": [
+        "<54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>",
+        "<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>",
+        "<b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>",
+        "<20111017085942.99510@gmx.net>"
+      ],
+      "body_plain": "Johannes Radinger <JRadinger at ...> writes:\n\n> thank you all for you tips with predict, predict.lm etc.\n> >From summary(lm-model), I can get the Estimate and the Standard\n> Error for intercept and slopes. With confint I can get confidence\n> intervals (?) for these parameters for different levels.\n> \n> I want to calculate it by hand, rather then by using R's predict\n> function, due to some reasons:\n> \n> 1) I want to get the mathematical background\n> 2) I want to use it in a model outside of grass (python-model, and\n> I don't want to use a direct interaction python-R)\n> 3) I want to calculate it with simple \n> programming languages (e.g. simplest form of basic etc.)\n> \n> In wikipedia it says that it is possible to \n> calculate the prediction interval from the standard error of the\n> parameters. So how is that done exactly? Can anyone guide me \n> to the formula? Or is it just \n> \n> Y=b+Intercept + (a1+SE(a1))*X1+(a2+SE(a2)*X2 \n> (of course with all variations in plus and minus SE)?\n> \n> Your help is greatly appreciated!\n> \n> /johannes\n> \n\n [snip]\n\n  You need to take the covariance of the parameters into account.\nSuppose you want to calculate the prediction interval for values\nX1=a1, X2=a2.  Form a vector X=c(1,a1,a2) (the first term is for\nthe intercept).  If you (matrix) multiply this by your parameter vector\nbeta (X %*% beta), i.e. beta_0 + beta_1*a1+beta_2*a2 \nyou get your predicted value.  If you have variance-covariance\nmatrix V for the intercept and slopes (a 3x3 symmetric matrix)\nthen the variance of the prediction is X %*% V %*% X^T.\n  Code following this approach can be found at http://glmm.wikidot.com/faq .",
+      "body_snippet": "Johannes Radinger <JRadinger at ...> writes:\n\n> thank you all for you tips with predict, predict.lm etc.\n> >From summary(lm-model), I can get the Estimate and the Standard\n> Error for intercept and sl",
+      "thread_id": "thread-1180975a942e",
+      "thread_depth": 4,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-28ccf567261e",
+      "message_id": "<4EA6EDC3.1010209@sccwrp.org>",
+      "from_name": "Raphael Mazor",
+      "from_email_hash": "5ce4e575f5bf2352520450bd64e7d54b3c2725cd2c71fd9b720c8f641780a04b",
+      "date": "2011-10-25T10:11:31-07:00",
+      "subject": "[R-sig-eco] Sources for learning mapping/GIS with R?",
+      "subject_clean": "Sources for learning mapping/GIS with R?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Can anyone recommend some basic resources for learning how to create \nmaps with R?\nOr recommend packages that are particularly helpful?\n\nThanks!\n\n-- \nRaphael D. Mazor\nFreshwater Biologist\nSouthern California Coastal Water Research Project\n3535 Harbor Blv Suite 110\nCosta Mesa, CA 92626\n\nTel. (714) 755-3235\nFax. (714) 755-3299",
+      "body_snippet": "Can anyone recommend some basic resources for learning how to create \nmaps with R?\nOr recommend packages that are particularly helpful?\n\nThanks!\n\n-- \nRaphael D. Mazor\nFreshwater Biologist\nSouthern Cal",
+      "thread_id": "thread-28ccf567261e",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-bd8f4bcebd9c",
+      "message_id": "<CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.gmail.com>",
+      "from_name": "Sarah Goslee",
+      "from_email_hash": "273eb6baae4ac25f2de5845f3f62dce55d161cfc7cf04eb5f3cc6d94b3d4aa24",
+      "date": "2011-10-25T13:47:43-04:00",
+      "subject": "[R-sig-eco] Sources for learning mapping/GIS with R?",
+      "subject_clean": "Sources for learning mapping/GIS with R?",
+      "in_reply_to": "<4EA6EDC3.1010209@sccwrp.org>",
+      "references": [
+        "<4EA6EDC3.1010209@sccwrp.org>"
+      ],
+      "body_plain": "There's a spatial taskview that's the perfect place to start:\ninstalling the taskview will\ngive you very nearly all the related packages.\n\nhttp://cran.r-project.org/web/views/Spatial.html\n\nFor learning how to use them, Bivand et al's Spatial Analysis book is good:\nhttp://books.google.com/books/about/Applied_spatial_data_analysis_with_R.html?id=4gg8yx_lcj0C\n\nSarah\n\nOn Tue, Oct 25, 2011 at 1:11 PM, Raphael Mazor <raphaelm at sccwrp.org> wrote:\n> Can anyone recommend some basic resources for learning how to create maps\n> with R?\n> Or recommend packages that are particularly helpful?\n>\n> Thanks!\n>\n-- \nSarah Goslee\nhttp://www.functionaldiversity.org",
+      "body_snippet": "There's a spatial taskview that's the perfect place to start:\ninstalling the taskview will\ngive you very nearly all the related packages.\n\nhttp://cran.r-project.org/web/views/Spatial.html\n\nFor learnin",
+      "thread_id": "thread-28ccf567261e",
+      "thread_depth": 1,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-220c47e397cc",
+      "message_id": "<201110251758.p9PHwoYH023069@smtp.upm.es>",
+      "from_name": "Marcelino de la Cruz",
+      "from_email_hash": "f2f0d38d5ba83ada9808ded312f97417ac4b3affff47651eee7d90629396044b",
+      "date": "2011-10-25T19:58:48+02:00",
+      "subject": "[R-sig-eco] Sources for learning mapping/GIS with R?",
+      "subject_clean": "Sources for learning mapping/GIS with R?",
+      "in_reply_to": "<CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.g mail.com>",
+      "references": [
+        "<4EA6EDC3.1010209@sccwrp.org>",
+        "<CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111025/2b8e76b2/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111025/2b8e76b2/attachment.pl>",
+      "thread_id": "thread-28ccf567261e",
+      "thread_depth": 2,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-2a8927f27c86",
+      "message_id": "<4EA729C4.1060809@ecology.msu.montana.edu>",
+      "from_name": "Dave Roberts",
+      "from_email_hash": "3229d32e357888923e00c65f487e6e1cd3028403c9c7a37830ffec8cd93222ad",
+      "date": "2011-10-25T15:27:32-06:00",
+      "subject": "[R-sig-eco] Sources for learning mapping/GIS with R?",
+      "subject_clean": "Sources for learning mapping/GIS with R?",
+      "in_reply_to": "<201110251758.p9PHwoYH023069@smtp.upm.es>",
+      "references": [
+        "<4EA6EDC3.1010209@sccwrp.org>",
+        "<CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.gmail.com>",
+        "<201110251758.p9PHwoYH023069@smtp.upm.es>"
+      ],
+      "body_plain": "R and GRASS can both be made to talk to the same database (I use \nPostgreSQL) at the same time, allowing you you to use the best tool for \neach job and keep everything in sync.\n\nYou might also want to look at\n\nhttp://pvanb.wordpress.com/\n\nand Dylan Beaudette at\n\nhttp://casoilresource.lawr.ucdavis.edu/drupal/node/905\n\nDave Roberts\n\nOn 10/25/2011 11:58 AM, Marcelino de la Cruz wrote:\n>\n> Also, for open source GIS ( GRASS and R)\n>\n> Neteler, M., Mitasova, H., 2008. Open Source GIS: A GRASS GIS\n> Approach, 3rd Edt. Springer, The International Series in Engineering\n> and Computer Science: Volume 773. 406 p.\n>\n> By the way, you can find a lot of useful resources in the home page\n> of Tomislav Hengl:\n> http://spatial-analyst.net/wiki/index.php?title=Main_Page\n>\n> Cheers,\n> Marcelino\n>\n>\n> At 19:47 25/10/2011, Sarah Goslee wrote:\n>> There's a spatial taskview that's the perfect place to start:\n>> installing the taskview will\n>> give you very nearly all the related packages.\n>>\n>> http://cran.r-project.org/web/views/Spatial.html\n>>\n>> For learning how to use them, Bivand et al's Spatial Analysis book is good:\n>> http://books.google.com/books/about/Applied_spatial_data_analysis_with_R.html?id=4gg8yx_lcj0C\n>>\n>> Sarah\n>>\n>> On Tue, Oct 25, 2011 at 1:11 PM, Raphael Mazor<raphaelm at sccwrp.org>  wrote:\n>>> Can anyone recommend some basic resources for learning how to create maps\n>>> with R?\n>>> Or recommend packages that are particularly helpful?\n>>>\n>>> Thanks!--\n\n>>>\n>> --\n>> Sarah Goslee\n>> http://www.functionaldiversity.org\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n> ____________________________________\n>\n> Marcelino de la Cruz Rot\n> Depto. Biologia Vegetal\n> EUIT Agricola\n> Universidad Politecnica de Madrid\n>\n> tel: 34 + 913365435\n> ____________________________________\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "R and GRASS can both be made to talk to the same database (I use \nPostgreSQL) at the same time, allowing you you to use the best tool for \neach job and keep everything in sync.\n\nYou might also want to",
+      "thread_id": "thread-28ccf567261e",
+      "thread_depth": 3,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-34eaafdf786b",
+      "message_id": "<CAPdoLAc=CidqOi1cdo5smkwgOve0ahanuGDq9_mqay8TEkJYyQ@mail.gmail.com>",
+      "from_name": "Andy Rominger",
+      "from_email_hash": "2956a05bc8af7c3f7005f759bf897a20c402ab3f15246c6947d5261b4faa7e72",
+      "date": "2011-10-25T17:44:33-07:00",
+      "subject": "[R-sig-eco] Job Announcement: Research Technician in the Harte Lab at UC Berkeley",
+      "subject_clean": "Job Announcement: Research Technician in the Harte Lab at UC Berkeley",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111025/7a31b9b3/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111025/7a31b9b3/attachment.pl>",
+      "thread_id": "thread-34eaafdf786b",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-b7107bd2e781",
+      "message_id": "<001a01cc940c$a977c960$fc675c20$@cornelis@cirad.fr>",
+      "from_name": "Daniel CORNELIS",
+      "from_email_hash": "05e61c348cbd68380804f60e193cef637a49bc514f98727c402d273a01e781c3",
+      "date": "2011-10-26T20:25:44+02:00",
+      "subject": "[R-sig-eco] brb function in adehabitatHR",
+      "subject_clean": "brb function in adehabitatHR",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111026/0ef034b9/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111026/0ef034b9/attachment.pl>",
+      "thread_id": "thread-b7107bd2e781",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-ae5476b41ec5",
+      "message_id": "<4EA95BA7.17078.4C8FBB@eperry.chesapeake.net>",
+      "from_name": "Elgin Perry",
+      "from_email_hash": "932c40ea3c59c3425b3762ae93875f32c2aaef675c0bc7ae28c44ad0e76f7fe2",
+      "date": "2011-10-27T09:24:55-04:00",
+      "subject": "[R-sig-eco] Maximum Autocorrelation Factor (MAF) transform",
+      "subject_clean": "Maximum Autocorrelation Factor (MAF) transform",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111027/bc96d644/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111027/bc96d644/attachment.pl>",
+      "thread_id": "thread-ae5476b41ec5",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-a812fb42210a",
+      "message_id": "<1319743563.89999.YahooMailNeo@web125714.mail.ne1.yahoo.com>",
+      "from_name": "dan clune",
+      "from_email_hash": "f0f826c5e79b93859fb5a2ba68aec3dcfb4c54ff55c2c0c77940d87205dc933f",
+      "date": "2011-10-27T12:26:03-07:00",
+      "subject": "[R-sig-eco] expected abundances from vegan radfit output",
+      "subject_clean": "expected abundances from vegan radfit output",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111027/9761275c/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111027/9761275c/attachment.pl>",
+      "thread_id": "thread-a812fb42210a",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-c0c0e2620197",
+      "message_id": "<63F107BCC37AEA49A75FD94AA3E07CB0093755E0@pacpbsex01.pac.dfo-mpo.ca>",
+      "from_name": "Edwards, Andrew",
+      "from_email_hash": "f591802e1c0a5b675238c7fb1ffcda7cf20035f11b9840d8b28cb236917274c1",
+      "date": "2011-10-27T15:01:04-07:00",
+      "subject": "[R-sig-eco] Sources for learning mapping/GIS with R? (Raphael Mazor)",
+      "subject_clean": "Sources for learning mapping/GIS with R? (Raphael Mazor)",
+      "in_reply_to": "<mailman.1.1319623201.18166.r-sig-ecology@r-project.org>",
+      "references": [],
+      "body_plain": "Dear Raphael,\n\nYou may want to take a look at the R package PBSmapping  (Mapping\nFisheries Data and Spatial Analysis Tools). It's available on CRAN.\n\nThe description is:\n\n\"This software has evolved from fisheries research conducted at the\nPacific Biological Station (PBS) in Nanaimo, British Columbia, Canada.\nIt extends the R language to include two-dimensional plotting features\nsimilar to those commonly available in a Geographic Information System\n(GIS). Embedded C code speeds algorithms from computational geometry,\nsuch as finding polygons that contain specified point events or\nconverting between longitude-latitude and Universal Transverse Mercator\n(UTM) coordinates. It includes data for a global shoreline and other\ndata sets in the public domain. The R directory\n'.../library/PBSmapping/doc' includes a complete user's guide\nPBSmapping-UG.pdf. To use this package effectively, please consult the\nguide.\"\n\nThe CRAN page is:\n\nhttp://cran.r-project.org/web/packages/PBSmapping/index.html\n\nincluding a link to the reference manual.\n\nLet me know if it is useful for your needs. We do maintain it here,\noften employing students or contractors, so it's useful to know how\nuseful people find it.\n\nCheers,\n\nAndrew Edwards\n \n-- \nDr. Andrew Edwards \nAndrew.Edwards at dfo-mpo.gc.ca \nhttp://www.chebucto.ns.ca/~english \n\nPacific Biological Station, \nFisheries and Oceans Canada, \n3190 Hammond Bay Road, \nNanaimo, British Columbia, \nV9T 6N7, Canada. \nTel: +1 250-756-7146 \nFax: +1 250 756-7053 \n> Message: 1\n> Date: Tue, 25 Oct 2011 10:11:31 -0700\n> From: Raphael Mazor <raphaelm at sccwrp.org>\n> To: r-sig-ecology at r-project.org\n> Subject: [R-sig-eco] Sources for learning mapping/GIS with R?\n> Message-ID: <4EA6EDC3.1010209 at sccwrp.org>\n> Content-Type: text/plain; charset=ISO-8859-1; format=flowed\n> \n> Can anyone recommend some basic resources for learning how to create \n> maps with R?\n> Or recommend packages that are particularly helpful?\n> \n> Thanks!\n> \n> -- \n> Raphael D. Mazor\n> Freshwater Biologist\n> Southern California Coastal Water Research Project\n> 3535 Harbor Blv Suite 110\n> Costa Mesa, CA 92626\n> \n> Tel. (714) 755-3235\n> Fax. (714) 755-3299\n>",
+      "body_snippet": "Dear Raphael,\n\nYou may want to take a look at the R package PBSmapping  (Mapping\nFisheries Data and Spatial Analysis Tools). It's available on CRAN.\n\nThe description is:\n\n\"This software has evolved fr",
+      "thread_id": "thread-c0c0e2620197",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-bdbd0c2276f4",
+      "message_id": "<CAEeY+MuzEgNTYFZW37=m6WW+TuZ00v+Dm4CCdp=-q7-hy4N8CQ@mail.gmail.com>",
+      "from_name": "Christian Setzkorn",
+      "from_email_hash": "05129acdd5aa0e8a09e4c9f0bc29e46e82c4460ae2971f12ca52b943f5374c76",
+      "date": "2011-10-28T14:55:31+01:00",
+      "subject": "[R-sig-eco] location data format for adehabitat package",
+      "subject_clean": "location data format for adehabitat package",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "I have a file in this format:\n\nhttp://docs.codehaus.org/display/GEOTOOLS/ArcInfo+ASCII+Grid+format#ASCIIGrid\n\nThe first rows look like this:\n\nncols 1440\nnrows 720\nxllcorner -180.0\nyllcorner -90\ncellsize 0.25\nNODATA_value -9999\n\nBasically I have the world with 1440 'tiles' in x direction\n(longitude) and 720 'tiles' in y direction (latitude). Each 'tile' is\na square with a length of 0.25 degrees. I think I have xllcorner and\nyllcorner correct. I can draw this map like this in R:\n\nlibrary(\"adehabitat\")\nbio1 <- import.asc(\"D:/ENFA/data.asc\")\nmaps <- as.kasc(list(data = bio1))\nimage(maps, col = cm.colors(256), clfac = list(Aspect = cl))\n\nThe map looks fine.\n\nI would like to perform some ecological niche factor analysis (ENFA)\nusing the adehabitat package and am not too sure about the location\ndata. Basically I have them as longitudes and latitudes at the moment\nbut I could also generate then as 'tile index' (e.g. lower left corner\nhas the latitude -90 and longitude -180 so the 'tile index' would be\n0, 0 - right?). Which is the correct location data format? I would use\nENFA code like this:\n\nlocs <- read.table(\"D:/ENFA/Locs.txt\", header = TRUE, sep=\"\\t\")\ndataenfa1 <- data2enfa(maps, locs)\npc <- dudi.pca(dataenfa1$tab, scannf = FALSE)\nenfa1 <- enfa(pc, dataenfa1$pr,scannf = FALSE)\nhist(enfa1)\n\nI would appreciate any comments please. Thanks in advance.\n\nChristian",
+      "body_snippet": "I have a file in this format:\n\nhttp://docs.codehaus.org/display/GEOTOOLS/ArcInfo+ASCII+Grid+format#ASCIIGrid\n\nThe first rows look like this:\n\nncols 1440\nnrows 720\nxllcorner -180.0\nyllcorner -90\ncellsi",
+      "thread_id": "thread-bdbd0c2276f4",
+      "thread_depth": 0,
+      "month": "2011-10"
+    },
+    {
+      "id": "msg-aa80383c117b",
+      "message_id": "<4EAE836B.2090903@oncfs.gouv.fr>",
+      "from_name": "Clement Calenge",
+      "from_email_hash": "599c7bb21e58eb2d87faf33dae39c73009649e589b73716148359a67c1e08666",
+      "date": "2011-10-31T12:15:55+01:00",
+      "subject": "[R-sig-eco] location data format for adehabitat package",
+      "subject_clean": "location data format for adehabitat package",
+      "in_reply_to": "<CAEeY+MuzEgNTYFZW37=m6WW+TuZ00v+Dm4CCdp=-q7-hy4N8CQ@mail.gmail.com>",
+      "references": [
+        "<CAEeY+MuzEgNTYFZW37=m6WW+TuZ00v+Dm4CCdp=-q7-hy4N8CQ@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Christian,\n\n> I would like to perform some ecological niche factor analysis (ENFA)\n> using the adehabitat package and am not too sure about the location\n> data. Basically I have them as longitudes and latitudes at the moment\n> but I could also generate then as 'tile index' (e.g. lower left corner\n> has the latitude -90 and longitude -180 so the 'tile index' would be\n> 0, 0 - right?). Which is the correct location data format?\n\nThe location data should be in the same coordinate system as the maps. \nTherefore, the locations should be expressed as longitude/latitudes.\nHTH,\n\nCl?ment Calenge\n\n-- \nCl?ment CALENGE\nCellule d'appui ? l'analyse de donn?es\nDirection des Etudes et de la Recherche\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_snippet": "Dear Christian,\n\n> I would like to perform some ecological niche factor analysis (ENFA)\n> using the adehabitat package and am not too sure about the location\n> data. Basically I have them as longitude",
+      "thread_id": "thread-bdbd0c2276f4",
+      "thread_depth": 1,
+      "month": "2011-10"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-37d5da32e602",
+      "subject": "Repeated measures RDA in vegan",
+      "message_count": 2,
+      "participants": [
+        "Gavin Simpson",
+        "Lien Sim"
+      ],
+      "started": "2011-10-03T12:57:23+11:00",
+      "last_reply": "2011-10-04T10:59:40+01:00",
+      "root_message_id": "msg-37d5da32e602"
+    },
+    {
+      "id": "thread-42830a310ca1",
+      "subject": "Help PCNM analysis",
+      "message_count": 4,
+      "participants": [
+        "Emma Gothe",
+        "François Gillet",
+        "Jari Oksanen"
+      ],
+      "started": "2011-10-05T10:25:12+02:00",
+      "last_reply": "2011-10-05T23:59:08+02:00",
+      "root_message_id": "msg-42830a310ca1"
+    },
+    {
+      "id": "thread-b19c8cb63f76",
+      "subject": "Calculating an AIC for the Fisher's log series.....",
+      "message_count": 3,
+      "participants": [
+        "Cory Redman",
+        "Jari Oksanen",
+        "Peter Solymos"
+      ],
+      "started": "2011-10-05T12:42:30-05:00",
+      "last_reply": "2011-10-05T23:21:30+03:00",
+      "root_message_id": "msg-b19c8cb63f76"
+    },
+    {
+      "id": "thread-00b84008f7c7",
+      "subject": "trouble in fitting a distirbution",
+      "message_count": 1,
+      "participants": [
+        "matteo dossena"
+      ],
+      "started": "2011-10-05T18:19:46+01:00",
+      "last_reply": "2011-10-05T18:19:46+01:00",
+      "root_message_id": "msg-00b84008f7c7"
+    },
+    {
+      "id": "thread-b180769d28b7",
+      "subject": "trouble in fitting a distirbution (matteo dossena)",
+      "message_count": 2,
+      "participants": [
+        "Edwards, Andrew",
+        "matteo dossena"
+      ],
+      "started": "2011-10-06T17:20:24-07:00",
+      "last_reply": "2011-10-07T16:21:35+01:00",
+      "root_message_id": "msg-b180769d28b7"
+    },
+    {
+      "id": "thread-d9d71fdcfe6b",
+      "subject": "Multivariate ANOVA/repeated measures",
+      "message_count": 7,
+      "participants": [
+        "Dave Roberts",
+        "Dr N.A. Cutler",
+        "Gavin Simpson",
+        "Rich Shepard"
+      ],
+      "started": "2011-10-07T15:51:30+01:00",
+      "last_reply": "2011-10-11T12:54:12+01:00",
+      "root_message_id": "msg-d9d71fdcfe6b"
+    },
+    {
+      "id": "thread-92e8e4df2b26",
+      "subject": "K function",
+      "message_count": 2,
+      "participants": [
+        "marcelino.delacruz at upm.es",
+        "沈勇"
+      ],
+      "started": "2011-10-12T11:38:48+08:00",
+      "last_reply": "2011-10-12T10:23:15+01:00",
+      "root_message_id": "msg-92e8e4df2b26"
+    },
+    {
+      "id": "thread-a42825a70055",
+      "subject": "How can get P value of regression tree and LOWESS in R.",
+      "message_count": 2,
+      "participants": [
+        "Gavin Simpson",
+        "刘朔孺"
+      ],
+      "started": "2011-10-12T11:44:00+08:00",
+      "last_reply": "2011-10-12T09:41:41+01:00",
+      "root_message_id": "msg-a42825a70055"
+    },
+    {
+      "id": "thread-290851684733",
+      "subject": "number of pixels in a circular window for GRASS r.neighbors function",
+      "message_count": 2,
+      "participants": [
+        "Alexandre Villers",
+        "cparker at pdx.edu"
+      ],
+      "started": "2011-10-12T13:39:22+03:00",
+      "last_reply": "2011-10-12T06:40:34-07:00",
+      "root_message_id": "msg-290851684733"
+    },
+    {
+      "id": "thread-1180975a942e",
+      "subject": "adehabitat: GNESFA - first and last axes",
+      "message_count": 5,
+      "participants": [
+        "Ben Bolker",
+        "Chris Howden",
+        "Johannes Radinger",
+        "Maria Zwart"
+      ],
+      "started": "2011-10-13T11:20:37+01:00",
+      "last_reply": "2011-10-25T02:20:23+00:00",
+      "root_message_id": "msg-1180975a942e"
+    },
+    {
+      "id": "thread-3c537f92fc3c",
+      "subject": "TWINSPAN file format",
+      "message_count": 2,
+      "participants": [
+        "Gavin Simpson",
+        "Sami Rabei"
+      ],
+      "started": "2011-10-14T11:22:59-07:00",
+      "last_reply": "2011-10-14T19:30:10+01:00",
+      "root_message_id": "msg-3c537f92fc3c"
+    },
+    {
+      "id": "thread-0789cb11cbe9",
+      "subject": "Predict with 2 factors in an additive model",
+      "message_count": 4,
+      "participants": [
+        "Chris Howden",
+        "Gavin Simpson",
+        "Manuel Spínola",
+        "cparker at pdx.edu"
+      ],
+      "started": "2011-10-14T17:09:56-06:00",
+      "last_reply": "2011-10-17T10:47:08+11:00",
+      "root_message_id": "msg-0789cb11cbe9"
+    },
+    {
+      "id": "thread-377ca1d8f810",
+      "subject": "(no subject)",
+      "message_count": 2,
+      "participants": [
+        "Gavin Simpson",
+        "Kerstin Kober"
+      ],
+      "started": "2011-10-17T15:33:18+02:00",
+      "last_reply": "2011-10-17T14:59:08+01:00",
+      "root_message_id": "msg-377ca1d8f810"
+    },
+    {
+      "id": "thread-ebe5c9f32818",
+      "subject": "3-way ANOVA with 2 repeated measures",
+      "message_count": 2,
+      "participants": [
+        "Renato Filogonio",
+        "Roman Luštrik"
+      ],
+      "started": "2011-10-20T10:18:49-02:00",
+      "last_reply": "2011-10-20T15:28:46+02:00",
+      "root_message_id": "msg-ebe5c9f32818"
+    },
+    {
+      "id": "thread-795016f1e9e0",
+      "subject": "NaNs produced in the process of maximum likelihood",
+      "message_count": 3,
+      "participants": [
+        "Ben Bolker",
+        "lgj200306"
+      ],
+      "started": "2011-10-21T03:26:35+08:00",
+      "last_reply": "2011-10-24T01:05:51+00:00",
+      "root_message_id": "msg-795016f1e9e0"
+    },
+    {
+      "id": "thread-78fa759a707e",
+      "subject": "vegan cca",
+      "message_count": 2,
+      "participants": [
+        "Augusto Silva Costa",
+        "Pedro Higuchi"
+      ],
+      "started": "2011-10-22T14:06:35-07:00",
+      "last_reply": "2011-10-22T19:51:58-02:00",
+      "root_message_id": "msg-78fa759a707e"
+    },
+    {
+      "id": "thread-6e883807c72f",
+      "subject": "Confidence intervals in lmer",
+      "message_count": 1,
+      "participants": [
+        "Ben Bolker"
+      ],
+      "started": "2011-10-24T01:10:53+00:00",
+      "last_reply": "2011-10-24T01:10:53+00:00",
+      "root_message_id": "msg-6e883807c72f"
+    },
+    {
+      "id": "thread-28ccf567261e",
+      "subject": "Sources for learning mapping/GIS with R?",
+      "message_count": 4,
+      "participants": [
+        "Dave Roberts",
+        "Marcelino de la Cruz",
+        "Raphael Mazor",
+        "Sarah Goslee"
+      ],
+      "started": "2011-10-25T10:11:31-07:00",
+      "last_reply": "2011-10-25T15:27:32-06:00",
+      "root_message_id": "msg-28ccf567261e"
+    },
+    {
+      "id": "thread-34eaafdf786b",
+      "subject": "Job Announcement: Research Technician in the Harte Lab at UC Berkeley",
+      "message_count": 1,
+      "participants": [
+        "Andy Rominger"
+      ],
+      "started": "2011-10-25T17:44:33-07:00",
+      "last_reply": "2011-10-25T17:44:33-07:00",
+      "root_message_id": "msg-34eaafdf786b"
+    },
+    {
+      "id": "thread-b7107bd2e781",
+      "subject": "brb function in adehabitatHR",
+      "message_count": 1,
+      "participants": [
+        "Daniel CORNELIS"
+      ],
+      "started": "2011-10-26T20:25:44+02:00",
+      "last_reply": "2011-10-26T20:25:44+02:00",
+      "root_message_id": "msg-b7107bd2e781"
+    },
+    {
+      "id": "thread-ae5476b41ec5",
+      "subject": "Maximum Autocorrelation Factor (MAF) transform",
+      "message_count": 1,
+      "participants": [
+        "Elgin Perry"
+      ],
+      "started": "2011-10-27T09:24:55-04:00",
+      "last_reply": "2011-10-27T09:24:55-04:00",
+      "root_message_id": "msg-ae5476b41ec5"
+    },
+    {
+      "id": "thread-a812fb42210a",
+      "subject": "expected abundances from vegan radfit output",
+      "message_count": 1,
+      "participants": [
+        "dan clune"
+      ],
+      "started": "2011-10-27T12:26:03-07:00",
+      "last_reply": "2011-10-27T12:26:03-07:00",
+      "root_message_id": "msg-a812fb42210a"
+    },
+    {
+      "id": "thread-c0c0e2620197",
+      "subject": "Sources for learning mapping/GIS with R? (Raphael Mazor)",
+      "message_count": 1,
+      "participants": [
+        "Edwards, Andrew"
+      ],
+      "started": "2011-10-27T15:01:04-07:00",
+      "last_reply": "2011-10-27T15:01:04-07:00",
+      "root_message_id": "msg-c0c0e2620197"
+    },
+    {
+      "id": "thread-bdbd0c2276f4",
+      "subject": "location data format for adehabitat package",
+      "message_count": 2,
+      "participants": [
+        "Christian Setzkorn",
+        "Clement Calenge"
+      ],
+      "started": "2011-10-28T14:55:31+01:00",
+      "last_reply": "2011-10-31T12:15:55+01:00",
+      "root_message_id": "msg-bdbd0c2276f4"
+    }
+  ]
+}

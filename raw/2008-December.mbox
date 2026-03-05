@@ -1,0 +1,3150 @@
+From Paul.Satterthwaite at oregonstate.edu  Mon Dec  1 17:41:33 2008
+From: Paul.Satterthwaite at oregonstate.edu (Satterthwaite, Paul)
+Date: Mon, 1 Dec 2008 08:41:33 -0800
+Subject: [R-sig-eco] hole-effect model variograms and moving average
+	variograms
+Message-ID: <D7B94F0B40246740A3EFF9DBBD921B7BB8981A@SAGE.forestry.oregonstate.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081201/4765429a/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Mon Dec  1 20:30:35 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Mon, 01 Dec 2008 19:30:35 +0000
+Subject: [R-sig-eco] Problems with vegdist in Vegan
+In-Reply-To: <492F21D5.40600@una.ac.cr>
+References: <492F21D5.40600@una.ac.cr>
+Message-ID: <1228159835.2814.37.camel@graptoleberis.geog.ucl.ac.uk>
+
+I don't understand your data? Dissimilarities are computed with
+vegdist() in vegan on an n x m matrix of n samples and m variables. The
+m variables could be species or any other set of descriptor variables.
+
+Is your data like this? Or did you mean that your data are n samples
+with a single column of numbers representing the count of a single thing
+at each of the n samples? If so, are some counts zero? This doesn't
+sound like a community matrix as I describe above to me.
+
+I think the error message is reasonably clear; You have some samples
+(rows) with no positive values in them (i.e. some all-zero counts for a
+given sample (row)). In such cases, the Jaccard distance is not defined
+- the warning is coming from the Bray-Curtis routine [as these two
+dissimilarities are equivalent] and hence the ambiguity there ("...may
+be..."), as the connoisseur may know what they are doing and know what
+to do with such results. 
+
+The second message is a consequence of the first; as the Jaccard is not
+defined for empty rows, you get NA values for those comparisons
+concerning this/those sample(s).
+
+So I think yes, it is a problem and you need to consider how to proceed.
+Perhaps taking a look at rowSums(yourData) might indicate which samples
+are causing the problem.
+
+HTH
+
+G
+
+On Thu, 2008-11-27 at 16:40 -0600, Manuel Sp?nola wrote:
+> Dear list members,
+> 
+> I am runnig a NMDS in Vegan (version 1.13.2, Windows) and I get the 
+> following message with the function vegdist:
+> 
+>  > aves.dis <- vegdist(avesp.esp, dist="jaccard")
+> Warning messages:
+> 1: In vegdist(avesp.esp, dist = "jaccard") :
+>   you have empty rows: their dissimilarities may be meaningless in 
+> method bray
+> 
+> 2: In vegdist(avesp.esp, dist = "jaccard") : missing values in results
+> 
+> I have sites (point counts) without species, is it a problem?
+> Thank you very much in advance.
+> Best,
+> 
+> Manuel Sp?nola
+>
+
+
+From gavin.simpson at ucl.ac.uk  Mon Dec  1 21:06:03 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Mon, 01 Dec 2008 20:06:03 +0000
+Subject: [R-sig-eco] Problems with vegdist in Vegan
+In-Reply-To: <1228159835.2814.37.camel@graptoleberis.geog.ucl.ac.uk>
+References: <492F21D5.40600@una.ac.cr>
+	<1228159835.2814.37.camel@graptoleberis.geog.ucl.ac.uk>
+Message-ID: <1228161963.2814.45.camel@graptoleberis.geog.ucl.ac.uk>
+
+On Mon, 2008-12-01 at 19:30 +0000, Gavin Simpson wrote:
+> I don't understand your data? Dissimilarities are computed with
+> vegdist() in vegan on an n x m matrix of n samples and m variables. The
+> m variables could be species or any other set of descriptor variables.
+> 
+> Is your data like this? Or did you mean that your data are n samples
+> with a single column of numbers representing the count of a single thing
+> at each of the n samples? If so, are some counts zero? This doesn't
+> sound like a community matrix as I describe above to me.
+> 
+> I think the error message is reasonably clear; You have some samples
+> (rows) with no positive values in them (i.e. some all-zero counts for a
+> given sample (row)). In such cases, the Jaccard distance is not defined
+> - the warning is coming from the Bray-Curtis routine [as these two
+> dissimilarities are equivalent] and hence the ambiguity there ("...may
+> be..."), as the connoisseur may know what they are doing and know what
+> to do with such results.
+
+[sorry should have checked rather than rely on my memory; never a good
+thing after a 5am start...]
+
+The warning is actually coming from your use of 'dist = "jaccard"'.
+There is no argument 'dist' in vegdist() hence the default 'method =
+"bray"' is used, and hence the warning is raised from the initial checks
+in vegdist()
+
+Where I was misremembering is that it is in the C source that the bray
+routine *is* used even if you want/ask for Jaccard. vegdist() sorts out
+the difference to be the Bray-Curtis distances into Jaccard ones.
+
+That said - the problem with your data still remains if you set method =
+"jaccard".
+
+G
+
+> 
+> The second message is a consequence of the first; as the Jaccard is not
+> defined for empty rows, you get NA values for those comparisons
+> concerning this/those sample(s).
+> 
+> So I think yes, it is a problem and you need to consider how to proceed.
+> Perhaps taking a look at rowSums(yourData) might indicate which samples
+> are causing the problem.
+> 
+> HTH
+> 
+> G
+> 
+> On Thu, 2008-11-27 at 16:40 -0600, Manuel Sp?nola wrote:
+> > Dear list members,
+> > 
+> > I am runnig a NMDS in Vegan (version 1.13.2, Windows) and I get the 
+> > following message with the function vegdist:
+> > 
+> >  > aves.dis <- vegdist(avesp.esp, dist="jaccard")
+> > Warning messages:
+> > 1: In vegdist(avesp.esp, dist = "jaccard") :
+> >   you have empty rows: their dissimilarities may be meaningless in 
+> > method bray
+> > 
+> > 2: In vegdist(avesp.esp, dist = "jaccard") : missing values in results
+> > 
+> > I have sites (point counts) without species, is it a problem?
+> > Thank you very much in advance.
+> > Best,
+> > 
+> > Manuel Sp?nola
+> >
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From Jeffrey_Warren at fws.gov  Mon Dec  1 22:49:49 2008
+From: Jeffrey_Warren at fws.gov (Jeffrey_Warren at fws.gov)
+Date: Mon, 1 Dec 2008 14:49:49 -0700
+Subject: [R-sig-eco] RMark Burnham Ananlysis
+Message-ID: <OFF38C43D3.6B63E75C-ON87257512.0075A928-87257512.0077EB18@fws.gov>
+
+
+I'm currently conducting an analysis of seasonal survival in RMark using
+Burnham's joint analysis model.  The year is broken into the non-breeding
+season (Sept. - April) and the breeding season (May-August).  Capture
+periods occur in May, June, and August, so that the breeding season is
+divided into 2 intervals (mid-May to mid-June and mid-June to late August)
+and the non-breeding season is a single interval from September to April.
+In MARK I could go into the PIMS and 'constrain' the 2 intervals of a
+breeding season to have the same survival, but I can't figure out how to do
+this in RMark.  It seems that adding a factor for breeding season and
+non-breeding season may be the only way to do this.  This would require a
+new factor for each model of interest (e.g., nbs(.) bs(.) vs. nbs(t) bs(t))
+- I wanted to see if there were other options before going further.  Any
+ideas would be appreciated.
+
+Thanks,
+
+Jeff Warren
+Wildlife Biologist
+Red Rock Lakes NWR
+Lima, Montana 59739
+(406) 276-3536
+
+
+From Jeff.Laake at noaa.gov  Tue Dec  2 16:07:39 2008
+From: Jeff.Laake at noaa.gov (Jeff Laake)
+Date: Tue, 02 Dec 2008 07:07:39 -0800
+Subject: [R-sig-eco] RMark Burnham Ananlysis
+In-Reply-To: <OFF38C43D3.6B63E75C-ON87257512.0075A928-87257512.0077EB18@fws.gov>
+References: <OFF38C43D3.6B63E75C-ON87257512.0075A928-87257512.0077EB18@fws.gov>
+Message-ID: <49354F3B.60304@noaa.gov>
+
+Best place to post questions about RMark is on the phidot MARK forum.  I 
+do get postings from this list but in digest form but I don't always 
+review carefully.  Also, since RMark is not on CRAN many on this list 
+may not be aware of RMark.
+
+Now to your question.  You are on the right track to add another factor 
+variable but not for groups.  I didn't quite understand your notation 
+but you need to add a factor variable to the design data for S that you 
+can use in place of the default time field.  I don't know how you have 
+your time intervals set up but let's say it is something like below 
+where time starts at beginning of "year" and end of breeding is after .2 
+of a year (not sure arithmetic is correct here). Because S is an 
+interval paramter, time will be given the value of the beginning of the 
+interval.  Thus, records in the design data with values of 
+1.0,1.1,2.0,2.1  etc are breeding season periods and the periods 
+1.2,2.2,... will be non-breeding periods
+
+ddl$S
+time
+1.0    breeding
+1.1    breeding
+1.2    non-breeding
+2.0    breeding
+2.1    breeding
+2.2    non-breeding
+.
+.
+
+So you can create 2 factor variables. One could be B or N for breeding 
+non-breeding that would allow you to fit a model with differences 
+between seasons but not years and the other would be Year which would be 
+for yearly effects.   You could do this as follows if your design data 
+is names ddl:
+
+ddl$S$season="B"
+ddl$S$season[ddl$S$Time-floor(ddl$S$Time)>0.15]="N"
+ddl$S$season=factor(ddl$S$season)
+ddl$S$year=factor(floor(ddl$S$Time))
+
+Then you can use models for S like ~season, ~year, ~season+year or 
+~season*year where the latter is equivalent to ~time.  Note that I 
+didn't check the above in R and you'll want to modify to fit your time 
+setup but it should get going in the right direction.
+
+--jeff
+
+
+From ct529 at york.ac.uk  Wed Dec  3 10:29:29 2008
+From: ct529 at york.ac.uk (Corrado)
+Date: Wed, 3 Dec 2008 09:29:29 +0000
+Subject: [R-sig-eco] Raster file from ascii file and flattening Africa ....
+	:)
+Message-ID: <200812030929.29575.ct529@york.ac.uk>
+
+Dear friends,
+
+I am a kind of advanced newbie, if that makes sense.
+
+I have a text file of the form
+
+coordinate x,coordinate y,cat={real number between 250 and 450}
+
+where coordinate are expressed in latitude and longitude. The files represents 
+measurements of the size of a skulls on sites all over Africa.
+
+From it, I would like to build a raster file, 100 km by 100km.  There are 2 
+problems:
+
+1) Unfortunately,  in some 100km x 100km squares, there is one of the points 
+whilst in others there are maybe 20. How do I average, so that in each square 
+I only have 1 value representing the average?
+ 
+2) How do we "flatten" Africa so that we may use 100km x 100km squares instead 
+of 1 degree x 1 degree, without committing a geographical crime? What we need 
+is to respect the areas ....
+
+Best regards and apologies for the silliness of the questions.
+-- 
+Corrado Topi
+
+Global Climate Change & Biodiversity Indicators
+Area 18,Department of Biology
+University of York, York, YO10 5YW, UK
+Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+
+
+From Kamran.Safi at ioz.ac.uk  Wed Dec  3 11:26:14 2008
+From: Kamran.Safi at ioz.ac.uk (Kamran Safi)
+Date: Wed, 3 Dec 2008 10:26:14 -0000
+Subject: [R-sig-eco] [R-sig-Geo] Raster file from ascii file and
+	flattening Africa ....:)
+In-Reply-To: <200812030929.29575.ct529@york.ac.uk>
+References: <200812030929.29575.ct529@york.ac.uk>
+Message-ID: <41E1ED29E5E8E34BBDD8B82CFA1A9D04062E6357@zsl26>
+
+Hi Corrado,
+
+Being a advanced newbie myself, I first of all understand what you mean
+by that and secondly ask you to qualify my answer.
+
+I would, tackling your problem, create a raster polygon in a metric
+equal area projection, such as Mollweide. Then you use overlay() and get
+for each polygon the set of points that are within each raster polygon.
+You need to import the xyz file in R and convert it into a Spatialpoints
+data frame. 
+
+Here's the first bit
+This reads a coast line shapefile and extracts africa from it. Then uses
+the boundings boxes to produce a grid at the extent of africa. Then it
+projects that raster back to longlat for the overlay() procedure. 
+
+map <- readShapePoly("E:/Science/continent.shp", ID="CONTINENT",
+proj4string = CRS("+proj=longlat"))
+africa <- as.SpatialPolygons.PolygonsList(map at polygons[1])
+africa.proj <- spTransform(africa, CRS("+proj=moll"))
+grd <- GridTopology(c(bbox(africa.proj)[1,1]+5000,
+bbox(africa.proj)[2,1]+50000), c(100000,100000),
+c(ceiling((bbox(africa.proj)[1,2] - bbox(africa.proj)[1,1]) /
+100000),ceiling((bbox(africa.proj)[1,2] - bbox(africa.proj)[1,1]) /
+100000)))
+
+# if you should not have a coastline of africa:
+# these are the values you'll need to produce the raster you need to
+proceed
+# bbox(africa.proj)
+#         min     max
+# r1 -2472164 6131319
+# r2 -4202811 4490010
+
+
+polys.proj <- as.SpatialPolygons.GridTopology(grd)
+proj4string(polys.proj) <- CRS("+proj=moll")
+polys <- spTransform(polys.proj, CRS("+proj=longlat"))
+# now you have a spatialpolygon in longlat proj that has equal area and
+a 
+# cell size of 100km2
+#prepare a list for you results
+results <- rep(NA, length(polys at polygons))
+# use something like this to calculate the values per raster grid
+# this here is not working probably, as I didn't think about it all too
+much
+# I have though somewhere a code lying around doing exactly this step,
+so if 
+# you don't succeed, let me know and I dig that out
+for(i in 1:length(polys at polygons))
+{
+results[i] <- mean(<your spatial
+points>$values[which(overlay(as.SpatialPolygons.PolygonsList(map.Proj at po
+lygons[i]), <your Spatialpoints>) != NA, ])
+}
+
+Apart from the final bits, I tested the start and it worked. The last
+bit should not be too difficult to solve. The whole thing could be more
+elegant by excluding those polygons that are in the sea. But I think
+that is something others can try to get their heads around it. Shouldn't
+be too difficult: get the centroid coordinates, overlay it with the
+costlines of Africa and convert it back into a grid...
+
+Hope this helped.
+
+Kamran 
+
+
+------------------------
+Kamran Safi
+
+Postdoctoral Research Fellow
+Institute of Zoology
+Zoological Society of London
+Regent's Park
+London NW1 4RY
+
+http://www.zoo.cam.ac.uk/ioz/people/safi.htm
+
+http://spatialr.googlepages.com
+http://asapi.wetpaint.com
+
+-----Original Message-----
+From: r-sig-geo-bounces at stat.math.ethz.ch
+[mailto:r-sig-geo-bounces at stat.math.ethz.ch] On Behalf Of Corrado
+Sent: 03 December 2008 09:29
+To: r-sig-ecology at r-project.org; r-sig-geo at stat.math.ethz.ch
+Subject: [R-sig-Geo] Raster file from ascii file and flattening Africa
+....:)
+
+Dear friends,
+
+I am a kind of advanced newbie, if that makes sense.
+
+I have a text file of the form
+
+coordinate x,coordinate y,cat={real number between 250 and 450}
+
+where coordinate are expressed in latitude and longitude. The files
+represents 
+measurements of the size of a skulls on sites all over Africa.
+
+>From it, I would like to build a raster file, 100 km by 100km.  There
+are 2 
+problems:
+
+1) Unfortunately,  in some 100km x 100km squares, there is one of the
+points 
+whilst in others there are maybe 20. How do I average, so that in each
+square 
+I only have 1 value representing the average?
+ 
+2) How do we "flatten" Africa so that we may use 100km x 100km squares
+instead 
+of 1 degree x 1 degree, without committing a geographical crime? What we
+need 
+is to respect the areas ....
+
+Best regards and apologies for the silliness of the questions.
+-- 
+Corrado Topi
+
+Global Climate Change & Biodiversity Indicators
+Area 18,Department of Biology
+University of York, York, YO10 5YW, UK
+Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+
+_______________________________________________
+R-sig-Geo mailing list
+R-sig-Geo at stat.math.ethz.ch
+https://stat.ethz.ch/mailman/listinfo/r-sig-geo
+
+
+
+
+Click
+https://www.mailcontrol.com/sr/wQw0zmjPoHdJTZGyOCrrhg==
+rtsaKomrEVtGO6LLtLGhCXg+F32PftV4uyzpFBU8KFm0g==  to report this email as
+spam.
+
+
+The Zoological Society of London is incorporated by Royal Charter
+Principal Office England. Company Number RC000749
+Registered address: 
+Regent's Park, London, England NW1 4RY
+Registered Charity in England and Wales no. 208728 
+
+_________________________________________________________________________
+This e-mail has been sent in confidence to the named add...{{dropped:17}}
+
+
+From Jeffrey_Warren at fws.gov  Wed Dec  3 17:46:01 2008
+From: Jeffrey_Warren at fws.gov (Jeffrey_Warren at fws.gov)
+Date: Wed, 3 Dec 2008 09:46:01 -0700
+Subject: [R-sig-eco] Selecting levels from a list
+Message-ID: <OFA87C13AC.E7A14273-ON87257514.005AFAC3-87257514.005C1A84@fws.gov>
+
+
+I'm trying to select multiple levels from a list of factors but have not
+been able to.  Here is the list:
+
+ lesc.ddl$p$time
+ [1] 0.75  0.833 1     1.75  1.833 2     2.75  2.833 3     3.75  3.833 4
+0.833 1     1.75  1.833 2     2.75  2.833 3     3.75  3.833 4     1
+1.75
+[26] 1.833 2     2.75  2.833 3     3.75  3.833 4     1.75  1.833 2     2.75
+2.833 3     3.75  3.833 4     1.833 2     2.75  2.833 3     3.75  3.833 4
+[51] 2     2.75  2.833 3     3.75  3.833 4     2.75  2.833 3     3.75
+3.833 4     2.833 3     3.75  3.833 4     3     3.75  3.833 4     3.75
+3.833 4
+[76] 3.833 4     4
+Levels: 0.75 0.833 1 1.75 1.833 2 2.75 2.833 3 3.75 3.833 4
+
+And the code I've tried so far:
+
+lesc.ddl$p$time==0.75 | 1.75 | 2.75  #returns all 'TRUE' values
+
+lesc.ddl$p$time==c(0.75 | 1.75 | 2.75)  #returns all 'FALSE' values
+
+Any help would be greatly appreciated.
+
+Cheers,
+
+Jeff Warren
+Wildlife Biologist
+Red Rock Lakes NWR
+Lima, Montana 59739
+(406) 276-3536
+
+
+From owen.jones at imperial.ac.uk  Wed Dec  3 17:59:32 2008
+From: owen.jones at imperial.ac.uk (Owen Jones)
+Date: Wed, 3 Dec 2008 16:59:32 +0000
+Subject: [R-sig-eco] Selecting levels from a list
+In-Reply-To: <OFA87C13AC.E7A14273-ON87257514.005AFAC3-87257514.005C1A84@fws.gov>
+References: <OFA87C13AC.E7A14273-ON87257514.005AFAC3-87257514.005C1A84@fws.gov>
+Message-ID: <6f4e3bcb0812030859y32839f92v39992e23bef06f31@mail.gmail.com>
+
+Try the %in% notation which works like this:
+
+> x<-as.factor(LETTERS[1:10])
+> x
+ [1] A B C D E F G H I J
+Levels: A B C D E F G H I J
+> x[x%in%c("C","J")]
+[1] C J
+Levels: A B C D E F G H I J
+
+
+Cheers,
+Owen
+
+
+On Wed, Dec 3, 2008 at 4:46 PM, <Jeffrey_Warren at fws.gov> wrote:
+
+>
+> I'm trying to select multiple levels from a list of factors but have not
+> been able to.  Here is the list:
+>
+>  lesc.ddl$p$time
+>  [1] 0.75  0.833 1     1.75  1.833 2     2.75  2.833 3     3.75  3.833 4
+> 0.833 1     1.75  1.833 2     2.75  2.833 3     3.75  3.833 4     1
+> 1.75
+> [26] 1.833 2     2.75  2.833 3     3.75  3.833 4     1.75  1.833 2     2.75
+> 2.833 3     3.75  3.833 4     1.833 2     2.75  2.833 3     3.75  3.833 4
+> [51] 2     2.75  2.833 3     3.75  3.833 4     2.75  2.833 3     3.75
+> 3.833 4     2.833 3     3.75  3.833 4     3     3.75  3.833 4     3.75
+> 3.833 4
+> [76] 3.833 4     4
+> Levels: 0.75 0.833 1 1.75 1.833 2 2.75 2.833 3 3.75 3.833 4
+>
+> And the code I've tried so far:
+>
+> lesc.ddl$p$time==0.75 | 1.75 | 2.75  #returns all 'TRUE' values
+>
+> lesc.ddl$p$time==c(0.75 | 1.75 | 2.75)  #returns all 'FALSE' values
+>
+> Any help would be greatly appreciated.
+>
+> Cheers,
+>
+> Jeff Warren
+> Wildlife Biologist
+> Red Rock Lakes NWR
+> Lima, Montana 59739
+> (406) 276-3536
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Dr Owen Jones
+Imperial College London,
+Silwood Park Campus,
+Ascot.
+SL5 7PY
+UK
+
+Tel: +44(0)20 75942489
+Email: owen.jones at imperial.ac.uk
+Website:http://www3.imperial.ac.uk/people/owen.jones
+
+From tyler.smith at mail.mcgill.ca  Wed Dec  3 19:13:20 2008
+From: tyler.smith at mail.mcgill.ca (tyler)
+Date: Wed, 03 Dec 2008 14:13:20 -0400
+Subject: [R-sig-eco] Selecting levels from a list
+References: <OFA87C13AC.E7A14273-ON87257514.005AFAC3-87257514.005C1A84@fws.gov>
+Message-ID: <87tz9li0u7.fsf@blackbart.sedgenet>
+
+Jeffrey_Warren at fws.gov writes:
+
+> I'm trying to select multiple levels from a list of factors but have not
+> been able to.  Here is the list:
+>
+>
+> And the code I've tried so far:
+>
+> lesc.ddl$p$time==0.75 | 1.75 | 2.75  #returns all 'TRUE' values
+>
+> lesc.ddl$p$time==c(0.75 | 1.75 | 2.75)  #returns all 'FALSE' values
+>
+
+Owen already gave you the solution. FYI, Your code didn't work because R
+didn't see what you thought it saw.
+
+  lesc.ddl$p$time==0.75 | 1.75 | 2.75
+
+gets interpreted as 
+
+  (lesc.ddl$p$time==0.75) | 1.75 | 2.75
+
+The first part is true when time == 0.75. The second part, 1.75, is
+always true (i.e., not zero or false), so the expression as a whole is
+always true. Similarly,
+
+  lesc.ddl$p$time==c(0.75 | 1.75 | 2.75)
+
+gets interpreted as
+
+  lesc.ddl$p$time==TRUE
+
+which is FALSE for any value of lesc.ddl$p$time other than 1.
+
+What you could have used was:
+
+  lesc.ddl$p$time==0.75 | lesc.ddl$p$time==1.75 | lesc.ddl$p$time==2.75
+
+This is awkward, which makes the %in% function that Owen recommended
+easier to deal with.
+
+Cheers,
+
+Tyler
+
+-- 
+Who is your computer working for?
+
+http://www.defectivebydesign.org/faq
+
+
+From opheliawang at mail.utexas.edu  Thu Dec  4 07:17:50 2008
+From: opheliawang at mail.utexas.edu (Ophelia Wang)
+Date: Thu, 04 Dec 2008 00:17:50 -0600
+Subject: [R-sig-eco] How to obtain individual values of transformed Ripley's
+	function	local L(r) at a fixed distance r?
+Message-ID: <20081204001750.bexelfi39c0wg0so@new.webmail.utexas.edu>
+
+Hi all,
+
+I am using the spatstat package in R to compute local L function, the  
+transformed Ripley's k. I am interested in getting the estimated local  
+L(r) value for each data point at a fixed distance r. I know I can run  
+localL and then generate a plot to show an overall pattern of all the  
+data points combined, but is there a way to get these local L(r)  
+estimate values so they can be copied or exported into a table? Thanks  
+a lot!
+
+Ophelia
+-- 
+Yung-Ho (Ophelia) Wang
+Doctoral Candidate
+Department of Geography and the Environment
+University of Texas
++1-512-232-1597
+opheliawang at mail.utexas.edu
+
+
+From opheliawang at mail.utexas.edu  Thu Dec  4 07:51:12 2008
+From: opheliawang at mail.utexas.edu (Ophelia Wang)
+Date: Thu, 04 Dec 2008 00:51:12 -0600
+Subject: [R-sig-eco] How to obtain individual values of transformed
+	Ripley's	function local L(r) at a fixed distance r?
+In-Reply-To: <20081204001750.bexelfi39c0wg0so@new.webmail.utexas.edu>
+References: <20081204001750.bexelfi39c0wg0so@new.webmail.utexas.edu>
+Message-ID: <20081204005112.ffclupsqtwcwo0ck@new.webmail.utexas.edu>
+
+Hi again,
+
+To be more specific, my question is: I get an output as a list of  
+values labeled from 1 to 600 (let's say I
+have 600 data points), but I am not sure how these labeled numbers are  
+generated. Is
+there a way to know how these labels correspond to my data points, or  
+do they just
+correspond to the order of my data points when they are read by R?--
+
+Ophelia
+
+Quoting Ophelia Wang <opheliawang at mail.utexas.edu>:
+
+> Hi all,
+>
+> I am using the spatstat package in R to compute local L function, the
+> transformed Ripley's k. I am interested in getting the estimated local
+> L(r) value for each data point at a fixed distance r. I know I can run
+> localL and then generate a plot to show an overall pattern of all the
+> data points combined, but is there a way to get these local L(r)
+> estimate values so they can be copied or exported into a table? Thanks
+> a lot!
+>
+> Ophelia
+> -- 
+>
+
+
+From ct529 at york.ac.uk  Thu Dec  4 12:36:35 2008
+From: ct529 at york.ac.uk (Corrado)
+Date: Thu, 4 Dec 2008 11:36:35 +0000
+Subject: [R-sig-eco] [R-sig-Geo] Raster file from ascii file and
+	flattening Africa ....:)
+In-Reply-To: <41E1ED29E5E8E34BBDD8B82CFA1A9D04062E6357@zsl26>
+References: <200812030929.29575.ct529@york.ac.uk>
+	<41E1ED29E5E8E34BBDD8B82CFA1A9D04062E6357@zsl26>
+Message-ID: <200812041136.35956.ct529@york.ac.uk>
+
+Thanks a lot Kamran!
+
+I will test your approach and let you know ....
+
+On Wednesday 03 December 2008 10:26:14 Kamran Safi wrote:
+> Hi Corrado,
+>
+> Being a advanced newbie myself, I first of all understand what you mean
+> by that and secondly ask you to qualify my answer.
+>
+> I would, tackling your problem, create a raster polygon in a metric
+> equal area projection, such as Mollweide. Then you use overlay() and get
+> for each polygon the set of points that are within each raster polygon.
+> You need to import the xyz file in R and convert it into a Spatialpoints
+> data frame.
+>
+> Here's the first bit
+> This reads a coast line shapefile and extracts africa from it. Then uses
+> the boundings boxes to produce a grid at the extent of africa. Then it
+> projects that raster back to longlat for the overlay() procedure.
+>
+> map <- readShapePoly("E:/Science/continent.shp", ID="CONTINENT",
+> proj4string = CRS("+proj=longlat"))
+> africa <- as.SpatialPolygons.PolygonsList(map at polygons[1])
+> africa.proj <- spTransform(africa, CRS("+proj=moll"))
+> grd <- GridTopology(c(bbox(africa.proj)[1,1]+5000,
+> bbox(africa.proj)[2,1]+50000), c(100000,100000),
+> c(ceiling((bbox(africa.proj)[1,2] - bbox(africa.proj)[1,1]) /
+> 100000),ceiling((bbox(africa.proj)[1,2] - bbox(africa.proj)[1,1]) /
+> 100000)))
+>
+> # if you should not have a coastline of africa:
+> # these are the values you'll need to produce the raster you need to
+> proceed
+> # bbox(africa.proj)
+> #         min     max
+> # r1 -2472164 6131319
+> # r2 -4202811 4490010
+>
+>
+> polys.proj <- as.SpatialPolygons.GridTopology(grd)
+> proj4string(polys.proj) <- CRS("+proj=moll")
+> polys <- spTransform(polys.proj, CRS("+proj=longlat"))
+> # now you have a spatialpolygon in longlat proj that has equal area and
+> a
+> # cell size of 100km2
+> #prepare a list for you results
+> results <- rep(NA, length(polys at polygons))
+> # use something like this to calculate the values per raster grid
+> # this here is not working probably, as I didn't think about it all too
+> much
+> # I have though somewhere a code lying around doing exactly this step,
+> so if
+> # you don't succeed, let me know and I dig that out
+> for(i in 1:length(polys at polygons))
+> {
+> results[i] <- mean(<your spatial
+> points>$values[which(overlay(as.SpatialPolygons.PolygonsList(map.Proj at po
+> lygons[i]), <your Spatialpoints>) != NA, ])
+> }
+>
+> Apart from the final bits, I tested the start and it worked. The last
+> bit should not be too difficult to solve. The whole thing could be more
+> elegant by excluding those polygons that are in the sea. But I think
+> that is something others can try to get their heads around it. Shouldn't
+> be too difficult: get the centroid coordinates, overlay it with the
+> costlines of Africa and convert it back into a grid...
+>
+> Hope this helped.
+>
+> Kamran
+>
+>
+> ------------------------
+> Kamran Safi
+>
+> Postdoctoral Research Fellow
+> Institute of Zoology
+> Zoological Society of London
+> Regent's Park
+> London NW1 4RY
+>
+> http://www.zoo.cam.ac.uk/ioz/people/safi.htm
+>
+> http://spatialr.googlepages.com
+> http://asapi.wetpaint.com
+>
+> -----Original Message-----
+> From: r-sig-geo-bounces at stat.math.ethz.ch
+> [mailto:r-sig-geo-bounces at stat.math.ethz.ch] On Behalf Of Corrado
+> Sent: 03 December 2008 09:29
+> To: r-sig-ecology at r-project.org; r-sig-geo at stat.math.ethz.ch
+> Subject: [R-sig-Geo] Raster file from ascii file and flattening Africa
+> ....:)
+>
+> Dear friends,
+>
+> I am a kind of advanced newbie, if that makes sense.
+>
+> I have a text file of the form
+>
+> coordinate x,coordinate y,cat={real number between 250 and 450}
+>
+> where coordinate are expressed in latitude and longitude. The files
+> represents
+> measurements of the size of a skulls on sites all over Africa.
+>
+> >From it, I would like to build a raster file, 100 km by 100km.  There
+>
+> are 2
+> problems:
+>
+> 1) Unfortunately,  in some 100km x 100km squares, there is one of the
+> points
+> whilst in others there are maybe 20. How do I average, so that in each
+> square
+> I only have 1 value representing the average?
+>
+> 2) How do we "flatten" Africa so that we may use 100km x 100km squares
+> instead
+> of 1 degree x 1 degree, without committing a geographical crime? What we
+> need
+> is to respect the areas ....
+>
+> Best regards and apologies for the silliness of the questions.
+
+
+
+-- 
+Corrado Topi
+
+Global Climate Change & Biodiversity Indicators
+Area 18,Department of Biology
+University of York, York, YO10 5YW, UK
+Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+
+
+From Roger.Bivand at nhh.no  Thu Dec  4 08:18:15 2008
+From: Roger.Bivand at nhh.no (Roger Bivand)
+Date: Thu, 4 Dec 2008 08:18:15 +0100 (CET)
+Subject: [R-sig-eco] [R-sig-Geo] How to obtain individual values of
+ transformed Ripley's	function local L(r) at a fixed distance r?
+In-Reply-To: <20081204005112.ffclupsqtwcwo0ck@new.webmail.utexas.edu>
+References: <20081204001750.bexelfi39c0wg0so@new.webmail.utexas.edu>
+	<20081204005112.ffclupsqtwcwo0ck@new.webmail.utexas.edu>
+Message-ID: <alpine.LRH.2.00.0812040812110.11827@reclus.nhh.no>
+
+On Thu, 4 Dec 2008, Ophelia Wang wrote:
+
+> Hi again,
+>
+> To be more specific, my question is: I get an output as a list of values 
+> labeled from 1 to 600 (let's say I
+> have 600 data points), but I am not sure how these labeled numbers are 
+> generated. Is
+> there a way to know how these labels correspond to my data points, or do they 
+> just
+> correspond to the order of my data points when they are read by R?--
+
+Try the examples:
+
+library(spatstat)
+data(ponderosa)
+X <- ponderosa
+L <- localL(X)
+r206 <- L$r[206]
+L12a <- sapply(L, function(x) x[206])[1:108]
+names(L12a) <- NULL
+L12 <- localL(X, rvalue=r206)
+all.equal(L12, L12a)
+
+The values of L12 are in the same order as the points in X. I can't see 
+that any re-ordering is occurring.
+
+Hope this helps,
+
+Roger
+
+
+>
+> Ophelia
+>
+> Quoting Ophelia Wang <opheliawang at mail.utexas.edu>:
+>
+>> Hi all,
+>> 
+>> I am using the spatstat package in R to compute local L function, the
+>> transformed Ripley's k. I am interested in getting the estimated local
+>> L(r) value for each data point at a fixed distance r. I know I can run
+>> localL and then generate a plot to show an overall pattern of all the
+>> data points combined, but is there a way to get these local L(r)
+>> estimate values so they can be copied or exported into a table? Thanks
+>> a lot!
+>> 
+>> Ophelia
+>> -- 
+>> 
+>
+> _______________________________________________
+> R-sig-Geo mailing list
+> R-sig-Geo at stat.math.ethz.ch
+> https://stat.ethz.ch/mailman/listinfo/r-sig-geo
+
+-- 
+Roger Bivand
+Economic Geography Section, Department of Economics, Norwegian School of
+Economics and Business Administration, Helleveien 30, N-5045 Bergen,
+Norway. voice: +47 55 95 93 55; fax +47 55 95 95 43
+e-mail: Roger.Bivand at nhh.no
+
+
+From graham.smith at myotis.co.uk  Thu Dec  4 15:20:33 2008
+From: graham.smith at myotis.co.uk (Graham Smith)
+Date: Thu, 04 Dec 2008 14:20:33 +0000
+Subject: [R-sig-eco] Teaching statistics to ecology undergraduates
+Message-ID: <4937E731.6090602@myotis.co.uk>
+
+If, like me, you have a only a few hours (11 hours over 3 years in my 
+case) to try and teach statistics to ecology undergraduates, how do you 
+do it?
+
+Any introductory statistics text seems to assume, more time and more 
+mathematical ability than in practice is available.
+
+Although, I emphasise graphical techniques and the use of confidence 
+intervals, and how these might help understand the ecological process 
+being looked at, I still spend a large chunk of precious time on 
+hypothesis testing.
+
+The more I have been thinking about this, and the more I search for a 
+suitable text book, the more I realise how hopelessly confusing the 
+average text book is, with t-tests, anova, manova, ancova, OLS 
+regression, poission regression, logistic regression GLM etc. Yes I know 
+that all of these may well not appear in the average introductory text.
+
+I have reached the stage  where I am wondering whether I should just 
+teach GLM. This would give the students a single flexible method capable 
+of tackling a wide range of ecological problems. It would also,I think, 
+provide a  better framework for approaching ecological questions than 
+simple hypothesis testing.
+
+I admit, that this email is really just me thinking out loud, but does 
+anyone who teaches statistics to ecologists, or indeed anyone at all 
+really, have any views about how best to spend my 11 hours (which I may 
+be able to increase 13 hours).
+
+I should point out that at the moment I also spend some of this time on 
+good practice in data management, a bit on scientific method, and a bit 
+on the importance of random sampling, but nothing really on experimental 
+design.
+
+Graham
+
+
+From carsten.dormann at ufz.de  Thu Dec  4 17:10:21 2008
+From: carsten.dormann at ufz.de (Carsten Dormann)
+Date: Thu, 04 Dec 2008 17:10:21 +0100
+Subject: [R-sig-eco] Teaching statistics to ecology undergraduates
+In-Reply-To: <4937E731.6090602@myotis.co.uk>
+References: <4937E731.6090602@myotis.co.uk>
+Message-ID: <493800ED.4020603@ufz.de>
+
+Dear Graham,
+
+11 hours is short - there's no mistaking. I teach (among other things) a 
+6 day stats course for beginners, and find that I need the first 3 days 
+to get the student to "think straight". I tried for a couple of years to 
+teach "only" GLM, as you suggested. I "waste" one full day of explaining 
+what a distribution is, what parameters of distributions are and on what 
+ground to suspect data to be derived from a certain distribution. That 
+would be at least 5 of your 11 hours. The next half day goes into 
+explaining (and running examples) on likelihood and its maximisation. It 
+is a good way to start, I find, and eventually students are very 
+comfortable using glm rather than aov and friends.
+Using only GLM is clear (and Ben Bolker's book sets the right tone, 
+albeit at a much too high level for beginners). At the same time, the 
+learning curve is VERY steep. 30% of the participants fall by the 
+wayside. Is that acceptable? Maybe it is me, not the GLM.
+
+However, I think you have to be very realistic about what you can 
+achieve (and I have heard speaking highly of your courses, so I am sure 
+you are doing the right things). Giving the students a "feeling" about 
+what the idea of a "fit" is and what is behind comparisons of samples is 
+rather independent of distributional assumptions and a very general 
+point they can take away from a short course.
+Also, as you said, visualising the data, getting a feeling for it, is SO 
+important, particular when a student has little idea what to expect from 
+an experiment/observation.
+
+I my little 6 day course, I spend roughly 2 days on introducing R, 
+distributions and (maximum) likelihood (half of this time the 
+participants run examples). Another 2 days are devoted to multiple 
+regression (going wildly through different distributions to make them 
+comfortable with GLM) and issues such as collinearity and model 
+selection. Then I throw in a day of design of experiments (randomised 
+block, nested, split, survey design, stratification, sample size 
+estimation) and run some simple (?) mixed models to illustrate the 
+practical problems attached to DOE. The final two days we run largish 
+examples (such as Harrell's Titanic data set), touch very superficially 
+multivariate methods (PCA, CA and CCA) and end up with some 
+miscellaneous issues such as randomisation and bootstrapping.
+
+If I had to reduce it to 11 hours: Unless the students are likely to do 
+experiments (which seems to have fallen out of funding), I would ditch 
+DOE and focus on GLM plus a few sexy  but tricky examples. I love the 
+Titanic study, because you can get the students to identify with the 
+passengers. If that leads them to transfer their newly gained knowledge 
+to the ecological work is a different question. If you additionally make 
+the buy a good book (I always recommend Quinn & Keough, having myself 
+been "raised" on Sokal and Rohlf and always hated it, because it never 
+addressed my type of non-Gaussian problems) I think they should be set 
+up for the next level.
+
+I shall stop now (and prepare some stats course next week), otherwise I 
+would also have a word to say about Crawley's approach, which I find 
+enchanting and confusing.
+
+Carsten
+
+
+Graham Smith wrote:
+> If, like me, you have a only a few hours (11 hours over 3 years in my 
+> case) to try and teach statistics to ecology undergraduates, how do 
+> you do it?
+>
+> Any introductory statistics text seems to assume, more time and more 
+> mathematical ability than in practice is available.
+>
+> Although, I emphasise graphical techniques and the use of confidence 
+> intervals, and how these might help understand the ecological process 
+> being looked at, I still spend a large chunk of precious time on 
+> hypothesis testing.
+>
+> The more I have been thinking about this, and the more I search for a 
+> suitable text book, the more I realise how hopelessly confusing the 
+> average text book is, with t-tests, anova, manova, ancova, OLS 
+> regression, poission regression, logistic regression GLM etc. Yes I 
+> know that all of these may well not appear in the average introductory 
+> text.
+>
+> I have reached the stage  where I am wondering whether I should just 
+> teach GLM. This would give the students a single flexible method 
+> capable of tackling a wide range of ecological problems. It would 
+> also,I think, provide a  better framework for approaching ecological 
+> questions than simple hypothesis testing.
+>
+> I admit, that this email is really just me thinking out loud, but does 
+> anyone who teaches statistics to ecologists, or indeed anyone at all 
+> really, have any views about how best to spend my 11 hours (which I 
+> may be able to increase 13 hours).
+>
+> I should point out that at the moment I also spend some of this time 
+> on good practice in data management, a bit on scientific method, and a 
+> bit on the importance of random sampling, but nothing really on 
+> experimental design.
+>
+> Graham
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+-- 
+Dr. Carsten F. Dormann
+Department of Computational Landscape Ecology
+Helmholtz Centre for Environmental Research UFZ 
+Permoserstr. 15
+04318 Leipzig
+Germany
+
+Tel: ++49(0)341 2351946
+Fax: ++49(0)341 2351939
+Email: carsten.dormann at ufz.de
+internet: http://www.ufz.de/index.php?de=4205
+
+
+From graham.smith at myotis.co.uk  Thu Dec  4 18:42:27 2008
+From: graham.smith at myotis.co.uk (Graham Smith)
+Date: Thu, 04 Dec 2008 17:42:27 +0000
+Subject: [R-sig-eco] Teaching statistics to ecology undergraduates
+In-Reply-To: <493800ED.4020603@ufz.de>
+References: <4937E731.6090602@myotis.co.uk> <493800ED.4020603@ufz.de>
+Message-ID: <49381683.7090406@myotis.co.uk>
+
+Carsten
+
+
+> 11 hours is short - there's no mistaking. I teach (among other things) a 
+> 6 day stats course for beginners, and find that I need the first 3 days 
+> to get the student to "think straight". 
+
+It is useful to know that you had 6 days
+
+> Using only GLM is clear (and Ben Bolker's book sets the right tone, 
+> albeit at a much too high level for beginners). At the same time, the 
+> learning curve is VERY steep. 30% of the participants fall by the 
+> wayside. Is that acceptable? Maybe it is me, not the GLM.
+
+I suspect that regardless of what you do, a percentage are just never 
+going to get it.
+
+
+> However, I think you have to be very realistic about what you can 
+> achieve (and I have heard speaking highly of your courses, so I am sure 
+> you are doing the right things). 
+
+My guess is that you are speaking of the Highstat courses, which I'm not 
+actually involved with, I'm asking about the basic undergrad intro to 
+stats lectures.
+
+>Giving the students a "feeling" about 
+> what the idea of a "fit" is and what is behind comparisons of samples is 
+> rather independent of distributional assumptions and a very general 
+> point they can take away from a short course.
+
+My main aim, I think, is that they gain some understanding of 
+statistical thinking rather than specific techniques, which most will 
+forget almost immediately.
+
+> Also, as you said, visualising the data, getting a feeling for it, is SO 
+> important, particular when a student has little idea what to expect from 
+> an experiment/observation.
+
+Yes, I strongly agree with this.
+
+
+> If I had to reduce it to 11 hours: Unless the students are likely to do 
+> experiments (which seems to have fallen out of funding), I would ditch 
+> DOE and focus on GLM plus a few sexy  but tricky examples. I love the 
+> Titanic study, because you can get the students to identify with the 
+> passengers. If that leads them to transfer their newly gained knowledge 
+> to the ecological work is a different question. 
+
+In my case, the stats is part of broader module, which focusses on a 
+woodland ecology study, where the students collect vegetation data, and 
+carry out some soil analysis. I introduce the stats, they then complete 
+a stats exercise, I give them feedback on this, and they are then meant 
+to apply the stats to help explain the vegetation characteristics found 
+in the two woods they sampled.
+
+
+> the buy a good book (I always recommend Quinn & Keough, 
+
+Yes, a wonderful book.
+
+> I shall stop now (and prepare some stats course next week), otherwise I 
+> would also have a word to say about Crawley's approach, which I find 
+> enchanting and confusing.
+
+:-)
+
+Graham
+> 
+> Carsten
+> 
+> 
+> Graham Smith wrote:
+>> If, like me, you have a only a few hours (11 hours over 3 years in my 
+>> case) to try and teach statistics to ecology undergraduates, how do 
+>> you do it?
+>>
+>> Any introductory statistics text seems to assume, more time and more 
+>> mathematical ability than in practice is available.
+>>
+>> Although, I emphasise graphical techniques and the use of confidence 
+>> intervals, and how these might help understand the ecological process 
+>> being looked at, I still spend a large chunk of precious time on 
+>> hypothesis testing.
+>>
+>> The more I have been thinking about this, and the more I search for a 
+>> suitable text book, the more I realise how hopelessly confusing the 
+>> average text book is, with t-tests, anova, manova, ancova, OLS 
+>> regression, poission regression, logistic regression GLM etc. Yes I 
+>> know that all of these may well not appear in the average introductory 
+>> text.
+>>
+>> I have reached the stage  where I am wondering whether I should just 
+>> teach GLM. This would give the students a single flexible method 
+>> capable of tackling a wide range of ecological problems. It would 
+>> also,I think, provide a  better framework for approaching ecological 
+>> questions than simple hypothesis testing.
+>>
+>> I admit, that this email is really just me thinking out loud, but does 
+>> anyone who teaches statistics to ecologists, or indeed anyone at all 
+>> really, have any views about how best to spend my 11 hours (which I 
+>> may be able to increase 13 hours).
+>>
+>> I should point out that at the moment I also spend some of this time 
+>> on good practice in data management, a bit on scientific method, and a 
+>> bit on the importance of random sampling, but nothing really on 
+>> experimental design.
+>>
+>> Graham
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+> 
+
+-- 
+--
+Graham M Smith
+graham.smith at myotis.co.uk
+
+Station Cottage, Station Road
+Binegar, Somerset
+BA3 4UQ
+
+
+From r.a.sanderson at newcastle.ac.uk  Fri Dec  5 17:08:41 2008
+From: r.a.sanderson at newcastle.ac.uk (Roy Sanderson)
+Date: Fri, 05 Dec 2008 16:08:41 +0000
+Subject: [R-sig-eco] adehabitat: kernel HR size compared to MCP
+Message-ID: <EMEW-kB4G4a96008269d3afa8a0b78958257142122a-1228493321.18734.186.camel@clarinet>
+
+Hello SIG-Ecology
+
+Could anyone shed any information on why the area of home ranges as
+estimated in adehabitat can be several times higher when the kernelUD \
+kernel.area functions are used compared to estimates from the mcp
+function.  I would have expected them to be roughly the same, rather
+than up to an order of magnitude different.  The feature is obvious even
+in the example puechabon dataset that comes with the adehabitat package.
+
+Using R version 2.8.0, adehabitat 1.7.1 on Ubuntu linux 8.04
+
+Many thanks
+Roy
+
+-- 
+Roy Sanderson,
+Institute for Research on Environment and Sustainability (IRES),
+Devonshire Building,
+Newcastle University,
+Newcastle upon Tyne NE1 7RU
+r.a.sanderson at newcastle.ac.uk
+0191 246 4835
+
+
+From calenge at biomserv.univ-lyon1.fr  Fri Dec  5 17:57:36 2008
+From: calenge at biomserv.univ-lyon1.fr (calenge at biomserv.univ-lyon1.fr)
+Date: Fri, 05 Dec 2008 17:57:36 +0100
+Subject: [R-sig-eco] (no subject)
+Message-ID: <1228496256.49395d8051d0b@webmail.univ-lyon1.fr>
+
+Hello Roy,
+
+> Could anyone shed any information on why the area of home ranges as
+> estimated in adehabitat can be several times higher when the kernelUD \
+> kernel.area functions are used compared to estimates from the mcp
+> function.  I would have expected them to be roughly the same, rather
+> than up to an order of magnitude different.  The feature is obvious even
+> in the example puechabon dataset that comes with the adehabitat package.
+
+Because the two methods differ: the MCP computes the smallest polygon
+encompassing a given percentage of the relocations, while the kernel method
+tries to estimate the bivariate probability density function to relocate the
+animal at a given place (the utilization distribution, or UD). The kernel home
+range is estimated from the UD as the smallest area on which the probability to
+relocate the animal is equal to a given probability (e.g. 0.95, 0.7, etc.).
+
+Because the two methods do not rely on the same mathematical bases they are not
+expected to return the same results. Very often, the kernel home-range estimate
+is /smaller/ than the MCP (because the MCP may include large areas not actually
+used by the animal, while this is not the case for the kernel home range). When
+it is higher, it may be because the smoothing parameter h is misspecified (as it
+is the case for the "puechabon" dataset). Alternatively, it can be just a
+characteristic of your data.
+
+Indeed, the ad-hoc or so-called "reference" method to estimate the smoothing
+parameter, i.e. the most widely used method in the ecological literature (and
+the default in adehabitat, but it can be changed with the parameter "h" of
+kernelUD), tends to overestimate the home-range size, as this method supposes
+that the UD is bivariate normal, which is actually rarely the case. There is a
+large literature on this issue. You may begin with:
+
+Worton, B. 1995. Using Monte Carlo simulation to evaluate kernel-based home
+range estimators, Journal of Wildlife Management, 59, 794-800
+Worton, B. 1989. Kernel methods for estimating the utilization distribution in
+home range studies. Ecology, 70, 164-168.
+
+Hope this helps,
+
+
+Cl?ment.
+
+-- 
+Cl?ment CALENGE
+Office national de la chasse et de la faune sauvage
+Saint Benoist - 78610 Auffargis
+tel. (33) 01.30.46.54.14
+
+
+From mspinola10 at gmail.com  Sat Dec  6 17:58:15 2008
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Sat, 06 Dec 2008 10:58:15 -0600
+Subject: [R-sig-eco] Intepreting a plot from a "constrained" NMDS
+Message-ID: <493AAF27.7090902@gmail.com>
+
+Dear list members,
+
+Is there any reference or document on how to interpret a "constrained" 
+non-metrical multidimensional scaling using ecological data?  By 
+"constrained" I mean after fitting environmental covariables, using, for 
+example, the "envfit" function in the vegan package.  Is it possible to 
+interpret the resulting plot in the same way that a constrained 
+ordination, for example CCA?
+Thank you very much in advance.
+Best,
+
+Manuel
+
+-- 
+Manuel Sp?nola, Ph.D.
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.ac.cr
+mspinola10 at gamil.com
+Tel?fono: (506) 2277-3598
+Fax: (506) 2237-7036
+
+
+From ssefick at gmail.com  Mon Dec  8 01:53:14 2008
+From: ssefick at gmail.com (stephen sefick)
+Date: Sun, 7 Dec 2008 19:53:14 -0500
+Subject: [R-sig-eco] Intepreting a plot from a "constrained" NMDS
+In-Reply-To: <493AAF27.7090902@gmail.com>
+References: <493AAF27.7090902@gmail.com>
+Message-ID: <c502a9e10812071653j2e318f78xa96415796425d4b5@mail.gmail.com>
+
+A way that may work is use the axis scores as y in a regression- this
+seems like it would let you interpret how the communities are
+distributed in species space.  Just a thought
+
+Stephen Sefick
+
+On Sat, Dec 6, 2008 at 11:58 AM, Manuel Sp?nola <mspinola10 at gmail.com> wrote:
+> Dear list members,
+>
+> Is there any reference or document on how to interpret a "constrained"
+> non-metrical multidimensional scaling using ecological data?  By
+> "constrained" I mean after fitting environmental covariables, using, for
+> example, the "envfit" function in the vegan package.  Is it possible to
+> interpret the resulting plot in the same way that a constrained ordination,
+> for example CCA?
+> Thank you very much in advance.
+> Best,
+>
+> Manuel
+>
+> --
+> Manuel Sp?nola, Ph.D.
+> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> Universidad Nacional
+> Apartado 1350-3000
+> Heredia
+> COSTA RICA
+> mspinola at una.ac.cr
+> mspinola10 at gamil.com
+> Tel?fono: (506) 2277-3598
+> Fax: (506) 2237-7036
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Stephen Sefick
+
+Let's not spend our time and resources thinking about things that are
+so little or so large that all they really do for us is puff us up and
+make us feel like gods.  We are mammals, and have not exhausted the
+annoying little problems of being mammals.
+
+								-K. Mullis
+
+From salvadorsanchezcolon at prodigy.net.mx  Mon Dec  8 02:10:19 2008
+From: salvadorsanchezcolon at prodigy.net.mx (=?ISO-8859-1?Q?Salvador_S=E1nchez-Col=F3n?=)
+Date: Sun, 07 Dec 2008 19:10:19 -0600
+Subject: [R-sig-eco] Intepreting a plot from a "constrained" NMDS
+In-Reply-To: <493AAF27.7090902@gmail.com>
+References: <493AAF27.7090902@gmail.com>
+Message-ID: <493C73FB.6070605@prodigy.net.mx>
+
+Well, I guess you can have a look at
+
+Data Analysis in Community and Landscape Ecology. Edited by R.H.G. 
+Jongman, C.J.F. ter Braak, and O.F.R. van Tongeren, 1995, Cambridge 
+University Press, 299 pages.
+
+I sure hope it helps.
+
+Un abrazo,
+
+Salvador
+
+Salvador S?nchez-Col?n,
+Consultor?a Ambiental y Estad?stica,
+Cerrada de Cort?s 43,
+Colonia Campestre Tlacopac,
+San ?ngel,
+01049 M?xico, DF
+tel: (+52-55)5662-4644
+mobile: (+52-1-55)3200-8559
+e-mail: salvadorsanchezcolon at prodigy.net.mx
+
+Manuel Sp?nola escribi?:
+> Dear list members,
+> 
+> Is there any reference or document on how to interpret a "constrained" 
+> non-metrical multidimensional scaling using ecological data?  By 
+> "constrained" I mean after fitting environmental covariables, using, for 
+> example, the "envfit" function in the vegan package.  Is it possible to 
+> interpret the resulting plot in the same way that a constrained 
+> ordination, for example CCA?
+> Thank you very much in advance.
+> Best,
+> 
+> Manuel
+>
+
+
+From tyler.smith at mail.mcgill.ca  Mon Dec  8 02:46:26 2008
+From: tyler.smith at mail.mcgill.ca (tyler)
+Date: Sun, 07 Dec 2008 21:46:26 -0400
+Subject: [R-sig-eco] Intepreting a plot from a "constrained" NMDS
+References: <493AAF27.7090902@gmail.com>
+Message-ID: <87prk3iglp.fsf@blackbart.sedgenet>
+
+Manuel Sp?nola <mspinola10 at gmail.com>
+writes:
+
+> Is there any reference or document on how to interpret a "constrained"
+> non-metrical multidimensional scaling using ecological data? 
+
+The vegan vignette includes a worked example.
+
+> By "constrained" I mean after fitting environmental covariables,
+> using, for example, the "envfit" function in the vegan package. 
+
+'envfit' can be used on any ordination result, including NMDS. It does
+not produce a constrained ordination, though. The ordination itself is
+unaltered, but the envfit result can be used to plot the environmental
+variable in the ordination space. You can then interpret this as you
+would a PCA biplot. This assumes that the environmental variable has a
+simple linear relationship to the ordination axes. If it doesn't,
+ordisurf will give you a clearer picture.
+
+> Is it possible to interpret the resulting plot in the same way that a
+> constrained ordination, for example CCA?
+
+No, you're still doing an unconstrained ordination, also referred to as
+an indirect gradient analysis. 
+
+Cheers,
+
+Tyler
+
+
+-- 
+Friends don't let friends send Word documents
+
+http://www.nothingisreal.com/dfki/no-word
+
+
+From jari.oksanen at oulu.fi  Mon Dec  8 07:08:22 2008
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Mon, 8 Dec 2008 08:08:22 +0200
+Subject: [R-sig-eco] Intepreting a plot from a "constrained" NMDS
+In-Reply-To: <c502a9e10812071653j2e318f78xa96415796425d4b5@mail.gmail.com>
+References: <493AAF27.7090902@gmail.com>
+	<c502a9e10812071653j2e318f78xa96415796425d4b5@mail.gmail.com>
+Message-ID: <94458750-B4C9-471B-86EB-53610D05C661@oulu.fi>
+
+
+On 8 Dec 2008, at 2:53, stephen sefick wrote:
+
+> A way that may work is use the axis scores as y in a regression- this
+> seems like it would let you interpret how the communities are
+> distributed in species space.  Just a thought
+>
+
+NEVER do this! The rotation is not determined in NMDS. If you rotate  
+the NMDS solution you will always have the very same solutios, but the  
+correlations with the "axis scores" will change. The whole point of  
+having envfit/vectorfit in vegan is that you don't need to calculate  
+the correlations with the axes.
+
+The axis rotation is determined in eigenvector ordination, but that  
+does not mean that the direction is meaningful. You can see this with  
+envfit/vectorfit in unconstrained eigenvector ordination, but also in  
+constrained ordination: very rarely the fitted vectors or biplot  
+arrows are parallel to axes. Only if axes are parallel to axes (and go  
+along the axes), then it would be meaningful to look a the  
+relationship of axis and something else.
+
+And indeed, there is no constrained NMDS in vegan. It is unconstrained  
+with an interpretation through vector fitting.
+
+cheers, jari oksanen
+> Stephen Sefick
+>
+> On Sat, Dec 6, 2008 at 11:58 AM, Manuel Sp?nola  
+> <mspinola10 at gmail.com> wrote:
+>> Dear list members,
+>>
+>> Is there any reference or document on how to interpret a  
+>> "constrained"
+>> non-metrical multidimensional scaling using ecological data?  By
+>> "constrained" I mean after fitting environmental covariables,  
+>> using, for
+>> example, the "envfit" function in the vegan package.  Is it  
+>> possible to
+>> interpret the resulting plot in the same way that a constrained  
+>> ordination,
+>> for example CCA?
+>> Thank you very much in advance.
+>> Best,
+>>
+>> Manuel
+>>
+>> --
+>> Manuel Sp?nola, Ph.D.
+>> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+>> Universidad Nacional
+>> Apartado 1350-3000
+>> Heredia
+>> COSTA RICA
+>> mspinola at una.ac.cr
+>> mspinola10 at gamil.com
+>> Tel?fono: (506) 2277-3598
+>> Fax: (506) 2237-7036
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+> -- 
+> Stephen Sefick
+>
+> Let's not spend our time and resources thinking about things that are
+> so little or so large that all they really do for us is puff us up and
+> make us feel like gods.  We are mammals, and have not exhausted the
+> annoying little problems of being mammals.
+>
+> 								-K. Mullis
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From nlichti at purdue.edu  Mon Dec  8 14:49:59 2008
+From: nlichti at purdue.edu (Lichti, Nathanael I)
+Date: Mon, 8 Dec 2008 08:49:59 -0500
+Subject: [R-sig-eco] kernel HR size compared to MCP
+In-Reply-To: <mailman.1.1228561201.7259.r-sig-ecology@r-project.org>
+References: <mailman.1.1228561201.7259.r-sig-ecology@r-project.org>
+Message-ID: <73EDE3D5906C2F4CB9A8E36BED5722C2042EABE1@EXCH02.purdue.lcl>
+
+Hi Roy,
+
+This is a pretty typical behavior.  Because the kernel is a probability
+model, it extends the home range boundaries beyond the edge of the data
+cloud.  In contrast, the MCP is just a summary of the sampled points.
+The size of the difference in estimates depends on the smoothing
+parameter used in the kernel estimate (bigger = more extension), and on
+the degree to which the MCP includes unused interior space. The latter
+is a common problem with MCPs, and one of the main reasons that the
+estimation literature almost universally recommends against their use.
+You can find more details in Seaman and Powell's work, and the
+subsequent lit on home range estimation.
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of
+r-sig-ecology-request at r-project.org
+Sent: Saturday, December 06, 2008 6:00 AM
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 9, Issue 6
+
+Send R-sig-ecology mailing list submissions to
+	r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+	r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+	r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific
+than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. adehabitat: kernel HR size compared to MCP (Roy Sanderson)
+   2. (no subject) (calenge at biomserv.univ-lyon1.fr)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Fri, 05 Dec 2008 16:08:41 +0000
+From: Roy Sanderson <r.a.sanderson at newcastle.ac.uk>
+Subject: [R-sig-eco] adehabitat: kernel HR size compared to MCP
+To: r-sig-ecology at r-project.org
+Message-ID:
+	
+<EMEW-kB4G4a96008269d3afa8a0b78958257142122a-1228493321.18734.186.camel@
+clarinet>
+	
+Content-Type: text/plain
+
+Hello SIG-Ecology
+
+Could anyone shed any information on why the area of home ranges as
+estimated in adehabitat can be several times higher when the kernelUD \
+kernel.area functions are used compared to estimates from the mcp
+function.  I would have expected them to be roughly the same, rather
+than up to an order of magnitude different.  The feature is obvious even
+in the example puechabon dataset that comes with the adehabitat package.
+
+Using R version 2.8.0, adehabitat 1.7.1 on Ubuntu linux 8.04
+
+Many thanks
+Roy
+
+-- 
+Roy Sanderson,
+Institute for Research on Environment and Sustainability (IRES),
+Devonshire Building,
+Newcastle University,
+Newcastle upon Tyne NE1 7RU
+r.a.sanderson at newcastle.ac.uk
+0191 246 4835
+
+
+
+------------------------------
+
+Message: 2
+Date: Fri, 05 Dec 2008 17:57:36 +0100
+From: calenge at biomserv.univ-lyon1.fr
+Subject: [R-sig-eco] (no subject)
+To: r.a.sanderson at newcastle.ac.uk
+Cc: r-sig-ecology at r-project.org
+Message-ID: <1228496256.49395d8051d0b at webmail.univ-lyon1.fr>
+Content-Type: text/plain; charset=ISO-8859-1
+
+Hello Roy,
+
+> Could anyone shed any information on why the area of home ranges as
+> estimated in adehabitat can be several times higher when the kernelUD
+\
+> kernel.area functions are used compared to estimates from the mcp
+> function.  I would have expected them to be roughly the same, rather
+> than up to an order of magnitude different.  The feature is obvious
+even
+> in the example puechabon dataset that comes with the adehabitat
+package.
+
+Because the two methods differ: the MCP computes the smallest polygon
+encompassing a given percentage of the relocations, while the kernel
+method
+tries to estimate the bivariate probability density function to relocate
+the
+animal at a given place (the utilization distribution, or UD). The
+kernel home
+range is estimated from the UD as the smallest area on which the
+probability to
+relocate the animal is equal to a given probability (e.g. 0.95, 0.7,
+etc.).
+
+Because the two methods do not rely on the same mathematical bases they
+are not
+expected to return the same results. Very often, the kernel home-range
+estimate
+is /smaller/ than the MCP (because the MCP may include large areas not
+actually
+used by the animal, while this is not the case for the kernel home
+range). When
+it is higher, it may be because the smoothing parameter h is
+misspecified (as it
+is the case for the "puechabon" dataset). Alternatively, it can be just
+a
+characteristic of your data.
+
+Indeed, the ad-hoc or so-called "reference" method to estimate the
+smoothing
+parameter, i.e. the most widely used method in the ecological literature
+(and
+the default in adehabitat, but it can be changed with the parameter "h"
+of
+kernelUD), tends to overestimate the home-range size, as this method
+supposes
+that the UD is bivariate normal, which is actually rarely the case.
+There is a
+large literature on this issue. You may begin with:
+
+Worton, B. 1995. Using Monte Carlo simulation to evaluate kernel-based
+home
+range estimators, Journal of Wildlife Management, 59, 794-800
+Worton, B. 1989. Kernel methods for estimating the utilization
+distribution in
+home range studies. Ecology, 70, 164-168.
+
+Hope this helps,
+
+
+Cl?ment.
+
+-- 
+Cl?ment CALENGE
+Office national de la chasse et de la faune sauvage
+Saint Benoist - 78610 Auffargis
+tel. (33) 01.30.46.54.14
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 9, Issue 6
+
+
+From zaha_dragos at yahoo.com  Mon Dec  8 16:16:08 2008
+From: zaha_dragos at yahoo.com (Dragos Zaharescu)
+Date: Mon, 8 Dec 2008 07:16:08 -0800 (PST)
+Subject: [R-sig-eco] save LOESS regression line values in R
+References: <mailman.1.1228734001.6700.r-sig-ecology@r-project.org>
+Message-ID: <327826.45868.qm@web31702.mail.mud.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081208/4087d665/attachment.pl>
+
+From owen.jones at imperial.ac.uk  Mon Dec  8 16:26:25 2008
+From: owen.jones at imperial.ac.uk (Owen Jones)
+Date: Mon, 8 Dec 2008 15:26:25 +0000
+Subject: [R-sig-eco] save LOESS regression line values in R
+In-Reply-To: <327826.45868.qm@web31702.mail.mud.yahoo.com>
+References: <mailman.1.1228734001.6700.r-sig-ecology@r-project.org>
+	<327826.45868.qm@web31702.mail.mud.yahoo.com>
+Message-ID: <6f4e3bcb0812080726u4acbf766rc034f072d53d26e1@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081208/2edca23f/attachment.pl>
+
+From kingsfordjones at gmail.com  Mon Dec  8 22:30:45 2008
+From: kingsfordjones at gmail.com (Kingsford Jones)
+Date: Mon, 8 Dec 2008 14:30:45 -0700
+Subject: [R-sig-eco] save LOESS regression line values in R
+In-Reply-To: <327826.45868.qm@web31702.mail.mud.yahoo.com>
+References: <mailman.1.1228734001.6700.r-sig-ecology@r-project.org>
+	<327826.45868.qm@web31702.mail.mud.yahoo.com>
+Message-ID: <2ad0cc110812081330o6fb2a12ay914af5876c971756@mail.gmail.com>
+
+Hi Dragos,
+
+It's not entirely clear what you'd like to do, but assuming you're
+using stats::loess to create the fit, you can use the predict function
+to generate predictions and then dput (or dump, save, write.table ...)
+to save the output.  For example,
+
+cars.lo <- loess(dist ~ speed, cars)
+str(pred <- predict(cars.lo, data.frame(speed = seq(5, 30, 1)), se = TRUE))
+
+List of 4
+ $ fit           : num [1:26] 7.81 10.04 12.57 15.37 18.43 ...
+ $ se.fit        : num [1:26] 7.57 5.94 4.98 4.52 4.32 ...
+ $ residual.scale: num 15.3
+ $ df            : num 44.6
+
+
+# predict.loess has returned a list and the 'fit' element contains the
+fitted values.
+# dput can write these out to a text file:
+
+
+dput(pred$fit, file = 'predfile.txt')
+
+
+# And to retrieve, use dget
+
+ret.pred <- dget(file = 'predfile.txt')
+
+
+If you'd rather save a workspace with the object, see ?save.  To write
+out a data frame see ?write.table.
+
+
+hope it helps,
+
+Kingsford Jones
+
+
+
+
+
+
+
+On Mon, Dec 8, 2008 at 8:16 AM, Dragos Zaharescu <zaha_dragos at yahoo.com> wrote:
+>
+> Dear list members,
+>
+> Can anyone give a hint on how to calculate and save predicted (fit) values for the LOESS regression line in R ?
+> This is for further analysis on climate change data.
+>
+> Much appreciated.
+>
+> Dragos Zaharescu @ KingstonU, London
+>
+>
+>
+>        [[alternative HTML version deleted]]
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From ct529 at york.ac.uk  Thu Dec 11 12:46:37 2008
+From: ct529 at york.ac.uk (Corrado)
+Date: Thu, 11 Dec 2008 11:46:37 +0000
+Subject: [R-sig-eco] Principal Component Analysis - Selecting components? +
+	right choice?
+Message-ID: <200812111146.38088.ct529@york.ac.uk>
+
+Dear R gurus,
+
+I have some climatic data for a region of the world. They are monthly averages 
+1950 -2000 of precipitation (12 months), minimum temperature (12 months), 
+maximum temperature (12 months). I have scaled them to 2 km x 2km cells, and 
+I have around 75,000 cells.
+
+I need to feed them into a statistical model as co-variates, to use them to 
+predict a response variable.
+
+The climatic data are obviously correlated: precipitation for January is 
+correlated to precipitation for February and so on .... even precipitation 
+and temperature are heavily correlated. I did some correlation analysis and 
+they are all strongly correlated.
+
+I though of running PCA on them, in order to reduce the number of co-variates 
+I feed into the model.
+
+I run the PCA using prcomp, quite successfully. Now I need to use a criteria 
+to select the right number of PC. (that is: is it 1,2,3,4?)
+
+What criteria would you suggest?
+
+At the moment, I am using a criteria based on threshold, but that is highly 
+subjective, even if there are some rules of thumb (Jolliffe,Principal 
+Component Analysis, II Edition, Springer Verlag,2002). 
+
+Could you suggest something more rigorous?
+
+By the way, do you think I would have been better off by using something 
+different from PCA?
+
+Best,
+-- 
+Corrado Topi
+
+Global Climate Change & Biodiversity Indicators
+Area 18,Department of Biology
+University of York, York, YO10 5YW, UK
+Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+
+
+From gavin.simpson at ucl.ac.uk  Thu Dec 11 13:06:11 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Thu, 11 Dec 2008 12:06:11 +0000
+Subject: [R-sig-eco] Principal Component Analysis -
+	Selecting	components? + right choice?
+In-Reply-To: <200812111146.38088.ct529@york.ac.uk>
+References: <200812111146.38088.ct529@york.ac.uk>
+Message-ID: <1228997171.13578.11.camel@prometheus.geog.ucl.ac.uk>
+
+Please DO NOT cross-post to multiple R mailing lists.
+
+Don Jackson (1993) Stopping Rules in Principal Components Analysis: A
+Comparison of Heuristical and Statistical Approaches. Ecology, Vol. 74,
+No. 8. (1993), pp. 2204-2214.
+
+G
+
+On Thu, 2008-12-11 at 11:46 +0000, Corrado wrote:
+> Dear R gurus,
+> 
+> I have some climatic data for a region of the world. They are monthly averages 
+> 1950 -2000 of precipitation (12 months), minimum temperature (12 months), 
+> maximum temperature (12 months). I have scaled them to 2 km x 2km cells, and 
+> I have around 75,000 cells.
+> 
+> I need to feed them into a statistical model as co-variates, to use them to 
+> predict a response variable.
+> 
+> The climatic data are obviously correlated: precipitation for January is 
+> correlated to precipitation for February and so on .... even precipitation 
+> and temperature are heavily correlated. I did some correlation analysis and 
+> they are all strongly correlated.
+> 
+> I though of running PCA on them, in order to reduce the number of co-variates 
+> I feed into the model.
+> 
+> I run the PCA using prcomp, quite successfully. Now I need to use a criteria 
+> to select the right number of PC. (that is: is it 1,2,3,4?)
+> 
+> What criteria would you suggest?
+> 
+> At the moment, I am using a criteria based on threshold, but that is highly 
+> subjective, even if there are some rules of thumb (Jolliffe,Principal 
+> Component Analysis, II Edition, Springer Verlag,2002). 
+> 
+> Could you suggest something more rigorous?
+> 
+> By the way, do you think I would have been better off by using something 
+> different from PCA?
+> 
+> Best,
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From ralf.schaefer at rmit.edu.au  Fri Dec 12 02:04:25 2008
+From: ralf.schaefer at rmit.edu.au (=?ISO-8859-1?Q?Ralf_Sch=E4fer?=)
+Date: Fri, 12 Dec 2008 12:04:25 +1100
+Subject: [R-sig-eco] pairwise comparison of rank dissimilarities for factor
+	levels - pairwise ANOSIM
+Message-ID: <4C5D7492-2F9E-4DFB-A527-1FA895A6C1A1@rmit.edu.au>
+
+Hello,
+
+I have a question and would be grateful for any help:
+
+Is there a possibility (in the sense that I do not have to write my  
+own function) to compute pairwise comparisons for factor levels  
+concerning their rank dissimilarities?
+I have a distance matrix and want to assess if there are significant  
+differences between the ranked distances of different ecological  
+groups (pollution categories).  I found the anosim, adonis and mrpp  
+function in the vegan package for testing if there is a general  
+difference between and among group rank similarities but I did not  
+figure out which group levels are significantly different from each  
+other in multiple comparison.
+In Primer there is something like pariwise ANOSIM to do this.
+
+Thanks in advance!
+Ralf
+
+------------------------------------------------------------
+
+Dr. Ralf Bernhard Sch?fer
+Biotechnology and Environmental Biology
+School of Applied Sciences
+RMIT University
+PO Box 71
+3083 Bundoora, VIC
+Australia
+
+Mail: Ralf.Schaefer at rmit.edu.au
+Phone: ++61 (0)3 99257105
+Web: http://www.rmit.edu.au/staff/ralf-schaefer
+
+
+From pdixon at iastate.edu  Fri Dec 12 15:55:45 2008
+From: pdixon at iastate.edu (Philip Dixon)
+Date: Fri, 12 Dec 2008 08:55:45 CST
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 9, Issue 9
+In-Reply-To: Your message of "Fri, 12 Dec 2008 12:00:02 +0100."
+	<mailman.1.1229079602.7199.r-sig-ecology@r-project.org> 
+Message-ID: <200812121455.IAA16006@gauss.stat.iastate.edu>
+
+Finding a good summary of the X matrix and finding good predictors of Y are 
+two very different objectives.
+
+PCA on the X matrix followed by regression works well when you believe that 
+the relevant information for predicting Y lies in one of the first few 
+eigenvectors.  The relevant information for prediction may be in one of the 
+last eigenvectors.
+
+I suggest you consider PLS regression (PLS partial least squares) or the LASSO.
+There are R packages for both.
+
+Philip Dixon
+
+
+From r.a.sanderson at newcastle.ac.uk  Tue Dec 16 12:21:03 2008
+From: r.a.sanderson at newcastle.ac.uk (Roy Sanderson)
+Date: Tue, 16 Dec 2008 11:21:03 +0000
+Subject: [R-sig-eco] adehabitat: Number of categories of each habitat
+Message-ID: <EMEW-kBFBL48449763452ff0de91b75354eb029efc1-1229426463.30173.5.camel@clarinet>
+
+Hello
+
+Apologies for asking such a simple question, but I have been having
+problems obtaining a simple summary of the habitat classes in a
+categorical (factor) asc map in the adehabitat library.  It has been
+created from overlaying an mcp polygon as follows:
+
+# Importation of asc files: factor e.g vegetation map
+(vegm <- paste("Y:/Map Import/veg05_7.asc", sep = "/")) # veg05_7 is a vegetation map with 10 classes
+(vegt <- paste("Y:/Map Import/veg05_2.txt", sep = "/")) # veg05 is a table with the names of the 10 classes
+veg <- import.asc(vegm, lev = vegt, type = "factor")
+
+# A Script to compute Homerange using Minimum Concex Polygon(MCP)
+roans<-read.csv("Y:/PhD Data/Data Analysis/Roan Data Analysis/Rawdata/NTO_G.csv") # Load the data
+xy<-roans[,c("X","Y")] # combine columns X & Y into a new column labelled xy
+id<-roans$Group # Allocate label id to Group column
+hrtg<-mcp(xy,id,percent=95) # Compute the homerange MCP
+
+## Converts the home range to raster
+hrrast <- hr.rast(hrtg, veg)
+
+## for each relocation, finds the values of the variables in x
+mcpveg = setmask(veg, hrrast)
+hrrast2 = getkasc(hrrast, "Nyatoto Group")
+mcpveg = setmask(veg, hrrast2)
+
+The asc map, mcpveg, produced by the final setmask function contains
+just the vegetation types within the MCP.  This map displays correctly.
+However, I'm unclear on how to obtain a numerical summary of the number
+of cells of each vegetation type, or percentage of each vegetation type,
+within the
+MCP.  Typing:
+
+summary(mcpveg)
+
+gives hundreds of columns, relating to the geographic structure of the
+asc map.
+
+Many thanks for your advice
+Roy
+
+-- 
+Roy Sanderson,
+Institute for Research on Environment and Sustainability (IRES),
+Devonshire Building,
+Newcastle University,
+Newcastle upon Tyne NE1 7RU
+r.a.sanderson at newcastle.ac.uk
+0191 246 4835
+
+
+From clement.calenge at oncfs.gouv.fr  Tue Dec 16 13:23:22 2008
+From: clement.calenge at oncfs.gouv.fr (=?ISO-8859-1?Q?Cl=E9ment_Calenge?=)
+Date: Tue, 16 Dec 2008 13:23:22 +0100
+Subject: [R-sig-eco] adehabitat: Number of categories of each habitat
+In-Reply-To: <EMEW-kBFBL48449763452ff0de91b75354eb029efc1-1229426463.30173.5.camel@clarinet>
+References: <EMEW-kBFBL48449763452ff0de91b75354eb029efc1-1229426463.30173.5.camel@clarinet>
+Message-ID: <49479DBA.6080606@oncfs.gouv.fr>
+
+Hello Roy,
+
+
+> Apologies for asking such a simple question, but I have been having
+> problems obtaining a simple summary of the habitat classes in a
+> categorical (factor) asc map in the adehabitat library.  It has been
+> created from overlaying an mcp polygon as follows:
+>
+> # Importation of asc files: factor e.g vegetation map
+> (vegm <- paste("Y:/Map Import/veg05_7.asc", sep = "/")) # veg05_7 is a vegetation map with 10 classes
+> (vegt <- paste("Y:/Map Import/veg05_2.txt", sep = "/")) # veg05 is a table with the names of the 10 classes
+> veg <- import.asc(vegm, lev = vegt, type = "factor")
+>
+> # A Script to compute Homerange using Minimum Concex Polygon(MCP)
+> roans<-read.csv("Y:/PhD Data/Data Analysis/Roan Data Analysis/Rawdata/NTO_G.csv") # Load the data
+> xy<-roans[,c("X","Y")] # combine columns X & Y into a new column labelled xy
+> id<-roans$Group # Allocate label id to Group column
+> hrtg<-mcp(xy,id,percent=95) # Compute the homerange MCP
+>
+> ## Converts the home range to raster
+> hrrast <- hr.rast(hrtg, veg)
+>
+> ## for each relocation, finds the values of the variables in x
+> mcpveg = setmask(veg, hrrast)
+>   
+
+This line is incorrect (hrrast is an object of class "kasc", it should 
+be of class "asc"), and useless since you redefine mcpveg below.
+
+
+> hrrast2 = getkasc(hrrast, "Nyatoto Group")
+> mcpveg = setmask(veg, hrrast2)
+>   
+
+At this point mcpveg is a *matrix* of class "asc".
+
+
+> The asc map, mcpveg, produced by the final setmask function contains
+> just the vegetation types within the MCP.  This map displays correctly.
+> However, I'm unclear on how to obtain a numerical summary of the number
+> of cells of each vegetation type, or percentage of each vegetation type,
+> within the
+> MCP.  Typing:
+>
+> summary(mcpveg)
+>
+> gives hundreds of columns, relating to the geographic structure of the
+> asc map.
+>   
+
+Because mcpveg is a matrix, calling summary on it computes one summary 
+per column of the matrix (which is not what you want). You should first 
+convert it to vector. Try:
+
+ta <- table(as.vector(mcpveg))
+names(ta) <- levels(mcpveg)[as.numeric(names(ta))]
+ta
+
+HTH,
+
+
+Cl?ment Calenge
+
+-- 
+Cl?ment CALENGE
+Office national de la chasse et de la faune sauvage
+Saint Benoist - 78610 Auffargis
+tel. (33) 01.30.46.54.14
+
+
+From swbcole at gmail.com  Wed Dec 17 21:05:40 2008
+From: swbcole at gmail.com (Stephen Cole)
+Date: Wed, 17 Dec 2008 16:05:40 -0400
+Subject: [R-sig-eco] Unbalnced nested ANOVA
+Message-ID: <f7134c940812171205w3a5da170iebdbaf8158ec5ba9@mail.gmail.com>
+
+Hello R help
+
+I have read over many of the help threads on the regular r help
+archive and must admit i am still confused.
+
+The data set i wish to analyze is a 2 level nested design with both
+factors random.
+
+Response variable: Density of barnacles
+
+Explanatory one: Region ( 4 regions)
+Explanatory two: Site nested within region (this is where the
+unbalance is...... 3 regions have 6 sites each, 1 region has 3 sites)
+
+The hypothesis I wish to test; Is there a difference among regions in
+density, and are there differences among sites nested within region.
+
+I know that i shouldn't (can't) use the aov function as i have read in
+the help files that it can not deal with unbalanced designs.  So i
+guess what i need to do is use the lm function, however i am unsure
+what to do with the type II or III sums of squares.  I realize that
+this decision is dictated by my hypothesis but what i dont know is
+which type my hypothesis dictates.  there seems to be an issue with
+interaction terms and order of factors in the model.  However neither
+of these issues appliy to my data (at least i dont think so).
+
+What i would really like by way of help is a guide to some sort of
+reference i can use to A) learn about the issue, and B) cite as the
+reason that i can analyze an unbalanced design as the work I am doing
+will at some point be submitted for publication ( I hope).
+
+Thanks for any help and advice in advance.
+
+Stephen Cole
+Graduate Student
+Marine Ecology Lab
+STFX
+
+
+From kingsfordjones at gmail.com  Wed Dec 17 23:39:46 2008
+From: kingsfordjones at gmail.com (Kingsford Jones)
+Date: Wed, 17 Dec 2008 15:39:46 -0700
+Subject: [R-sig-eco] Unbalnced nested ANOVA
+In-Reply-To: <f7134c940812171205w3a5da170iebdbaf8158ec5ba9@mail.gmail.com>
+References: <f7134c940812171205w3a5da170iebdbaf8158ec5ba9@mail.gmail.com>
+Message-ID: <2ad0cc110812171439x39bff8d1vbb5fa66616829fce@mail.gmail.com>
+
+Stephen,
+
+Assuming normally distributed errors (and random effects) you can fit
+unbalanced random effects models using REML via either lmer in the
+lme4 package or lme in the nlme package.  The lme4 package also
+provides means of fitting models with non-normal errors, whereas nlme
+provides means of structuring error covariance matrices.  If you're
+assuming both factors are random your hypotheses will be stated in
+terms of the variance components (e.g. H0: region-to-region variance
+is zero) and the types of sums of squares issue is not relevant.
+Realize that with only 4 regions you will essentially be estimating a
+variance from a sample size of 4.
+
+lme code:
+
+lme(resp ~ 1, random = ~1|region/site)
+
+lmer code:
+
+lmer(resp ~ 1 + (1|region/site)
+
+hope it helps,
+
+Kingsford Jones
+
+On Wed, Dec 17, 2008 at 1:05 PM, Stephen Cole <swbcole at gmail.com> wrote:
+> Hello R help
+>
+> I have read over many of the help threads on the regular r help
+> archive and must admit i am still confused.
+>
+> The data set i wish to analyze is a 2 level nested design with both
+> factors random.
+>
+> Response variable: Density of barnacles
+>
+> Explanatory one: Region ( 4 regions)
+> Explanatory two: Site nested within region (this is where the
+> unbalance is...... 3 regions have 6 sites each, 1 region has 3 sites)
+>
+> The hypothesis I wish to test; Is there a difference among regions in
+> density, and are there differences among sites nested within region.
+>
+> I know that i shouldn't (can't) use the aov function as i have read in
+> the help files that it can not deal with unbalanced designs.  So i
+> guess what i need to do is use the lm function, however i am unsure
+> what to do with the type II or III sums of squares.  I realize that
+> this decision is dictated by my hypothesis but what i dont know is
+> which type my hypothesis dictates.  there seems to be an issue with
+> interaction terms and order of factors in the model.  However neither
+> of these issues appliy to my data (at least i dont think so).
+>
+> What i would really like by way of help is a guide to some sort of
+> reference i can use to A) learn about the issue, and B) cite as the
+> reason that i can analyze an unbalanced design as the work I am doing
+> will at some point be submitted for publication ( I hope).
+>
+> Thanks for any help and advice in advance.
+>
+> Stephen Cole
+> Graduate Student
+> Marine Ecology Lab
+> STFX
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From caitlin.vertigan at gmail.com  Thu Dec 18 00:23:33 2008
+From: caitlin.vertigan at gmail.com (Caitlin Vertigan)
+Date: Thu, 18 Dec 2008 10:23:33 +1100
+Subject: [R-sig-eco] Power analysis on mixed model
+Message-ID: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081218/07aebdc6/attachment.pl>
+
+From h.wickham at gmail.com  Thu Dec 18 00:37:20 2008
+From: h.wickham at gmail.com (hadley wickham)
+Date: Wed, 17 Dec 2008 17:37:20 -0600
+Subject: [R-sig-eco] Power analysis on mixed model
+In-Reply-To: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+References: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+Message-ID: <f8e6ff050812171537q35e747b0u20695d2d7a1133e1@mail.gmail.com>
+
+You might want to start with:
+
+JM Hoening and DM Heisey. The abuse of power: The
+pervasive fallacy of power calulatons for data analysis.
+The American Statistician, 55(1):19?24, 2001.
+
+Hadley
+
+On Wed, Dec 17, 2008 at 5:23 PM, Caitlin Vertigan
+<caitlin.vertigan at gmail.com> wrote:
+> Hi all,  I've just completed an analysis of short-tailed shearwater breeding
+> success in relation to human disturbance using a mixed model.  I'd like to
+> do a power analysis on this now but am unaware of any way to do it.   Is it
+> possible? Does anyone have any ideas?
+> Thanks,
+> Caitlin
+>
+>        [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+http://had.co.nz/
+
+
+From s.blomberg1 at uq.edu.au  Thu Dec 18 00:43:53 2008
+From: s.blomberg1 at uq.edu.au (Simon Blomberg)
+Date: Thu, 18 Dec 2008 09:43:53 +1000
+Subject: [R-sig-eco] Power analysis on mixed model
+In-Reply-To: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+References: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+Message-ID: <1229557433.4761.21.camel@sib-sblomber01d.sib.uq.edu.au>
+
+You can do it. It is probably easiest to do it by simulation. Simulate
+data at several effect sizes (ie when H0 is false) and sample sizes and
+count the proportion of times that the model correctly rejects H0. The
+big problem is dealing with the random effects. You could treat the
+random effects as fixed at the values in your initial analysis, in which
+case your power analysis will only be relevant to the original
+population, or you can simulate the random effects by drawing them from
+a candidate distribution, for more general applicability.
+
+But if this is a post-hoc power analysis, you shouldn't do it at all.
+See: 
+
+HOENIG, J. M. & HEISEY, D. M. The Abuse of Power: The Pervasive Fallacy
+of Power Calculations for Data Analysis. The American Statistician,
+2001, 55, 19-24 
+
+Cheers,
+
+Simon.
+
+On Thu, 2008-12-18 at 10:23 +1100, Caitlin Vertigan wrote:
+> Hi all,  I've just completed an analysis of short-tailed shearwater breeding
+> success in relation to human disturbance using a mixed model.  I'd like to
+> do a power analysis on this now but am unaware of any way to do it.   Is it
+> possible? Does anyone have any ideas?
+> Thanks,
+> Caitlin
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+Simon Blomberg, BSc (Hons), PhD, MAppStat. 
+Lecturer and Consultant Statistician 
+Faculty of Biological and Chemical Sciences 
+The University of Queensland 
+St. Lucia Queensland 4072 
+Australia
+Room 320 Goddard Building (8)
+T: +61 7 3365 2506
+http://www.uq.edu.au/~uqsblomb
+email: S.Blomberg1_at_uq.edu.au
+
+Policies:
+1.  I will NOT analyse your data for you.
+2.  Your deadline is your problem.
+
+The combination of some data and an aching desire for 
+an answer does not ensure that a reasonable answer can 
+be extracted from a given body of data. - John Tukey.
+
+
+From spluque at gmail.com  Thu Dec 18 00:59:59 2008
+From: spluque at gmail.com (Sebastian P. Luque)
+Date: Wed, 17 Dec 2008 17:59:59 -0600
+Subject: [R-sig-eco] Power analysis on mixed model
+References: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+Message-ID: <87k59yz728.fsf@patagonia.sebmags.homelinux.org>
+
+On Thu, 18 Dec 2008 10:23:33 +1100,
+"Caitlin Vertigan" <caitlin.vertigan at gmail.com> wrote:
+
+> Hi all, I've just completed an analysis of short-tailed shearwater
+> breeding success in relation to human disturbance using a mixed model.
+> I'd like to do a power analysis on this now but am unaware of any way
+> to do it.  Is it possible? Does anyone have any ideas?  Thanks,
+> Caitlin
+
+Are you sure you want to do that?  I was asked to provide power
+calculations for other types of models in a manuscript not long ago, and
+did a bit digging on this topic in general.  I'm not sure what the
+consensus is now, but the following paper:
+
+Hoenig, J. M. & Heisey, D. M. The abuse of power: the pervasive fallacy
+of power calculations for data analysis Amer Statistician, 2001, 55,
+19-24
+
+is very convicing in showing that post-hoc power analyses are very
+misleading.  In the mixed-effects modelling context, you might want to
+use a simulation approach as that presented by:
+
+Baayen, R. H.; Davidson, D. J. & Bates, D. M. Mixed-effects modeling
+with crossed random effects for subjects and items J Mem Lang, 2008, 59,
+390-412
+
+
+-- 
+Seb
+
+
+From bolker at ufl.edu  Thu Dec 18 02:39:22 2008
+From: bolker at ufl.edu (Ben Bolker)
+Date: Wed, 17 Dec 2008 20:39:22 -0500
+Subject: [R-sig-eco] Power analysis on mixed model
+In-Reply-To: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+References: <e2b1330812171523ta25590dkc5892e51f7dd8316@mail.gmail.com>
+Message-ID: <4949A9CA.5070503@ufl.edu>
+
+Caitlin Vertigan wrote:
+> Hi all,  I've just completed an analysis of short-tailed shearwater breeding
+> success in relation to human disturbance using a mixed model.  I'd like to
+> do a power analysis on this now but am unaware of any way to do it.   Is it
+> possible? Does anyone have any ideas?
+> Thanks,
+> Caitlin
+> 
+
+  Please don't cross-post if you can avoid it (you just posted an almost
+identical query to r-sig-mixed-models, which was probably a better
+venue) ...
+
+  cheers
+    Ben Bolker
+
+-- 
+Ben Bolker
+Associate professor, Biology Dep't, Univ. of Florida
+bolker at ufl.edu / www.zoology.ufl.edu/bolker
+GPG key: www.zoology.ufl.edu/bolker/benbolker-publickey.asc
+
+
+From mujeebrahmanp at gmail.com  Thu Dec 18 12:22:46 2008
+From: mujeebrahmanp at gmail.com (mujeeb rahman)
+Date: Thu, 18 Dec 2008 16:52:46 +0530
+Subject: [R-sig-eco] About data distribution model
+Message-ID: <ac3840600812180322p47f58301x7face2587107c21b@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081218/3912ff3e/attachment.pl>
+
+From pmaurogut at hotmail.com  Thu Dec 18 12:42:40 2008
+From: pmaurogut at hotmail.com (FRANCISCO MAURO GUTIERREZ)
+Date: Thu, 18 Dec 2008 11:42:40 +0000
+Subject: [R-sig-eco] About data distribution model
+In-Reply-To: <ac3840600812180322p47f58301x7face2587107c21b@mail.gmail.com>
+References: <ac3840600812180322p47f58301x7face2587107c21b@mail.gmail.com>
+Message-ID: <COL107-W59205E0F44BE88DC945ACDBDF30@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081218/4d612b5d/attachment.pl>
+
+From rlandis at middlebury.edu  Thu Dec 18 22:29:07 2008
+From: rlandis at middlebury.edu (Landis, R Matthew)
+Date: Thu, 18 Dec 2008 16:29:07 -0500
+Subject: [R-sig-eco] Corrected AIC for binary response variables?
+Message-ID: <767C6B7CCDBD7345BD16C500B163CE84A633F2CD92@PANTHER.middlebury.edu>
+
+Greetings all,
+
+I'm using logistic regression to investigate mortality of trees.  I'm using AIC to compare models, and I'm wondering if I should use AICc instead of  AIC.  Burnham and Anderson [1] recommend using AICc when n/K < 40.  But what do I consider for n?  The logistic regression is based on 2811 observations (334 trees observed annually for <= 10 yr), but I've only observed 32 deaths.  Harrell [2] would consider 32 to be the "limiting sample size" for determining the feasible number of predictor variables.  Is AIC the same?  Should I use 2811, 334, or 32 to figure out AICc?
+
+Thanks for any help.
+
+Sincerely,
+
+Matt
+
+[1] Burnham K. and D. Anderson.  2002.  Model selection and multi-model inference:  a practical information-theoretic approach.  Springer.
+[2] Harrell, F. 2001.  Regression modeling strategies.  Springer.
+
+
+From bolker at ufl.edu  Thu Dec 18 22:54:20 2008
+From: bolker at ufl.edu (Ben Bolker)
+Date: Thu, 18 Dec 2008 15:54:20 -0600
+Subject: [R-sig-eco] Corrected AIC for binary response variables?
+In-Reply-To: <767C6B7CCDBD7345BD16C500B163CE84A633F2CD92@PANTHER.middlebury.edu>
+References: <767C6B7CCDBD7345BD16C500B163CE84A633F2CD92@PANTHER.middlebury.edu>
+Message-ID: <494AC68C.2050909@ufl.edu>
+
+Landis, R Matthew wrote:
+> Greetings all,
+>
+> I'm using logistic regression to investigate mortality of trees.  I'm using AIC to compare models, and I'm wondering if I should use AICc instead of  AIC.  Burnham and Anderson [1] recommend using AICc when n/K < 40.  But what do I consider for n?  The logistic regression is based on 2811 observations (334 trees observed annually for <= 10 yr), but I've only observed 32 deaths.  Harrell [2] would consider 32 to be the "limiting sample size" for determining the feasible number of predictor variables.  Is AIC the same?  Should I use 2811, 334, or 32 to figure out AICc?
+>
+>
+>   
+
+  Great question.  I think I would probably go with 32, but I'd like to 
+hear other opinions.
+
+  Ben Bolker
+
+
+From Mark_Wotawa at nps.gov  Thu Dec 18 23:49:34 2008
+From: Mark_Wotawa at nps.gov (Mark_Wotawa at nps.gov)
+Date: Thu, 18 Dec 2008 15:49:34 -0700
+Subject: [R-sig-eco] Corrected AIC for binary response variables?
+In-Reply-To: <767C6B7CCDBD7345BD16C500B163CE84A633F2CD92@PANTHER.middlebury.edu>
+Message-ID: <OF7A98D028.58A9DAB0-ON87257523.007B1435-87257523.007D6362@nps.gov>
+
+Good question,
+Burnham and Anderson 2002 (p332) mention but don't elaborate on the issue.
+Intuitively it seems  it would -not- be 2811 as you'd have something along
+the lines of pseudo-replication.  B&A also mention in a capture-recapture
+context that 334 could be n for survival and 2811 could be n for recapture.
+So, applied to your situation, you're recapture rate is 1,  which leads to
+my (again intuitive) guess that 334 would be appropriate.  This gives you
+only about 8 parameters before you should be using the AICc according to
+the   n/K < 40 rule, so I'd use AICc regardless.   If you come up with
+something concrete on this, it would be great to know more.
+Regards,
+Mark
+
+
+***************************************************************
+Mark A. Wotawa
+Quantitative Ecologist
+National Park Service
+Biological Resources Management Division
+1201 Oak Ridge Drive, Suite 200
+Fort Collins, CO  80525-5589
+Office: 970-225-3567
+FAX: 970-225-3585
+Email: mark_wotawa at nps.gov
+***************************************************************
+
+
+
+
+Greetings all,
+
+I'm using logistic regression to investigate mortality of trees.  I'm using
+AIC to compare models, and I'm wondering if I should use AICc instead of
+AIC.  Burnham and Anderson [1] recommend using AICc when n/K < 40.  But
+what do I consider for n?  The logistic regression is based on 2811
+observations (334 trees observed annually for <= 10 yr), but I've only
+observed 32 deaths.  Harrell [2] would consider 32 to be the "limiting
+sample size" for determining the feasible number of predictor variables.
+Is AIC the same?  Should I use 2811, 334, or 32 to figure out AICc?
+
+Thanks for any help.
+
+Sincerely,
+
+Matt
+
+[1] Burnham K. and D. Anderson.  2002.  Model selection and multi-model
+inference:  a practical information-theoretic approach.  Springer.
+[2] Harrell, F. 2001.  Regression modeling strategies.  Springer.
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From evelingtavera17 at gmail.com  Fri Dec 19 17:47:53 2008
+From: evelingtavera17 at gmail.com (Eveling Tavera)
+Date: Fri, 19 Dec 2008 11:47:53 -0500
+Subject: [R-sig-eco] Statistical Analysis
+Message-ID: <fa9e526c0812190847t3130fc68v6acdbccc74220054@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081219/2dd12889/attachment.pl>
+
+From nikko at hailmail.net  Fri Dec 19 19:13:01 2008
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Fri, 19 Dec 2008 10:13:01 -0800
+Subject: [R-sig-eco]  About data distribution model
+In-Reply-To: <mailman.1.1229684401.6913.r-sig-ecology@r-project.org>
+References: <mailman.1.1229684401.6913.r-sig-ecology@r-project.org>
+Message-ID: <1229710381.13181.1290966465@webmail.messagingengine.com>
+
+-----------------------------------------------------------------
+> 
+> Message: 1
+> Date: Thu, 18 Dec 2008 16:52:46 +0530
+Hi,
+If your counts are relatively high, you might start with a log-normal or
+gamma
+distribution. What you are talking about here are species abundance
+distributions
+on which there is a large body of confusing (and often wrong)
+literature.
+A good resource is Steinhard Engen (1978), Stochastic Abundance Models,
+CRC press.
+But this may be hard to find these days, and is not for the beginner. 
+
+But anyway, to just do an ANOVA, comparing treatments just taking the
+log
+and assuming a log-normal distribution may be good enough. By the way
+what is your response? Number of species? In that case you could do
+
+fit<-lm(log(No.Species)~Habitat, mydat)
+anova(fit)
+or
+glm(No.Species~Habitat, mydat,family=poisson())
+anova(fit)
+
+But I am not sure this answers anything. If your habitats
+follow a gradient, or you have covariates describing the habitats, you
+may want to look at ordination methods in vegan or ade4
+
+good luck
+
+Nicholas
+
+
+> From: "mujeeb rahman" <mujeebrahmanp at gmail.com>
+> Subject: [R-sig-eco] About data distribution model
+> To: r-sig-ecology at r-project.org
+> Message-ID:
+> 	<ac3840600812180322p47f58301x7face2587107c21b at mail.gmail.com>
+> Content-Type: text/plain
+> 
+> Hi
+> I have soil fauna count data from 60 plots (locations) which comprise 15
+> different habitats (15 x 4). From each of the 60 plots i taken 4 soil
+> monoliths (soil core of 25 x25 cm size) and counted all the fauna. it is
+> sure that the data does not follow a normal distribution and we could do
+> anova.
+> I want to find out which dsitribution it follow and to find out which
+> model
+> it can fit well. (Some body says that such type of data may fit with
+> negative binomial or poisson.)
+> 
+> Any solutions in R?.
+> More over I am new to R programme, I expect your kind help
+> 
+> Mujeeb Rahman P
+> Kerala Forest Research Institute
+> Peechi, Thrissur, Kerala, India.
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> 
+>
+
+
+From dhewitt37 at gmail.com  Fri Dec 19 19:17:13 2008
+From: dhewitt37 at gmail.com (Dave Hewitt)
+Date: Fri, 19 Dec 2008 18:17:13 +0000 (UTC)
+Subject: [R-sig-eco] Corrected AIC for binary response variables?
+References: <767C6B7CCDBD7345BD16C500B163CE84A633F2CD92@PANTHER.middlebury.edu>
+Message-ID: <loom.20081219T181037-345@post.gmane.org>
+
+> I'm using logistic regression to investigate mortality of trees.
+> I'm using AIC to compare models, and I'm wondering if I should
+> use AICc instead of AIC. Burnham and Anderson [1] recommend using
+> AICc when n/K < 40.
+
+B&A 2002 is not as forceful on this as they are in person or in later work.
+Basically, it's a non-issue. AICc approaches AIC with large sample sizes
+(relative to the number of parameters), so just calculate AICc. Always.
+
+> But what do I consider for n?
+
+I agree with Ben that this is a great question, and I doubt there
+is a single right answer. The capture-recapture world has converged
+on some general agreement in many of those models, but disagreement
+still exists and may never be resolved.
+
+The lazy, conservative approach in this case would be to take the
+value amongst the sensible ones that generates the smallest
+N:K ratio. Or, calculate the model selection stats for the range of
+the sensible numbers and see if it changes inference. It might not,
+and then you have nothing to worry about.
+
+
+From evelingtavera17 at gmail.com  Fri Dec 19 19:26:55 2008
+From: evelingtavera17 at gmail.com (Eveling Tavera)
+Date: Fri, 19 Dec 2008 13:26:55 -0500
+Subject: [R-sig-eco] Statistical Analysis
+In-Reply-To: <fa9e526c0812190847t3130fc68v6acdbccc74220054@mail.gmail.com>
+References: <fa9e526c0812190847t3130fc68v6acdbccc74220054@mail.gmail.com>
+Message-ID: <fa9e526c0812191026g6b31aaf9s9fe7a175333322c9@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081219/e1f5391a/attachment.pl>
+
+From murray.efford at otago.ac.nz  Fri Dec 19 21:08:43 2008
+From: murray.efford at otago.ac.nz (Murray Efford)
+Date: Sat, 20 Dec 2008 09:08:43 +1300
+Subject: [R-sig-eco] Corrected AIC for binary response variables? (Landis,
+	R Matthew)
+Message-ID: <E67251526203864DABCB7237DAC8EB2D2BE5D914CF@MAIL2.registry.otago.ac.nz>
+
+Matt Landis asked
+>>I'm using logistic regression to investigate mortality of trees.  I'm using AIC to compare models, and I'm wondering if I should use AICc instead of  AIC.  Burnham and Anderson [1] recommend using AICc when n/K < 40.  But what do I consider for n?  The logistic regression is based on 2811 observations (334 trees observed annually for <= 10 yr), but I've only observed 32 deaths.  Harrell [2] would consider 32 to be the "limiting sample size" for determining the feasible number of predictor variables.  Is AIC the same?  Should I use 2811, 334, or 32 to figure out AICc?
+
+You may be interested in an exchange on this topic that I initiated on www.phidot.org/forum MARK Statistics & analysis help on 30 September. I found the outcome quite unsatisfactory, and it seems the experts don't know. 334 seems safe to me, and of course it will make little numerical difference.
+
+Murray Efford
+
+[I'm sorry that I have this through the Digest & my reply may not conform]
+
+
+From dlr32 at cornell.edu  Sat Dec 20 01:49:16 2008
+From: dlr32 at cornell.edu (Dan Rabosky)
+Date: Fri, 19 Dec 2008 19:49:16 -0500
+Subject: [R-sig-eco] correlated parameters, absolute model fit, and MCMC
+Message-ID: <98556938-5DCD-4BBF-82AD-B681493FD606@cornell.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081219/351dbf6d/attachment.pl>
+
+From nikko at hailmail.net  Sat Dec 20 05:07:51 2008
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Fri, 19 Dec 2008 20:07:51 -0800
+Subject: [R-sig-eco]  correlated parameters, absolute model fit, and MCMC
+Message-ID: <1229746071.28149.1291035797@webmail.messagingengine.com>
+
+Hi Dan,
+Since you are fitting a fully Bayesian model, the output from your MCMC
+sample
+is a sample from the joint posterior distribution. So given that your
+chain is mixing
+properly and converged (a whole nother kettle of fish) I don't see why
+the correlation
+is a problem. You can assess the model fit using posterior predictive
+checks,
+ie from the joint posterior distribution you can generate the posterior
+predictive
+distribution. There are may papers on this a good place to start is
+Gelman et al. (2004) "Bayesian Data Analysis"
+
+Hope this helps
+Nicholas 
+----------------------------------------------------------------------------
+Hello -
+
+I'm investigating model adequacy for several stochastic models; I've  
+obtained posterior distributions for all parameters using approximate  
+MCMC. I'd now like to know, in an absolute sense, how good these  
+parameters actually are. In other words, given my data D, and a set  
+of summary statistics on those data S(D), I would like to simulate  
+date D' under the model parameters and look at the distribution of S 
+(D') and see how well it matches up with S(D). This should be a  
+straightforward evaluation of absolute model fit via parametric  
+simulation.
+
+However, because some of the parameters are correlated, I cannot  
+simply use the parameter set with the maximum posterior probability.  
+Nor can I use maximum likelihood estimates for the parameters (I am  
+using approximate MCMC because no likelihood function can be  
+specified, but the simulations are easy, and the data are well- 
+characterized by several summary statistics).
+
+Does anyone have any suggestions on how to deal with correlated  
+parameters like this, or alternative approaches for evaluating model  
+fit?
+
+One solution would be simply to run simulations with parameters  
+sampled at random from the complete converged chain (or set of  
+chains), with the constraint that I would have to sample all  
+parameters from a given generation simultaneously. Parameter sets  
+would thus be sampled roughly in proportion to their joint posterior  
+probability. But I wonder whether there  may be other approaches out  
+there that I should investigate.
+
+This may be more stats than R, but it is an ecological analysis I'm  
+running in R!
+
+Thanks-
+~Dan Rabosky
+
+
+From mujeebrahmanp at gmail.com  Fri Dec 26 11:03:12 2008
+From: mujeebrahmanp at gmail.com (mujeeb rahman)
+Date: Fri, 26 Dec 2008 15:33:12 +0530
+Subject: [R-sig-eco] about ade4TkGUI
+Message-ID: <ac3840600812260203x78dc979fld5571329411f9a26@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081226/6b33ba93/attachment.pl>
+
+From Sebastiaan.DeSmedt at ua.ac.be  Sat Dec 27 13:11:45 2008
+From: Sebastiaan.DeSmedt at ua.ac.be (De Smedt Sebastiaan)
+Date: Sat, 27 Dec 2008 13:11:45 +0100
+Subject: [R-sig-eco] about ade4TkGUI
+References: <mailman.1.1230289201.9258.r-sig-ecology@r-project.org>
+Message-ID: <930B1A45F446404FA4D99A46F09209C4EEB1D1@xmail05.ad.ua.ac.be>
+
+In Excel: save the data as a txt-file, NOT a usual workbook.
+In R: data<-read.table("pathname of file.txt", header=T/F)
+ 
+ 
+Sebastiaan De Smedt
+Department of Bioscience Engineering
+University of Antwerp
+Belgium
+Tel.: +32 (0)3 265 35 17
+Fax.: +32 (0)3 265 32 25
+
+________________________________
+
+From: r-sig-ecology-bounces at r-project.org on behalf of r-sig-ecology-request at r-project.org
+Sent: Fri 26-12-2008 12:00
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 9, Issue 15
+
+
+
+Send R-sig-ecology mailing list submissions to
+        r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+        https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+        r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+        r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific
+than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. about ade4TkGUI (mujeeb rahman)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Fri, 26 Dec 2008 15:33:12 +0530
+From: "mujeeb rahman" <mujeebrahmanp at gmail.com>
+Subject: [R-sig-eco] about ade4TkGUI
+To: r-sig-ecology at r-project.org
+Message-ID:
+        <ac3840600812260203x78dc979fld5571329411f9a26 at mail.gmail.com>
+Content-Type: text/plain
+
+Hi All
+I have some doubts in the data input of the ade4GUI. I need elaborate reply
+from your side.
+What actully meant by "data frame to recieve the data". What actually type
+here. from the help source I could understand that, data from excel can be
+copied and no need to save as the excel data in .txt format. This task (data
+copy) done befoe opening of R or the middle of the programme
+running?. Please send me solution, with examples, and elaborate. R
+programe is new to me, so facing some initial problems.
+
+Awating for the reply
+
+Mujeeb Rahman P
+KFRI, Thrissur, Kerala, India
+
+        [[alternative HTML version deleted]]
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 9, Issue 15
+********************************************
+
+
+
+From carnivorescience at gmail.com  Sun Dec 28 22:51:10 2008
+From: carnivorescience at gmail.com (Guillaume Chapron)
+Date: Sun, 28 Dec 2008 22:51:10 +0100
+Subject: [R-sig-eco] Bayesian Methods for Ecology: inits working with
+	WinBUGS not working with R & R2WinBUGS
+Message-ID: <9159BA4A-07D0-40CC-AEB1-39CE8991FA16@gmail.com>
+
+Dear all,
+
+I'm trying to have a WinBUGS example from the book "Bayesian Methods  
+for Ecology" by Michael A. McCarthy running with R through R2WinBUGS.  
+I cannot have this working, as there seems to be an issue with inits.
+
+The model is a population dynamic one from the book Chapter 9, in  
+particular Box 9.1 p.219. The WinBUGS code is as follows:
+
+##################################
+# BUGS model to be called from WinBUGS
+##################################
+
+model
+{
+   for (j in 1:4)  # for each population
+   {
+     for(i in 1:T[j])  # for each year
+     {
+# env stoch in population growth rate, drawn from normal
+       ev[j, i] ~ dnorm(0, tau)
+# per capita growth rate is dens dep - Ricker
+       Er[j, i] <- exp(alpha*(1 - N[j, i]/K[j]) + ev[j, i])
+# lambda equal to number this year times per capita rate
+       lambda[j, i] <- N[j, i] * Er[j, i]
+# number next year drawn from Poisson with mean lambda - demo. stoch.
+       N[j, i+1] ~ dpois(lambda[j, i])
+     }
+  }
+
+#PRIORS
+# alpha is maximum exponential growth rate	
+   alpha ~ dunif(0, 1.0986)
+
+# K's are carrying capacities of the 4 sites	
+   for (i in 1:4)
+   {
+     K[i] ~ dunif(1, 50)
+   }
+
+# st. dev. in growth rate due to env. stoch.
+   sd ~ dunif(0, 0.5)
+   tau <- 1/sd/sd
+}
+
+
+list(alpha = 0.5, K=c(30,30, 30, 30), sd=0.1, ev = structure(.Data = c(
+0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1 
+,            NA,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,  NA, 
+0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,  NA),
+.Dim = c(4,11)))
+
+
+list(N = structure(.Data = c(
+32, 28, 29, 39, 20, 24, 22, 35, 20, 36, 34, 40,
+25, 25, 24, 24, 28, 15, 30, 36, 27, 31, 20, NA,
+7, 11, 8, 14, 11, 5, 12, 6, 10, 12, 19, NA,
+12, 16, 8, 8, 16, 11, 10, 6, 4, 10, 12, NA),
+.Dim = c(4, 12)), T = c(11, 10, 10, 10))
+
+##################################
+
+I have explicitly written the inits in this case, I have just rounded  
+the ones given by WinBUGS. All this works perfectly well.
+
+Running this with R would be done by this code (if I'm correct):
+
+##################################
+# R script to call R2WinBUGS and plot density
+##################################
+
+# Define the dataset
+
+mydata <- list(N = structure(.Data = c(32, 28, 29, 39, 20, 24, 22, 35,  
+20, 36, 34, 40, 25, 25, 24, 24, 28, 15, 30, 36, 27, 31, 20, NA,7, 11,  
+8, 14, 11, 5, 12, 6, 10, 12, 19, NA, 12, 16, 8, 8, 16, 11, 10, 6, 4,  
+10, 12, NA),.Dim = c(4, 12)), T = c(11, 10, 10, 10))
+
+# Define inits
+
+inits <- list(list(alpha = 0.5, K=c(30,30, 30, 30), sd=0.1, ev =  
+structure(.Data =  
+c 
+(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1 
+,NA,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,NA, 
+0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,NA), .Dim = c(4,11))))
+
+# specify the parameters to be monitored
+parameters <- c("alpha", "K", "sd")
+
+# load R2WinBUGS package
+library(R2WinBUGS)
+
+# run the MCMC analysis
+res.sim <- bugs(data=mydata, inits, parameters,"pva.bug",  
+n.chains=length(inits), n.burnin=5000, n.iter=10000
+#, bugs.directory="/Applications/WinBUGS14", working.directory=".",  
+#WINE="/Applications/Darwine/Wine.bundle/Contents/bin/wine",  
+#WINEPATH="/Applications/Darwine/Wine.bundle/Contents/bin/winepath"
+)
+
+attach.bugs(res.sim)
+plot(density(alpha))
+
+##################################
+
+and then the BUG model named pva.bug would be this (same as before  
+without the inits and data in fact)
+
+##################################
+# BUGS model to be called from R
+##################################
+
+model
+{
+   for (j in 1:4)  # for each population
+   {
+     for(i in 1:T[j])  # for each year
+     {
+# env stoch in population growth rate, drawn from normal
+       ev[j, i] ~ dnorm(0, tau)
+# per capita growth rate is dens dep - Ricker
+       Er[j, i] <- exp(alpha*(1 - N[j, i]/K[j]) + ev[j, i])
+# lambda equal to number this year times per capita rate
+       lambda[j, i] <- N[j, i] * Er[j, i]
+# number next year drawn from Poisson with mean lambda - demo. stoch.
+       N[j, i+1] ~ dpois(lambda[j, i])
+     }
+  }
+
+#PRIORS
+# alpha is maximum exponential growth rate
+   alpha ~ dunif(0, 1.0986)
+
+# K's are carrying capacities of the 4 sites
+   for (i in 1:4)
+   {
+     K[i] ~ dunif(1, 50)
+   }
+
+# st. dev. in growth rate due to env. stoch.
+   sd ~ dunif(0, 0.5)
+   tau <- 1/(sd*sd)
+
+}
+
+##################################
+
+BUT, this does not work, the log file says "this chain contains  
+uninitialized variables" and later "cannot bracket slice for node  
+N[4,6]". I cannot understand why something perfectly working directly  
+in WinBUGS (and giving the correct results) will not work at all when  
+WinBUGS is called by R2WinBUGS. What am I doing wrong?
+
+Thanks for your help !
+Cheers
+
+Guillaume
+
+
+From carnivorescience at gmail.com  Mon Dec 29 18:11:15 2008
+From: carnivorescience at gmail.com (Guillaume Chapron)
+Date: Mon, 29 Dec 2008 18:11:15 +0100
+Subject: [R-sig-eco] Bayesian Methods for Ecology: inits working with
+	WinBUGS not working with R & R2WinBUGS
+In-Reply-To: <9159BA4A-07D0-40CC-AEB1-39CE8991FA16@gmail.com>
+References: <9159BA4A-07D0-40CC-AEB1-39CE8991FA16@gmail.com>
+Message-ID: <C6E667A6-6DD0-4DD8-A54A-2A00DC13711F@gmail.com>
+
+Hello,
+
+The issue raised in my yesterday email is now solved. Philip Dixon  
+emailed a suggestion to me first and I tested it and it works.  
+Hereafter, you will find explanations, they are probably of interest  
+to people switching between R and WinBUGS.
+
+-- 
+
+Remember that R and (Win)BUGS store matrices (and arrays) in
+different order.  In BUGS, you specify values going across the rows.
+In R, you specify values going down the columns.  If you have a
+reasonable matrix in R format, R2WinBUGS takes care of the ordering by
+transposing the matrix before passing it to WinBUGS.
+
+I suggest you print out your data and init matrices in R and check
+that they are in the order you intend.  If they are in the wrong
+order, your NA's will NOT be where you intended, which explains the
+'some variables uninitialized' message.
+
+--
+
+So when pasting into R some WinBUGS code, it is important to remember  
+this ordering issue. What I did is replacing this
+
+N = structure(.Data = c(32, 28, 29, 39, 20, 24, 22, 35, 20, 36, 34,  
+40, 25, 25, 24, 24, 28, 15, 30, 36, 27, 31, 20, NA,7, 11, 8, 14, 11,  
+5, 12, 6, 10, 12, 19, NA, 12, 16, 8, 8, 16, 11, 10, 6, 4, 10, 12,  
+NA),.Dim = c(4, 12))
+
+with this
+
+N = matrix(c(32, 28, 29, 39, 20, 24, 22, 35, 20, 36, 34, 40, 25, 25,  
+24, 24, 28, 15, 30, 36, 27, 31, 20, NA,7, 11, 8, 14, 11, 5, 12, 6, 10,  
+12, 19, NA, 12, 16, 8, 8, 16, 11, 10, 6, 4, 10, 12, NA), nrow = 4,  
+ncol = 12, byrow = T)
+
+Cheers
+
+Guillaume
+
+
+From rlandis at middlebury.edu  Wed Dec 31 18:17:28 2008
+From: rlandis at middlebury.edu (Landis, R Matthew)
+Date: Wed, 31 Dec 2008 12:17:28 -0500
+Subject: [R-sig-eco] Corrected AIC for binary response variables?
+ (Landis, R Matthew)
+In-Reply-To: <E67251526203864DABCB7237DAC8EB2D2BE5D914CF@MAIL2.registry.otago.ac.nz>
+References: <E67251526203864DABCB7237DAC8EB2D2BE5D914CF@MAIL2.registry.otago.ac.nz>
+Message-ID: <767C6B7CCDBD7345BD16C500B163CE84A633F32F05@PANTHER.middlebury.edu>
+
+Murray - thanks for pointing me to that discussion - I found it stimulating, if inconclusive in the end.  The discussion of Bernoulli trials (1 per individual per time step) reminds me of something I once read by Paul Allison [1] in an introduction to the use of logistic regression for event data.  He discussed the notion of pseudoreplication of repeated observations on a single individual (p. 223), and concluded that it wasn't applicable because of the something to do with a conditional probability involved in factoring the likelihood function.  I don't quite understand it, but it does seem to imply that using the number of tree*years (2811 in my case), might be justifiable.
+
+In any case, it sounds like the number of individuals (334 here) is certainly justifiable and acceptable to most of the people who responded.  I'll probably go with that.
+
+Many thanks to all who responded with thoughts on my question...and apologies for the lack of specific R content.  The analyses _are_ all being done in R ;-)
+
+Happy New Year!
+
+Matt
+
+[1] Allison, P. 1995. Survival analysis using the SAS system: a practical guide SAS Institute, Inc.
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Murray Efford
+Sent: Friday, December 19, 2008 3:09 PM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Corrected AIC for binary response variables? (Landis, R Matthew)
+
+Matt Landis asked
+>>I'm using logistic regression to investigate mortality of trees.  I'm using AIC to compare models, and I'm wondering if I should use AICc instead of  AIC.  Burnham and Anderson [1] recommend using AICc when n/K < 40.  But what do I consider for n?  The logistic regression is based on 2811 observations (334 trees observed annually for <= 10 yr), but I've only observed 32 deaths.  Harrell [2] would consider 32 to be the "limiting sample size" for determining the feasible number of predictor variables.  Is AIC the same?  Should I use 2811, 334, or 32 to figure out AICc?
+
+You may be interested in an exchange on this topic that I initiated on www.phidot.org/forum MARK Statistics & analysis help on 30 September. I found the outcome quite unsatisfactory, and it seems the experts don't know. 334 seems safe to me, and of course it will make little numerical difference.
+
+Murray Efford
+
+[I'm sorry that I have this through the Digest & my reply may not conform]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+

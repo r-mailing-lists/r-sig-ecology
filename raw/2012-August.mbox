@@ -1,0 +1,1875 @@
+From ubuntero.9161 at gmail.com  Wed Aug  1 10:54:29 2012
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Wed, 1 Aug 2012 11:54:29 +0300
+Subject: [R-sig-eco] bin averages and spatial autocorrelation
+In-Reply-To: <CAPqhyzzoCpn9SuUv75B-EUY3hitT2FO8U9xP_rCFKCRUj-qaPA@mail.gmail.com>
+References: <CAPqhyzzoCpn9SuUv75B-EUY3hitT2FO8U9xP_rCFKCRUj-qaPA@mail.gmail.com>
+Message-ID: <CAAVnHsvRb=Pk+_z77UhqO6WdN8xnSYiDf6qC7Yx03ZrvSFayEQ@mail.gmail.com>
+
+On Tue, Jul 31, 2012 at 1:14 PM, carola cullum <carolacullum at gmail.com> wrote:
+> Could someone please explain to me the advantages and disadvantages of
+> using binned averages for reducing noise in ecological data?
+
+Carola,
+
+I am not sure if there are any advantages, but I know that binning a
+continuous variable leads to loss of information and hence degraded
+precision of the estimated parameters for that variable (for a
+detailed list of related problems see http://tinyurl.com/c6nbdmq).
+
+Hope this helps,
+Ivailo
+-- 
+UBUNTU: a person is a person through other persons.
+
+
+From lgj200306 at 163.com  Wed Aug  1 19:42:16 2012
+From: lgj200306 at 163.com (lgj200306)
+Date: Thu, 2 Aug 2012 01:42:16 +0800 (CST)
+Subject: [R-sig-eco] Log transformed simple linear regression and Poisson
+	regression
+Message-ID: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120802/a7c56029/attachment.pl>
+
+From mbrooks at ufl.edu  Wed Aug  1 20:17:17 2012
+From: mbrooks at ufl.edu (Brooks,Mollie E)
+Date: Wed, 01 Aug 2012 14:17:17 -0400
+Subject: [R-sig-eco] Log transformed simple linear regression and
+ Poisson regression
+In-Reply-To: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+References: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+Message-ID: <577e43d29bae6b261697912dd23e34f0@ufl.edu>
+
+Hi Lin,
+If y is count data, then you should probably model it with either the 
+Poisson or negative binomial distributions because these are for counts. 
+You can sometimes get away with the normal distribution if the counts 
+are very large.
+
+There is an article by O'Hara and Kotz in Methods in Ecology and 
+Evolution titled "Do not log-transform count data". So your first 
+approach is probably unacceptable.
+
+The similarity is that Poisson regressions typically use a log link 
+function (the function glm does this by default). A log link means that 
+the model follows the same exponential form that you've specified in 
+your first approach (except for the +1). If y does not appear to have an 
+accelerating relationship with the predictors, you can try an identity 
+link, but it is more fragile.
+
+cheers,
+Mollie
+
+On Thu, 2 Aug 2012 01:42:16 +0800 (CST), lgj200306 wrote:
+> Hi, everyone,
+> I used two methods to analysis the relationship between y (count 
+> data) and x.
+> 1) log transformed simple linear regression:
+>>lm(log(y+1)~x1+x2+x3,data)
+> 2) Poisson regression:
+>>glm(y~x1+x2+x3,family=poisson())
+>
+> Some one told that these two ways are very similar, but other one
+> told that the Poisson regression does not fit the y but the lambda
+> (parameter of the poisson distribution). I am not sure which one is
+> right. Can anybody help me?
+> Thanks for your attention and best wishes for you!
+>
+> Lin
+> Aug 1st, 2012
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From cadeb at usgs.gov  Wed Aug  1 21:34:25 2012
+From: cadeb at usgs.gov (Brian S Cade)
+Date: Wed, 1 Aug 2012 13:34:25 -0600
+Subject: [R-sig-eco] Log transformed simple linear regression and
+ Poisson regression
+In-Reply-To: <577e43d29bae6b261697912dd23e34f0@ufl.edu>
+References: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+	<577e43d29bae6b261697912dd23e34f0@ufl.edu>
+Message-ID: <OFB9FE81A9.31352F94-ON87257A4D.006B2253-87257A4D.006B85EA@usgs.gov>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120801/b030a2cd/attachment.pl>
+
+From elizabethpryde at gmail.com  Thu Aug  2 00:17:03 2012
+From: elizabethpryde at gmail.com (Liz Pryde)
+Date: Thu, 2 Aug 2012 08:17:03 +1000
+Subject: [R-sig-eco] Log transformed simple linear regression and
+	Poisson regression
+In-Reply-To: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+References: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+Message-ID: <AAD86A16-9B4D-4D82-98E1-4238C7BBC076@gmail.com>
+
+Hello Lin,
+
+It's a bit difficult to give you an exact answer without knowing what the data set is.
+That said, in general, count data does usually follow a poisson or neg binomial distribution. When you log transform such data, you are trying to normalise its distribution so that you can apply OLS regression (which assumes a normal distribution for the Y data to give you 'correct' significance values). One of the problems with this is that when you have data that can't be negative (e.g. counts) OLS regression on count data can give you estimations of your predicted values that may be negative (and hence, nonsensical). Also, when mean values are very low (near zero or zero), transforming the data becomes ineffective. GLMs overcome this problem because they explicitly model the X-Y relationship through the link function and ALSO model the mean-variance relationship (which is what is happening when you choose 'family= '). So they 'normalise' and 'linearise' the data as well as 'model' the error. Poisson data will generally have a variance that increases with increasing mean. On occasion this variance may be higher than expected (overdispersed) and so the negative binomial becomes appropriate.
+
+I hope this helps.
+The O'Hara paper that was mentioned below gives an excellent explanation of this.
+
+Liz
+
+
+On 02/08/2012, at 3:42 AM, lgj200306 <lgj200306 at 163.com> wrote:
+
+> Hi, everyone,
+> I used two methods to analysis the relationship between y (count data) and x.
+> 1) log transformed simple linear regression:
+>> lm(log(y+1)~x1+x2+x3,data)
+> 2) Poisson regression:
+>> glm(y~x1+x2+x3,family=poisson())
+> 
+> Some one told that these two ways are very similar, but other one told that the Poisson regression does not fit the y but the lambda (parameter of the poisson distribution). I am not sure which one is right. Can anybody help me? 
+> Thanks for your attention and best wishes for you!
+> 
+> Lin
+> Aug 1st, 2012 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+Liz Pryde
+PhD Candidate (off-campus @ The University of Melbourne)
+School of Earth and Environmental Sciences
+James Cook University, QLD
+
+elizabethpryde at gmail.com
+epryde at unimelb.edu.au
+
+
+From lgj200306 at 163.com  Thu Aug  2 00:50:03 2012
+From: lgj200306 at 163.com (lgj200306)
+Date: Thu, 2 Aug 2012 06:50:03 +0800 (CST)
+Subject: [R-sig-eco] Log transformed simple linear regression and
+ Poisson regression
+In-Reply-To: <AAD86A16-9B4D-4D82-98E1-4238C7BBC076@gmail.com>
+References: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+	<AAD86A16-9B4D-4D82-98E1-4238C7BBC076@gmail.com>
+Message-ID: <1122f2d.1de3.138e461b060.Coremail.lgj200306@163.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120802/e340403c/attachment.pl>
+
+From Li.Wen at environment.nsw.gov.au  Thu Aug  2 01:53:45 2012
+From: Li.Wen at environment.nsw.gov.au (Li Wen)
+Date: Wed, 1 Aug 2012 23:53:45 +0000
+Subject: [R-sig-eco] Log transformed simple linear regression and
+ Poisson regression
+In-Reply-To: <1122f2d.1de3.138e461b060.Coremail.lgj200306@163.com>
+References: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+	<AAD86A16-9B4D-4D82-98E1-4238C7BBC076@gmail.com>
+	<1122f2d.1de3.138e461b060.Coremail.lgj200306@163.com>
+Message-ID: <0B344862ED77D54F846E9A9386B547E734211631@LIDCOEX03.dec.int>
+
+HI, Lin
+
+You might "normalize" your predictors before the GLM, this allow you to directly compare the contributions by looking at the fitted coefficients, as all your Xs have 0 mean and 1 standard deviation.  
+
+Li
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of lgj200306
+Sent: Thursday, 2 August 2012 8:50 AM
+To: Liz Pryde
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Log transformed simple linear regression and Poisson regression
+
+Thanks Liz, Brian and Mollie. Your replies are helpful for me. 
+I have realized the complexity of analysing the count data. Different methods should be selected according to the structure of my data. But if the explanatory data table is composed by several  variables and I want to make clear the relative contribution of each explanatory variable to the variation of response variable, can I achieve it based on the Poisson, negative bionmial, zero-inflated Poisson, zero-inflated negative binomial or other models (except the simple linear regression model)?
+Thanks for your attention and best wishes for you!
+ 
+Lin
+Aug 1st, 2012
+
+At 2012-08-02 06:17:03,"Liz Pryde" <elizabethpryde at gmail.com> wrote:
+>Hello Lin,
+>
+>It's a bit difficult to give you an exact answer without knowing what the data set is.
+>That said, in general, count data does usually follow a poisson or neg binomial distribution. When you log transform such data, you are trying to normalise its distribution so that you can apply OLS regression (which assumes a normal distribution for the Y data to give you 'correct' significance values). One of the problems with this is that when you have data that can't be negative (e.g. counts) OLS regression on count data can give you estimations of your predicted values that may be negative (and hence, nonsensical). Also, when mean values are very low (near zero or zero), transforming the data becomes ineffective. GLMs overcome this problem because they explicitly model the X-Y relationship through the link function and ALSO model the mean-variance relationship (which is what is happening when you choose 'family= '). So they 'normalise' and 'linearise' the data as well as 'model' the error. Poisson data will generally have a variance that increases with increasing mean.!
+  On occasion this variance may be higher than expected (overdispersed) and so the negative binomial becomes appropriate.
+>
+>I hope this helps.
+>The O'Hara paper that was mentioned below gives an excellent explanation of this.
+>
+>Liz
+>
+>
+>On 02/08/2012, at 3:42 AM, lgj200306 <lgj200306 at 163.com> wrote:
+>
+>> Hi, everyone,
+>> I used two methods to analysis the relationship between y (count data) and x.
+>> 1) log transformed simple linear regression:
+>>> lm(log(y+1)~x1+x2+x3,data)
+>> 2) Poisson regression:
+>>> glm(y~x1+x2+x3,family=poisson())
+>> 
+>> Some one told that these two ways are very similar, but other one told that the Poisson regression does not fit the y but the lambda (parameter of the poisson distribution). I am not sure which one is right. Can anybody help me? 
+>> Thanks for your attention and best wishes for you!
+>> 
+>> Lin
+>> Aug 1st, 2012 
+>> 	[[alternative HTML version deleted]]
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>Liz Pryde
+>PhD Candidate (off-campus @ The University of Melbourne)
+>School of Earth and Environmental Sciences
+>James Cook University, QLD
+>
+>elizabethpryde at gmail.com
+>epryde at unimelb.edu.au
+>
+>
+
+	[[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+This email is intended for the addressee(s) named and may contain confidential and/or privileged information. 
+If you are not the intended recipient, please notify the sender and then delete it immediately.
+Any views expressed in this email are those of the individual sender except where the sender expressly and with authority states them to be the views of the Office of Environment and Heritage, NSW Department of Premier and Cabinet.
+
+PLEASE CONSIDER THE ENVIRONMENT BEFORE PRINTING THIS EMAIL
+
+
+From elizabethpryde at gmail.com  Thu Aug  2 02:55:59 2012
+From: elizabethpryde at gmail.com (Liz Pryde)
+Date: Thu, 2 Aug 2012 10:55:59 +1000
+Subject: [R-sig-eco] Log transformed simple linear regression and
+	Poisson regression
+In-Reply-To: <1122f2d.1de3.138e461b060.Coremail.lgj200306@163.com>
+References: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+	<AAD86A16-9B4D-4D82-98E1-4238C7BBC076@gmail.com>
+	<1122f2d.1de3.138e461b060.Coremail.lgj200306@163.com>
+Message-ID: <537BD572-C809-404C-B81B-373CF7D707FE@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120802/c08b2a87/attachment.pl>
+
+From tmeehan at wisc.edu  Sat Aug  4 01:18:40 2012
+From: tmeehan at wisc.edu (Tim Meehan)
+Date: Fri, 03 Aug 2012 18:18:40 -0500
+Subject: [R-sig-eco] NMDS with varying sampling effort
+In-Reply-To: <7630eff31458bf.501c5bc8@wiscmail.wisc.edu>
+References: <7700fd5d147d58.501c592f@wiscmail.wisc.edu>
+	<7700f2c4145d15.501c596d@wiscmail.wisc.edu>
+	<76f0f55c14705f.501c59e5@wiscmail.wisc.edu>
+	<7720fa7e145313.501c5a5e@wiscmail.wisc.edu>
+	<76408747147c19.501c5a9a@wiscmail.wisc.edu>
+	<7740bf78143890.501c5ad6@wiscmail.wisc.edu>
+	<7740e3e4140f1a.501c5b13@wiscmail.wisc.edu>
+	<7630d6da1418ce.501c5b4f@wiscmail.wisc.edu>
+	<76b0b954146f2a.501c5b8b@wiscmail.wisc.edu>
+	<7630eff31458bf.501c5bc8@wiscmail.wisc.edu>
+Message-ID: <7680f431145f38.501c1600@wiscmail.wisc.edu>
+
+Hi all,
+
+
+
+I am working with butterfly community data (rows=60 study sites, columns=120 species, cells=0 to 1500 individuals counted). I am using the metaMDS function from the vegan package to do NMDS, and then using the envfit function from vegan to link community structure to landscape covariates associated with each study site. 
+
+One shortcoming of this dataset is that survey effort varies across sites, pretty dramatically. For example, the smallest total abundance for any site is 100 individual butterflies and the largest is 12,000. In order to reduce the influence of uneven sampling on the results, I divided the abundance recorded in each cell by the total abundance for the row (this, after a square-root transformation on all abundances to reduce the influence of abundant species). 
+
+
+
+I'm not entirely satisfied with this approach for dealing with varying sampling effort, but do not know of another one. Is there a way to deal with this problem using resampling? If so, is there an R package/function already built to deal with this issue?
+
+
+
+Thanks,
+
+Tim
+
+
+From pdixon at iastate.edu  Sat Aug  4 16:59:33 2012
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Sat, 4 Aug 2012 14:59:33 +0000
+Subject: [R-sig-eco] Measuring community similarity when total abundance
+	differs
+Message-ID: <70BE37C808A96042AD67E77340C4D46308C87441@ITSDAG3D.its.iastate.edu>
+
+Tim,
+
+I don't know of any automatic way to deal with unequal sampling effort.  Even if there were, I would argue strongly that you need to think carefully about the data and how they relate to how you want to define 'similar' and 'less similar' community composition.  
+
+Fundamentally, this is an issue about how to define the distance between two vectors of species abundances.  Bray-Curtis is sensitive to differences in total abundance.  Perhaps the difference between a sample with 100 individuals and a sample with 12000 individuals is informative.  Probably it isn't.  If so, you probably (but not certainly) want to compute percent similarity (Bray-Curtis after dividing each abundance by total abundance in the sample).  That's a very common recommendation, but even that may be misleading if the reason for the 12000 is an emergence flush of one species.  Adjusting by total sqrt(abundance) may be appropriate, but it is certainly not common.  Similar levels of abundance heterogeneity occur in benthic macrofauna data sets.  Clarke is fond of Bray-Curtis (without total abundance correction, if I remember correctly) of sqrt(sqrt(abundance)), i.e. abundance^(1/4).  
+
+Anne Chou and Robin Chazdon have developed and used abundance corrected similarity measures, similar in spirit to the Chou measures of richness.  I'm not fond of them because I believe the adjustments for sampling effort presume that two samples come from the same underlying community.  
+
+Any distance measure reduces a pair of vectors to a single number.  It always throws away information.  You need to make sure that your choice of measure keeps the features you feel are important.  I strongly suggest you look at the abundance vectors for pairs of samples with small distances and pairs of samples with large distances to make sure that your quantitative measure matches your intuitive sense of 'similar' and 'not similar'.
+
+Philip Dixon
+
+
+From grumicha at yahoo.com.br  Sat Aug  4 19:11:19 2012
+From: grumicha at yahoo.com.br (Adriano Melo)
+Date: Sat, 4 Aug 2012 10:11:19 -0700 (PDT)
+Subject: [R-sig-eco] NMDS with varying sampling effort
+In-Reply-To: <mailman.1.1344074401.26688.r-sig-ecology@r-project.org>
+References: <mailman.1.1344074401.26688.r-sig-ecology@r-project.org>
+Message-ID: <1344100279.45890.YahooMailNeo@web162003.mail.bf1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120804/bbc81d56/attachment.pl>
+
+From C.Cesar at apemltd.co.uk  Sun Aug  5 13:10:53 2012
+From: C.Cesar at apemltd.co.uk (Christopher Cesar)
+Date: Sun, 5 Aug 2012 11:10:53 +0000
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 53, Issue 3
+Message-ID: <B1B86129-D30F-4E38-ADED-9948C26F4C9A@apemltd.co.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120805/41df553b/attachment.pl>
+
+From robertw.rankin at gmail.com  Sun Aug  5 16:11:54 2012
+From: robertw.rankin at gmail.com (Robert Rankin)
+Date: Sun, 5 Aug 2012 10:11:54 -0400
+Subject: [R-sig-eco] mixture distributions and boosting for
+	occupancy-detection models
+Message-ID: <CAL_woYAkhY6fvgx1YbYoPoXmmw6Gx7TBaMnkVR4L6TyjP3qgsA@mail.gmail.com>
+
+Hello r-sig-eco'ers,
+
+There have been two papers recently about integrating hierarchical
+models (e.g., occupancy-detection models) and boosting (e.g., Boosted
+regression trees), as by Hochachka et al (2012) and Hutchinson et al.
+(2011, free online). In these papers they refer to creating two
+different weak-learner/base function ensembles for either parameter in
+the occupancy detection model (e.g., one parameter p_o for probability
+that a site is truly occupied by a species, and another probability
+p_d that the species is detected). I understand how to use mboost to
+perform a boosted regression of X on a response whose distribution has
+a single parameter; my questions are: i) is it possible to use mboost
+to simultaneously boost two ensembles for two different parameters?
+ii) if so, any idea how?  Another reference, Borisov et al (2009, free
+online), claim's to have modified mboost to perform a Zero-inflated
+Poisson, which likewise involves a mixture of two parameters, each
+with their own ensemble.
+
+I understand that the mboost allows custom Families (?mboost::Family)
+to be added, by specifying a loss function and a gradient function. I
+guess the loss function would be the negative log-likelihood, but can
+the gradient function be different for either parameter (e.g., partial
+derivative)?
+
+Hochachka, W.M., Fink, D., Hutchinson, R.A., Sheldon, D., Wong, W.K.,
+and Kelling, S. 2012. Data-intensive science applied to broad-scale
+citizen science.  Trends Ecol. Evol. 27(2):130?137.
+Hutchinson, R.A., Liu, L.P., and Dietterich, T.G. 2011. Incorporating
+boosted regression trees into ecological latent variable models. pp.
+1343?1348. In: W. Burgard and D. Roth (eds.) Proceedings of the
+Twenty-Fifth AAAI Conference on Artificial Intelligence. Association
+for the Advancement of Artificial Intelligence. [Available at:
+http://www.aaai.org/ocs/index.php/AAAI/AAAI11/paper/viewFile/3711/4086]
+Schmid, M., Potapov, S., Pfahlberg, A., and Hothorn, T. 2010.
+Estimation and regularization techniques for regression models with
+multidimensional prediction functions.  Statistics and Computing
+20(2):139?150. [Available at:
+http://epub.ub.uni-muenchen.de/7788/1/TR.pdf]
+
+Thanks for your help,
+Rob
+
+--
+"You could give Aristotle a tutorial. And you could thrill him to the
+core of his being ... Such is the privilege of living after Newton,
+Darwin, Einstein, Planck, Watson, Crick and their colleagues."
+-- Richard Dawkins
+
+
+From david.rogowski at ttu.edu  Mon Aug  6 20:35:36 2012
+From: david.rogowski at ttu.edu (Rogowski, David)
+Date: Mon, 6 Aug 2012 18:35:36 +0000
+Subject: [R-sig-eco] constrained random walk within a convex polygon
+Message-ID: <1E988781A0530A429A76F0B66DACE90B0141DC@cyclops04.ttu.edu>
+
+I am trying to create a constrained random walk model to simulate a snail's movement to use as a control to test against actual snail movement. I am testing whether a snail selects for a certain depth within a convex polygon aquarium (28 x 560 x 220 x 608mm) with 608 mm being the diagonal and the bottom of the aquarium.
+
+Has anyone written code for this type of problem that they would be willing to share? I can code for a random walk and confine it to a rectangle but am kind of at a loss as to how to constrain the walk in regards to a diagonal.
+
+Thanks,
+
+david
+
+David Rogowski
+
+
+david.rogowski at ttu.edu
+
+
+From dvdscripter at gmail.com  Tue Aug  7 02:59:17 2012
+From: dvdscripter at gmail.com (David Valentim Dias)
+Date: Mon, 6 Aug 2012 20:59:17 -0400
+Subject: [R-sig-eco] constrained random walk within a convex polygon
+In-Reply-To: <1E988781A0530A429A76F0B66DACE90B0141DC@cyclops04.ttu.edu>
+References: <1E988781A0530A429A76F0B66DACE90B0141DC@cyclops04.ttu.edu>
+Message-ID: <CAAy4ZDRXu8YCpZKj2AUbq1ZKHEpmX61wMNaqvVGzxf8xbyDc_w@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120806/7d5981fd/attachment.pl>
+
+From jari.oksanen at oulu.fi  Tue Aug  7 08:12:58 2012
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 7 Aug 2012 06:12:58 +0000
+Subject: [R-sig-eco] NMDS with varying sampling effort
+In-Reply-To: <7680f431145f38.501c1600@wiscmail.wisc.edu>
+References: <7700fd5d147d58.501c592f@wiscmail.wisc.edu>
+	<7700f2c4145d15.501c596d@wiscmail.wisc.edu>
+	<76f0f55c14705f.501c59e5@wiscmail.wisc.edu>
+	<7720fa7e145313.501c5a5e@wiscmail.wisc.edu>
+	<76408747147c19.501c5a9a@wiscmail.wisc.edu>
+	<7740bf78143890.501c5ad6@wiscmail.wisc.edu>
+	<7740e3e4140f1a.501c5b13@wiscmail.wisc.edu>
+	<7630d6da1418ce.501c5b4f@wiscmail.wisc.edu>
+	<76b0b954146f2a.501c5b8b@wiscmail.wisc.edu>
+	<7630eff31458bf.501c5bc8@wiscmail.wisc.edu>
+	<7680f431145f38.501c1600@wiscmail.wisc.edu>
+Message-ID: <66C03CD1145C95448A4D73676DD9C2ED2FBEE0@nippu2.univ.yo.oulu.fi>
+
+
+On 04/08/2012, at 02:20 AM, Tim Meehan wrote:
+
+> Hi all,
+> 
+> 
+> 
+> I am working with butterfly community data (rows=60 study sites, columns=120 species, cells=0 to 1500 individuals counted). I am using the metaMDS function from the vegan package to do NMDS, and then using the envfit function from vegan to link community structure to landscape covariates associated with each study site. 
+> 
+> One shortcoming of this dataset is that survey effort varies across sites, pretty dramatically. For example, the smallest total abundance for any site is 100 individual butterflies and the largest is 12,000. In order to reduce the influence of uneven sampling on the results, I divided the abundance recorded in each cell by the total abundance for the row (this, after a square-root transformation on all abundances to reduce the influence of abundant species). 
+> 
+> 
+> 
+> I'm not entirely satisfied with this approach for dealing with varying sampling effort, but do not know of another one. Is there a way to deal with this problem using resampling? If so, is there an R package/function already built to deal with this issue?
+> 
+Tim,
+
+The normal thing is to use dissimilarity measures that tolerate uneven sampling intensity. I have tried to have some of those in vegan::vegdist. Some of these are only suitable for binary data, but there are also some that were claimed to be good for quantitative cases. No guarantees given: you should study their performance yourself (I have had a look at some of those, and I was not too impressed).
+
+The problem with resampling is that you get randomized results, and the degree of randomization depends on the subsampling proportion. You can try with rrarefy() function in function that takes random rarefied samples. However, if your data 'x' has 12 000 butterflies, then rrarefy(x, 100) will be more random than if 'x' already had 100 individuals (and it is unchanged). The rrarefy() does resampling without replacement. If you try resampling with replacement, you will lose species in all cases as you take only about 63.2% of the individuals in your new samples.  The problems are how to comppare (different) random results, and how to handle the sampling proportions.
+
+Cheers, Jari
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+
+
+From grumicha at yahoo.com.br  Wed Aug  8 00:17:56 2012
+From: grumicha at yahoo.com.br (Adriano Melo)
+Date: Tue, 7 Aug 2012 15:17:56 -0700 (PDT)
+Subject: [R-sig-eco] NMDS with varying sampling effort
+In-Reply-To: <mailman.1.1344333602.29368.r-sig-ecology@r-project.org>
+References: <mailman.1.1344333602.29368.r-sig-ecology@r-project.org>
+Message-ID: <1344377876.98698.YahooMailNeo@web162006.mail.bf1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120807/6d5d016b/attachment.pl>
+
+From tad.dallas at drakeresearchlab.com  Thu Aug  9 04:43:52 2012
+From: tad.dallas at drakeresearchlab.com (Tad Dallas)
+Date: Wed, 8 Aug 2012 22:43:52 -0400
+Subject: [R-sig-eco] variance partitioning in R
+Message-ID: <CADcLjjtreLTUtFm5tC=06HZNGcwK-QGpoZukzGNW_m2zSoUevQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120808/1f31d830/attachment.pl>
+
+From winnie56100 at 163.com  Wed Aug 15 09:37:27 2012
+From: winnie56100 at 163.com (Yong Shen)
+Date: Wed, 15 Aug 2012 15:37:27 +0800 (CST)
+Subject: [R-sig-eco] bivariate K function
+Message-ID: <7b065720.bce5.139293734a1.Coremail.winnie56100@163.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120815/a1aed0ea/attachment.pl>
+
+From markus.eichhorn at nottingham.ac.uk  Wed Aug 15 12:32:46 2012
+From: markus.eichhorn at nottingham.ac.uk (Markus Eichhorn)
+Date: Wed, 15 Aug 2012 11:32:46 +0100
+Subject: [R-sig-eco] bivariate K function
+In-Reply-To: <mailman.1.1345024801.14495.r-sig-ecology@r-project.org>
+References: <mailman.1.1345024801.14495.r-sig-ecology@r-project.org>
+Message-ID: <502B7ACE.3040406@nottingham.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120815/79fb2133/attachment.pl>
+
+From aedelspa at uoguelph.ca  Sat Aug 18 15:05:38 2012
+From: aedelspa at uoguelph.ca (Allan Edelsparre)
+Date: Sat, 18 Aug 2012 09:05:38 -0400 (EDT)
+Subject: [R-sig-eco] Randomizing matrices
+Message-ID: <456566593.936728.1345295138688.JavaMail.root@huron.cs.uoguelph.ca>
+
+Dear R ecologists,
+
+I'm trying to figure out a way to calculate the sum of squared
+distances (SSD) between two matrices, where one matrix is held
+constant and the other is randomized. So far I have been able to get
+the syntax together to obtain my observed SSD, but the problem for me
+is obtain SSD from 1000 randomizations to obtain a distribution. Below
+is my syntax, all data were standardized a priori, each matrix is
+6columns x 363rows.
+
+For now the issue seems to be that the 'sample' command destroys the
+matrix and turns it into a vector. I've tried to remedy this but now
+it seems I may have one huge matrix from my randomizations rather than
+1000 of the original size.
+
+data1<-read.table("StandDataTime1and2.txt", header=TRUE)
+data1<-data.frame(data1)
+
+#split data into two matrices 6 X 363
+#####trial1
+trial1<-cbind(data1$fe1, data1$fr1, data1$ar1, data1$mid1, data$bot1,
+data$surf1)
+trial1<-as.matrix(trial1)
+
+###trial2
+trial2<-cbind(data1$fe2, data1$fr2, data1$ar2, data1$mid2, data1$bot2,
+standardizedData$surf2)
+trial2<-as.matrix(trial2)
+
+##calculate euclidean distance between matrices
+library(fields)
+distances<-rdist(trial1, trial2)
+
+###getting the observed value SSD
+squared<-distances %*% distances
+ssd<-sum(squared)
+ssd
+###observed value is 14301499
+
+###########################################################################################
+Below is where the problem is occuring
+
+
+########permuting one block (trial2) and calculating a 95%
+distribution from 1000 randomizations
+v <- rep(sample(trial2 <- as.matrix(trial2)),1000)
+## Now run those thousand values through the equation to calculate the ssd2
+
+for (i in v) {
+  dist2 <-rdist(trial1,[i])
+  squared2<-dist2^2
+  ssd2<-sum(squared2)
+  print(ssd2)
+}
+
+Working with matrices seems to add to the level of difficulty. Any
+help here would be greatly appreciated. Thanks in advance for any
+help.
+
+Allan
+
+
+From solymos at ualberta.ca  Sat Aug 18 16:50:46 2012
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Sat, 18 Aug 2012 08:50:46 -0600
+Subject: [R-sig-eco] Randomizing matrices
+In-Reply-To: <456566593.936728.1345295138688.JavaMail.root@huron.cs.uoguelph.ca>
+References: <456566593.936728.1345295138688.JavaMail.root@huron.cs.uoguelph.ca>
+Message-ID: <CAH9coKZaNzkrhwe+PmwcnOxhWmm4G+7uTPH3dC2SdbaEy2KGig@mail.gmail.com>
+
+Allan,
+
+Simply defining the dimension might work:
+dim(v) <- dim(trial2)
+but it is not clear what you are trying to achieve with the rep(...,
+1000) part. It won't permute the matrix 1000 times but repeat same
+values. You might want to have a look at oecosimu in vegan which
+calculates the distribution given you SSD statistics, and you can use
+many different matrix permutation algorithms although it seems to me
+that you are just shuffling the cells.
+
+Cheers,
+
+Peter
+
+--
+P?ter S?lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB
+solymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com
+Alberta Biodiversity Monitoring Institute, http://www.abmi.ca
+Boreal Avian Modelling Project, http://www.borealbirds.ca
+
+
+On Sat, Aug 18, 2012 at 7:05 AM, Allan Edelsparre <aedelspa at uoguelph.ca> wrote:
+> Dear R ecologists,
+>
+> I'm trying to figure out a way to calculate the sum of squared
+> distances (SSD) between two matrices, where one matrix is held
+> constant and the other is randomized. So far I have been able to get
+> the syntax together to obtain my observed SSD, but the problem for me
+> is obtain SSD from 1000 randomizations to obtain a distribution. Below
+> is my syntax, all data were standardized a priori, each matrix is
+> 6columns x 363rows.
+>
+> For now the issue seems to be that the 'sample' command destroys the
+> matrix and turns it into a vector. I've tried to remedy this but now
+> it seems I may have one huge matrix from my randomizations rather than
+> 1000 of the original size.
+>
+> data1<-read.table("StandDataTime1and2.txt", header=TRUE)
+> data1<-data.frame(data1)
+>
+> #split data into two matrices 6 X 363
+> #####trial1
+> trial1<-cbind(data1$fe1, data1$fr1, data1$ar1, data1$mid1, data$bot1,
+> data$surf1)
+> trial1<-as.matrix(trial1)
+>
+> ###trial2
+> trial2<-cbind(data1$fe2, data1$fr2, data1$ar2, data1$mid2, data1$bot2,
+> standardizedData$surf2)
+> trial2<-as.matrix(trial2)
+>
+> ##calculate euclidean distance between matrices
+> library(fields)
+> distances<-rdist(trial1, trial2)
+>
+> ###getting the observed value SSD
+> squared<-distances %*% distances
+> ssd<-sum(squared)
+> ssd
+> ###observed value is 14301499
+>
+> ###########################################################################################
+> Below is where the problem is occuring
+>
+>
+> ########permuting one block (trial2) and calculating a 95%
+> distribution from 1000 randomizations
+> v <- rep(sample(trial2 <- as.matrix(trial2)),1000)
+> ## Now run those thousand values through the equation to calculate the ssd2
+>
+> for (i in v) {
+>   dist2 <-rdist(trial1,[i])
+>   squared2<-dist2^2
+>   ssd2<-sum(squared2)
+>   print(ssd2)
+> }
+>
+> Working with matrices seems to add to the level of difficulty. Any
+> help here would be greatly appreciated. Thanks in advance for any
+> help.
+>
+> Allan
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From aedelspa at uoguelph.ca  Sat Aug 18 17:02:46 2012
+From: aedelspa at uoguelph.ca (Allan Edelsparre)
+Date: Sat, 18 Aug 2012 11:02:46 -0400 (EDT)
+Subject: [R-sig-eco] Randomizing matrices
+In-Reply-To: <CAH9coKZaNzkrhwe+PmwcnOxhWmm4G+7uTPH3dC2SdbaEy2KGig@mail.gmail.com>
+Message-ID: <134323692.938657.1345302166443.JavaMail.root@huron.cs.uoguelph.ca>
+
+Thanks Peter,
+
+I think that might actually work. I Will let you know.
+
+Allan
+
+----- Original Message -----
+From: "Peter Solymos" <solymos at ualberta.ca>
+To: "Allan Edelsparre" <aedelspa at uoguelph.ca>
+Cc: r-sig-ecology at r-project.org
+Sent: Saturday, August 18, 2012 10:50:46 AM
+Subject: Re: [R-sig-eco] Randomizing matrices
+
+Allan,
+
+Simply defining the dimension might work:
+dim(v) <- dim(trial2)
+but it is not clear what you are trying to achieve with the rep(...,
+1000) part. It won't permute the matrix 1000 times but repeat same
+values. You might want to have a look at oecosimu in vegan which
+calculates the distribution given you SSD statistics, and you can use
+many different matrix permutation algorithms although it seems to me
+that you are just shuffling the cells.
+
+Cheers,
+
+Peter
+
+--
+P?ter S?lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB
+solymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com
+Alberta Biodiversity Monitoring Institute, http://www.abmi.ca
+Boreal Avian Modelling Project, http://www.borealbirds.ca
+
+
+On Sat, Aug 18, 2012 at 7:05 AM, Allan Edelsparre <aedelspa at uoguelph.ca> wrote:
+> Dear R ecologists,
+>
+> I'm trying to figure out a way to calculate the sum of squared
+> distances (SSD) between two matrices, where one matrix is held
+> constant and the other is randomized. So far I have been able to get
+> the syntax together to obtain my observed SSD, but the problem for me
+> is obtain SSD from 1000 randomizations to obtain a distribution. Below
+> is my syntax, all data were standardized a priori, each matrix is
+> 6columns x 363rows.
+>
+> For now the issue seems to be that the 'sample' command destroys the
+> matrix and turns it into a vector. I've tried to remedy this but now
+> it seems I may have one huge matrix from my randomizations rather than
+> 1000 of the original size.
+>
+> data1<-read.table("StandDataTime1and2.txt", header=TRUE)
+> data1<-data.frame(data1)
+>
+> #split data into two matrices 6 X 363
+> #####trial1
+> trial1<-cbind(data1$fe1, data1$fr1, data1$ar1, data1$mid1, data$bot1,
+> data$surf1)
+> trial1<-as.matrix(trial1)
+>
+> ###trial2
+> trial2<-cbind(data1$fe2, data1$fr2, data1$ar2, data1$mid2, data1$bot2,
+> standardizedData$surf2)
+> trial2<-as.matrix(trial2)
+>
+> ##calculate euclidean distance between matrices
+> library(fields)
+> distances<-rdist(trial1, trial2)
+>
+> ###getting the observed value SSD
+> squared<-distances %*% distances
+> ssd<-sum(squared)
+> ssd
+> ###observed value is 14301499
+>
+> ###########################################################################################
+> Below is where the problem is occuring
+>
+>
+> ########permuting one block (trial2) and calculating a 95%
+> distribution from 1000 randomizations
+> v <- rep(sample(trial2 <- as.matrix(trial2)),1000)
+> ## Now run those thousand values through the equation to calculate the ssd2
+>
+> for (i in v) {
+>   dist2 <-rdist(trial1,[i])
+>   squared2<-dist2^2
+>   ssd2<-sum(squared2)
+>   print(ssd2)
+> }
+>
+> Working with matrices seems to add to the level of difficulty. Any
+> help here would be greatly appreciated. Thanks in advance for any
+> help.
+>
+> Allan
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From solymos at ualberta.ca  Sun Aug 19 18:13:57 2012
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Sun, 19 Aug 2012 10:13:57 -0600
+Subject: [R-sig-eco] Randomizing matrices
+In-Reply-To: <1227460273.946913.1345377045083.JavaMail.root@huron.cs.uoguelph.ca>
+References: <CAH9coKZaNzkrhwe+PmwcnOxhWmm4G+7uTPH3dC2SdbaEy2KGig@mail.gmail.com>
+	<1227460273.946913.1345377045083.JavaMail.root@huron.cs.uoguelph.ca>
+Message-ID: <CAH9coKbh6ax3Ppi2JK+ROEwq0BPVb40sj=rTJKapFB5FOhKH2w@mail.gmail.com>
+
+Allan, here is a toy example. Cc-ing back to SIG-ECO:
+
+library(fields)
+library(vegan)
+x <- matrix(1:12,3,4)
+rf <- function(x)
+    array(sample(x), dim=dim(x))
+sf <- function(x, y) {
+    d <- rdist(x, y)
+    sum(d %*% d)
+}
+z <- oecosimu(x, sf, rf)
+z
+hist(c(z$statistic, z$oecosimu$simulated))
+abline(v=z$statistic, col=2)
+
+Peter
+
+--
+P?ter S?lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB
+solymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com
+Alberta Biodiversity Monitoring Institute, http://www.abmi.ca
+Boreal Avian Modelling Project, http://www.borealbirds.ca
+
+
+On Sun, Aug 19, 2012 at 5:50 AM, Allan Edelsparre <aedelspa at uoguelph.ca> wrote:
+> Hi Peter,
+>
+> I am still having trouble with matrices, especially the oecosimus, where I got completely lost. However, as you also pointed out, all I am trying to do is to shuffle the cells. Do you have any suggestions as to how I can shuffle the cells a 1000 times, and then go on to make the SSD value 1000 times?
+>
+> Thanks again for helping out.
+>
+> Allan
+>
+>
+>
+> ----- Original Message -----
+> From: "Peter Solymos" <solymos at ualberta.ca>
+> To: "Allan Edelsparre" <aedelspa at uoguelph.ca>
+> Cc: r-sig-ecology at r-project.org
+> Sent: Saturday, August 18, 2012 10:50:46 AM
+> Subject: Re: [R-sig-eco] Randomizing matrices
+>
+> Allan,
+>
+> Simply defining the dimension might work:
+> dim(v) <- dim(trial2)
+> but it is not clear what you are trying to achieve with the rep(...,
+> 1000) part. It won't permute the matrix 1000 times but repeat same
+> values. You might want to have a look at oecosimu in vegan which
+> calculates the distribution given you SSD statistics, and you can use
+> many different matrix permutation algorithms although it seems to me
+> that you are just shuffling the cells.
+>
+> Cheers,
+>
+> Peter
+>
+> --
+> P?ter S?lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB
+> solymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com
+> Alberta Biodiversity Monitoring Institute, http://www.abmi.ca
+> Boreal Avian Modelling Project, http://www.borealbirds.ca
+>
+>
+> On Sat, Aug 18, 2012 at 7:05 AM, Allan Edelsparre <aedelspa at uoguelph.ca> wrote:
+>> Dear R ecologists,
+>>
+>> I'm trying to figure out a way to calculate the sum of squared
+>> distances (SSD) between two matrices, where one matrix is held
+>> constant and the other is randomized. So far I have been able to get
+>> the syntax together to obtain my observed SSD, but the problem for me
+>> is obtain SSD from 1000 randomizations to obtain a distribution. Below
+>> is my syntax, all data were standardized a priori, each matrix is
+>> 6columns x 363rows.
+>>
+>> For now the issue seems to be that the 'sample' command destroys the
+>> matrix and turns it into a vector. I've tried to remedy this but now
+>> it seems I may have one huge matrix from my randomizations rather than
+>> 1000 of the original size.
+>>
+>> data1<-read.table("StandDataTime1and2.txt", header=TRUE)
+>> data1<-data.frame(data1)
+>>
+>> #split data into two matrices 6 X 363
+>> #####trial1
+>> trial1<-cbind(data1$fe1, data1$fr1, data1$ar1, data1$mid1, data$bot1,
+>> data$surf1)
+>> trial1<-as.matrix(trial1)
+>>
+>> ###trial2
+>> trial2<-cbind(data1$fe2, data1$fr2, data1$ar2, data1$mid2, data1$bot2,
+>> standardizedData$surf2)
+>> trial2<-as.matrix(trial2)
+>>
+>> ##calculate euclidean distance between matrices
+>> library(fields)
+>> distances<-rdist(trial1, trial2)
+>>
+>> ###getting the observed value SSD
+>> squared<-distances %*% distances
+>> ssd<-sum(squared)
+>> ssd
+>> ###observed value is 14301499
+>>
+>> ###########################################################################################
+>> Below is where the problem is occuring
+>>
+>>
+>> ########permuting one block (trial2) and calculating a 95%
+>> distribution from 1000 randomizations
+>> v <- rep(sample(trial2 <- as.matrix(trial2)),1000)
+>> ## Now run those thousand values through the equation to calculate the ssd2
+>>
+>> for (i in v) {
+>>   dist2 <-rdist(trial1,[i])
+>>   squared2<-dist2^2
+>>   ssd2<-sum(squared2)
+>>   print(ssd2)
+>> }
+>>
+>> Working with matrices seems to add to the level of difficulty. Any
+>> help here would be greatly appreciated. Thanks in advance for any
+>> help.
+>>
+>> Allan
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+
+
+From mario.serrajotto at gmail.com  Sun Aug 19 18:14:20 2012
+From: mario.serrajotto at gmail.com (Mario Serrajotto)
+Date: Sun, 19 Aug 2012 18:14:20 +0200
+Subject: [R-sig-eco] error distribution in GLM model
+Message-ID: <CAEp-UhrzY8HYEnB3xBZedJSJ4yG_n1yu_pBxJKFFXGneJ-a2KQ@mail.gmail.com>
+
+Dear R-users,
+
+apologies for the total beginner's question. I have some behavioural
+data expressed in number of interactions measured over a certain
+amount of time (expressed in minutes). I have calculated the number of
+interactions per minute and I would like to model this variable as a
+function of a covariate. I am, however, struggling with the choice of
+the argument family. I have thought to log transform the data and
+model them with a GLM by specifying a Gaussian family. Unfortunately
+for me my data do not seem to follow a normal distribution. I then
+recalled that my response is some kind of proportion and should
+perhaps be modelled with binomial GLM. But the data are not bounded
+from 0 to 1...Any suggestions would be greatly appreciated! Please see
+data and R code at the bottom of the e-mail.
+
+Cheers,
+
+Mario
+
+# number of interactions recorded
+interactions<-c(2,1,2,3,0,0,0,0,1,2,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,3,0,8,7,6,3,5,4,5,7,6,0,0,0,0,2,2,3,4,1,2,5,6,2,4,0,6,0,0,39,46,45,48,11,8,7,8,6,7,13,10,7,9,32,38,39,25,32,30,11,13)
+
+# observation time (in minutes)
+obs.time<-c(9.4666666667,9.7,9.1,9.45,8.8166666667,8.9333333333,8.7166666667,8.85,6,3.85,6.1666666667,6.3166666667,2,2.3833333333,7.95,9.6333333333,9.8166666667,1.5,9.4166666667,9.35,1.2833333333,1.85,1,2.3333333333,6.6,6.3166666667,4.4333333333,2.5,9.35,9.3166666667,6.6,6.3166666667,6.3166666667,6.1666666667,6,9.5166666667,9.1,9.45,8.7333333333,2.5,2.3833333333,2,1.85,1.2833333333,2.3833333333,8.65,8.5333333333,8.5,8,7.6833333333,0.55,2.4,8.5166666667,8.1833333333,7.9166666667,8,9.5833333333,9.6833333333,9.6833333333,9.4833333333,9.5833333333,9.55,9.4833333333,9.45,9.7333333333,9.6833333333,9.6333333333,9.45,9.4833333333,9.6833333333,9.65,9.6166666667,9.5,9.4333333333,9.3166666667,9.3333333333,9.4166666667,9.4666666667)
+
+# covariate
+covariate<-c(15,15,18,18,40,40,45,45,42,42,50,50,200,200,400,400,500,500,200,200,150,150,90,90,45,45,37,37,42,42,37,37,80,80,110,110,150,150,300,300,250,250,85,85,18,18,42,42,15,15,50,50,45,45,200,200,45,45,15,15,115,115,125,125,500,500,550,550,550,550,45,45,37,37,80,80,100,100)
+
+# calculate total number of interaction per minute
+interactions.m<-interactions/obs.time
+
+# fit glm
+glm(log(interactions.m+1)~covariate)
+
+
+From solymos at ualberta.ca  Sun Aug 19 18:28:44 2012
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Sun, 19 Aug 2012 10:28:44 -0600
+Subject: [R-sig-eco] error distribution in GLM model
+In-Reply-To: <CAEp-UhrzY8HYEnB3xBZedJSJ4yG_n1yu_pBxJKFFXGneJ-a2KQ@mail.gmail.com>
+References: <CAEp-UhrzY8HYEnB3xBZedJSJ4yG_n1yu_pBxJKFFXGneJ-a2KQ@mail.gmail.com>
+Message-ID: <CAH9coKbuBYb6qyWLKHAtNFYxDyKhF=xrMvFK8CByjHMnggQDhw@mail.gmail.com>
+
+Mario,
+
+If you can assume that the waiting time between events is constant
+through time, you can model your counts per unit time with Poisson glm
+(constant waiting time leads to an exponential survival function).
+log(Observation time) can be used as an offset:
+
+glm(interactions~covariate, offset=log(obs.time), family=poisson)
+
+Note that diagnostic plots indicate that homogeneous Poisson process
+assumption might not hold.
+
+Peter
+
+--
+P?ter S?lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB
+solymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com
+Alberta Biodiversity Monitoring Institute, http://www.abmi.ca
+Boreal Avian Modelling Project, http://www.borealbirds.ca
+
+
+On Sun, Aug 19, 2012 at 10:14 AM, Mario Serrajotto
+<mario.serrajotto at gmail.com> wrote:
+> Dear R-users,
+>
+> apologies for the total beginner's question. I have some behavioural
+> data expressed in number of interactions measured over a certain
+> amount of time (expressed in minutes). I have calculated the number of
+> interactions per minute and I would like to model this variable as a
+> function of a covariate. I am, however, struggling with the choice of
+> the argument family. I have thought to log transform the data and
+> model them with a GLM by specifying a Gaussian family. Unfortunately
+> for me my data do not seem to follow a normal distribution. I then
+> recalled that my response is some kind of proportion and should
+> perhaps be modelled with binomial GLM. But the data are not bounded
+> from 0 to 1...Any suggestions would be greatly appreciated! Please see
+> data and R code at the bottom of the e-mail.
+>
+> Cheers,
+>
+> Mario
+>
+> # number of interactions recorded
+> interactions<-c(2,1,2,3,0,0,0,0,1,2,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,3,0,8,7,6,3,5,4,5,7,6,0,0,0,0,2,2,3,4,1,2,5,6,2,4,0,6,0,0,39,46,45,48,11,8,7,8,6,7,13,10,7,9,32,38,39,25,32,30,11,13)
+>
+> # observation time (in minutes)
+> obs.time<-c(9.4666666667,9.7,9.1,9.45,8.8166666667,8.9333333333,8.7166666667,8.85,6,3.85,6.1666666667,6.3166666667,2,2.3833333333,7.95,9.6333333333,9.8166666667,1.5,9.4166666667,9.35,1.2833333333,1.85,1,2.3333333333,6.6,6.3166666667,4.4333333333,2.5,9.35,9.3166666667,6.6,6.3166666667,6.3166666667,6.1666666667,6,9.5166666667,9.1,9.45,8.7333333333,2.5,2.3833333333,2,1.85,1.2833333333,2.3833333333,8.65,8.5333333333,8.5,8,7.6833333333,0.55,2.4,8.5166666667,8.1833333333,7.9166666667,8,9.5833333333,9.6833333333,9.6833333333,9.4833333333,9.5833333333,9.55,9.4833333333,9.45,9.7333333333,9.6833333333,9.6333333333,9.45,9.4833333333,9.6833333333,9.65,9.6166666667,9.5,9.4333333333,9.3166666667,9.3333333333,9.4166666667,9.4666666667)
+>
+> # covariate
+> covariate<-c(15,15,18,18,40,40,45,45,42,42,50,50,200,200,400,400,500,500,200,200,150,150,90,90,45,45,37,37,42,42,37,37,80,80,110,110,150,150,300,300,250,250,85,85,18,18,42,42,15,15,50,50,45,45,200,200,45,45,15,15,115,115,125,125,500,500,550,550,550,550,45,45,37,37,80,80,100,100)
+>
+> # calculate total number of interaction per minute
+> interactions.m<-interactions/obs.time
+>
+> # fit glm
+> glm(log(interactions.m+1)~covariate)
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From weiser2 at natur.cuni.cz  Sat Aug 25 01:33:35 2012
+From: weiser2 at natur.cuni.cz (Martin Weiser)
+Date: Sat, 25 Aug 2012 01:33:35 +0200
+Subject: [R-sig-eco] Log transformed simple linear regression and
+ Poisson regression
+In-Reply-To: <1122f2d.1de3.138e461b060.Coremail.lgj200306@163.com>
+References: <24f5711e.349.138e347e7ae.Coremail.lgj200306@163.com>
+	<AAD86A16-9B4D-4D82-98E1-4238C7BBC076@gmail.com>
+	<1122f2d.1de3.138e461b060.Coremail.lgj200306@163.com>
+Message-ID: <1345851215.2991.68.camel@zouzel.natur.cuni.cz>
+
+Dear Lin and others,
+if I understood it well, You are now asking about variance decomposition
+(how much variance in response data could be ascribed to individual
+predictors or their groups).
+If log transformation (or maybe sqrt to stabilize the variance?) works
+well for you, I would do that and decompose the variance as usual, using
+sum of squares. 
+If the transformation does not work well and you need a GLM (poisson,
+negative binomial, quasipoisson...), then I am not sure about solution.
+I would use Nagelkerke's R (or some other Rsquared?), cross my fingers,
+hope for its aditivity and use that as a measure of the variance
+explained by the particular model.
+(I hope someone corrects me if I am wrong).
+I hope this helps.
+Martin Weiser
+
+lgj200306 p??e v ?t 02. 08. 2012 v 06:50 +0800:
+> Thanks Liz, Brian and Mollie. Your replies are helpful for me. 
+> I have realized the complexity of analysing the count data. Different methods should be selected according to the structure of my data. But if the explanatory data table is composed by several  variables and I want to make clear the relative contribution of each explanatory variable to the variation of response variable, can I achieve it based on the Poisson, negative bionmial, zero-inflated Poisson, zero-inflated negative binomial or other models (except the simple linear regression model)?
+> Thanks for your attention and best wishes for you!
+>  
+> Lin
+> Aug 1st, 2012
+> 
+> At 2012-08-02 06:17:03,"Liz Pryde" <elizabethpryde at gmail.com> wrote:
+> >Hello Lin,
+> >
+> >It's a bit difficult to give you an exact answer without knowing what the data set is.
+> >That said, in general, count data does usually follow a poisson or neg binomial distribution. When you log transform such data, you are trying to normalise its distribution so that you can apply OLS regression (which assumes a normal distribution for the Y data to give you 'correct' significance values). One of the problems with this is that when you have data that can't be negative (e.g. counts) OLS regression on count data can give you estimations of your predicted values that may be negative (and hence, nonsensical). Also, when mean values are very low (near zero or zero), transforming the data becomes ineffective. GLMs overcome this problem because they explicitly model the X-Y relationship through the link function and ALSO model the mean-variance relationship (which is what is happening when you choose 'family= '). So they 'normalise' and 'linearise' the data as well as 'model' the error. Poisson data will generally have a variance that increases with increasing mean.!
+>   On occasion this variance may be higher than expected (overdispersed) and so the negative binomial becomes appropriate.
+> >
+> >I hope this helps.
+> >The O'Hara paper that was mentioned below gives an excellent explanation of this.
+> >
+> >Liz
+> >
+> >
+> >On 02/08/2012, at 3:42 AM, lgj200306 <lgj200306 at 163.com> wrote:
+> >
+> >> Hi, everyone,
+> >> I used two methods to analysis the relationship between y (count data) and x.
+> >> 1) log transformed simple linear regression:
+> >>> lm(log(y+1)~x1+x2+x3,data)
+> >> 2) Poisson regression:
+> >>> glm(y~x1+x2+x3,family=poisson())
+> >> 
+> >> Some one told that these two ways are very similar, but other one told that the Poisson regression does not fit the y but the lambda (parameter of the poisson distribution). I am not sure which one is right. Can anybody help me? 
+> >> Thanks for your attention and best wishes for you!
+> >> 
+> >> Lin
+> >> Aug 1st, 2012 
+> >> 	[[alternative HTML version deleted]]
+> >> 
+> >> _______________________________________________
+> >> R-sig-ecology mailing list
+> >> R-sig-ecology at r-project.org
+> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> >Liz Pryde
+> >PhD Candidate (off-campus @ The University of Melbourne)
+> >School of Earth and Environmental Sciences
+> >James Cook University, QLD
+> >
+> >elizabethpryde at gmail.com
+> >epryde at unimelb.edu.au
+> >
+> >
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From mbyrne13 at uga.edu  Mon Aug 27 17:06:48 2012
+From: mbyrne13 at uga.edu (Mike)
+Date: Mon, 27 Aug 2012 08:06:48 -0700 (PDT)
+Subject: [R-sig-eco] adehabitat and Lat Long data
+In-Reply-To: <1346078254957-7577571.post@n2.nabble.com>
+References: <1346078254957-7577571.post@n2.nabble.com>
+Message-ID: <1346080008788-7577572.post@n2.nabble.com>
+
+Whoops look like this did actually get posted the other day (didn't actually
+see it go through).  Sorry for the double post! 
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/adehabitat-and-Lat-Long-data-tp7577571p7577572.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From mbyrne13 at uga.edu  Mon Aug 27 16:37:35 2012
+From: mbyrne13 at uga.edu (Mike)
+Date: Mon, 27 Aug 2012 07:37:35 -0700 (PDT)
+Subject: [R-sig-eco] adehabitat and Lat Long data
+Message-ID: <1346078254957-7577571.post@n2.nabble.com>
+
+Hi
+
+I have ARGOS satellite tag data from some some very long distance traveling
+sharks.  These
+critters cover large chunks of the Atlantic; coordinates are in
+decimal degrees.
+
+It would love to apply the residenceTime function in the adehabitat package
+to try and segment the paths into broad homogeneous bouts of movement (i.e.
+migration, seasonal residence/feeding areas etc).  But as far as I can tell
+from the documentation and the examples it seems that the data must be in
+some sort of Cartesian coordinate system.  Conversion to UTM's wouldn't be
+practical in
+this case because the movement tracks encompass many UTM zones.  Is there
+a way to do the residence time analysis in adehabitat using data in decimal
+degrees that perhaps I am just missing?  
+
+If not, does anybody have any code or recommendations for another way to go
+about this?  Any insight appreciated!
+
+Thanks 
+-Mike 
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/adehabitat-and-Lat-Long-data-tp7577571.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From jdhollan at purdue.edu  Mon Aug 27 19:39:48 2012
+From: jdhollan at purdue.edu (Jeff Holland)
+Date: Mon, 27 Aug 2012 10:39:48 -0700 (PDT)
+Subject: [R-sig-eco] adehabitat and Lat Long data
+In-Reply-To: <1346078254957-7577571.post@n2.nabble.com>
+References: <1346078254957-7577571.post@n2.nabble.com>
+Message-ID: <1346089188635-7577573.post@n2.nabble.com>
+
+Hello Mike,
+   One approach may be to convert your coordinates to a custom continuous
+equidistant conic projection with a central meridian near the center of your
+coordinates.  This should help minimize errors in distances calculated
+across a large area.  Hope that is useful.
+   Cheers,
+   Jeff
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/adehabitat-and-Lat-Long-data-tp7577571p7577573.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From maurizenker at gmail.com  Mon Aug 27 22:22:17 2012
+From: maurizenker at gmail.com (=?ISO-8859-1?Q?Maur=EDcio_Moraes_Zenker?=)
+Date: Mon, 27 Aug 2012 17:22:17 -0300
+Subject: [R-sig-eco] Multivariate ANOVA based on dissimilarities
+Message-ID: <CAOXpX=p_=8f1hcr+EEFs0VFnJzDz9tYGz+AjZ+ST6RQWBcnj+Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120827/68f9897c/attachment.pl>
+
+From jari.oksanen at oulu.fi  Tue Aug 28 07:57:24 2012
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 28 Aug 2012 05:57:24 +0000
+Subject: [R-sig-eco] Multivariate ANOVA based on dissimilarities
+In-Reply-To: <CAOXpX=p_=8f1hcr+EEFs0VFnJzDz9tYGz+AjZ+ST6RQWBcnj+Q@mail.gmail.com>
+References: <CAOXpX=p_=8f1hcr+EEFs0VFnJzDz9tYGz+AjZ+ST6RQWBcnj+Q@mail.gmail.com>
+Message-ID: <66C03CD1145C95448A4D73676DD9C2ED311BDE@nippu2.univ.yo.oulu.fi>
+
+Mauricio,
+
+Nothing reproducible here (we don't have your data sets), not even the output.
+
+In your email you only write about adonis() and the p-values you got from adonis. On the other hand, your TukeyHSD() is based on betadisper(), and you never seem to check the betadisper() p-values. These two methods are radically different: adonis() is about differences between groups, and betadisper() is about dispersions within groups. We expect some kind of consistency between betadisper() p-values and TukeyHSD() of betadisper, but adonis() is quite a different beast which has little to do with betadisper().
+
+If you take an analogy to standard statistics: adonis() is like (M)ANOVA, betadisper() is like Levene's test of "homogeneity" (what ever that means) of variances, and TukeyHSD() is its sequel about detecting cases with different variances.
+
+I suggest you rather use 999 permutations than 1000: you can get nicer round figures. Once we were more patronizing and dropped one permutation if the user asked for even hundred or thousand, but then we thought that this is up to user to decide and none of our business.
+
+Cheers, Jari Oksanen
+
+On 27/08/2012, at 23:23 PM, Maur?cio Moraes Zenker wrote:
+
+> Dear all,
+> 
+> 
+> I?m using the function ?adonis? (multivariate ANOVA based on
+> dissimilarities) to study beta diversity of moths between altitudinal
+> levels and seasons. My analysis is based on the example included in the
+> vegan tutorial ?Multivariate Analysis of Ecological Communities in R: vegan
+> tutorial?, written by Jari Oksanen. As in the example, the analysis of my
+> data indicated that there are significant differences. However, the Tukey?s
+> test indicated that there are no differences between groups? Why does it
+> happen? Shouldn?t the Tukey?s test show that one group is different from
+> another?
+> 
+> The script is almost the same of the tutorial but with more permutations.
+> 
+> 
+> 
+> Thank you.
+> 
+> 
+> 
+> Mauricio
+> 
+> 
+> 
+> Permanova<-read.table("Permanova.txt",header=T)
+> 
+> PermanovaII<-read.table("PermanovaII.txt",header=T)
+> 
+> betad <- betadiver(Permanova, "z")
+> 
+> adonis(formula = betad ~ Altitude*Season,data = PermanovaII,
+> 
+> permutations = 1000)
+> 
+> hov <- with(PermanovaII, betadisper(betad, Altitude))
+> 
+> TukeyHSD(hov)
+> 
+> hovII <- with(PermanovaII, betadisper(betad, Season))
+> 
+> TukeyHSD(hovII)
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+From pinaud at cebc.cnrs.fr  Tue Aug 28 09:37:13 2012
+From: pinaud at cebc.cnrs.fr (Pinaud David)
+Date: Tue, 28 Aug 2012 09:37:13 +0200
+Subject: [R-sig-eco] adehabitat and Lat Long data
+In-Reply-To: <1346078254957-7577571.post@n2.nabble.com>
+References: <1346078254957-7577571.post@n2.nabble.com>
+Message-ID: <503C7529.3030309@cebc.cnrs.fr>
+
+Hi Mike,
+you could use these homemade First Passage Time functions, based on 
+Fauchald & Tveraa, Ecology (2003), 84:282-288 and the trip package. It 
+uses distance calculation in km if longlat=T (DD) or in CRS unit if data 
+are projected. You could use then  Lavielle's method, used by Barraquand 
+and Benhamou (Ecology, 2008).
+
+##### an example:
+source("FPT4.r")
+library(trip)
+library(adehabitatLT)
+
+### FPT analysis:
+## use the FPT4.r function collection. Data are a trip object ("tr2")
+
+scales <- c(seq(0.01, 0.1, by=0.01), seq(0.2, 1, by=0.1), seq(1.2, 5, 
+by=0.2), 6:30)      # the scales at which FPT (=radius) is calculated
+tr2.cut <- FPT.cut(tr2, d=0.05)  # cut the trip at every d distance (= 
+add intermediate locs)
+loc.fpt <- FPT.calc(tr2.cut, r=scales)  # calculate FPT, can be quite 
+long (several minutes)...
+
+                      # draw the log(FPT)=f(scales) plot
+savar <- FPT.vargraph(loc.fpt, r=scales, name="tr2", plotit=T, saveit=F) 
+# peaks of variance at 0.1 and 8 km -> ARS at these scales
+
+                     # draw  FPT at ARS scales (here 0.1 km) against 
+time since departure:
+plot(x=getTimeID(loc.fpt)[, 1], y=loc.fpt at data[, "r0.1"], t="l", 
+main="FPT at 0.1km scale", xlab="Time since departure", ylab="FPT at 0.1 
+km")
+
+         # to find where (when) ARS occured. This segmentation is based 
+on Lavielle's method, used by Barraquand and Benhamou (Ecology, 2008).
+
+             # ex at 0.1 km
+l.1 <- lavielle(loc.fpt at data[!is.na(loc.fpt at data$r0.1), "r0.1"], Lmin=2, 
+Kmax=20, ld=2)
+chooseseg(l.1) # give the number of segments to keep, here we should use 
+K=3,
+fp1 <- findpath(l.1, 3)     # cut the path into K segments and give the 
+row ID of segement limits
+
+
+HTH
+David
+
+Le 27/08/2012 16:37, Mike a ?crit :
+> Hi
+>
+> I have ARGOS satellite tag data from some some very long distance traveling
+> sharks.  These
+> critters cover large chunks of the Atlantic; coordinates are in
+> decimal degrees.
+>
+> It would love to apply the residenceTime function in the adehabitat package
+> to try and segment the paths into broad homogeneous bouts of movement (i.e.
+> migration, seasonal residence/feeding areas etc).  But as far as I can tell
+> from the documentation and the examples it seems that the data must be in
+> some sort of Cartesian coordinate system.  Conversion to UTM's wouldn't be
+> practical in
+> this case because the movement tracks encompass many UTM zones.  Is there
+> a way to do the residence time analysis in adehabitat using data in decimal
+> degrees that perhaps I am just missing?
+>
+> If not, does anybody have any code or recommendations for another way to go
+> about this?  Any insight appreciated!
+>
+> Thanks
+> -Mike
+>
+>
+>
+>
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/adehabitat-and-Lat-Long-data-tp7577571.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+-- 
+***************************************************
+Dr. David PINAUD
+Ing?nieur de Recherche "Analyses spatiales"
+
+Centre d'Etudes Biologiques de Chiz? - CNRS UPR1934
+79360 Villiers-en-Bois, France
+poste 485
+Tel: +33 (0)5.49.09.35.58
+Fax: +33 (0)5.49.09.65.26
+http://www.cebc.cnrs.fr/
+
+***************************************************
+
+-------------- next part --------------
+                     ###########  FIRST-PASSAGE TIME ANALYSIS  ###########
+# v.25/06/2012
+# David PINAUD, pinaud at cebc.cnrs.fr, June 2012. Developped with R 2.14.2 (2012-02-29)
+# Many thanks to L?Ran Dubroca and Pascal Monestier
+# Based on Fauchald & Tveraa, Ecology (2003), 84:282-288
+#
+# - require "sp", "fields" & "trip" libraries
+# - input file: a trip object
+#
+# Analysis in 3 steps:
+#   - FPT.cut() calculates intermediate fixes (X, Y and date) for each successive distance d
+#   - FPT.calc() calculates First-Passage Time for each intermediate fix and for each spatial scale "r"
+#   - FPT.vargraph() calculates the var(log(fpt)) and plot it for each spatial scale r.
+#
+#
+
+  
+
+## FPT.cut calculates intermediate fixes (X, Y and date) for each successive distance d (in km if longlat=T or in CRS unit), from a trip object.
+## Returns a file to be passed to FPT.calc() analysis. Possibility to keep "extra data".
+## Version vectorielle + rapide.....
+FPT.cut <- function(tr, d, longlat=!is.projected(tr))
+{
+	 require(trip)
+	 
+	 tor <- getTORnames(tr)  #  get the DateTime and ID
+	 coordnames <- dimnames(coordinates(tr))[[2]] #  get the coord names
+	 dist01 <- c(0, trackDistance(coordinates(tr), longlat = longlat))     # distance between subsequent locations, in km if longlat=T or in d (CRS) unit
+	 
+	 Xv <- c(0, coordinates(tr)[2:nrow(coordinates(tr)), 1] - coordinates(tr)[1:(nrow(coordinates(tr))-1), 1])  # longitude vectors
+	 Yv <- c(0, coordinates(tr)[2:nrow(coordinates(tr)), 2] - coordinates(tr)[1:(nrow(coordinates(tr))-1), 2])  # latitude vectors
+	  
+	 lag <- dist01 / d   # number of intermediate fixes according to d   /!\ d should be in CRS unit or in km if longlat=T
+	 rm(dist01)
+	 nbfix <- trunc(lag)  
+	 nbfix <- ifelse(((nbfix == lag) & (lag > 0)), lag-1, nbfix ) # case where dist is a multiple of d and lag==0
+	
+	 pos0 <- cumsum(nbfix+1)  # index of locations
+	 
+	 mc <- as.data.frame(matrix(data=FALSE, nr=(sum(nbfix)+length(nbfix)), nc=5))
+	 names(mc) <- c(tor, coordnames, "Origin")
+	 mc[pos0, 1:4] <- data.frame(getTimeID(tr), coordinates(tr))
+	 mc[pos0, 5] <- TRUE
+	 
+	 Xvr <- rep(Xv/lag, nbfix+1)  # vectors X
+	 Yvr <- rep(Yv/lag, nbfix+1)   # vectors Y
+	 rm(Yv, Xv)
+	 Dvr <- c(0, rep((getTimeID(tr)[2:nrow(getTimeID(tr)), 1] - getTimeID(tr)[1:(nrow(getTimeID(tr)) - 1), 1]) / lag[2:nrow(getTimeID(tr))], (nbfix+1)[2:length(nbfix)]))  # vectors Date
+	 seqr <- sequence(nbfix+1)  # sequence of multipliers
+	 Xb <- c(rep(coordinates(tr)[1:(length(nbfix)-1), 1], (nbfix+1)[2:length(nbfix)]), 0)  # basis X
+	 Yb <- c(rep(coordinates(tr)[1:(length(nbfix)-1), 2], (nbfix+1)[2:length(nbfix)]), 0)  # basis Y
+	 Dtb <- c(rep(getTimeID(tr)[1:(length(nbfix)-1), 1], (nbfix+1)[2:length(nbfix)]), 0)  # basis DateTime
+	 rm(lag)
+	    
+	   # calculus:
+	 mc[mc$Origin==FALSE, coordnames[1]] <- Xb[mc$Origin==FALSE] + Xvr[mc$Origin==FALSE] * seqr[mc$Origin==FALSE]
+	 mc[mc$Origin==FALSE, coordnames[2]] <- Yb[mc$Origin==FALSE] + Yvr[mc$Origin==FALSE] * seqr[mc$Origin==FALSE]
+	 mc[mc$Origin==FALSE, tor[1]] <- Dtb[mc$Origin==FALSE] + Dvr[mc$Origin==FALSE] * seqr[mc$Origin==FALSE]
+	 rm(Xvr, Yvr, Dvr, seqr, Xb, Yb, Dtb)
+	 mc[, tor[1]] <- mc[, tor[1]] +  as.POSIXct("1970-01-01 00:00:00", "GMT") 
+	 mc[, tor[1]] <- as.POSIXct(mc[, tor[1]], tz="GMT")
+	 mc[, tor[2]] <- getTimeID(tr)[1, 2]
+	  
+	  # extra data
+	 if(ncol(tr at data)>4) {
+		 	"%w/o%" <- function(x, y) x[!x %in% y] #--  x without y
+		 	cd <- tr at data[, colnames(tr at data) %w/o% tor]
+			kept <- as.data.frame(matrix(data=NA, nr=(sum(nbfix)+length(nbfix)), nc=ncol(cd)))
+			names(kept) <- colnames(cd)
+			kept[pos0, ] <- cd
+			mc <- data.frame(mc, kept)
+		 	   }
+			# trip
+		coordinates(mc) <- coordnames             #  is now a 'sp' object  (SpatialPointsDataFrame)
+		proj4string(mc) <- CRS(proj4string(tr))         # set the coord system / projection
+		mc <- trip(mc, tor)    # a trip object, "locs$device_info_serial"  as factor
+	 return(mc)
+	 rm(nbfix, pos0, mc, kept, cd)
+ }
+
+ 
+
+## "FPT.calc" calculates First-Passage Time for each successive fix of "tr" object (coming from FPT.cut() ) and for each spatial scale "radii".
+## "tr" is the result of "FPT.cut", "radii" is a sequence of each spatial scale to be tested in km (if tr is longlat) or in coordinate unit si tr is projected.
+FPT.calc <- function (tr, radii)  
+{ 
+	options(digits = 10)
+	startTime <- Sys.time()	
+	fpt2 <- NULL
+	n <- nrow(tr at data)
+	cat("0%")
+	for (i in 1:n)
+		{
+		disttemp <- spDistsN1(pts=as(tr, "SpatialPointsDataFrame")[i:n,], pt=as(tr, "SpatialPointsDataFrame")[i,], longlat = !is.projected(tr))
+		distclas <- cut(disttemp, breaks=c(0, radii, (max(radii)+ceiling(diff(range(radii))/length(radii)))), include.lowest = T)
+		fpt.fwd <- tapply(getTimeID(tr)[i:n, 1], distclas, min) - as.numeric(getTimeID(tr)[i, 1])
+		disttemp <- spDistsN1(pts=as(tr, "SpatialPointsDataFrame")[1:i,], pt=as(tr, "SpatialPointsDataFrame")[i,], longlat = !is.projected(tr))
+		distclas <- cut(disttemp, breaks=c(0, radii, (max(radii)+ceiling(diff(range(radii))/length(radii)))), include.lowest = T)
+		fpt.bwd <- as.numeric(getTimeID(tr)[i, 1]) - tapply(getTimeID(tr)[1:i, 1], distclas, max)
+		fpttotal <- apply(rbind(fpt.bwd, fpt.fwd), 2, sum)
+		fpt2 <- rbind(fpt2, fpttotal)
+		
+		 		# time bar:
+		tb <- cbind(trunc(n/10)*1:10, 1:10*10)
+		if(any(i==tb[,1])) cat(paste("|| ", tb[i==tb[,1],2], "%, ", round(c(difftime(Sys.time(), startTime, unit="mins"))), "min", sep="")) 
+ 	 	}
+  fpt2 <- as.data.frame(fpt2)
+	names(fpt2) <- paste("r", c(0, radii), sep="")
+	fpt2$r0 <- NULL
+	tr at data <- cbind(tr at data, fpt2)
+	return(tr)
+}
+
+
+
+## FPT.vargraph calculates  the var(log(fpt)) for a file from FPT.calc()and plot it for each radius.
+## Return a data.frame and a plot for the individual "name". Plot can be saved.
+FPT.vargraph <- function(tr.fpt, radii, name="", modes.method=1, plotit=F, saveit=F, type=c("wmf", "png", "jpeg", "jpg", "bmp", "ps", "pdf"))
+{
+ r.ind <- radii
+ r.char <- paste("r",radii, sep="")
+ r.ind <- as.data.frame(t(radii))
+ names(r.ind) <- r.char
+ r.ind[1,] <- NA
+ fptr <- subset(tr.fpt at data, select=r.char)
+ for (j in 1:(length(radii)))
+  { 
+  jr<-fptr[, j]
+  if(length(na.omit(log(jr))) > 1) { r.ind[1, j] <- stats::var(log(jr), na.rm=T) }
+  }
+ rfpt <- radii[r.ind == max(r.ind, na.rm=T)] 
+ if (plotit)
+  {
+  if(modes.method==2)
+		{
+			pm <- posmodes2(radii, r.ind, numbermodes2(radii, r.ind))
+		} else {
+			pm <- posmodes(radii, r.ind, numbermodes(radii, r.ind))
+			}
+  plot(radii, r.ind, t="l", xlab="Spatial scale r (km)", ylab="S(log(fpt))", xlim=c(0, max(radii)), 
+										ylim=c(0, max(r.ind, na.rm=T)), main=paste(name, ", FPT analysis", sep=""))
+  abline(v=radii, col="grey", lty=3)
+  points(radii, r.ind, t="l")
+  abline(v=rfpt, col="red", lty=2)
+  if(length(pm)>0) text(x=pm, y=rep(c(0, max(r.ind, na.rm=T)/20), length.out=length(pm)), labels=as.character(pm), cex=0.85, font=4)
+  }
+ if(plotit & saveit)
+  {
+  savePlot(filename=paste(name,"vargraf", sep=""), type=type)
+  }
+ return(r.ind)
+}
+
+### FPT.cutsim calculates intermediate fixes (X, Y and date) for each successive distance d (in km) for simulated data (cartesian coordinates).
+### Returns a file to be passed to FPT.calcsim() analysis.
+#FPT.cutsim <- function (file, Long, Lat, Date, d, datakept=NULL)
+#{
+#	 options(digits=10)
+#	 require(fields)
+#	 a <- data.frame(Date, Long, Lat, Origin=rep("FALSE", length(Long))) 
+#	 
+#	 coord <- matrix(c(a$Long, a$Lat), length(a$Long), 2) # XY matrix, to calculate distance
+#	 coord <- coord[-length(coord[, 1]), ]
+#	 coord2 <- matrix(c(a$Long[2:length(a$Long)], a$Lat[2:length(a$Lat)]), length(a$Long)-1, 2)
+#	 dist01 <- c(0, sqrt((coord[,1]-coord2[,1])^2 + (coord[,2]-coord2[,2])^2)) # dist to previous fix
+#	 rm(coord, coord2)
+#	 
+#	 Xv <- c(0, a$Long[2:length(a$Long)] - a$Long[1:(length(a$Long) - 1)])  # longitude vectors
+#	 Yv <- c(0, a$Lat[2:length(a$Lat)] - a$Lat[1:(length(a$Lat) - 1)])  # latitude vectors
+#	  
+#	 lag <- dist01 / d   # number of intermediate fixes according to d
+#	 rm(dist01)
+#	 nbfix <- trunc(lag)  
+#	 nbfix <- ifelse (((nbfix == lag) & (lag > 0)), lag-1, nbfix ) # case where dist is a multiple of d and lag==0
+#	
+#	 pos0 <- cumsum(nbfix+1)  # position des points GPS
+#	 
+#	 mc <- as.data.frame(matrix(data=FALSE, nr=(sum(nbfix)+length(nbfix)), nc=4))
+#	 names(mc) <- c("Date", "Long", "Lat", "Origin")
+#	 mc[pos0, 1:3] <- a[, 1:3]
+#	 mc[pos0, 4] <- TRUE
+#	 
+#	 Xvr <- rep(Xv/lag, nbfix+1)  # vecteurs X
+#	 Yvr <- rep(Yv/lag, nbfix+1)   # vecteurs Y
+#	 rm(Yv, Xv)
+#	 Dvr <- c(0, rep((a$Date[2:length(a[,1])]-a$Date[1:(length(a[,1])-1)])/lag[2:length(a[,1])],(nbfix+1)[2:length(nbfix)]))  # vecteurs Date
+#	 seqr <- sequence(nbfix+1)  # sequence des multiplicateurs
+#	 Xb <- c(rep(a$Long[1:(length(nbfix)-1)], (nbfix+1)[2:length(nbfix)]), 0)  # bases X
+#	 Yb <- c(rep(a$Lat[1:(length(nbfix)-1)], (nbfix+1)[2:length(nbfix)]), 0)  # bases Y
+#	 Db <- c(rep(a$Date[1:(length(nbfix)-1)], (nbfix+1)[2:length(nbfix)]), 0)  # bases Date
+#	 rm(a, lag)
+#	    
+#	   # calcul:
+#	 mc$Date[mc$Origin==FALSE] <- Db[mc$Origin==FALSE] + Dvr[mc$Origin==FALSE]*seqr[mc$Origin==FALSE]
+#	 mc$Long[mc$Origin==FALSE] <- Xb[mc$Origin==FALSE] + Xvr[mc$Origin==FALSE]*seqr[mc$Origin==FALSE]
+#	 mc$Lat[mc$Origin==FALSE] <- Yb[mc$Origin==FALSE] + Yvr[mc$Origin==FALSE]*seqr[mc$Origin==FALSE]
+#	 rm(Xvr, Yvr, Dvr, seqr, Xb, Yb, Db)
+#	  
+#	  # ajout de datakept
+#	 if(!is.null(datakept)) { 
+#		 kept <- as.data.frame(matrix(data=NA, nr=(sum(nbfix)+length(nbfix)), nc=ncol(datakept)))
+#		 names(kept) <- names(datakept)
+#		 kept[pos0, ] <- datakept
+#		 mc <- data.frame(mc, kept)
+#		 	   }
+#		 	   
+#	 return(mc)
+#	 rm(nbfix, pos0, mc, kept)
+# }
+#
+### "FPT.calcsim" calculates First-Passage Time for each successive fix of "a" and for each spatial scale "r" for simulated data.
+## "a" is the result of "FPT.cutsim", "r" is a sequence of each spatial scale to be tested in km.
+#FPT.calcsim <- function (a, r) 
+#{ 
+#	options(digits = 13)
+#	require(fields)	
+#	fpt2 <- NULL
+#	n <- nrow(a)
+#	for (i in 1:n)
+#		{  
+#		disttemp <- rdist(matrix(c(a$Lat[i], a$Long[i]), length(a$Long[i]), 2), matrix(c(a$Lat[i:n], a$Long[i:n]), length(a$Long[i:n]), 2))
+#		distclas <- cut(disttemp, breaks=c(0, r, (max(r)+ceiling(diff(range(r))/length(r)))), include.lowest = T)
+#		fptav <- tapply(a$Date[i:n], distclas, min) - a$Date[i]
+#		disttemp <- rdist(matrix(c(a$Lat[i], a$Long[i]), length(a$Long[i]), 2), matrix(c(a$Lat[1:i], a$Long[1:i]), length(a$Long[1:i]), 2))
+#		distclas <- cut(disttemp, breaks=c(0, r, (max(r)+ceiling(diff(range(r))/length(r)))), include.lowest = T)
+#		fptar <- a$Date[i] - tapply(a$Date[1:i], distclas, max)
+#		fpttotal <- apply(rbind(fptar, fptav), 2, sum)
+#		fpt2 <- rbind(fpt2, fpttotal)
+#		
+#		if(i/100-trunc(i/100)==0) print(paste(i,"th fix on", n)) 
+# 	 	}
+# 	row.names(fpt2) <- 1:n
+#  fpt2 <- as.data.frame(fpt2[, -1])
+#	names(fpt2) <- paste("r",r, sep="")
+#	a <- cbind(a, fpt2)
+#	return(a)
+#	rm(a)
+#}
+#
+
+
+
+# "numbermodes" finds number of modes- Bradley Efron's method
+# modified from code (function nmodes) supplied by Rob Tibshirini
+# to return only number of modes.
+numbermodes <- function(x, y)
+{
+        n <- length(x)
+        mcount <- 0
+        
+        for(i in 1:(n-2)) 
+             {
+	            if(is.na(y[i +2])) break
+              if((y[i + 1] > y[i]) & (y[i + 1] > y[i +2])) 
+                 {
+                 mcount <- mcount + 1
+                 }
+             }
+           
+        return(mcount)
+}
+
+numbermodes2 <- function(x, y)   # fen?tre plus large (sur -2 et +2 points)
+{
+        n <- length(x)
+        mcount <- 0
+        
+        for(i in 2:(n-3)) 
+             {
+              if((y[i + 1] > y[i]) & (y[i + 1] > y[i +2]) & (y[i ] > y[i-1]) & (y[i + 2] > y[i +3])) 
+                 {
+                 mcount <- mcount + 1
+                 }
+             }
+        return(mcount)
+}
+
+
+# "posmodes" renvoie la position (x) des modes de "y"
+#  selon le nombre donnn? par "numbermodes".
+
+posmodes <- function(x, y, nmodes)
+  {
+	  n <- length(x)
+	  mcount <- 0
+	  pos <- vector(mode="numeric", length=nmodes)
+	  
+	  for(i in 1:(n-2)) 
+             {
+	            if(is.na(y[i +2])) break
+              if((y[i + 1] > y[i]) & (y[i + 1] > y[i +2])) 
+                 {
+                 mcount <- mcount + 1
+                 pos[mcount] <- x[i+1]
+                 }
+             }
+     return(pos)
+  }  
+	 
+# "posmodes2" renvoie la position (x) des modes de "y"
+#  selon le nombre donnn? par "numbermodes2", fen?tre plus large (sur -2 et +2 points).
+
+posmodes2 <- function(x, y, nmodes)
+  {
+	  n <- length(x)
+	  mcount <- 0
+	  pos <- vector(mode="numeric", length=nmodes)
+	  
+	  for(i in 2:(n-3)) 
+             {
+	            if(is.na(y[i + 3])) break
+              if((y[i + 1] > y[i]) & (y[i + 1] > y[i +2]) & (y[i ] > y[i-1]) & (y[i + 2] > y[i +3])) 
+                 {
+                 mcount <- mcount + 1
+                 pos[mcount] <- x[i+1]
+                 }
+             }
+     return(pos)
+  }  
+
+### rdist.earth2 calculates distance between loc1[i] and loc2[i]. 
+#   Rlat adjusts earth's radius to the latitude of the first fix of loc1.
+rdist.earth2 <- function (loc1, loc2, Rlat = TRUE) 
+{
+    
+    R <- ifelse(Rlat, 6378137 * (1 - 0.0033493*sin(loc1[1,2])^2)/1000, 6378.388)
+    
+    if (missing(loc2)) 
+        loc2 <- loc1
+    coslat1 <- cos((loc1[, 2] * pi)/180)
+    sinlat1 <- sin((loc1[, 2] * pi)/180)
+    coslon1 <- cos((loc1[, 1] * pi)/180)
+    sinlon1 <- sin((loc1[, 1] * pi)/180)
+    coslat2 <- cos((loc2[, 2] * pi)/180)
+    sinlat2 <- sin((loc2[, 2] * pi)/180)
+    coslon2 <- cos((loc2[, 1] * pi)/180)
+    sinlon2 <- sin((loc2[, 1] * pi)/180)
+    pp <- (coslat1 * coslon1 * coslat2 * coslon2) + (coslat1 * sinlon1 * coslat2 * sinlon2) + (sinlat1 * sinlat2)
+    R * acos(ifelse(pp > 1, 1, pp))
+}
+
+# calcul de distance sur le globe terrestre (je fais confiance!!)
+disttraj <- function(LAT1, LAT2, LONG1, LONG2)
+  {
+	  dist1 <- (((((((LAT2-LAT1)*3600)*6335508)*((1-0.00672267*((sin(((LAT2+LAT1)/2)*2*pi/360))^2))^(-2/3))*(1/206265))^2)+(((((LONG2-LONG1)*3600)*6378388)*((1-0.00672267*(sin(((LAT2+LAT1)/2)*2*pi/360)))^(-1/2))*(1/206265)*(cos(((LAT2+LAT1)/2)*2*pi/360)))^2))^(1/2))/1000
+    return(dist1)
+  }
+
+  # calcul du ratio Lon/Lat pour les graphs (? passer dans asp=)
+asp.rect <- function(Long, Lat) {
+		coord.m <- data.frame(mean(Long), mean(Lat))
+		d1.long <- rdist.earth2(coord.m, coord.m+c(1,0))
+		d1.lat <- rdist.earth2(coord.m, coord.m+c(0,1))
+		rap <- d1.lat/d1.long
+		return(rap)
+	}
+
+
+
+# fonction distp en version longitude latitude
+distp2 <- function(latp, longp, lat, long) 
+  {
+     # latp et longp sont de dimension1, lat et long sont de meme dimension n  
+      n <- length (lat)
+      dist <- rep(0, n)
+      dist <- disttraj(rep(latp, n), lat, rep(longp, n), long)
+      return(dist)
+  }
+
+ 
+
+From winnie56100 at 163.com  Fri Aug 31 05:49:27 2012
+From: winnie56100 at 163.com (Yong Shen)
+Date: Fri, 31 Aug 2012 11:49:27 +0800 (CST)
+Subject: [R-sig-eco] question about K function
+Message-ID: <5137653.6e4e.1397acc38b4.Coremail.winnie56100@163.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120831/0f147212/attachment.pl>
+
+From cliffbeall at gmail.com  Fri Aug 31 14:48:52 2012
+From: cliffbeall at gmail.com (Cliff Beall)
+Date: Fri, 31 Aug 2012 08:48:52 -0400
+Subject: [R-sig-eco] question about K function
+In-Reply-To: <5137653.6e4e.1397acc38b4.Coremail.winnie56100@163.com>
+References: <5137653.6e4e.1397acc38b4.Coremail.winnie56100@163.com>
+Message-ID: <E50E865C-6C5E-4C7F-AE43-36371780F5D5@gmail.com>
+
+The function p.adjust from the stats package works on a vector of p values regardless of how they were determined, would that fulfill your needs. It has various adustment methods available, I have seen Benjamini-Hochberg used a lot.
+
+On Aug 30, 2012, at 11:49 PM, Yong Shen wrote:
+
+> 
+> Hi all,
+>    Is anybody know how to perform adjustment to p values for multiple significance testing when using bivarite K function? Thank you very much.
+> Best,
+>                                                                                                                                            Yong
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+Cliff Beall
+Research Assistant Professor
+Division of Oral Biology
+College of Dentistry
+The Ohio State University
+beall.3 at osu.edu
+
+
+From microbeatic at gmail.com  Fri Aug 31 23:36:22 2012
+From: microbeatic at gmail.com (Migun Shakya)
+Date: Fri, 31 Aug 2012 17:36:22 -0400
+Subject: [R-sig-eco] variation partitioning significane test vegan
+Message-ID: <CAChP=skAQ46Uem+tYnkR57ogzG8oQF9pJTU5x+zTMfmuZwoZ4A@mail.gmail.com>
+
+Hi all,
+A general question on the use of capscale for partition of variance.
+
+I have used capscale to explain the variation in a soil microbial
+community into different measured parameters. However, none of the
+test (anova.cca) that i ran to check for the significance of
+constraints are significant. Does that mean that the variation
+explained are not relevant and should not be used to deduce any
+conclusions?
+
+Here is what i did:
+
+> FullRDA<-capscale(UNI.UNW.MAT ~A+B+C+D+Latitude+Longitude, comm=OTU,envbac)
+> anova.cca(FullRDA)
+
+> EnvRDA<-capscale(UNI.UNW.MAT ~ A+B+Condition( C+D+Latitude+Longitude), comm=OTU,envbac)
+> anova.cca(EnvRDA)
+
+> SoilRDA<-capscale(UNI.UNW.MAT ~  C+D+Condition(A+B+Latitude+Longitude), comm=OTU,envbac)
+> anova.cca(SoilRDA)
+
+> GeoRDA<-capscale(UNI.UNW.MAT ~ Latitude+Longitude+Condition(A+B+C+D), comm=OTU,envbac)
+> anova.cca(GeoRDA)
+
+> GenRDA<-capscale(UNI.UNW.MAT ~ gen$vectors+Condition(BasalArea + BaseTree+ProximalTrees+RiverDistance+ TreeToSample+ Ca+Moist+Mn+Zn+pH1+K+Month+Latitude+Longitude), comm=RHIZOTU,envbac)
+> anova.cca(GenRDA)
+
+
+
+I hope the question itself is not as much as the answer.
+
+Migee
+
+

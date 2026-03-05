@@ -1,0 +1,2730 @@
+From botta-dukat.zoltan at okologia.mta.hu  Sun Mar  6 21:27:25 2016
+From: botta-dukat.zoltan at okologia.mta.hu (Zoltan Botta-Dukat)
+Date: Sun, 6 Mar 2016 21:27:25 +0100
+Subject: [R-sig-eco] reprametrization of Lloyd-Taylor function
+Message-ID: <56DC92AD.3080703@okologia.mta.hu>
+
+Dear All,
+
+I tried to fit Lloyd-Taylor function for soil respiration data, but 
+convergence is often failed and even if the model converged there is 
+extremely high uncertainty in parameter estimates.
+
+The fitted model is: y=a-b/(x-c), where a, b, and c are the parameters. 
+(Note that it is not the original Lloyd-Taylor function, in my version 
+the dependent variable is the logarithm of respiration).
+
+I have already recognized the origin of the problem: since c<min(x), 
+partial derivatives of y with respect to b and c are highly correlated. 
+I suppose that it can be solved by an appropriate re-parametrization, 
+but I was not able to find it. Could you suggest an appropriate 
+re-parametrization?
+
+Thanks
+
+Zoltan
+
+
+-- 
+Botta-Duk?t Zolt?n
+--------------------------------
+?kol?giai ?s Botanikai Int?zet
+Magyar Tudom?nyos Akad?mia
+?kol?giai Kutat?k?zpont
+--------------------------------
+2163. V?cr?t?t, Alkotm?ny u. 2-4.
+tel: +36 28 360122/157
+fax: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+Zolt?n BOTTA-Duk?t
+--------------------------------
+Institute of Ecology and Botany
+Hungarian Academy of Sciences
+Centre for Ecological Research
+--------------------------------
+H-2163 V?cr?t?t, Alkom?ny u. 2-4.
+HUNGARY
+Phone: +36 28 360122/157
+Fax..: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+From alexandresantosbr at yahoo.com.br  Mon Mar  7 22:02:50 2016
+From: alexandresantosbr at yahoo.com.br (ASANTOS)
+Date: Mon, 7 Mar 2016 17:02:50 -0400
+Subject: [R-sig-eco] Two-way contrasts with adonis()
+Message-ID: <56DDEC7A.2060901@yahoo.com.br>
+
+Dear members,
+
+I try to create Two-way PERMANOVA contrasts using model.matrix() 
+function, but I failed with my output in adonis object. I need all 
+comparisons with impyes:treatt1, impno:treatt1, impyes:treatt2, 
+impno:treatt2, impyes:treatt3 and impno:treatt3 factors, this is 
+possible? In my code:
+
+#1st factor
+treat <- gl(3, 20, labels = paste("t", 1:3, sep=""))
+#2nd factor
+imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+#create a design matrix of the contrasts for "treat" in "imp"
+Treat_Imp<-model.matrix(~ imp:treat-1)
+
+
+#Variables
+eff <- sort(rep(1:6, 10))
+# add noise:
+sp1 = eff + rnorm(60, 0, 0.25)
+sp2 = eff + rnorm(60, 0, 0.25)
+sp3 = eff + rnorm(60, 0, 0.25)
+sp4 = eff + rnorm(60, 0, 0.25)
+
+sp<-cbind(sp1,sp2,sp3,sp4)
+
+require(vegan)
+
+## do the pm-manova with the orthogonal contrasts for imp and treat'
+fm <- adonis(sp ~ Treat_Imp,
+               method = "euclidean", perm = 999)
+fm
+
+Thanks,
+
+-- 
+======================================================================
+Alexandre dos Santos
+Prote??o Florestal
+IFMT - Instituto Federal de Educa??o, Ci?ncia e Tecnologia de Mato Grosso
+Campus C?ceres
+Caixa Postal 244
+Avenida dos Ramires, s/n
+Bairro: Distrito Industrial
+C?ceres - MT                      CEP: 78.200-000
+Fone: (+55) 65 8132-8112 (TIM)   (+55) 65 9686-6970 (VIVO)
+
+         alexandre.santos at cas.ifmt.edu.br
+Lattes: http://lattes.cnpq.br/1360403201088680
+OrcID: orcid.org/0000-0001-8232-6722
+Researchgate: https://www.researchgate.net/profile/Alexandre_Santos10
+LinkedIn: https://br.linkedin.com/in/alexandre-dos-santos-87961635
+
+
+From philipova at imbm.bas.bg  Tue Mar  8 11:09:45 2016
+From: philipova at imbm.bas.bg (Philipova)
+Date: Tue, 8 Mar 2016 12:09:45 +0200
+Subject: [R-sig-eco] Calculating Mean Absolute Error and Mean Squared Error
+	for Ordinary Kriging
+Message-ID: <000e01d17922$a43041d0$b0e660c3@NikolinaKo1>
+
+Hello everyone,
+Can someone give sugestions how to compare map interpolations produced by Ordinary Kriging or Inverse Distance Weigthed, how to calculate Mean Absolute Error and Mean Squared Error in R?
+Thank you so much in advance!
+Wish successes in your undertakings to all of you!
+Nina Philipova
+
+---
+???? ????? ? ???????? ?? ?????? ?? Avast.
+https://www.avast.com/antivirus
+
+	[[alternative HTML version deleted]]
+
+
+From bfalevlist at gmail.com  Tue Mar  8 12:12:44 2016
+From: bfalevlist at gmail.com (=?UTF-8?Q?Bede-Fazekas_=c3=81kos?=)
+Date: Tue, 8 Mar 2016 12:12:44 +0100
+Subject: [R-sig-eco] Calculating Mean Absolute Error and Mean Squared
+ Error for Ordinary Kriging
+In-Reply-To: <000e01d17922$a43041d0$b0e660c3@NikolinaKo1>
+References: <000e01d17922$a43041d0$b0e660c3@NikolinaKo1>
+Message-ID: <56DEB3AC.4070009@gmail.com>
+
+Dear Nina,
+
+you should make prediction on the evaluation dataset (Note that since 
+kriging is an exact interpolation method, predicting on the original 
+dataset does not make sense):
+prediction <- krige(dependent_variable ~ predictor, locations = 
+original_dataset, newdata = evaluation_dataset)
+Then you can calculate the difference of the predicted and observed values:
+difference <- evaluation_dataset$dependent_variable - 
+prediction at data$var1.pred
+MAE <- mean(abs(difference))
+MSE <- mean(difference ^ 2)
+
+HTH,
+?kos Bede-Fazekas
+Hungarian Academy of Sciences
+
+2016.03.08. 11:09 keltez?ssel, Philipova ?rta:
+> Hello everyone,
+> Can someone give sugestions how to compare map interpolations produced by Ordinary Kriging or Inverse Distance Weigthed, how to calculate Mean Absolute Error and Mean Squared Error in R?
+> Thank you so much in advance!
+> Wish successes in your undertakings to all of you!
+> Nina Philipova
+>
+> ---
+> ???? ????? ? ???????? ?? ?????? ?? Avast.
+> https://www.avast.com/antivirus
+>
+> 	[[alternative HTML version deleted]]
+>
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From microbiomics at mytng.de  Tue Mar  8 14:20:18 2016
+From: microbiomics at mytng.de (microbiomics)
+Date: Tue, 08 Mar 2016 14:20:18 +0100
+Subject: [R-sig-eco] Two-way contrasts with adonis()
+Message-ID: <b802cf81ac0a17d2ba2a82525895b92f@imap.tng.de>
+
+Dear Alexandre,
+
+I may not have understood what you are up to, but your approach appears 
+quite strange to me. If you wish to perform a two-way permanova with 
+interactions, this would be:
+
+fullModel <- adonis(sp ~ treat * imp, method = "euclidean")
+
+fullModel
+
+
+Call:
+adonis(formula = sp ~ treat * imp, method = "euclidean")
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+Df SumsOfSqs MeanSqs F.Model R2 Pr(>F)
+treat 2 657.60 328.80 1197.73 0.88707 0.001 ***
+imp 1 68.66 68.66 250.12 0.09262 0.001 ***
+treat:imp 2 0.23 0.11 0.42 0.00031 0.646
+Residuals 54 14.82 0.27 0.02000
+Total 59 741.31 1.00000
+
+ From this, you can see that the interaction term treat:imp is not 
+significant. Thus, performing pairwise comparisons for all factor 
+combinations does not make sense in the first place - it would be enough 
+to concentrate on the main effects here.
+
+Now, _suppose_ the interaction _was_ significant; then you could do the 
+following:
+
+For a pairwise comparison "c1" of impyes and impno within treatt1, do:
+
+c1 <- Treat_Imp[, 1] - Treat_Imp[, 2]
+adonis(sp[as.logical(c1), ] ~ c1[as.logical(c1)], method = "euclidean")
+
+Repeat the above for treatt2 and treatt3.
+
+As mentioned above, I may be off the track regarding your underlying 
+purpose, and perhaps others here have better ideas regarding this issue. 
+Nonetheless, I hope that helps. ;-)
+
+
+Best,
+Sven
+
+
+From alexandresantosbr at yahoo.com.br  Wed Mar  9 12:34:44 2016
+From: alexandresantosbr at yahoo.com.br (ASANTOS)
+Date: Wed, 9 Mar 2016 07:34:44 -0400
+Subject: [R-sig-eco] Two-way contrasts with adonis()
+Message-ID: <56E00A54.50904@yahoo.com.br>
+
+Thanks you very much Sven,
+
+           But I try to make multiple comparisons and not with isolate 
+factors and doesn't work. In my new code I have significant interaction, 
+my example was:
+
+#1st factor
+treat <- gl(3, 20, labels = paste("t", 1:3, sep=""))
+#2nd factor
+imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+
+
+#create a design matrix of the contrasts for "treat" in "imp"
+Treat_Imp<-model.matrix(~ imp:treat-1)
+
+
+#Variables
+sp1_1 = rnorm(10, 5, 0.25)
+sp1_2 = rnorm(50, 2.5, 0.25)
+sp1 = c(sp1_1,sp1_2)
+sp2 = rnorm(60, 2.5, 0.25)
+sp3_1 = rnorm(10, 12, 0.25)
+sp3_2 = rnorm(50, 2.5, 0.25)
+sp3 = c(sp3_1,sp3_2)
+sp4 = rnorm(60, 2.5, 0.25)
+sp<-cbind(sp1,sp2,sp3,sp4)
+
+require(vegan)
+
+fullModel <- adonis(sp ~ treat * imp, method = "euclidean")
+
+fullModel
+
+#Comparisons
+impyes:treatt1_impno:treatt1<- Treat_Imp[, 1] - Treat_Imp[, 2]
+impyes:treatt2_impno:treatt2<- Treat_Imp[, 2] - Treat_Imp[, 3]
+impyes:treatt3_impno:treatt3<- Treat_Imp[, 3] - Treat_Imp[, 4]
+
+adonis(sp ~ 
+impyes:treatt1_impno:treatt1[as.logical(impyes:treatt1_impno:treatt1)]
++impyes:treatt2_impno:treatt2[as.logical(impyes:treatt2_impno:treatt2)]+
++impyes:treatt3_impno:treatt3[as.logical(impyes:treatt3_impno:treatt3)],method 
+= "euclidean")
+#
+
+
+
+-- 
+======================================================================
+Alexandre dos Santos
+Prote??o Florestal
+IFMT - Instituto Federal de Educa??o, Ci?ncia e Tecnologia de Mato Grosso
+Campus C?ceres
+Caixa Postal 244
+Avenida dos Ramires, s/n
+Bairro: Distrito Industrial
+C?ceres - MT                      CEP: 78.200-000
+Fone: (+55) 65 8132-8112 (TIM)   (+55) 65 9686-6970 (VIVO)
+
+         alexandre.santos at cas.ifmt.edu.br
+Lattes: http://lattes.cnpq.br/1360403201088680
+OrcID: orcid.org/0000-0001-8232-6722
+Researchgate: https://www.researchgate.net/profile/Alexandre_Santos10
+LinkedIn: https://br.linkedin.com/in/alexandre-dos-santos-87961635
+
+
+From microbiomics at mytng.de  Wed Mar  9 15:29:12 2016
+From: microbiomics at mytng.de (microbiomics)
+Date: Wed, 9 Mar 2016 15:29:12 +0100
+Subject: [R-sig-eco] Two-way contrasts with adonis()
+In-Reply-To: <56E00A54.50904@yahoo.com.br>
+References: <56E00A54.50904@yahoo.com.br>
+Message-ID: <56E03338.8000309@mytng.de>
+
+
+
+On 09.03.2016 12:34, ASANTOS wrote:
+> Thanks you very much Sven,
+>
+>            But I try to make multiple comparisons and not with isolate
+> factors and doesn't work. In my new code I have significant interaction,
+> my example was:
+>
+> #1st factor
+> treat <- gl(3, 20, labels = paste("t", 1:3, sep=""))
+> #2nd factor
+> imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+>
+>
+> #create a design matrix of the contrasts for "treat" in "imp"
+> Treat_Imp<-model.matrix(~ imp:treat-1)
+>
+>
+> #Variables
+> sp1_1 = rnorm(10, 5, 0.25)
+> sp1_2 = rnorm(50, 2.5, 0.25)
+> sp1 = c(sp1_1,sp1_2)
+> sp2 = rnorm(60, 2.5, 0.25)
+> sp3_1 = rnorm(10, 12, 0.25)
+> sp3_2 = rnorm(50, 2.5, 0.25)
+> sp3 = c(sp3_1,sp3_2)
+> sp4 = rnorm(60, 2.5, 0.25)
+> sp<-cbind(sp1,sp2,sp3,sp4)
+>
+> require(vegan)
+>
+> fullModel <- adonis(sp ~ treat * imp, method = "euclidean")
+>
+> fullModel
+>
+> #Comparisons
+> impyes:treatt1_impno:treatt1<- Treat_Imp[, 1] - Treat_Imp[, 2]
+> impyes:treatt2_impno:treatt2<- Treat_Imp[, 2] - Treat_Imp[, 3]
+> impyes:treatt3_impno:treatt3<- Treat_Imp[, 3] - Treat_Imp[, 4]
+>
+> adonis(sp ~
+> impyes:treatt1_impno:treatt1[as.logical(impyes:treatt1_impno:treatt1)]
+> +impyes:treatt2_impno:treatt2[as.logical(impyes:treatt2_impno:treatt2)]+
+> +impyes:treatt3_impno:treatt3[as.logical(impyes:treatt3_impno:treatt3)],method
+> = "euclidean")
+> #
+>
+>
+>
+
+
+From microbiomics at mytng.de  Wed Mar  9 15:30:07 2016
+From: microbiomics at mytng.de (microbiomics)
+Date: Wed, 9 Mar 2016 15:30:07 +0100
+Subject: [R-sig-eco] Two-way contrasts with adonis()
+In-Reply-To: <56E00A54.50904@yahoo.com.br>
+References: <56E00A54.50904@yahoo.com.br>
+Message-ID: <56E0336F.7010408@mytng.de>
+
+Hi Alexandre,
+
+On 09.03.2016 12:34, ASANTOS wrote:
+[the code above is OK]
+
+> #Comparisons
+> impyes:treatt1_impno:treatt1<- Treat_Imp[, 1] - Treat_Imp[, 2]
+> impyes:treatt2_impno:treatt2<- Treat_Imp[, 2] - Treat_Imp[, 3]
+> impyes:treatt3_impno:treatt3<- Treat_Imp[, 3] - Treat_Imp[, 4]
+>
+
+First, variable names cannot contain ":", so you need to replace the 
+colon with a period. Also, it looks like you mixed up column indices of 
+Treat_Imp, so my suggestion is:
+
+impyes.treatt1_impno.treatt1<- Treat_Imp[, 1] - Treat_Imp[, 2]
+impyes.treatt2_impno.treatt2<- Treat_Imp[, 3] - Treat_Imp[, 4]
+impyes.treatt3_impno.treatt3<- Treat_Imp[, 5] - Treat_Imp[, 6]
+
+
+
+
+To simply make the code run as per your request, try this:
+
+adonis(sp ~ impyes.treatt1_impno.treatt1
+       + impyes.treatt2_impno.treatt2
+       + impyes.treatt3_impno.treatt3,
+       method = "euclidean")
+
+
+
+One problem with this approach is that terms are added sequentially to 
+the test, so "impyes.treatt1_impno.treatt1" is tested alone, while 
+"impyes.treatt2_impno.treatt2" is tested in presence of 
+"impyes.treatt1_impno.treatt1" and so on. Thus, your result depends on 
+the input order of your terms, which might not be what you expect or 
+even want.
+
+A better alternative to the above code would thus involve function 
+rda(), followed by its anova() method:
+
+
+rdaModel <- rda(sp ~ impyes.treatt1_impno.treatt1
+                + impyes.treatt2_impno.treatt2
+                + impyes.treatt3_impno.treatt3)
+
+anova(rdaModel, by = "terms")
+
+
+
+Still, it looks like you are trying to construct a "Swiss Army knife" to 
+do ANOVA and multiple pairwise tests at the same time. IMHO, you need to 
+perform the pairwise comparisons one by one, each with its respective 
+subset of data - and appropriate p-value adjustment for multiple testing.
+
+
+
+Best,
+Sven
+
+
+From o.a.keller at hotmail.com  Thu Mar 10 10:41:54 2016
+From: o.a.keller at hotmail.com (Onno Keller)
+Date: Thu, 10 Mar 2016 09:41:54 +0000
+Subject: [R-sig-eco] FPT analysis using the adehabitatLT package
+Message-ID: <AM4PR08MB10109C2131595111B164EE0CD8B40@AM4PR08MB1010.eurprd08.prod.outlook.com>
+
+Dear all,
+
+
+For my current research topic I am analyzing the horizontal movement tracks of humpback whales in response to different disturbances.
+
+To quantify movement I am using several methods including FPT analysis included in the adehabitatLT package.
+
+I am currently trying to find an appropriate radius that allows me to identify changes at small scales because exposure times of disturbances are often less than 30 minutes. To do this I first have to compute the FPT for each relocation at different radii so that I may use the varlogfpt command.
+
+This is where I get unexpected output as I will try to explain in the next section.
+
+
+Track of animal loaded into R:
+
+------------------------------------------------------------------------------------------------
+
+Animal Date Lat Lon
+A 9-06-12 19:09 77556433356901 112766724160403
+A 9-06-12 19:09 7755668828875 112768309061303
+A 9-06-12 19:12 775569607563212 112708437582434
+A 9-06-12 19:15 775569981645682 112770230855766
+A 9-06-12 19:18 775559880555804 112858061437748
+A 9-06-12 19:21 775559185947383 112833893141488
+A 9-06-12 19:24 775554937366939 112840817033561
+A 9-06-12 19:26 775532430988859 112839886951611
+A 9-06-12 19:28 775513906294915 112783397258944
+A 9-06-12 19:32 77554751359435 112717334207261
+A 9-06-12 19:35 775561175394068 112649544316971
+A 9-06-12 19:38 77558608929978 112570044070965
+A 9-06-12 19:41 775608917015529 112549548347995
+A 9-06-12 19:44 775622243236414 112587320961205
+A 9-06-12 19:47 775643415430827 112636334889656
+A 9-06-12 19:50 775664602413583 112666013747308
+A 9-06-12 19:52 775683912091816 112722633380347
+A 9-06-12 19:55 775705799364393 112713649362632
+A 9-06-12 19:58 775721428377661 112723338387982
+A 9-06-12 20:01 77575009530171 112666632938266
+A 9-06-12 20:05 775776792360936 112638096936
+A 9-06-12 20:08 775801217657886 112632332685628
+A 9-06-12 20:10 775818799827111 11259411452662
+A 9-06-12 20:15 775847423035956 112520996378392
+A 9-06-12 20:17 775864577577883 112433893034824
+A 9-06-12 20:22 775885695438449 112363881650794
+A 9-06-12 20:25 775911279252788 112293166451541
+A 9-06-12 20:28 775924258408442 11212246841254
+A 9-06-12 20:32 775924920643121 111945201583012
+A 9-06-12 20:35 775963345621213 112019604780289
+A 9-06-12 20:37 775967972252907 111944919795181
+A 9-06-12 20:41 775985208225909 111864596165658
+A 9-06-12 20:45 775996992684661 111726446440277
+A 9-06-12 20:48 776002275259982 111698535583296
+A 9-06-12 20:53 775990982300375 111620537532766
+A 9-06-12 20:56 775972209616128 111591605702784
+A 9-06-12 21:00 775953323942231 111628145732825
+A 9-06-12 21:03 775932902276634 111711676377467
+A 9-06-12 21:07 775911426108094 11169467095714
+A 9-06-12 21:09 775898912069667 111749372126154
+A 9-06-12 21:13 775879338573411 111787809215769
+A 9-06-12 21:16 775852291221277 11180334979155
+A 9-06-12 21:20 775833651450554 111851551686734
+A 9-06-12 21:23 775820010715811 11186169708004
+A 9-06-12 21:26 775804209184563 111891166802068
+A 9-06-12 21:30 775784605949986 111951160316634
+A 9-06-12 21:34 775765100409765 111961959815072
+A 9-06-12 21:37 775745618414734 111958705827539
+A 9-06-12 21:41 775734786323824 11201949011818
+A 9-06-12 21:44 775721953626808 112073854839335
+A 9-06-12 21:46 775713264927441 112113117234569
+A 9-06-12 21:50 775711813890501 112198693401063
+A 9-06-12 21:53 775703895869953 112280599907883
+A 9-06-12 21:56 775700967415395 112340281060674
+A 9-06-12 22:01 775684493677515 112439990007127
+A 9-06-12 22:04 775684390490348 112518627207705
+A 9-06-12 22:08 775679052187588 112601009903336
+A 9-06-12 22:12 775666971518524 112713957884933
+A 9-06-12 22:15 775664973145496 112797566711504
+A 9-06-12 22:20 775656281813141 112971657868823
+A 9-06-12 22:25 775659890959426 113155924150963
+A 9-06-12 22:28 775641929488891 113133891373235
+A 9-06-12 22:31 775626473358053 11312566488949
+
+
+----------------------------------------------------------------------------------------------
+
+
+Script:
+
+Trial <-read.table("mn12_161_Base.txt", sep="\t", dec=",", header=T)
+
+# Store date in POSIXct object
+da <- as.character(Trial$Date)
+da <- as.POSIXct(strptime(as.character(Trial$Date),"%d-%m-%Y %H:%M:%S"))
+
+
+#Creat an object of class ltraj, ltraj automatically computes some descriptive parameters including angles etc.
+Trial_ltraj <- as.ltraj(xy = Trial[,c("Lon","Lat")], date = da, id = Trial$Name)
+
+#FPT calculations
+i<-fpt(Trial_ltraj, seq(0.,0.14, length=100))
+i
+
+The output I get for i is different from what I would expect because I am getting a lot of NA, even for small radii:
+
+-------------------------------------------------------------------------------------------
+> i
+[[1]]
+   r1       r2        r3        r4        r5       r6       r7       r8       r9      r10      r11      r12       r13       r14       r15
+1  NA       NA        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+2   0       NA        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+3   0 344.6375        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+4   0 258.1202        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+5   0 674.4649  985.1631        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+6   0 748.0733 1134.6472        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+7   0 729.2368 1091.5573        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+8   0 733.1255 1084.1339        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+9   0 294.5591        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+10  0 307.2180  620.3491        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+11  0 299.7344 1253.8778 1834.7958        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+12  0 556.1033  950.1141 1277.7050 2529.3255       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+13  0 476.6646  850.8415 1189.6811 2655.8799 3104.398       NA       NA       NA       NA       NA       NA        NA        NA        NA
+14  0 620.8436 1053.2058 2150.3288 2796.4636       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+15  0 421.3395 1520.1129 2421.3037 3389.3135       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+16  0 393.4383 1364.6252 2486.5748        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+17  0 568.8497 1091.7618 1653.1042        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+18  0 651.1217 1241.0961 1725.5470        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+19  0 601.2497 1217.6464 1660.2531        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+20  0 563.3341 1498.7189 1972.7839 2776.7161       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+21  0 600.6826 1216.7037 1993.0220 2713.3706 3145.339       NA       NA       NA       NA       NA       NA        NA        NA        NA
+22  0 580.4407  994.0854 1881.3701 2551.0977 3104.858       NA       NA       NA       NA       NA       NA        NA        NA        NA
+23  0 514.5602  930.4308 1452.4218 2576.8718 3108.979 3409.341       NA       NA       NA       NA       NA        NA        NA        NA
+24  0 295.0017  652.6900 1252.1293 1621.2101 2986.674 3293.020 3534.912       NA       NA       NA       NA        NA        NA        NA
+25  0 306.0586  628.1298  944.0977 1380.4156 1691.505 3173.182 3452.472 3704.978       NA       NA       NA        NA        NA        NA
+26  0 370.2110  589.7890  774.2219 1029.8940 1426.411 1813.891 2347.478 3992.852 4309.935 4597.379       NA        NA        NA        NA
+27  0 226.6533  480.5771  700.0599  881.4927 1149.310 1750.642 2338.048 2664.809 4220.055 4525.838 4959.074        NA        NA        NA
+28  0 139.6300  279.2600  426.0528 1070.3791 1401.887 1637.533 1857.919 2326.503 2857.790 7751.681 8310.697  9735.137 10009.282 10302.132
+29  0 193.2195  746.7581  919.7588 1088.8537 1433.440 1824.170 5500.718 5870.687 6207.190 6479.671 6841.504  7272.666  7785.197  9494.052
+30  0 238.9733  693.3732  899.4945 1049.1422 1222.770 1667.134 2124.660 6172.640 6477.207 6839.951 7345.563  7787.369  9452.568  9776.581
+31  0 294.4359  741.5590  929.8951 1143.7828 1458.367 1850.267 5410.325 5774.742 6124.558 6411.090 6754.681  7156.565  7717.067  8235.309
+32  0 257.6360  489.0948 1083.2537 1383.0705 4385.307 4711.977 5000.641 5299.355 5638.852 6019.302 6310.700  6617.125  6994.920  7554.321
+33  0 370.3541  712.7265 2233.2269 2817.7925 3214.330 4123.309 4435.882 4721.449 4977.971 5222.833 5542.386  5911.153  6232.976  6509.439
+34  0 428.3577 1611.0865 2042.9567 2545.4944 3070.002 3768.394 4303.758 4591.564 4865.635 5106.471 5388.780  5728.222  6095.917  6375.997
+35  0 712.6666 1355.7869 1651.0522 2069.5007 2573.601 3046.903 3785.599 4291.029 4572.840 4839.566 5074.790  5321.443  5646.307  6026.280
+36  0 576.9311  923.3175 1532.9022 1934.1300 2329.497 2935.214 3278.819 4201.258 4486.279 4761.453 4992.680  5204.165  5512.152  5869.831
+37  0 687.1306 1438.2095 1770.1222 2192.9917 2781.356 3148.951 4111.652 4398.554 4676.951 4920.897 5140.822  5407.222  5744.229  6122.140
+38  0 539.8671 1080.0077 2371.7589 2957.0739 3370.371 4230.967 4519.292 4790.948 5024.581 5235.346 5555.643  5924.042  6253.966  6512.305
+39  0 502.5727 1098.8807 2263.7699 2876.7800 3275.157 4196.464 4480.357 4757.002 4986.748 5196.228 5485.442  5839.941  6197.878  6456.624
+40  0 708.3758 1113.2496 2816.6642 3201.9093 4171.379 4459.573 4741.820 4973.468 5185.521 5468.282 5820.922  6185.233  6445.831  6777.702
+41  0 557.8089 1376.5757 1717.5131 3789.6367 4374.924 4661.983 4906.295 5126.328 5366.099 5700.954 6093.895  6373.318  6662.277  7052.016
+42  0 630.2661 1193.3800 1873.1848 2570.3404 4480.458 4760.433 4989.828 5196.567 5467.604 5825.079 6199.229  6455.391  6788.114  7185.957
+43  0 693.2642 1258.6225 1972.1365 2542.3680 2998.083 4954.106 5165.311 5409.632 5760.718 6158.485 6419.620  6730.438  7126.538  7698.261
+44  0 659.0779 1424.3069 1985.2594 2562.8746 2956.804 5000.693 5205.326 5468.793 5833.932 6215.386 6468.055  6805.847  7199.270  7768.425
+45  0 622.3183 1508.8291 2004.5159 2617.4568 2906.259 5105.491 5310.809 5640.120 6037.259 6350.617 6617.429  7010.112  7567.029  7935.106
+46  0 748.1320 1420.2905 1918.0444 2387.3146 2944.222 3200.280 5638.642 6042.090 6359.177 6630.009 7026.052  7589.457  7953.123  9750.808
+47  0 776.8924 1295.0113 1850.4047 2345.2464 2684.623 3198.436 3560.258 6111.756 6406.718 6704.037 7106.426  7688.063  8020.653  9826.634
+48  0 747.8301 1239.3244 1821.7368 2307.3685 2662.949 3181.705 3520.586 6077.367 6392.165 6678.445 7082.122  7663.593  8009.702  9829.559
+49  0 393.4405 1177.9598 1609.1929 2131.2111 2603.489 2973.969 3531.979 3860.269 6685.946 7094.584 7684.306  8027.297  9845.986 10121.594
+50  0 390.1414  743.8896 1481.0651 1903.5644 2440.425 2956.124 3306.767 3835.756 4209.547 7645.069 8005.137  9831.567 10109.160        NA
+51  0 362.0675  703.6954 1426.9361 1783.0602 2396.771 2841.141 3291.330 3881.757 4126.403 7898.816 9736.808 10025.405 10748.965        NA
+52  0 291.4742  618.8264  982.8837 1358.4474 2116.623 2548.785 3111.380 3553.447 3855.896 4383.907 4684.176        NA        NA        NA
+53  0 279.8816  605.5687  937.5612 1281.5761 1655.178 2415.930 2717.749 3279.507 3763.386 4094.186 4587.000  4800.000        NA        NA
+54  0 322.8420  626.1536  911.6326 1250.8055 1594.668 1888.862 2639.129 2984.677 3518.672 3957.830 4287.510  4781.669  4999.944        NA
+55  0 315.5918  650.3962  953.5294 1185.6491 1450.562 1775.865 2079.556 2370.648 3086.402 3435.790 3939.198  4388.004        NA        NA
+56  0 317.4154  613.4286  889.4016 1165.8956 1439.092 1678.931 1931.073 2232.853 2525.786 3248.952       NA        NA        NA        NA
+57  0 276.7260  531.1405  826.6545 1120.4563 1375.921 1610.042 1841.894 2093.399 2379.462       NA       NA        NA        NA        NA
+58  0 244.4130  462.7608  737.0829  984.1782 1228.584 1502.651 1757.180       NA       NA       NA       NA        NA        NA        NA
+59  0 241.9073  454.8290  645.5639  889.2351 1155.662 1388.209       NA       NA       NA       NA       NA        NA        NA        NA
+60  0 188.9915  377.9831  567.6136        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+61  0       NA        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+62  0       NA        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+63 NA       NA        NA        NA        NA       NA       NA       NA       NA       NA       NA       NA        NA        NA        NA
+
+-----------------------------------------------------------------------------------------
+
+What I do not understand is why the output is triangle shaped like this.
+
+Why for example am I not given an FPT value for relocation #9 for r3 while I do get a value for r3 at relocation #10. The track is definitely crossing the circle with the specific radius.
+
+
+It seems that I am not given an FPT value when the relocation that comes after the one  from which the FPT is calculated falls within the radius it is calculating the FPT for.
+
+
+Hopefully my question is clear, please let me know if anything is unclear.
+
+
+Thanks in advance,
+
+
+Onno Keller
+
+
+	[[alternative HTML version deleted]]
+
+
+From alexandresantosbr at yahoo.com.br  Thu Mar 10 16:05:16 2016
+From: alexandresantosbr at yahoo.com.br (ASANTOS)
+Date: Thu, 10 Mar 2016 11:05:16 -0400
+Subject: [R-sig-eco]  Two-way contrasts with adonis()
+In-Reply-To: <56E16762.20905@yahoo.com.br>
+References: <56E16762.20905@yahoo.com.br>
+Message-ID: <56E18D2C.4030005@yahoo.com.br>
+
+
+Hi Sven,
+
+         Thank you other time, but I improve my code for multiple
+comparisons with adonis() function and I have other problems in my code,
+because the function don't read my comparisons object contr2(list), in
+my code:
+
+#1st factor
+treat <- gl(4, 15, labels = paste("t", 1:4, sep="")); treat
+
+#Variables
+set.sed(124)
+sp  <- cbind(c(rnorm(10,  5, 0.25), rnorm(50, 2.5, 0.25)), rnorm(60,
+2.5, 0.25),
+              c(rnorm(10, 12, 0.25), rnorm(50, 2.5, 0.25)), rnorm(60,
+2.5, 0.25))
+colnames(sp) <- c("sp1", "sp2", "sp3", "sp4")
+head(sp))
+
+
+#create a design matrix of the contrasts for "treat"
+Treat_Imp<-model.matrix(~treat-1)
+
+require(vegan)
+
+fullModel <- adonis(sp ~ treat, method = "euclidean", permutations = 9999)
+
+fullModel
+
+#Comparisons
+TI    <- model.matrix(~ treat-1)
+head(TI)
+
+f    <- length(levels(treat))
+comb <- t(combn(1:f, 2))
+n    <- nrow(comb)
+
+contr2 <- NULL
+for (x in 1:n) {
+      i <- comb[x, 1]
+      j <- comb[x, 2]
+      tmp <- list(TI[,i] - TI[,j]); names(tmp) <- paste0("TI",i, "_", j)
+      contr2 <- c(contr2, tmp)
+}
+contr2
+
+adonis(sp ~ contr2[1]+contr2[2]+contr2[3]+contr2[4]+contr2[5]+contr2[6],
+method = "euclidean", permutations = 9999)
+#
+
+Thanks
+
+-- 
+======================================================================
+Alexandre dos Santos
+Prote??o Florestal
+IFMT - Instituto Federal de Educa??o, Ci?ncia e Tecnologia de Mato Grosso
+Campus C?ceres
+Caixa Postal 244
+Avenida dos Ramires, s/n
+Bairro: Distrito Industrial
+C?ceres - MT                      CEP: 78.200-000
+Fone: (+55) 65 8132-8112 (TIM)   (+55) 65 9686-6970 (VIVO)
+
+         alexandre.santos at cas.ifmt.edu.br
+Lattes: http://lattes.cnpq.br/1360403201088680
+OrcID: orcid.org/0000-0001-8232-6722
+Researchgate: https://www.researchgate.net/profile/Alexandre_Santos10
+LinkedIn: https://br.linkedin.com/in/alexandre-dos-santos-87961635
+======================================================================
+
+Em 09/03/2016 10:23, microbiomics escreveu:
+> Hi Alexandre,
+>
+> On 09.03.2016 12:34, ASANTOS wrote:
+> [the code above is OK]
+>
+>> #Comparisons
+>> impyes:treatt1_impno:treatt1<- Treat_Imp[, 1] - Treat_Imp[, 2]
+>> impyes:treatt2_impno:treatt2<- Treat_Imp[, 2] - Treat_Imp[, 3]
+>> impyes:treatt3_impno:treatt3<- Treat_Imp[, 3] - Treat_Imp[, 4]
+>>
+>
+> First, variable names cannot contain ":", so you need to replace the
+> colon with a period. Also, it looks like you mixed up column indices
+> of Treat_Imp, so my suggestion is:
+>
+> impyes.treatt1_impno.treatt1<- Treat_Imp[, 1] - Treat_Imp[, 2]
+> impyes.treatt2_impno.treatt2<- Treat_Imp[, 3] - Treat_Imp[, 4]
+> impyes.treatt3_impno.treatt3<- Treat_Imp[, 5] - Treat_Imp[, 6]
+>
+>
+>
+>
+> To simply make the code run as per your request, try this:
+>
+> adonis(sp ~ impyes.treatt1_impno.treatt1
+>       + impyes.treatt2_impno.treatt2
+>       + impyes.treatt3_impno.treatt3,
+>       method = "euclidean")
+>
+>
+>
+> One problem with this approach is that terms are added sequentially to
+> the test, so "impyes.treatt1_impno.treatt1" is tested alone, while
+> "impyes.treatt2_impno.treatt2" is tested in presence of
+> "impyes.treatt1_impno.treatt1" and so on. Thus, your result depends on
+> the input order of your terms, which might not be what you expect or
+> even want.
+>
+> A better alternative to the above code would thus involve function
+> rda(), followed by its anova() method:
+>
+>
+> rdaModel <- rda(sp ~ impyes.treatt1_impno.treatt1
+>                + impyes.treatt2_impno.treatt2
+>                + impyes.treatt3_impno.treatt3)
+>
+> anova(rdaModel, by = "terms")
+>
+>
+>
+> Still, it looks like you are trying to construct a "Swiss Army knife"
+> to do ANOVA and multiple pairwise tests at the same time. IMHO, you
+> need to perform the pairwise comparisons one by one, each with its
+> respective subset of data - and appropriate p-value adjustment for
+> multiple testing.
+>
+>
+>
+> Best,
+> Sven
+>
+
+
+From jcmassante at hotmail.com  Thu Mar 10 17:29:08 2016
+From: jcmassante at hotmail.com (Jhonny Capichoni Massante)
+Date: Thu, 10 Mar 2016 19:29:08 +0300
+Subject: [R-sig-eco] GLMM with spatial coordinates
+Message-ID: <BAY181-W18C30B897E475C44CA9304D4B40@phx.gbl>
+
+Dear all,
+
+My name is Jhonny and I'm finishing my master with plant ecology.
+I need some help with my data because I want to analysis with GLMM and to include spatial coordinates, but I don't know to do it! Someone help me?
+I have a data.frame with 200 obs. of 45 variables. This data.frame is in block as example below:
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  Plot
+  Bock
+  Cod
+  Lat
+  Long
+  Area
+  Elev (m)
+  Baresoil
+
+  Litter
+
+  Vneo
+  Cova
+  Aren
+  Mfum...
+ 
+ 
+  1             
+
+  1             
+
+  M8400
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  2.47275
+        8
+   0         
+
+  0            
+
+  0.2         
+
+  0.69          
+
+  0.05         
+
+  0.02         
+
+ 
+ 
+  2             
+
+  1             
+
+  C8400
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  1
+        8
+  0.35      
+
+  0.2         
+
+  0           
+
+  0.1           
+
+     0.2          
+
+  0.05         
+
+ 
+ 
+  3             
+
+  2             
+
+  M8340
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  2.190386
+         9
+  0.03      
+
+  0.13       
+
+  0           
+
+      0            
+
+   0           
+
+  0           
+
+ 
+ 
+  4             
+
+  2             
+
+  C8340
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  1
+         9
+  0.7        
+
+  0.01       
+
+  0           
+
+  0            
+
+  0           
+
+  0.15       
+
+ 
+ 
+ 
+  .
+.
+.
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+ 
+ 
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+ 
+ 
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+ 
+>From Vneo (in blue) are my plant species with its cover (from 0.00 to 1.00) and between Lat and Litter are my predictor variables. Before Lat are plot number, block (paired) number and plot code.
+
+I want to know if predictor variables (or its interactions) explain the co-ocurrence of plants at scrub vegetation surrounding by baresoil and to know if is there spatial autocorrelation. The lat and long are position of plots and they make up a gradient of distance from a source of stress (hypersaline coastal lagoon).
+
+How can I begin this analisys? 
+
+Thank you so much!
+Best wishes!!!
+
+ Jhonny
+Capichoni Massante
+Universidade
+Federal Fluminense - UFF
+
+
+ 		 	   		  
+	[[alternative HTML version deleted]]
+
+
+From microbiomics at mytng.de  Thu Mar 10 17:30:00 2016
+From: microbiomics at mytng.de (microbiomics)
+Date: Thu, 10 Mar 2016 17:30:00 +0100
+Subject: [R-sig-eco] Two-way contrasts with adonis()
+In-Reply-To: <56E18D2C.4030005@yahoo.com.br>
+References: <56E16762.20905@yahoo.com.br> <56E18D2C.4030005@yahoo.com.br>
+Message-ID: <56E1A108.3070101@mytng.de>
+
+Hi Alexandre,
+
+> f    <- length(levels(treat))
+
+For brevity, you could use:
+
+f <- nlevels(treat)
+
+
+
+
+
+> comb <- t(combn(1:f, 2))
+> n    <- nrow(comb)
+>
+> contr2 <- NULL
+> for (x in 1:n) {
+>       i <- comb[x, 1]
+>       j <- comb[x, 2]
+>       tmp <- list(TI[,i] - TI[,j]); names(tmp) <- paste0("TI",i, "_", j)
+>       contr2 <- c(contr2, tmp)
+> }
+> contr2
+>
+> adonis(sp ~ contr2[1]+contr2[2]+contr2[3]+contr2[4]+contr2[5]+contr2[6],
+> method = "euclidean", permutations = 9999)
+
+contr2 is a "list" object. To make it work with adonis, you need to 
+transform it into a data frame:
+
+contr2df <- as.data.frame(contr2)
+
+Then you can easily refer to all variables in contr2df at once using the 
+"~ ." shorthand formula notation:
+
+adonis(
+     sp ~ ., data = contr2df,
+     method = "euclidean",
+     permutations = 9999
+)
+
+
+
+
+Problem: Since contr2 contains all possible pairwise combinations of 
+your factor levels, the resulting "contrasts" are not orthogonal anymore:
+
+crossprod(as.matrix(contr2))
+
+With a factor of four levels, there can only be three independent 
+contrasts, and adonis will only report results for the first three 
+variables in contr2 (contr2df, respectively), ignoring the other three.
+
+
+
+
+Best,
+Sven
+
+
+From jcmassante at hotmail.com  Thu Mar 10 17:41:47 2016
+From: jcmassante at hotmail.com (Jhonny Capichoni Massante)
+Date: Thu, 10 Mar 2016 19:41:47 +0300
+Subject: [R-sig-eco] GLMM with spatial coordinates
+In-Reply-To: <BAY181-W18C30B897E475C44CA9304D4B40@phx.gbl>
+References: <BAY181-W18C30B897E475C44CA9304D4B40@phx.gbl>
+Message-ID: <BAY181-W4997EA4F82EAB25987E8F4D4B40@phx.gbl>
+
+My example matrix was wrong! I attacher another more simple!
+
+Plot    Block    Cod     Lat                            Long                     Elev     Baresoil       Litter       Vneo        Cova     Aren...
+1             1       S8360   Gg?mm'ss.s" S     Gg?mm'ss.s" W       8           0                      0         0.20          0.69      0.05...
+2             1       C8360   Gg?mm'ss.s" S     Gg?mm'ss.s" W       8           0.35              0.20         0            0.20      0.50...
+.               .             .                 .                               .                       .              .                        .           .               .             .
+.               .             .                 .                               .                       .              .                        .           .               .             .
+.               .             .                 .                               .                        .             .                         .          .               .             .
+Thank you all!
+
+Jhonny
+Capichoni Massante
+Universidade
+Federal Fluminense - UFF
+
+From: jcmassante at hotmail.com
+To: r-sig-ecology-bounces at r-project.org
+CC: r-sig-ecology at r-project.org
+Date: Thu, 10 Mar 2016 19:29:08 +0300
+Subject: [R-sig-eco] GLMM with spatial coordinates
+
+Dear all,
+ 
+My name is Jhonny and I'm finishing my master with plant ecology.
+I need some help with my data because I want to analysis with GLMM and to include spatial coordinates, but I don't know to do it! Someone help me?
+I have a data.frame with 200 obs. of 45 variables. This data.frame is in block as example below:
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  Plot
+  Bock
+  Cod
+  Lat
+  Long
+  Area
+  Elev (m)
+  Baresoil
+ 
+  Litter
+ 
+  Vneo
+  Cova
+  Aren
+  Mfum...
+ 
+ 
+  1             
+ 
+  1             
+ 
+  M8400
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  2.47275
+        8
+   0         
+ 
+  0            
+ 
+  0.2         
+ 
+  0.69          
+ 
+  0.05         
+ 
+  0.02         
+ 
+ 
+ 
+  2             
+ 
+  1             
+ 
+  C8400
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  1
+        8
+  0.35      
+ 
+  0.2         
+ 
+  0           
+ 
+  0.1           
+ 
+     0.2          
+ 
+  0.05         
+ 
+ 
+ 
+  3             
+ 
+  2             
+ 
+  M8340
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  2.190386
+         9
+  0.03      
+ 
+  0.13       
+ 
+  0           
+ 
+      0            
+ 
+   0           
+ 
+  0           
+ 
+ 
+ 
+  4             
+ 
+  2             
+ 
+  C8340
+  Gg?mm'ss.s" s
+  Gg?mm'ss.s" w
+  1
+         9
+  0.7        
+ 
+  0.01       
+ 
+  0           
+ 
+  0            
+ 
+  0           
+ 
+  0.15       
+ 
+ 
+ 
+ 
+  .
+.
+.
+ 
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+ 
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+ 
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+ 
+>From Vneo (in blue) are my plant species with its cover (from 0.00 to 1.00) and between Lat and Litter are my predictor variables. Before Lat are plot number, block (paired) number and plot code.
+ 
+I want to know if predictor variables (or its interactions) explain the co-ocurrence of plants at scrub vegetation surrounding by baresoil and to know if is there spatial autocorrelation. The lat and long are position of plots and they make up a gradient of distance from a source of stress (hypersaline coastal lagoon).
+ 
+How can I begin this analisys? 
+ 
+Thank you so much!
+Best wishes!!!
+ 
+ Jhonny
+Capichoni Massante
+Universidade
+Federal Fluminense - UFF
+ 
+ 
+ 		 	   		  
+	[[alternative HTML version deleted]]
+ 
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology 		 	   		  
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Thu Mar 10 17:45:06 2016
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 10 Mar 2016 11:45:06 -0500
+Subject: [R-sig-eco] GLMM with spatial coordinates
+In-Reply-To: <BAY181-W18C30B897E475C44CA9304D4B40@phx.gbl>
+References: <BAY181-W18C30B897E475C44CA9304D4B40@phx.gbl>
+Message-ID: <CAM_vjunzNQgq6+oLdGTKusUVWZjh0j+DqNay37LeHeZyX33BBA@mail.gmail.com>
+
+Hi Jhonny,
+
+As you can see below, posting in HTML means that your message becomes
+impossible to read. Your second example matrix is at least readable,
+but not really helpful Using dput() is much better for providing R
+data.
+
+It looks like the spaMM package provides spatial GLMM. Have you looked
+into that yet? This list really isn't equipped to assist you with
+basic statistical questions, but we can help with specific ecological
+R questions.
+
+Sarah
+
+
+
+On Thu, Mar 10, 2016 at 11:29 AM, Jhonny Capichoni Massante
+<jcmassante at hotmail.com> wrote:
+> Dear all,
+>
+> My name is Jhonny and I'm finishing my master with plant ecology.
+> I need some help with my data because I want to analysis with GLMM and to include spatial coordinates, but I don't know to do it! Someone help me?
+> I have a data.frame with 200 obs. of 45 variables. This data.frame is in block as example below:
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>   Plot
+>   Bock
+>   Cod
+>   Lat
+>   Long
+>   Area
+>   Elev (m)
+>   Baresoil
+>
+>   Litter
+>
+>   Vneo
+>   Cova
+>   Aren
+>   Mfum...
+>
+>
+>   1
+>
+>   1
+>
+>   M8400
+>   Gg?mm'ss.s" s
+>   Gg?mm'ss.s" w
+>   2.47275
+>         8
+>    0
+>
+>   0
+>
+>   0.2
+>
+>   0.69
+>
+>   0.05
+>
+>   0.02
+>
+>
+>
+>   2
+>
+>   1
+>
+>   C8400
+>   Gg?mm'ss.s" s
+>   Gg?mm'ss.s" w
+>   1
+>         8
+>   0.35
+>
+>   0.2
+>
+>   0
+>
+>   0.1
+>
+>      0.2
+>
+>   0.05
+>
+>
+>
+>   3
+>
+>   2
+>
+>   M8340
+>   Gg?mm'ss.s" s
+>   Gg?mm'ss.s" w
+>   2.190386
+>          9
+>   0.03
+>
+>   0.13
+>
+>   0
+>
+>       0
+>
+>    0
+>
+>   0
+>
+>
+>
+>   4
+>
+>   2
+>
+>   C8340
+>   Gg?mm'ss.s" s
+>   Gg?mm'ss.s" w
+>   1
+>          9
+>   0.7
+>
+>   0.01
+>
+>   0
+>
+>   0
+>
+>   0
+>
+>   0.15
+>
+>
+>
+>
+>   .
+> .
+> .
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+> >From Vneo (in blue) are my plant species with its cover (from 0.00 to 1.00) and between Lat and Litter are my predictor variables. Before Lat are plot number, block (paired) number and plot code.
+>
+> I want to know if predictor variables (or its interactions) explain the co-ocurrence of plants at scrub vegetation surrounding by baresoil and to know if is there spatial autocorrelation. The lat and long are position of plots and they make up a gradient of distance from a source of stress (hypersaline coastal lagoon).
+>
+> How can I begin this analisys?
+>
+> Thank you so much!
+> Best wishes!!!
+>
+>  Jhonny
+> Capichoni Massante
+> Universidade
+> Federal Fluminense - UFF
+>
+>
+>
+>         [[alternative HTML version deleted]]
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From cramjaco at gmail.com  Thu Mar 10 18:32:57 2016
+From: cramjaco at gmail.com (Jacob Cram)
+Date: Thu, 10 Mar 2016 09:32:57 -0800
+Subject: [R-sig-eco] Rarefying metagenome data table
+Message-ID: <CAGUAbOmYQnZ_A8_-k1+aWV_tL0t_KCHeUSPFWbjcOQMP+kNhsg@mail.gmail.com>
+
+Dear List,
+I have a large data table (its the TARA Oceans metagenomic data and
+can be found here http://ocean-microbiome.embl.de/companion.html).
+Essentially the columns of the data table are samples taken in
+different parts of the ocean and the rows are different genes found in
+those locations. The numbers in the body of the table are the number
+of times an insturment detects that gene in a sample. Because the
+machine returns more reads (number of observed genes) in some samples
+than in others, the data need to be "rarefied", that is subsampled
+such that there are the same number of genes assigned to each station.
+I am trying to use the rrarefy package in vegan to do this, but I keep
+getting an error message
+
+    ## Get TARA oceans KEGG metagenomes
+    temp = tempfile()
+    download.file("http://ocean-microbiome.embl.de/data/TARA243.KO.profile.release.gz",
+temp)
+    taraKEGG = read.delim(gzfile(temp, "TARA243.KO.profile.release"))
+    unlink(temp)
+
+    ## some processing
+    ids = taraKEGG[,1]
+    data = taraKEGG[,2:dim(taraKEGG)[2]]
+    minsamples = min(colSums(data))
+    mtx= as.matrix(data)
+    imtx=as.integer(as.matrix(data))
+    data2 = data
+    data2 = sapply(round(data, 0), as.integer)
+
+    ## load library
+    library(vegan)
+
+    ## rarify samples
+    rare = rrarefy(data2, minsamples)
+
+> Error in if (sum(x[i, ]) <= sample[i]) next :    missing value where TRUE/FALSE needed In
+> addition: Warning messages: 1: In rrarefy(data2, minsamples) :   Some
+> row sums < 'sample' and are not rarefied 2: In sum(x[i, ]) : integer
+> overflow - use sum(as.numeric(.))
+
+It looks like the problem is a line in rrarify where it tries to make
+a huge matrix that has as many columns as there are genes in one of
+the samples
+
+` row <- sample(rep(nm, times = x[i, ]), sample[i])`
+
+Since there are sometimes millions to tens of millions of genes, this
+ends up being a really big matrix and the program gives up in order to
+save my computer memory.
+
+So, I am trying to figure out how to proceed from here. Perhaps I am
+using this function incorrectly and there is a different way to use it
+to not have this problem. Alternatively, perhaps I should be using a
+different tool. I have heard of rarefication programs in python, or,
+for that matter the bioinfomatics universe of Qime, but I'd rather
+stay within R if at all possible. Does anyone have any suggestions?
+
+Thank you for your time.
+Sincerely,
+Jacob Cram
+
+
+From j_arronte at hotmail.com  Mon Mar 14 22:26:34 2016
+From: j_arronte at hotmail.com (JC Arronte)
+Date: Mon, 14 Mar 2016 22:26:34 +0100
+Subject: [R-sig-eco] Simper in Vegan package
+Message-ID: <DUB131-W2918C0565FEDB8DFAC72138B880@phx.gbl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hi all,
+
+
+
+
+I?m still new to R
+and trying to learn how to use the library vegan. I?m carrying out a cluster
+analysis on marine fish species distribution and I want to determine the
+contribution of each species to the similarity of the cluster groups. I have read
+that it can be done with the function ?simper?. The problem arises when I want
+to look, not only, at dissimilarities between groups but also at species
+contribution to similarity within a group.
+
+
+If I?m not wrong, simper function from the vegan package
+computes discriminating compounds, rather then compounds that make a pair
+unique.
+
+
+Is there any way of obtaining information on the
+contributions of the most important species to the average similarity within
+each assemblage as it can get in PRIMER-E package?. And the average similarity
+of each assemblage?. 
+I get the average dissimilarity using lapply(simper_clusterpeces,
+FUN=function(x){x$overall}).
+
+
+This is the first time I work with vegan and simper function,
+thus any assistance would help.
+
+
+Thanks in advance,
+
+
+Juan Carlos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 		 	   		  
+	[[alternative HTML version deleted]]
+
+
+From ludovicofrate at hotmail.it  Mon Mar 14 23:47:17 2016
+From: ludovicofrate at hotmail.it (Ludovico Frate)
+Date: Mon, 14 Mar 2016 15:47:17 -0700 (MST)
+Subject: [R-sig-eco] R: Simper in Vegan package
+Message-ID: <DUB410-EAS14068DB561E9C3EB338C19AD6880@phx.gbl>
+
+Hi, simper Analysis is not always appropriate since much of the differences arise from within site variability rather than between site variability!  Have a look to the package mvabund by Warton!
+Regards,
+Ludovico
+
+Inviata dal mio Windows Phone
+________________________________
+Da: JC Arronte [via r-sig-ecology]<mailto:ml-node+s471788n7579718h73 at n2.nabble.com>
+Inviato: ?14/?03/?2016 22:28
+A: Ludovico Frate<mailto:ludovicofrate at hotmail.it>
+Oggetto: Simper in Vegan package
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hi all,
+
+
+
+
+I?m still new to R
+and trying to learn how to use the library vegan. I?m carrying out a cluster
+analysis on marine fish species distribution and I want to determine the
+contribution of each species to the similarity of the cluster groups. I have read
+that it can be done with the function ?simper?. The problem arises when I want
+to look, not only, at dissimilarities between groups but also at species
+contribution to similarity within a group.
+
+
+If I?m not wrong, simper function from the vegan package
+computes discriminating compounds, rather then compounds that make a pair
+unique.
+
+
+Is there any way of obtaining information on the
+contributions of the most important species to the average similarity within
+each assemblage as it can get in PRIMER-E package?. And the average similarity
+of each assemblage?.
+I get the average dissimilarity using lapply(simper_clusterpeces,
+FUN=function(x){x$overall}).
+
+
+This is the first time I work with vegan and simper function,
+thus any assistance would help.
+
+
+Thanks in advance,
+
+
+Juan Carlos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        [[alternative HTML version deleted]]
+
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+_______________________________________________
+If you reply to this email, your message will be added to the discussion below:
+http://r-sig-ecology.471788.n2.nabble.com/Simper-in-Vegan-package-tp7579718.html
+
+To unsubscribe from r-sig-ecology, visit http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=unsubscribe_by_code&node=471788&code=bHVkb3ZpY29mcmF0ZUBob3RtYWlsLml0fDQ3MTc4OHwyMTEzOTYzODM0
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/R-Simper-in-Vegan-package-tp7579719.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+	[[alternative HTML version deleted]]
+
+
+From highstat at highstat.com  Wed Mar 16 20:13:56 2016
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Wed, 16 Mar 2016 20:13:56 +0100
+Subject: [R-sig-eco] 8 statistics courses in Australia
+Message-ID: <56E9B074.60203@highstat.com>
+
+We would like to announce a series of 8 statistics courses in Australia 
+in June/July/August 2016. For details and registration:
+
+http://highstat.com/statscourse.htm
+
+Kind regards,
+
+Alain Zuur
+
+
+
+Course 1: Introduction to Linear Mixed Effects Models and GLMM with R. 
+Frequentist and Bayesian approaches.
+Murdoch University, Perth, Australia
+6-10 June 2016
+
+Course 2: Introduction to Zero Inflated Models
+Australian Institute of Marine Science, Perth, Australia
+13-17 June 2016
+
+Course 3: Introduction to Linear Mixed Effects Models and GLMM with R. 
+Frequentist and Bayesian approaches
+University of Adelaide, Adelaide, Australia
+20-24 June 2016
+
+Course 4: Introduction to Linear Mixed Effects Models and GLMM with R. 
+Frequentist and Bayesian approaches
+Deakin University, Melbourne, Australia
+4-8 July 2016
+
+Course 5: Introduction to GAM and GAMM using Bayesian and frequentist tools
+CSIRO, Canberra, Australia
+11-15 July 2016
+
+Course 6: Introduction to Linear Mixed Effects Models and GLMM with R. 
+Frequentist and Bayesian approaches
+UNSW, Sydney, Australia
+18-22 July 2016
+
+Course 7: Introduction to Zero Inflated Models
+UNSW, Sydney, Australia
+25-29 July 2016
+
+Course 8: Data exploration, regression, GLM & GAM with introduction to R
+Charles Darwin University, Alice Springs, Australia
+1-5 August 2016
+
+
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From kgorman at pwssc.org  Wed Mar 16 22:47:19 2016
+From: kgorman at pwssc.org (Kristen Gorman)
+Date: Wed, 16 Mar 2016 13:47:19 -0800
+Subject: [R-sig-eco] Plotting power graph for one sample proportion test
+Message-ID: <58AD2150-C009-4544-A18D-EE1688627AB6@pwssc.org>
+
+Dear all, 
+I am looking for help in plotting a power analysis using library(pwr). Specifically, I am using the following test:
+
+pwr.p.test ()
+
+I would like to produce a sample size vs power plot for varying alpha levels and differences between the null proportion and alternative proportion.
+
+Thanks for any guidance, 
+Kristen Gorman
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From roman.lustrik at gmail.com  Thu Mar 17 09:27:19 2016
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Thu, 17 Mar 2016 09:27:19 +0100
+Subject: [R-sig-eco] Plotting power graph for one sample proportion test
+In-Reply-To: <58AD2150-C009-4544-A18D-EE1688627AB6@pwssc.org>
+References: <58AD2150-C009-4544-A18D-EE1688627AB6@pwssc.org>
+Message-ID: <CAHT1vphCG12m2=XHwiRbQc33sbhxdUw5ezVg4prOBOF2LwvN0A@mail.gmail.com>
+
+Hi,
+
+you're looking for a simulation approach of sorts. What I would do is set
+up a data.frame of all combination of parameters (with e.g. `expand.grid`)
+you're interested in and use for example `apply` to go through each
+combination and calculate power. You save that as a new variable and plot
+it.
+
+If you can provide us with parameters and their ranges perhaps we can be of
+further service.
+
+Cheers,
+Roman
+
+On Wed, Mar 16, 2016 at 10:47 PM, Kristen Gorman <kgorman at pwssc.org> wrote:
+
+> Dear all,
+> I am looking for help in plotting a power analysis using library(pwr).
+> Specifically, I am using the following test:
+>
+> pwr.p.test ()
+>
+> I would like to produce a sample size vs power plot for varying alpha
+> levels and differences between the null proportion and alternative
+> proportion.
+>
+> Thanks for any guidance,
+> Kristen Gorman
+>
+>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+In God we trust, all others bring data.
+
+	[[alternative HTML version deleted]]
+
+
+From paul.johnson at glasgow.ac.uk  Thu Mar 17 11:11:26 2016
+From: paul.johnson at glasgow.ac.uk (Paul Johnson)
+Date: Thu, 17 Mar 2016 10:11:26 +0000
+Subject: [R-sig-eco] Plotting power graph for one sample proportion test
+In-Reply-To: <CAHT1vphCG12m2=XHwiRbQc33sbhxdUw5ezVg4prOBOF2LwvN0A@mail.gmail.com>
+References: <58AD2150-C009-4544-A18D-EE1688627AB6@pwssc.org>
+	<CAHT1vphCG12m2=XHwiRbQc33sbhxdUw5ezVg4prOBOF2LwvN0A@mail.gmail.com>
+Message-ID: <4DA000C3-ACC8-4277-BE80-9EA852C8583F@glasgow.ac.uk>
+
+Hi Kristen,
+
+As an alternative to simulations you could just run pwr.p.test through the data frame suggested by Roman:
+
+library(pwr)
+parameters <- 
+  expand.grid(
+    p.h0 = 0.5, 
+    p.h1 = c(0.6, 0.7, 0.8), 
+    n = c(50, 100),
+    sig.level = c(0.05, 0.01, 0.001))
+parameters$h <- ES.h(parameters$p.h1, parameters$p.h0)
+parameters
+
+parameters$power <- 
+  sapply(1:nrow(parameters), function(i) {
+    pwr.p.test(
+      h = parameters$h[i],
+      n = parameters$n[i],
+      sig.level = parameters$sig.level[i])$power
+  })
+parameters
+
+That just leaves the plotting.
+
+However if you want to use simulations there?s lots of guidance available, including: 
+* Chapter 5 of Ben Bolker?s book Ecological Models and Data in R. 
+* We have have written an tutorial which covers GLMMs but starts with a simple power.t.test example, in the supplementary info here: dx.doi.org/10.1111/2041-210X.12306
+
+Good luck,
+Paul
+
+
+
+> On 17 Mar 2016, at 08:27, Roman Lu?trik <roman.lustrik at gmail.com> wrote:
+> 
+> Hi,
+> 
+> you're looking for a simulation approach of sorts. What I would do is set
+> up a data.frame of all combination of parameters (with e.g. `expand.grid`)
+> you're interested in and use for example `apply` to go through each
+> combination and calculate power. You save that as a new variable and plot
+> it.
+> 
+> If you can provide us with parameters and their ranges perhaps we can be of
+> further service.
+> 
+> Cheers,
+> Roman
+> 
+> On Wed, Mar 16, 2016 at 10:47 PM, Kristen Gorman <kgorman at pwssc.org> wrote:
+> 
+>> Dear all,
+>> I am looking for help in plotting a power analysis using library(pwr).
+>> Specifically, I am using the following test:
+>> 
+>> pwr.p.test ()
+>> 
+>> I would like to produce a sample size vs power plot for varying alpha
+>> levels and differences between the null proportion and alternative
+>> proportion.
+>> 
+>> Thanks for any guidance,
+>> Kristen Gorman
+>> 
+>> 
+>> 
+>>        [[alternative HTML version deleted]]
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> 
+> 
+> 
+> 
+> -- 
+> In God we trust, all others bring data.
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From id.farga at gmail.com  Thu Mar 17 19:21:41 2016
+From: id.farga at gmail.com (farga -not old one-)
+Date: Thu, 17 Mar 2016 11:21:41 -0700
+Subject: [R-sig-eco] specaccum
+Message-ID: <CAOSCJovW6z57rdyRjmm3TPw=-FH6u_sgeYAFERSe3Bjv5XCMPA@mail.gmail.com>
+
+Hello I'm working with a species discovery curve and want to use the Clench
+ecuation in said curve, I'm using specaccum {vegan} however I'm not sure if
+speccacum use said ecuation, I also require a summary from said ecuation
+and both curves, the asymptote curve and the curve from my data, in a plot.
+Any ideas or is there any package i should use instead vegan?
+
+-- 
+ - non plus ultra -
+
+	[[alternative HTML version deleted]]
+
+
+From jari.oksanen at oulu.fi  Thu Mar 17 19:58:02 2016
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 17 Mar 2016 18:58:02 +0000
+Subject: [R-sig-eco] specaccum
+In-Reply-To: <CAOSCJovW6z57rdyRjmm3TPw=-FH6u_sgeYAFERSe3Bjv5XCMPA@mail.gmail.com>
+References: <CAOSCJovW6z57rdyRjmm3TPw=-FH6u_sgeYAFERSe3Bjv5XCMPA@mail.gmail.com>
+Message-ID: <DABA1E70-C92D-4329-A38E-5943C3CB2517@oulu.fi>
+
+
+> On 17 Mar 2016, at 20:21 pm, farga -not old one- <id.farga at gmail.com> wrote:
+> 
+> Hello I'm working with a species discovery curve and want to use the Clench
+> ecuation in said curve, I'm using specaccum {vegan} however I'm not sure if
+> speccacum use said ecuation, I also require a summary from said ecuation
+> and both curves, the asymptote curve and the curve from my data, in a plot.
+> Any ideas or is there any package i should use instead vegan?
+> 
+
+I don?t know what is the ?Clench equation?, but Google claims that "Clench (1979) proposed the use of the Michaelis-Menten equation?. Michaelis-Menten is available in fitspecaccum() in vegan.
+
+Cheers, Jari Oksanen
+
+
+From j_arronte at hotmail.com  Fri Mar 18 10:46:24 2016
+From: j_arronte at hotmail.com (JC Arronte)
+Date: Fri, 18 Mar 2016 10:46:24 +0100
+Subject: [R-sig-eco] R: Simper in Vegan package
+In-Reply-To: <mailman.9.1458039604.25327.r-sig-ecology@r-project.org>
+References: <mailman.9.1458039604.25327.r-sig-ecology@r-project.org>
+Message-ID: <DUB131-W6164BFBEA609C49B7A6FDD8B8C0@phx.gbl>
+
+Hi,
+
+Thanks for the advice Ludovico.
+I?ll look in deep to the package mvabund.
+Regards,
+Juan Carlos
+
+
+> From: r-sig-ecology-request at r-project.org
+> Subject: R-sig-ecology Digest, Vol 96, Issue 6
+> To: r-sig-ecology at r-project.org
+> Date: Tue, 15 Mar 2016 12:00:04 +0100
+> 
+> Send R-sig-ecology mailing list submissions to
+> 	r-sig-ecology at r-project.org
+> 
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+> 	r-sig-ecology-request at r-project.org
+> 
+> You can reach the person managing the list at
+> 	r-sig-ecology-owner at r-project.org
+> 
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+> 
+> 
+> Today's Topics:
+> 
+>    1. Simper in Vegan package (JC Arronte)
+>    2. R: Simper in Vegan package (Ludovico Frate)
+> 
+> 
+> ----------------------------------------------------------------------
+> 
+> Message: 1
+> Date: Mon, 14 Mar 2016 22:26:34 +0100
+> From: JC Arronte <j_arronte at hotmail.com>
+> To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+> Subject: [R-sig-eco] Simper in Vegan package
+> Message-ID: <DUB131-W2918C0565FEDB8DFAC72138B880 at phx.gbl>
+> Content-Type: text/plain; charset="UTF-8"
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> Hi all,
+> 
+> 
+> 
+> 
+> I?m still new to R
+> and trying to learn how to use the library vegan. I?m carrying out a cluster
+> analysis on marine fish species distribution and I want to determine the
+> contribution of each species to the similarity of the cluster groups. I have read
+> that it can be done with the function ?simper?. The problem arises when I want
+> to look, not only, at dissimilarities between groups but also at species
+> contribution to similarity within a group.
+> 
+> 
+> If I?m not wrong, simper function from the vegan package
+> computes discriminating compounds, rather then compounds that make a pair
+> unique.
+> 
+> 
+> Is there any way of obtaining information on the
+> contributions of the most important species to the average similarity within
+> each assemblage as it can get in PRIMER-E package?. And the average similarity
+> of each assemblage?. 
+> I get the average dissimilarity using lapply(simper_clusterpeces,
+> FUN=function(x){x$overall}).
+> 
+> 
+> This is the first time I work with vegan and simper function,
+> thus any assistance would help.
+> 
+> 
+> Thanks in advance,
+> 
+> 
+> Juan Carlos
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+>  		 	   		  
+> 	[[alternative HTML version deleted]]
+> 
+> 
+> 
+> ------------------------------
+> 
+> Message: 2
+> Date: Mon, 14 Mar 2016 15:47:17 -0700 (MST)
+> From: Ludovico Frate <ludovicofrate at hotmail.it>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] R: Simper in Vegan package
+> Message-ID: <DUB410-EAS14068DB561E9C3EB338C19AD6880 at phx.gbl>
+> Content-Type: text/plain; charset="UTF-8"
+> 
+> Hi, simper Analysis is not always appropriate since much of the differences arise from within site variability rather than between site variability!  Have a look to the package mvabund by Warton!
+> Regards,
+> Ludovico
+> 
+> Inviata dal mio Windows Phone
+> ________________________________
+> Da: JC Arronte [via r-sig-ecology]<mailto:ml-node+s471788n7579718h73 at n2.nabble.com>
+> Inviato: ?14/?03/?2016 22:28
+> A: Ludovico Frate<mailto:ludovicofrate at hotmail.it>
+> Oggetto: Simper in Vegan package
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> Hi all,
+> 
+> 
+> 
+> 
+> I?m still new to R
+> and trying to learn how to use the library vegan. I?m carrying out a cluster
+> analysis on marine fish species distribution and I want to determine the
+> contribution of each species to the similarity of the cluster groups. I have read
+> that it can be done with the function ?simper?. The problem arises when I want
+> to look, not only, at dissimilarities between groups but also at species
+> contribution to similarity within a group.
+> 
+> 
+> If I?m not wrong, simper function from the vegan package
+> computes discriminating compounds, rather then compounds that make a pair
+> unique.
+> 
+> 
+> Is there any way of obtaining information on the
+> contributions of the most important species to the average similarity within
+> each assemblage as it can get in PRIMER-E package?. And the average similarity
+> of each assemblage?.
+> I get the average dissimilarity using lapply(simper_clusterpeces,
+> FUN=function(x){x$overall}).
+> 
+> 
+> This is the first time I work with vegan and simper function,
+> thus any assistance would help.
+> 
+> 
+> Thanks in advance,
+> 
+> 
+> Juan Carlos
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+>         [[alternative HTML version deleted]]
+> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> 
+> _______________________________________________
+> If you reply to this email, your message will be added to the discussion below:
+> http://r-sig-ecology.471788.n2.nabble.com/Simper-in-Vegan-package-tp7579718.html
+> 
+> To unsubscribe from r-sig-ecology, visit http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=unsubscribe_by_code&node=471788&code=bHVkb3ZpY29mcmF0ZUBob3RtYWlsLml0fDQ3MTc4OHwyMTEzOTYzODM0
+> 
+> 
+> 
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/R-Simper-in-Vegan-package-tp7579719.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 	[[alternative HTML version deleted]]
+> 
+> 
+> 
+> ------------------------------
+> 
+> Subject: Digest Footer
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> ------------------------------
+> 
+> End of R-sig-ecology Digest, Vol 96, Issue 6
+> ********************************************
+ 		 	   		  
+	[[alternative HTML version deleted]]
+
+
+From javi.martinez.lopez at gmail.com  Fri Mar 18 12:22:28 2016
+From: javi.martinez.lopez at gmail.com (=?UTF-8?B?SmF2aWVyIE1hcnTDrW5lei1Mw7NwZXo=?=)
+Date: Fri, 18 Mar 2016 12:22:28 +0100
+Subject: [R-sig-eco] Graphically represent Mantel Test
+Message-ID: <CAKgwV9k4pC+pp2NW1a8+mvBHzo5xm6k91DC+10BTQ2TqvZW4rA@mail.gmail.com>
+
+Hello all,
+
+is there a way of graphically represent a Mantel correlation test between
+two distance/dissimilarity matrices?
+
+Thank you and best regards,
+
+Javier
+
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Fri Mar 18 14:09:02 2016
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Fri, 18 Mar 2016 09:09:02 -0400
+Subject: [R-sig-eco] Graphically represent Mantel Test
+In-Reply-To: <CAKgwV9k4pC+pp2NW1a8+mvBHzo5xm6k91DC+10BTQ2TqvZW4rA@mail.gmail.com>
+References: <CAKgwV9k4pC+pp2NW1a8+mvBHzo5xm6k91DC+10BTQ2TqvZW4rA@mail.gmail.com>
+Message-ID: <CAM_vju=_ON1nJKM-iC-88ispE9n8fe0RwGAjRnGc0o0oy3_WqA@mail.gmail.com>
+
+I'm not sure what you're asking: a Mantel test result is a single number.
+
+Path diagrams are one potential tool for displaying the results of
+many such tests.
+
+You might also be interested in Mantel correlograms, for spatial pattern.
+
+This isn't an R question, as presented, but I'm curious what you mean.
+
+Sarah
+
+On Fri, Mar 18, 2016 at 7:22 AM, Javier Mart?nez-L?pez
+<javi.martinez.lopez at gmail.com> wrote:
+> Hello all,
+>
+> is there a way of graphically represent a Mantel correlation test between
+> two distance/dissimilarity matrices?
+>
+> Thank you and best regards,
+>
+> Javier
+>
+
+
+From javi.martinez.lopez at gmail.com  Fri Mar 18 14:19:54 2016
+From: javi.martinez.lopez at gmail.com (=?UTF-8?B?SmF2aWVyIE1hcnTDrW5lei1Mw7NwZXo=?=)
+Date: Fri, 18 Mar 2016 14:19:54 +0100
+Subject: [R-sig-eco] Graphically represent Mantel Test
+In-Reply-To: <CAM_vju=_ON1nJKM-iC-88ispE9n8fe0RwGAjRnGc0o0oy3_WqA@mail.gmail.com>
+References: <CAKgwV9k4pC+pp2NW1a8+mvBHzo5xm6k91DC+10BTQ2TqvZW4rA@mail.gmail.com>
+	<CAM_vju=_ON1nJKM-iC-88ispE9n8fe0RwGAjRnGc0o0oy3_WqA@mail.gmail.com>
+Message-ID: <CAKgwV9kGOF=gVtTUDsPHgJovC-spKFd2rMJ2OiQo46N5JOFDbQ@mail.gmail.com>
+
+I guess what I try to show is something like plotting an axis of an NMDS
+based on each multivariate distance matrix against each other. I have an
+environmental versus a species distance matrix, with a high correlation
+based on the Mantel test and I wanted to show it somehow graphically. I
+will take a look at path diagrams. Thanks!
+
+On Fri, Mar 18, 2016 at 2:09 PM, Sarah Goslee <sarah.goslee at gmail.com>
+wrote:
+
+> I'm not sure what you're asking: a Mantel test result is a single number.
+>
+> Path diagrams are one potential tool for displaying the results of
+> many such tests.
+>
+> You might also be interested in Mantel correlograms, for spatial pattern.
+>
+> This isn't an R question, as presented, but I'm curious what you mean.
+>
+> Sarah
+>
+> On Fri, Mar 18, 2016 at 7:22 AM, Javier Mart?nez-L?pez
+> <javi.martinez.lopez at gmail.com> wrote:
+> > Hello all,
+> >
+> > is there a way of graphically represent a Mantel correlation test between
+> > two distance/dissimilarity matrices?
+> >
+> > Thank you and best regards,
+> >
+> > Javier
+> >
+>
+
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Fri Mar 18 14:23:52 2016
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Fri, 18 Mar 2016 09:23:52 -0400
+Subject: [R-sig-eco] Graphically represent Mantel Test
+In-Reply-To: <CAKgwV9kGOF=gVtTUDsPHgJovC-spKFd2rMJ2OiQo46N5JOFDbQ@mail.gmail.com>
+References: <CAKgwV9k4pC+pp2NW1a8+mvBHzo5xm6k91DC+10BTQ2TqvZW4rA@mail.gmail.com>
+	<CAM_vju=_ON1nJKM-iC-88ispE9n8fe0RwGAjRnGc0o0oy3_WqA@mail.gmail.com>
+	<CAKgwV9kGOF=gVtTUDsPHgJovC-spKFd2rMJ2OiQo46N5JOFDbQ@mail.gmail.com>
+Message-ID: <CAM_vjukhwjFCFV_wkhJn6u4ATviohFQPTTX_OwNxQNd-RZCEnQ@mail.gmail.com>
+
+Of course you can plot the distance vs the environmental matrix.
+That's a reasonable thing to do, just as you would do it for any
+potentially-correlated data.
+
+Sarah
+
+On Fri, Mar 18, 2016 at 9:19 AM, Javier Mart?nez-L?pez
+<javi.martinez.lopez at gmail.com> wrote:
+> I guess what I try to show is something like plotting an axis of an NMDS
+> based on each multivariate distance matrix against each other. I have an
+> environmental versus a species distance matrix, with a high correlation
+> based on the Mantel test and I wanted to show it somehow graphically. I will
+> take a look at path diagrams. Thanks!
+>
+> On Fri, Mar 18, 2016 at 2:09 PM, Sarah Goslee <sarah.goslee at gmail.com>
+> wrote:
+>>
+>> I'm not sure what you're asking: a Mantel test result is a single number.
+>>
+>> Path diagrams are one potential tool for displaying the results of
+>> many such tests.
+>>
+>> You might also be interested in Mantel correlograms, for spatial pattern.
+>>
+>> This isn't an R question, as presented, but I'm curious what you mean.
+>>
+>> Sarah
+>>
+>> On Fri, Mar 18, 2016 at 7:22 AM, Javier Mart?nez-L?pez
+>> <javi.martinez.lopez at gmail.com> wrote:
+>> > Hello all,
+>> >
+>> > is there a way of graphically represent a Mantel correlation test
+>> > between
+>> > two distance/dissimilarity matrices?
+>> >
+>> > Thank you and best regards,
+>> >
+>> > Javier
+>> >
+>
+>
+
+
+From epalmery at cns.umass.edu  Thu Mar 24 14:37:23 2016
+From: epalmery at cns.umass.edu (Evan Palmer-Young)
+Date: Thu, 24 Mar 2016 09:37:23 -0400
+Subject: [R-sig-eco] Model for Preference analysis
+Message-ID: <CAAge6+6TT2DzQDM_4VufB-h0fpixC-Uv=+T9Q_9V3yDoDYSSFg@mail.gmail.com>
+
+Would greatly appreciate help with this. Hope it is not a duplicate-- my
+first email to the list appeared to bounce back.
+
+Dear Colleagues,
+I am trying to analyze an experiment comparing consumption of 2 food types
+in a choice-type design. Subjects were offered a choice of 2 food types,
+and their daily consumption of each food type was recorded. Each subject
+also was assigned to one of 2 Infection treatments.
+We want to know-- "
+*How does infection affect preference for one food type over another?*
+
+I am wondering if it is acceptable to model this like a repeated measures
+design, with 2 observations per subject and timepoint-- one for each food
+type. Or is that not acceptable because the 2 food types were given at the
+same time?
+
+I attached my actual data and script, and also paste a code to generate a
+random data set, to show the general data structure.
+
+####choice analysis for list###
+Df<-expand.grid(Time=seq(0,10,1),
+        Subject=c("Honeybunch","Buttercup","Rosy",
+                          "Sting", "Buzz", "Bumble"))
+View(Df)
+Df$Infection<-NULL
+Df$Infection[1:33]<-"Infected"
+Df$Infection[34:66]<-"Uninfected"
+Df$Infection
+
+Df$Consumption.Food.A<-rnorm(n=length(Df$Time),mean=30, sd=6)
+Df$Consumption.Food.B<-rnorm(n=length(Df$Time),mean=25, sd=8)
+
+library(lme4)
+##Analysis with consumption of other food type as covariate
+ModelA<-lmer(Consumption.Food.A~ Time + Infection + Consumption.Food.B +
+               (1|Subject),data=Df)
+ModelB<-lmer(Consumption.Food.B~ Time + Infection + Consumption.Food.A +
+             (1|Subject), data=Df)
+
+#option to convert data to long format
+library(tidyr)
+Df_long<-gather(data=Df, key=Foodtype, value=Amt.eaten,
+                Consumption.Food.A,Consumption.Food.B)
+View(Df_long)
+#Is this model legal, because both foods offered simulateneously
+Fullmodel<-lmer(Amt.eaten ~ Foodtype * Infection + Time +
+                  (1|Subject) + (1|Time), data=Df_long)
+
+
+
+(Originally I was planning to model proportions of the 2 food types eaten,
+but there a lot of values close to zero that could make the proportion
+estimates highly variable. And the proportional analysis would not account
+for the strong trends of decreasing with (a) time and (b) infection
+treatment)
+
+Thanks very much for your advice!
+Evan
+
+
+
+-- 
+Department of Biology
+221 Morrill Science Center
+611 North Pleasant St
+Amherst MA 01003
+https://sites.google.com/a/cornell.edu/evan-palmer-young/
+
+
+
+-- 
+Department of Biology
+221 Morrill Science Center
+611 North Pleasant St
+Amherst MA 01003
+https://sites.google.com/a/cornell.edu/evan-palmer-young/
+
+From pnovack-gottshall at ben.edu  Fri Mar 25 13:57:01 2016
+From: pnovack-gottshall at ben.edu (Novack-Gottshall, Philip M.)
+Date: Fri, 25 Mar 2016 12:57:01 +0000
+Subject: [R-sig-eco] New R package for K-S goodness-of-fit tests
+Message-ID: <8CF6FE2C677EA94F94FA6285289BAE68755B5319@BENMAIL02.ben.pri>
+
+Greetings,
+
+We wanted to announce a new R package 'KScorrect' that carries out the
+Lilliefors correction to the Kolmogorov-Smirnoff test for use in
+goodness-of-fit tests. It's well-established it's inappropriate to use
+the K-S test when sample statistics are used to estimate parameters,
+which results in substantially increased Type-II errors. This package
+corrects for the bias by using Monte Carlo simulation, a solution first
+recommended by Lilliefors (1967) but not widely used. The primary
+function 'LcKS()' is written to complement, and can be used directly in
+place of, 'ks.test()'. It can be used with most continuous distribution
+functions, including normal, univariate mixture of normals, lognormal,
+uniform, loguniform (flat when data are log-transformed), exponential,
+gamma, and Weibull. Distribution functions are provided in the package
+for the loguniform and univariate mixture of normal distributions, which
+are not included in the base R installation.  Additional details are
+available at https://cran.r-project.org/web/packages/KScorrect.
+
+We hope you find the functions useful when conducting goodness-of-fit
+tests using the K-S test.
+
+Sincerely,
+Phil Novack-Gottshall and Steve Wang
+
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Phil Novack-Gottshall
+ Associate Professor
+ Department of Biological Sciences
+ Benedictine University
+ 5700 College Road 
+ Lisle, IL 60532
+
+ pnovack-gottshall at ben.edu
+ Phone: 630-829-6514
+ Fax: 630-829-6547
+ Office: 332 Birck Hall
+ Lab: 316 Birck Hall
+ http://www.ben.edu/faculty/pnovack-gottshall
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+

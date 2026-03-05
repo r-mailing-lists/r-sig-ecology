@@ -1,0 +1,1721 @@
+From thomassattler at gmx.net  Mon Sep  1 18:19:10 2008
+From: thomassattler at gmx.net (Thomas Sattler)
+Date: Mon, 01 Sep 2008 18:19:10 +0200
+Subject: [R-sig-eco] glmer,
+	quasipoisson and standard errors of the coefficients
+In-Reply-To: <mailman.1.1220263201.30131.r-sig-ecology@r-project.org>
+References: <mailman.1.1220263201.30131.r-sig-ecology@r-project.org>
+Message-ID: <6.2.1.2.2.20080901175524.02df5f98@pop.gmx.net>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080901/fec386d1/attachment.pl>
+
+From bolker at ufl.edu  Tue Sep  2 00:41:50 2008
+From: bolker at ufl.edu (Ben Bolker)
+Date: Mon, 01 Sep 2008 17:41:50 -0500
+Subject: [R-sig-eco] glmer ,
+	quasipoisson and standard errors of the coefficients
+In-Reply-To: <48BAC00C.2010205@ub.edu>
+References: <48BAC00C.2010205@ub.edu>
+Message-ID: <48BC6FAE.4000609@ufl.edu>
+
+Albert Romero wrote:
+> Hello,
+> I am trying to simplify backwards a mixed effects model, using lmer 
+> function from lme4 package. As my data are species numbers and there 
+> exists overdisperison, I think appropriate to use glmer function with 
+> error family quasipoisson. I compare one model with its simplification 
+> through log-likelihood ratio tests.
+> Nevertheless, once I have selected a simplified model, I find in the 
+> summary of this 'significant' model that estimated coefficients  are  
+> associated  to  very big  standard errors, to the point that no one of 
+> the coefficients seem to be significantly different from zero.
+>
+> Here come my questions:
+> Can anybody explain this contradiction among standard errors of the 
+> estimated coefficients and the significance of the model?
+> Is unappropriated to use Log-likelihood backwards simplification with 
+> quasipoisson errors?
+>
+
+   There are several issues here (and you should think about asking this 
+question on r-sig-mixed-models , where there
+is more expertise).
+
+  1. glmer with a quasipoisson link does not provide a likelihood 
+(rather, a quasilikelihood),
+so you shouldn't necessarily assume that you can do *any* 
+likelihood-based inference with
+the results from this analysis.  The most conservative approach is to 
+use only the estimated
+standard errors or Z statistics on the parameters (this is a Wald test) 
+for inference.
+
+  2. if you _do_ want to use the likelihood for inference, you need to 
+convert it to a "quasi-likelihood"
+by dividing it by the estimated scale parameter (which you can extract 
+via lme4:::sigma(model) ).
+This is done (for example) when you state test="F" in anova() on 
+generalized linear models --
+also note that in this case you should technically do an F test rather 
+than a chi-squared test,
+with denominator df equal to the residual df (although it's hard to 
+figure out what these should
+be ...)
+
+  3. it is generally advised *NOT* to use the likelihood ratio test for 
+testing fixed effects
+(see Pinheiro and Bates 2000).
+
+  So ... bottom line ... for now, I would use the Z tests (labeled as t 
+tests), i.e.
+means / standard errors ...
+
+  good luck,
+   Ben Bolker
+
+
+From pdixon at iastate.edu  Tue Sep  2 15:39:48 2008
+From: pdixon at iastate.edu (Philip Dixon)
+Date: Tue, 02 Sep 2008 08:39:48 CDT
+Subject: [R-sig-eco] large s.e.'s for coefficients
+In-Reply-To: Your message of "Mon, 01 Sep 2008 12:00:01 +0200."
+	<mailman.1.1220263201.30131.r-sig-ecology@r-project.org> 
+Message-ID: <200809021339.IAA13748@gauss.stat.iastate.edu>
+
+Albert,
+
+1) Have you looked at the correlation among your X variables?  
+
+The situation you describe, overall model highly significant but large se's on 
+each individual coefficient, often arises with multicollinearity.  Variance 
+Inflation Factors (VIF's) are one common diagnostic.   If multicollinearity is 
+the issue, there should be an even simpler model that fits almost as well.
+
+2) I haven't checked how glmer computes the quasi-likelihood.  If done 
+correctly, that should account for the overdispersion.  If not, it may be that 
+the lnL is computed without adjusting for overdispersion but the s.e.s of the 
+coefficients include overdispersion.  That will also create the behaviour you 
+have encountered.
+
+There is one theoretical issue with the use of a quasi-likelihood ratio test.  
+ The quasilikelihoods for both models (full and reduced) should be computed 
+using the same estimate of overdispersion, taken from the full model.  The 
+usual calculations use different estimates for the two models.  That is not a 
+practical problem if the two estimates are similar, as they often are.
+
+Best wishes,
+Philip Dixon
+
+
+From albertromeropuente at ub.edu  Thu Sep  4 15:47:26 2008
+From: albertromeropuente at ub.edu (Albert Romero)
+Date: Thu, 04 Sep 2008 15:47:26 +0200
+Subject: [R-sig-eco] glmer ,
+ quasipoisson and standard errors of the coefficients
+Message-ID: <48BFE6EE.6060400@ub.edu>
+
+Thank you all for the answers. I'll be careful with this kind of models 
+till I learn how they work...
+
+By the way, I have realized that, comparing a Poisson model  with a 
+quasi-Poisson model,  the estimated  SE of the coefficients in the 
+quasi-Poisson model are the SE of the Poisson model times the scale 
+parameter of the quasi-Poisson model. I guess that this is related with 
+Bolker's statement of dividing the LRT by the scale parameter to obtain 
+the quasi-likelihood.
+
+Kind regards.
+
+-- 
+Albert Romero Puente
+Departament de Biologia Vegetal-Bot?nica
+Universitat de Barcelona
+Facultat de Biologia
+3a Planta
+Av. Diagonal, 645. (08028) Barcelona
+Tel. 0034 93 402 14 71
+
+
+From krzysztof.sakrejda at gmail.com  Fri Sep  5 22:17:40 2008
+From: krzysztof.sakrejda at gmail.com (Krzysztof Sakrejda-Leavitt)
+Date: Fri, 05 Sep 2008 16:17:40 -0400
+Subject: [R-sig-eco] Multi-state models
+Message-ID: <48C193E4.4020608@nsm.umass.edu>
+
+Dear colleagues,
+
+I am am starting work on a project using multi-state models based on 
+capture-mark-recapture data to create parameter estimates for matrix 
+population models.  The software the group is currently using is MSurge, 
+but I am interested in packages within R which would substitute for that 
+function.  I am aware of pomp and msm, but i have experience with 
+neither.  Any comments on functionality and robustness in real 
+applications (or in testing) would be appreciated, especially coming 
+from anyone who has also worked with MSurge/MARK. 
+
+Best,
+
+Krzysztof
+
+--------------------------------------
+Krzysztof Sakrejda-Leavitt
+
+Organismic and Evolutionary Biology
+University of Massachusetts, Amherst
+319 Morrill Science Center South
+611 N. Pleasant Street
+Amherst, MA 01003
+
+work (cell): 413-325-6555
+email: sakrejda at nsm.umass.edu
+
+
+From bacollier at ag.tamu.edu  Fri Sep  5 23:48:11 2008
+From: bacollier at ag.tamu.edu (Bret Collier)
+Date: Fri, 05 Sep 2008 16:48:11 -0500
+Subject: [R-sig-eco] Multi-state models
+In-Reply-To: <48C193E4.4020608@nsm.umass.edu>
+References: <48C193E4.4020608@nsm.umass.edu>
+Message-ID: <48C1A91B.7020807@ag.tamu.edu>
+
+Krzysztof,
+I probably just beat Jeff to it, but you should look into RMark, it is 
+an interface to MARK using R, I use it all the time and it works great, 
+help is very detailed, and multi-strata models are implemented in it.
+
+http://www.phidot.org/software/mark/rmark/
+
+
+Bret
+
+Krzysztof Sakrejda-Leavitt wrote:
+> Dear colleagues,
+> 
+> I am am starting work on a project using multi-state models based on 
+> capture-mark-recapture data to create parameter estimates for matrix 
+> population models.  The software the group is currently using is MSurge, 
+> but I am interested in packages within R which would substitute for that 
+> function.  I am aware of pomp and msm, but i have experience with 
+> neither.  Any comments on functionality and robustness in real 
+> applications (or in testing) would be appreciated, especially coming 
+> from anyone who has also worked with MSurge/MARK.
+> Best,
+> 
+> Krzysztof
+> 
+> --------------------------------------
+> Krzysztof Sakrejda-Leavitt
+> 
+> Organismic and Evolutionary Biology
+> University of Massachusetts, Amherst
+> 319 Morrill Science Center South
+> 611 N. Pleasant Street
+> Amherst, MA 01003
+> 
+> work (cell): 413-325-6555
+> email: sakrejda at nsm.umass.edu
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From John_Gross at nps.gov  Sat Sep  6 18:01:17 2008
+From: John_Gross at nps.gov (John_Gross at nps.gov)
+Date: Sat, 6 Sep 2008 10:01:17 -0600
+Subject: [R-sig-eco] John Gross/FTCOLLINS/NPS will return March 13, 2006
+Message-ID: <OFCC591CEB.8A710CB4-ON872574BC.00580224-872574BC.00580224@nps.gov>
+
+
+I will be out of the office starting  08/30/2008 and will not return until
+09/08/2008.
+
+
+From ftgrh at uaf.edu  Wed Sep 10 20:28:53 2008
+From: ftgrh at uaf.edu (Grant Humphries)
+Date: Wed, 10 Sep 2008 10:28:53 -0800 (AKDT)
+Subject: [R-sig-eco] Spatial overlays
+Message-ID: <2281.137.229.77.255.1221071333.squirrel@ftgrh.email.uaf.edu>
+
+Hi,
+
+I am wondering if anyone knows how to program spatial overlays into R, and
+if anyone knows how to take that method and then automate it to run say,
+1000 times for example.
+
+
+Thanks,
+Grant Humphries
+
+University of Alaska Fairbanks
+-EWHALE-lab Irving I  Rm 419
+902 Koyukuk Dr.
+Fairbanks, Alaska
+99775
+907-474-7959
+ftgrh at uaf.edu
+
+
+From gsargeant at usgs.gov  Wed Sep 10 22:18:30 2008
+From: gsargeant at usgs.gov (Glen A Sargeant)
+Date: Wed, 10 Sep 2008 15:18:30 -0500
+Subject: [R-sig-eco] Spatial overlays
+In-Reply-To: <2281.137.229.77.255.1221071333.squirrel@ftgrh.email.uaf.edu>
+Message-ID: <OFDE17BCE9.86C8CB6E-ON862574C0.006F7DB0-862574C0.006F8EF7@usgs.gov>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080910/b63481db/attachment.pl>
+
+From kingsfordjones at gmail.com  Thu Sep 11 18:14:17 2008
+From: kingsfordjones at gmail.com (Kingsford Jones)
+Date: Thu, 11 Sep 2008 10:14:17 -0600
+Subject: [R-sig-eco] Spatial overlays
+In-Reply-To: <OFDE17BCE9.86C8CB6E-ON862574C0.006F7DB0-862574C0.006F8EF7@usgs.gov>
+References: <2281.137.229.77.255.1221071333.squirrel@ftgrh.email.uaf.edu>
+	<OFDE17BCE9.86C8CB6E-ON862574C0.006F7DB0-862574C0.006F8EF7@usgs.gov>
+Message-ID: <2ad0cc110809110914w79b972e4rae27f30381a18418@mail.gmail.com>
+
+Grant,
+
+I'm not sure what you a looking to do, but this thread may be of use:
+
+https://stat.ethz.ch/pipermail/r-sig-ecology/2008-May/000121.html
+
+Something to add to that thread is this recent book which covers many
+of the spatial tools available in R:
+
+http://www.amazon.com/Applied-Spatial-Data-Analysis-Use/dp/0387781706/ref=pd_bbs_sr_1?ie=UTF8&s=books&qid=1221148754&sr=8-1
+
+Also, this is a useful guide for finding answers to R questions and/or
+eliciting useful responses on R mailing lists:
+
+http://www.r-project.org/posting-guide.html
+
+
+best,
+
+Kingsford Jones
+
+
+
+On Wed, Sep 10, 2008 at 2:18 PM, Glen A Sargeant <gsargeant at usgs.gov> wrote:
+> Can you describe your data, your objective, and the issues that are
+> causing trouble?
+>
+> *************************************************
+> Glen A. Sargeant, Ph.D.
+> Research Wildlife Biologist/Statistician
+> Northern Prairie Wildlife Research Center
+> 8711 37th Street SE
+> Jamestown, ND  58401
+>
+> Phone: (701) 253-5528
+> E-mail:  glen_sargeant at usgs.gov
+> FAX:     (701) 253-5553
+> *************************************************
+>
+>
+>
+> "Grant Humphries" <ftgrh at uaf.edu>
+> Sent by: r-sig-ecology-bounces at r-project.org
+> 09/10/2008 01:28 PM
+>
+> To
+> r-sig-ecology at r-project.org
+> cc
+>
+> Subject
+> [R-sig-eco] Spatial overlays
+>
+>
+>
+>
+>
+>
+> Hi,
+>
+> I am wondering if anyone knows how to program spatial overlays into R, and
+> if anyone knows how to take that method and then automate it to run say,
+> 1000 times for example.
+>
+>
+> Thanks,
+> Grant Humphries
+>
+> University of Alaska Fairbanks
+> -EWHALE-lab Irving I  Rm 419
+> 902 Koyukuk Dr.
+> Fairbanks, Alaska
+> 99775
+> 907-474-7959
+> ftgrh at uaf.edu
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>        [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From John_Gross at nps.gov  Fri Sep 12 17:29:53 2008
+From: John_Gross at nps.gov (John_Gross at nps.gov)
+Date: Fri, 12 Sep 2008 09:29:53 -0600
+Subject: [R-sig-eco] John Gross/FTCOLLINS/NPS will return March 13, 2006
+Message-ID: <OF6AD47A37.A94F166F-ON872574C2.00552265-872574C2.00552265@nps.gov>
+
+
+I will be out of the office starting  09/12/2008 and will not return until
+09/22/2008.
+
+
+From queirozrafaelmv at yahoo.com.br  Sun Sep 21 01:35:14 2008
+From: queirozrafaelmv at yahoo.com.br (Rafael Maia)
+Date: Sat, 20 Sep 2008 20:35:14 -0300
+Subject: [R-sig-eco] Differences between (A)anova 's
+Message-ID: <09BC689F-DE2E-44DE-8EB0-FF5C1F7D3821@yahoo.com.br>
+
+Hi all,
+
+I am trying to fit a linear model (using lm) with 3 predictors (2  
+continuous and 1 factor) for a response variable. I have no  
+interaction terms nor missing values (though I do not have the same  
+sample size in all factor cells), so I thought the results would be  
+pretty straightforward, with no differences due to the "type" of Sum- 
+of-Sqares employed. However, I am getting somewhat conflicting results  
+(especially for the variable "IMC", see below) when I use anova, Anova  
+(from car package), and drop1. Actually, drop1(), Anova(type="II") and  
+Anova(type="III") all give the same results, only anova() yields a  
+different one.
+
+Due to "consistency" of results I am imagining i should ignore R  
+standard anova's results, but I'd like to understand why and the  
+implications this would have to any other test I conduct.
+
+Any comments would be welcome...
+
+Best,
+Rafael Maia
+
+
+ > m1<-lm(PC1~IMC+ResPlum+factor(Year),data=dados)
+ > summary(m1)
+
+Call:
+lm(formula = PC1 ~ IMC + ResPlum + factor(Year), data = dados)
+
+Residuals:
+     Min      1Q  Median      3Q     Max
+-4.0212 -0.8983  0.1623  1.2623  2.7767
+
+Coefficients:
+               Estimate Std. Error t value Pr(>|t|)
+(Intercept)    -5.1260     3.9075  -1.312 0.196080
+IMC             8.8518     6.1188   1.447 0.154777
+ResPlum         3.0034     0.7625   3.939 0.000276 ***
+factor(Year)2  -1.2602     0.5186  -2.430 0.019069 *
+factor(Year)3   0.6307     0.9014   0.700 0.487675
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+Residual standard error: 1.659 on 46 degrees of freedom
+Multiple R-squared: 0.4001,	Adjusted R-squared: 0.3479
+F-statistic: 7.669 on 4 and 46 DF,  p-value: 8.033e-05
+
+ > anova(m1)
+Analysis of Variance Table
+
+Response: PC1
+              Df  Sum Sq Mean Sq F value    Pr(>F)
+IMC           1  16.844  16.844  6.1204 0.0171142 *
+ResPlum       1  44.860  44.860 16.3003 0.0002027 ***
+factor(Year)  2  22.720  11.360  4.1278 0.0224493 *
+Residuals    46 126.596   2.752
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+ > drop1(m1, test="F")
+Single term deletions
+
+Model:
+PC1 ~ IMC + ResPlum + factor(Year)
+              Df Sum of Sq     RSS     AIC F value     Pr(F)
+<none>                    126.596  56.368
+IMC           1     5.759 132.355  56.637  2.0928 0.1547766
+ResPlum       1    42.700 169.295  69.191 15.5155 0.0002757 ***
+factor(Year)  2    22.720 149.316  60.786  4.1278 0.0224493 *
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+ > Anova(m1)
+Anova Table (Type II tests)
+
+Response: PC1
+               Sum Sq Df F value    Pr(>F)
+IMC            5.759  1  2.0928 0.1547766
+ResPlum       42.700  1 15.5155 0.0002757 ***
+factor(Year)  22.720  2  4.1278 0.0224493 *
+Residuals    126.596 46
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+ > Anova(m1, type="III")
+Anova Table (Type III tests)
+
+Response: PC1
+               Sum Sq Df F value    Pr(>F)
+(Intercept)    4.736  1  1.7210 0.1960800
+IMC            5.759  1  2.0928 0.1547766
+ResPlum       42.700  1 15.5155 0.0002757 ***
+factor(Year)  22.720  2  4.1278 0.0224493 *
+Residuals    126.596 46
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+
+From kingsfordjones at gmail.com  Sun Sep 21 19:18:40 2008
+From: kingsfordjones at gmail.com (Kingsford Jones)
+Date: Sun, 21 Sep 2008 11:18:40 -0600
+Subject: [R-sig-eco] Differences between (A)anova 's
+In-Reply-To: <09BC689F-DE2E-44DE-8EB0-FF5C1F7D3821@yahoo.com.br>
+References: <09BC689F-DE2E-44DE-8EB0-FF5C1F7D3821@yahoo.com.br>
+Message-ID: <2ad0cc110809211018m19ff29b8kb82934d45c2381c9@mail.gmail.com>
+
+Hi Rafael,
+
+some comments below...
+
+On Sat, Sep 20, 2008 at 5:35 PM, Rafael Maia
+<queirozrafaelmv at yahoo.com.br> wrote:
+> Hi all,
+>
+> I am trying to fit a linear model (using lm) with 3 predictors (2 continuous
+> and 1 factor) for a response variable. I have no interaction terms nor
+> missing values (though I do not have the same sample size in all factor
+> cells), so I thought the results would be pretty straightforward, with no
+> differences due to the "type" of Sum-of-Sqares employed. However, I am
+
+The issue is whether your predictors are orthogonal.  If they are,
+they are not "competing" for the same information and the order that
+they enter the model will not affect the testing.
+
+> getting somewhat conflicting results (especially for the variable "IMC", see
+> below) when I use anova, Anova (from car package), and drop1. Actually,
+> drop1(), Anova(type="II") and Anova(type="III") all give the same results,
+> only anova() yields a different one.
+
+See ?anova.lm, help(Anova, package=car), and ?drop1.lm.
+
+anova.lm is testing the terms sequentially.
+
+Anova tests the terms given that all other terms are in the model
+(Type = 'III'), or given that all terms that at not at a higher level
+in the hierarchy of terms (e..g. x1^2 and x1:x2 are at a higher level
+than x1) are in the model (Type = 'II').
+
+drop1.lm tests droping terms 1 at a time, while respecting the
+'hierarchy'  (this is often referred to as 'marginality constraints').
+
+>
+> Due to "consistency" of results I am imagining i should ignore R standard
+> anova's results, but I'd like to understand why and the implications this
+> would have to any other test I conduct.
+>
+
+I think it is generally better not to automate the process of choosing
+hypotheses of interest, but rather to form tests/comparisons
+explicitly.  One good method to do this is to compare nested models,
+where the difference in the two models reflects the hypothesis of
+interest.
+
+e.g., to test the ResPlum term given that all other terms are in the model
+
+m2 <- update(m1, . ~ . -ResP)
+anova(m1, m2)
+
+Note there are many methods available for model testing/comparison
+(e.g., F or LR tests, or Cp, AIC, BIC, ...)
+
+Similarly, you can get away from the default method of testing factor
+levels in summary.lm by explicitly choosing your contrasts to test
+hypotheses of interest.
+
+The entire process can be generalized via the General Linear
+Hypothesis Test -- see e.g., help(glh.test, package = gmodels)
+
+HTH,
+
+Kingsford Jones
+
+
+From fffcccrrr at yahoo.com  Wed Sep 24 07:18:18 2008
+From: fffcccrrr at yahoo.com (Francisco Cabrera Rodriguez)
+Date: Tue, 23 Sep 2008 22:18:18 -0700 (PDT)
+Subject: [R-sig-eco] ordinal multinominal
+Message-ID: <312415.79291.qm@web35804.mail.mud.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080923/c486df2b/attachment.pl>
+
+From Griffith.Michael at epamail.epa.gov  Fri Sep 26 16:58:54 2008
+From: Griffith.Michael at epamail.epa.gov (Griffith.Michael at epamail.epa.gov)
+Date: Fri, 26 Sep 2008 10:58:54 -0400
+Subject: [R-sig-eco] Getting output from predict.randomForest
+Message-ID: <OF69FB60D0.7D1231EE-ON852574D0.004D4C52-852574D0.00524C1E@epamail.epa.gov>
+
+
+I have been trying to use randomForest and specifically predict for
+randomForest as follows:
+
+for (y in 7:42){
+  data1 <- indata[c(1:5,y)]
+  test1 <- test[c(1:5,y)])]
+  data1 <- na.omit(data1))]
+  test1 <- na.omit(test1))]
+  set.seed(1234)
+  tree=randomForest(x=data1[,2:5], y=data1[,6], ntree=1000, mtry=3,
+     importance=TRUE, keep.forest=TRUE)
+     summary(tree)
+     print(tree)
+     tree.predict <- predict(tree, test1[,2:6], type="response",
+nodes=TRUE)
+     table(observed = test1, predicted = tree.predict)
+     varUsed(tree, count=TRUE)
+}
+
+The data set, data1, has the following form, with ERClass and ChanClass
+being factors:
+
+    FieldNum ERClass ChanClass DrainageArea   PctFines Clinger
+1    04LM099       5                      1           10.2791962
+0.000000      10
+2    04LM127       5                      1           44.9838181
+0.000000      10
+3    96SC002       3                      1         668.9939004
+0.000000      29
+4    96SC037       3                      1         241.9048792
+0.000000      23
+5    97LS051        3                     1          342.3964136
+0.000000      17
+.
+.
+.
+
+In this example, FieldNum is a sample identifier that is not used in the
+analysis, Clinger is the dependent variable.  The other variables are
+the independent variables.  The data set, test1, is a subset of 12
+samples that were removed from data1 prior to the analysis with the same
+variables.
+
+What I would like is to get a prediction of the characteristics (i.e.,
+something like ERClass = 3, ChanClass = 2 or 3, DrainageArea > 400,
+PctFines < 10 - although I have found an example for a similar problem,
+so I am not sure what it will look like exactly) of the end nodes where
+the majority of the trees place each of these 12 samples).
+
+However, the output I am currently getting is:
+
+Call:
+ randomForest(x = data1[, 2:5], y = data1[, 6], ntree = 1000,      mtry
+= 3, importance = TRUE, keep.forest = TRUE)
+               Type of random forest: regression
+                     Number of trees: 1000
+No. of variables tried at each split: 3
+
+          Mean of squared residuals: 17.6679
+                    % Var explained: 49.65
+Error in predict.randomForest(tree, test1[, 1:6], type = "response",
+nodes = TRUE) :
+  Type of predictors in new data do not match that of the training data.
+
+Clearly, something is wrong with my predict statement, but what?  Do I
+need to re-identify which variables are x and which variable is y?  If
+so, how?  Also, am I going to get the result I am looking for?  If not,
+how do I need to write this to get that?  The help pages I have found
+have been very inadequate.
+
+Thanks for your help.
+
+Michael
+
+Michael B. Griffith, Ph.D.
+Research Ecologist
+
+USEPA, NCEA (MS A-110)
+26 W. Martin Luther King Dr.
+Cincinnati, OH  45268
+
+telephone:  513 569-7034
+e-mail:  griffith.michael at epa.gov
+
+
+From gavin.simpson at ucl.ac.uk  Sat Sep 27 17:54:13 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Sat, 27 Sep 2008 16:54:13 +0100
+Subject: [R-sig-eco] Getting output from predict.randomForest
+In-Reply-To: <OF69FB60D0.7D1231EE-ON852574D0.004D4C52-852574D0.00524C1E@epamail.epa.gov>
+References: <OF69FB60D0.7D1231EE-ON852574D0.004D4C52-852574D0.00524C1E@epamail.epa.gov>
+Message-ID: <1222530853.2726.66.camel@graptoleberis.geog.ucl.ac.uk>
+
+On Fri, 2008-09-26 at 10:58 -0400, Griffith.Michael at epamail.epa.gov
+wrote:
+> I have been trying to use randomForest and specifically predict for
+> randomForest as follows:
+> 
+> for (y in 7:42){
+>   data1 <- indata[c(1:5,y)]
+>   test1 <- test[c(1:5,y)])]
+>   data1 <- na.omit(data1))]
+>   test1 <- na.omit(test1))]
+>   set.seed(1234)
+>   tree=randomForest(x=data1[,2:5], y=data1[,6], ntree=1000, mtry=3,
+>      importance=TRUE, keep.forest=TRUE)
+>      summary(tree)
+>      print(tree)
+>      tree.predict <- predict(tree, test1[,2:6], type="response",
+> nodes=TRUE)
+>      table(observed = test1, predicted = tree.predict)
+>      varUsed(tree, count=TRUE)
+> }
+> 
+> The data set, data1, has the following form, with ERClass and ChanClass
+> being factors:
+> 
+>     FieldNum ERClass ChanClass DrainageArea   PctFines Clinger
+> 1    04LM099       5                      1           10.2791962
+> 0.000000      10
+> 2    04LM127       5                      1           44.9838181
+> 0.000000      10
+> 3    96SC002       3                      1         668.9939004
+> 0.000000      29
+> 4    96SC037       3                      1         241.9048792
+> 0.000000      23
+> 5    97LS051        3                     1          342.3964136
+> 0.000000      17
+> .
+> .
+> .
+> 
+> In this example, FieldNum is a sample identifier that is not used in the
+> analysis, Clinger is the dependent variable.  The other variables are
+> the independent variables.  The data set, test1, is a subset of 12
+> samples that were removed from data1 prior to the analysis with the same
+> variables.
+> 
+> What I would like is to get a prediction of the characteristics (i.e.,
+> something like ERClass = 3, ChanClass = 2 or 3, DrainageArea > 400,
+> PctFines < 10 - although I have found an example for a similar problem,
+> so I am not sure what it will look like exactly) of the end nodes where
+> the majority of the trees place each of these 12 samples).
+> 
+> However, the output I am currently getting is:
+> 
+> Call:
+>  randomForest(x = data1[, 2:5], y = data1[, 6], ntree = 1000,      mtry
+> = 3, importance = TRUE, keep.forest = TRUE)
+>                Type of random forest: regression
+>                      Number of trees: 1000
+> No. of variables tried at each split: 3
+> 
+>           Mean of squared residuals: 17.6679
+>                     % Var explained: 49.65
+> Error in predict.randomForest(tree, test1[, 1:6], type = "response",
+> nodes = TRUE) :
+>   Type of predictors in new data do not match that of the training data.
+> 
+> Clearly, something is wrong with my predict statement, but what?  Do I
+> need to re-identify which variables are x and which variable is y?  If
+> so, how?  Also, am I going to get the result I am looking for?  If not,
+> how do I need to write this to get that?  The help pages I have found
+> have been very inadequate.
+
+do str(indata) and str(test) give the same information regarding the
+types of variables? If any of the variables used are factors, do the
+factors have the same levels in indata and test?
+
+I'd probably do this differently, and store the test and training data
+in the same df to start with, and then split it out at random into a
+training and test set object (or just use the indices on the main object
+depending on whether I want the training or test rows).
+
+This way, the variables will be the same type/format/structure as they
+came from the same df to begin with.
+
+Also, I really don't follow your loop code. You seem to be indexing
+indata without reference to columns/rows in first line within the loop.
+There also seem to be several syntax errors - too many "]"?
+
+So start simple, set y <- 7 and perform the first run of the loop "by
+hand" and once that works, then do the loop in full.
+
+G
+
+> 
+> Thanks for your help.
+> 
+> Michael
+> 
+> Michael B. Griffith, Ph.D.
+> Research Ecologist
+> 
+> USEPA, NCEA (MS A-110)
+> 26 W. Martin Luther King Dr.
+> Cincinnati, OH  45268
+> 
+> telephone:  513 569-7034
+> e-mail:  griffith.michael at epa.gov
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From prado at ib.usp.br  Mon Sep 29 02:55:22 2008
+From: prado at ib.usp.br (=?ISO-8859-1?Q?Paulo_In=E1cio_de_Kn?==?ISO-8859-1?Q?egt_L=F3pez_de_Prado?=)
+Date: Sun, 28 Sep 2008 21:55:22 -0300
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <mailman.1.1222596002.12800.r-sig-ecology@r-project.org>
+References: <mailman.1.1222596002.12800.r-sig-ecology@r-project.org>
+Message-ID: <20080929002804.M94451@ib.usp.br>
+
+Dear r-sig-ecology users
+
+Here follow the messages I exchanged with Ben Bolker last week about the
+likelihood and frequentist approaches. We both would like to open this topic
+for discussion in the list.
+
+Best wishes
+
+Paulo
+
+----------------------------------------------------------------------------
+Dear Dr. Bolker, 
+
+I am puzzled why some authors treat likelihood approaches as 
+frequentist, as it seems you did in page 13 of your book 'Ecological Models
+and Data'. 
+This sounds odd to me because  what brought my attention to likelihood was
+Richard Royall's book 'Statistical Evidence'. His framing of a paradigm
+based on the likelihood principle, and the clear distinction he makes
+between this paradigm and frequentist and Bayesian approaches looks
+quite convincing to me.
+
+I agree with him that we use likelihood criteria to identify, among
+competing hypotheses, which one attribute the highest probability to  a
+given dataset. If I understood correctly, this is what Royal calls the
+'evidence value' of a data set to a hypothesis 'vis a vis' other
+hypotheses. I also like his idea that the role of statistics in science
+is just to gauge this evidence value, no less, no more.
+
+This approach differs from the frequentist because the sampling
+space is irrelevant, that is, other datasets that might be observed do not
+affect the evidence value of the observed data set. My favourite example is
+the comparison of binomial and negative binomial experiments on coin
+tossing, in the sections 1.11 and 1.12 of his book.
+
+I am not an "orthodox likelihoodist"; on the contrary, I agree with the
+pragmatic view you express in your book. I'd just like to understand
+the key differences among the available statistical tools, in order to make
+a good pragmatic use of them. I'd really appreciate if you can help me
+with this.
+
+Best wishes
+
+Paulo
+-----------------------------------------------------------------------------
+>   Very well put.  Royall, and Edwards (author of _Likelihood_, Johns
+> Hopkins 1992) are what I would call "pure", or "hard-core",
+> or "orthodox", likelihoodists. They are satisfied with a statement
+> of relative likelihood, and don't feel the need to attach a p-value
+> to the result in order to have a decision rule for hypothesis rejection.
+>
+>   Far more commonly, however, people impose (? add ?) an additional
+> layer of frequentist procedure on top of this basic structure, namely
+> using the likelihood ratio test to assess the statistical significance
+> of a given observed likelihood ratio and/or to set a cutoff value
+> for profile confidence intervals.  Using the LRT puts the inference
+> back squarely into the frequentist domain, although the sample space
+> we are now dealing with (sample space of likelihoods derived from
+> coin-tossing experiments) is quite different from the one
+> we started with (sample space of outcomes of coin-tossing experiments).
+> As far as I can see, Edwards and Royall are almost alone in their
+> adherence to "pure" likelihood -- most of the rest of us pander
+> to the desire for p-values (or, less cynically, to the desire
+> for a probabilistically sound decision rule).
+>
+>  I would also add that different scientists have different
+> goals (belief, prediction, decision, assessing evidence). I too
+> think Royall makes a good case for the primacy of
+> assessing strength-of-evidence, and he gives the clearest
+> explanation I have seen, but I wouldn't completely
+> rule out the other frameworks.
+>
+>   Hope that makes sense -- thanks for the kind words!
+>
+>   cheers
+>    Ben Bolker 
+
+--
+Paulo In?cio de Knegt L?pez de Prado
+Depto. de Ecologia - Instituto de Bioci?ncias - USP
+
+
+From rroa at udec.cl  Mon Sep 29 15:30:15 2008
+From: rroa at udec.cl (=?ISO-8859-1?Q?Rub=E9n_Roa-Ureta?=)
+Date: Mon, 29 Sep 2008 09:30:15 -0400
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <20080929002804.M94451@ib.usp.br>
+References: <mailman.1.1222596002.12800.r-sig-ecology@r-project.org>
+	<20080929002804.M94451@ib.usp.br>
+Message-ID: <48E0D867.9080106@udec.cl>
+
+Paulo In?cio de Knegt L?pez de Prado wrote:
+> Dear r-sig-ecology users
+>
+> Here follow the messages I exchanged with Ben Bolker last week about the
+> likelihood and frequentist approaches. We both would like to open this topic
+> for discussion in the list.
+>
+> Best wishes
+>
+> Paulo
+>
+> ----------------------------------------------------------------------------
+> Dear Dr. Bolker, 
+>
+> I am puzzled why some authors treat likelihood approaches as 
+> frequentist, as it seems you did in page 13 of your book 'Ecological Models
+> and Data'. 
+> This sounds odd to me because  what brought my attention to likelihood was
+> Richard Royall's book 'Statistical Evidence'. His framing of a paradigm
+> based on the likelihood principle, and the clear distinction he makes
+> between this paradigm and frequentist and Bayesian approaches looks
+> quite convincing to me.
+>   
+Paulo,
+The likelihood function is the central concept of statistical inference, 
+so working with the likelihood you can have Bayesian, frequentist 
+(better called sampling-distribution inference), or likelihoodist 
+inference, depending on what do you do with your likelihoods. In 
+Bayesian inference the likelihood function updates prior opinion by 
+bringing the data into the inference, in sampling-distribution inference 
+(a.k.a. frequentist) it allows the building of better confidence 
+intervals by finding in the sample space likelihood values that could 
+have occurred if data similar to the data you have had been obtained, 
+and in the direct-likelihood approach the likelihood is directly used to 
+compare two hypotheses or equivalently to build direct-likelihood 
+intervals. For example, the likelihood ratio test (not to be confused 
+with the pure likelihood ratio, or differences in support) based on a 
+limiting Chi-square distribution is a likelihood-based frequentist 
+method. Frequentist statisticians evaluate the likelihood from the 
+sample, and then proceed to evaluate the likelihood for other potential 
+samples, thus building their confidence intervals and p-values. On the 
+other hand Bayesian and likelihoodist statisticians only use the 
+likelihood evaluated at the actual sample that was obtained. From that 
+point of view one can say that Bayesian and likelihoodist are closer to 
+each other than to frequentists, however both Bayesian and frequentists 
+base their inference on probabilities (posterior probabilities or error 
+rates) whereas likelihoodists base their inference on, well, likelihood 
+only.
+Royall's points are very convincing indeed, at least they were for me 
+too. Royall's concept of evidence in the sample about competing 
+hypotheses and on approximate likelihoods for problems with nuisance 
+parameters, plus Edwards' mathematical proofs of the properties of the 
+support function, plus Jim Lindsey's arguments about Akaike's index in 
+model selection, provide a complete theory of statistical inference, 
+based exclusively on the likelihood, IMHO.
+> I agree with him that we use likelihood criteria to identify, among
+> competing hypotheses, which one attribute the highest probability to  a
+> given dataset. If I understood correctly, this is what Royal calls the
+> 'evidence value' of a data set to a hypothesis 'vis a vis' other
+> hypotheses. I also like his idea that the role of statistics in science
+> is just to gauge this evidence value, no less, no more.
+>
+> This approach differs from the frequentist because the sampling
+> space is irrelevant, that is, other datasets that might be observed do not
+> affect the evidence value of the observed data set. My favourite example is
+> the comparison of binomial and negative binomial experiments on coin
+> tossing, in the sections 1.11 and 1.12 of his book.
+>
+> I am not an "orthodox likelihoodist"; on the contrary, I agree with the
+> pragmatic view you express in your book. I'd just like to understand
+> the key differences among the available statistical tools, in order to make
+> a good pragmatic use of them. I'd really appreciate if you can help me
+> with this.
+>
+> Best wishes
+>
+> Paulo
+>   
+"There is nothing more practical than a good theory". I'm not sure who 
+was the original author of that quote (in a book I read long ago it was 
+said that the author was Einstein) but it applies here. Likelihoodist, 
+frequentist, and Bayesian inferences are not compatible. Especially 
+likelihoodist and Bayesian versus frequentist, so the pragmatst who 
+change allegiance is making an error at some point.
+
+>>   Very well put.  Royall, and Edwards (author of _Likelihood_, Johns
+>> Hopkins 1992) are what I would call "pure", or "hard-core",
+>> or "orthodox", likelihoodists. They are satisfied with a statement
+>> of relative likelihood, and don't feel the need to attach a p-value
+>> to the result in order to have a decision rule for hypothesis rejection.
+>>
+>>   Far more commonly, however, people impose (? add ?) an additional
+>> layer of frequentist procedure on top of this basic structure, namely
+>> using the likelihood ratio test to assess the statistical significance
+>> of a given observed likelihood ratio and/or to set a cutoff value
+>> for profile confidence intervals.  Using the LRT puts the inference
+>> back squarely into the frequentist domain, although the sample space
+>> we are now dealing with (sample space of likelihoods derived from
+>> coin-tossing experiments) is quite different from the one
+>> we started with (sample space of outcomes of coin-tossing experiments).
+>> As far as I can see, Edwards and Royall are almost alone in their
+>> adherence to "pure" likelihood -- most of the rest of us pander
+>> to the desire for p-values (or, less cynically, to the desire
+>> for a probabilistically sound decision rule).
+>>     
+Two other great statisticians that subscribe to the likelihoodist school 
+of inference are Jim Lindsey
+and John Nelder.
+At least once a year I hear someone at a meeting say that there are two 
+modes of inference:
+frequentist and Bayesian. That this sort of nonsense should be so 
+regularly propagated shows how
+much we have to do. To begin with there is a flourishing school of 
+likelihood inference, to which I
+belong.
+
+>>  I would also add that different scientists have different
+>> goals (belief, prediction, decision, assessing evidence). I too
+>> think Royall makes a good case for the primacy of
+>> assessing strength-of-evidence, and he gives the clearest
+>> explanation I have seen, but I wouldn't completely
+>> rule out the other frameworks.
+>>     
+I tend to think there is a place for Bayesian inference in prediction.
+
+Rub?n
+
+
+From Farrar.David at epamail.epa.gov  Mon Sep 29 15:56:03 2008
+From: Farrar.David at epamail.epa.gov (Farrar.David at epamail.epa.gov)
+Date: Mon, 29 Sep 2008 09:56:03 -0400
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <20080929002804.M94451@ib.usp.br>
+Message-ID: <OF967AC87D.D4D8DCAD-ON852574D3.004BBC92-852574D3.004C8B5F@epamail.epa.gov>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080929/3e6952c9/attachment.pl>
+
+From rroa at udec.cl  Mon Sep 29 16:53:25 2008
+From: rroa at udec.cl (=?ISO-8859-1?Q?Rub=E9n_Roa-Ureta?=)
+Date: Mon, 29 Sep 2008 10:53:25 -0400
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <48E0D867.9080106@udec.cl>
+References: <mailman.1.1222596002.12800.r-sig-ecology@r-project.org>	<20080929002804.M94451@ib.usp.br>
+	<48E0D867.9080106@udec.cl>
+Message-ID: <48E0EBE5.3040201@udec.cl>
+
+Rub?n Roa-Ureta wrote:
+
+Two other great statisticians that subscribe to the likelihoodist school 
+of inference are Jim Lindsey and John Nelder.
+> At least once a year I hear someone at a meeting say that there are 
+> two modes of inference:
+> frequentist and Bayesian. That this sort of nonsense should be so 
+> regularly propagated shows how
+> much we have to do. To begin with there is a flourishing school of 
+> likelihood inference, to which I
+> belong.
+Sorry, the above is a quote from John Nelder, The Statistician, vol. 48, 
+issue 2, p. 264.
+Rub?n
+
+>
+>
+>>>  I would also add that different scientists have different
+>>> goals (belief, prediction, decision, assessing evidence). I too
+>>> think Royall makes a good case for the primacy of
+>>> assessing strength-of-evidence, and he gives the clearest
+>>> explanation I have seen, but I wouldn't completely
+>>> rule out the other frameworks.
+>>>     
+> I tend to think there is a place for Bayesian inference in prediction.
+>
+> Rub?n
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From prado at ib.usp.br  Mon Sep 29 17:17:46 2008
+From: prado at ib.usp.br (prado)
+Date: Mon, 29 Sep 2008 12:17:46 -0300
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <48E0E58A.5000909@zoology.ufl.edu>
+References: <OF967AC87D.D4D8DCAD-ON852574D3.004BBC92-852574D3.004C8B5F@epamail.epa.gov>
+	<48E0E58A.5000909@zoology.ufl.edu>
+Message-ID: <48E0F19A.9070006@ib.usp.br>
+
+
+
+Ben Bolker escreveu:
+> 
+> Farrar.David at epamail.epa.gov wrote:
+>> I'm a little surpised not to see A.W.F. Edwards book on Likelihood cited 
+>> in connection 
+>> with the possibility of a distinctive "likelihoodist" viewpoint, as I 
+>> think the book was influential, 
+>> including for some biologists.  (The first edition of the book was 
+>> sometimes known as 
+>> "Little Red Likelihood.") 
+> 
+>   I did cite it ...
+> 
+>   Ruben: can you give a central Lindsey citation?  I like
+> "Statistical Heresies" (1999, The Statistician), although
+> I'm bothered by the following passage (bottom of p. 15),
+> on the subject of calibrating differences in deviance
+> for models of differing complexity:
+> 
+>   With a fairly large set of 6215 observations, a=0.22
+> might be chosen as a reasonable value for the height
+> of the normed likelihood determining the interval of
+> precision for one parameter; this implies the deviance
+> must be penalized by adding three (equal to -2 log(0.22))
+> times the number of parameters. (This a is smaller than
+> that from the AIC: a = 1/e = 0.37 so twice the number
+> of parameters would be added to the deviance.  It is larger
+> than that from a $\chi^2$-test at 5% with 1 degree of
+> freedom, a=0.14, or adding 3.84 times the number of
+> parameters, but, with p parameters, this does not change
+> to 0.14^p.)
+> 
+>   So ... one just gets to pick the penalty term based
+> on common sense (calibrated from decades of statistical
+> practice)?
+> 
+>   Ben Bolker
+> 
+
+
+If the concern here is about the subjectivity in choosing a reference 
+value (or distribution) to make a decision, it is not different from 
+p-values for sampling-distribution inference (thanks Rub?n) or from the 
+a priori distributions for Bayesian inference.
+
+I think the central issue is to distinguish between the evidence value 
+of a given data set, which is only a piece of our decision(1), and the 
+decision itself. I made this point in a previous msg: 
+https://stat.ethz.ch/pipermail/r-sig-ecology/2008-May/000148.html
+
+1- Decision = adoption of a given model or hypothesis, for explicative, 
+predictive or descriptive purposes.
+
+
+Cheers
+
+Paulo  Prado
+
+--
+
+
+From prado at ib.usp.br  Mon Sep 29 17:27:59 2008
+From: prado at ib.usp.br (prado)
+Date: Mon, 29 Sep 2008 12:27:59 -0300
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <48E0D867.9080106@udec.cl>
+References: <mailman.1.1222596002.12800.r-sig-ecology@r-project.org>
+	<20080929002804.M94451@ib.usp.br> <48E0D867.9080106@udec.cl>
+Message-ID: <48E0F3FF.2000903@ib.usp.br>
+
+Thanks, Rub?n
+
+My point with this topic was to clarify that the likelihood-based 
+approach is a distinct paradigm in statistical inference, and there is 
+people in biology applying it successfully.
+
+I agree with you that this point should be better stressed, specially 
+for biologists. Taper & Lelle  "The Nature of Scientific Evidence" 
+(Chigago Univ Press, 2007) is a great help in this respect.
+
+Could you indicate the best works by Nelder Lindsey that could 
+contribute to this point?
+
+Abra?os
+
+Paulo
+
+Rub?n Roa-Ureta escreveu:
+> Paulo In?cio de Knegt L?pez de Prado wrote:
+>> Dear r-sig-ecology users
+>>
+>> Here follow the messages I exchanged with Ben Bolker last week about the
+>> likelihood and frequentist approaches. We both would like to open this 
+>> topic
+>> for discussion in the list.
+>>
+>> Best wishes
+>>
+>> Paulo
+>>
+>> ---------------------------------------------------------------------------- 
+>>
+>> Dear Dr. Bolker,
+>> I am puzzled why some authors treat likelihood approaches as 
+>> frequentist, as it seems you did in page 13 of your book 'Ecological 
+>> Models
+>> and Data'. This sounds odd to me because  what brought my attention to 
+>> likelihood was
+>> Richard Royall's book 'Statistical Evidence'. His framing of a paradigm
+>> based on the likelihood principle, and the clear distinction he makes
+>> between this paradigm and frequentist and Bayesian approaches looks
+>> quite convincing to me.
+>>   
+> Paulo,
+> The likelihood function is the central concept of statistical inference, 
+> so working with the likelihood you can have Bayesian, frequentist 
+> (better called sampling-distribution inference), or likelihoodist 
+> inference, depending on what do you do with your likelihoods. In 
+> Bayesian inference the likelihood function updates prior opinion by 
+> bringing the data into the inference, in sampling-distribution inference 
+> (a.k.a. frequentist) it allows the building of better confidence 
+> intervals by finding in the sample space likelihood values that could 
+> have occurred if data similar to the data you have had been obtained, 
+> and in the direct-likelihood approach the likelihood is directly used to 
+> compare two hypotheses or equivalently to build direct-likelihood 
+> intervals. For example, the likelihood ratio test (not to be confused 
+> with the pure likelihood ratio, or differences in support) based on a 
+> limiting Chi-square distribution is a likelihood-based frequentist 
+> method. Frequentist statisticians evaluate the likelihood from the 
+> sample, and then proceed to evaluate the likelihood for other potential 
+> samples, thus building their confidence intervals and p-values. On the 
+> other hand Bayesian and likelihoodist statisticians only use the 
+> likelihood evaluated at the actual sample that was obtained. From that 
+> point of view one can say that Bayesian and likelihoodist are closer to 
+> each other than to frequentists, however both Bayesian and frequentists 
+> base their inference on probabilities (posterior probabilities or error 
+> rates) whereas likelihoodists base their inference on, well, likelihood 
+> only.
+> Royall's points are very convincing indeed, at least they were for me 
+> too. Royall's concept of evidence in the sample about competing 
+> hypotheses and on approximate likelihoods for problems with nuisance 
+> parameters, plus Edwards' mathematical proofs of the properties of the 
+> support function, plus Jim Lindsey's arguments about Akaike's index in 
+> model selection, provide a complete theory of statistical inference, 
+> based exclusively on the likelihood, IMHO.
+>> I agree with him that we use likelihood criteria to identify, among
+>> competing hypotheses, which one attribute the highest probability to  a
+>> given dataset. If I understood correctly, this is what Royal calls the
+>> 'evidence value' of a data set to a hypothesis 'vis a vis' other
+>> hypotheses. I also like his idea that the role of statistics in science
+>> is just to gauge this evidence value, no less, no more.
+>>
+>> This approach differs from the frequentist because the sampling
+>> space is irrelevant, that is, other datasets that might be observed do 
+>> not
+>> affect the evidence value of the observed data set. My favourite 
+>> example is
+>> the comparison of binomial and negative binomial experiments on coin
+>> tossing, in the sections 1.11 and 1.12 of his book.
+>>
+>> I am not an "orthodox likelihoodist"; on the contrary, I agree with the
+>> pragmatic view you express in your book. I'd just like to understand
+>> the key differences among the available statistical tools, in order to 
+>> make
+>> a good pragmatic use of them. I'd really appreciate if you can help me
+>> with this.
+>>
+>> Best wishes
+>>
+>> Paulo
+>>   
+> "There is nothing more practical than a good theory". I'm not sure who 
+> was the original author of that quote (in a book I read long ago it was 
+> said that the author was Einstein) but it applies here. Likelihoodist, 
+> frequentist, and Bayesian inferences are not compatible. Especially 
+> likelihoodist and Bayesian versus frequentist, so the pragmatst who 
+> change allegiance is making an error at some point.
+> 
+>>>   Very well put.  Royall, and Edwards (author of _Likelihood_, Johns
+>>> Hopkins 1992) are what I would call "pure", or "hard-core",
+>>> or "orthodox", likelihoodists. They are satisfied with a statement
+>>> of relative likelihood, and don't feel the need to attach a p-value
+>>> to the result in order to have a decision rule for hypothesis rejection.
+>>>
+>>>   Far more commonly, however, people impose (? add ?) an additional
+>>> layer of frequentist procedure on top of this basic structure, namely
+>>> using the likelihood ratio test to assess the statistical significance
+>>> of a given observed likelihood ratio and/or to set a cutoff value
+>>> for profile confidence intervals.  Using the LRT puts the inference
+>>> back squarely into the frequentist domain, although the sample space
+>>> we are now dealing with (sample space of likelihoods derived from
+>>> coin-tossing experiments) is quite different from the one
+>>> we started with (sample space of outcomes of coin-tossing experiments).
+>>> As far as I can see, Edwards and Royall are almost alone in their
+>>> adherence to "pure" likelihood -- most of the rest of us pander
+>>> to the desire for p-values (or, less cynically, to the desire
+>>> for a probabilistically sound decision rule).
+>>>     
+> Two other great statisticians that subscribe to the likelihoodist school 
+> of inference are Jim Lindsey
+> and John Nelder.
+> At least once a year I hear someone at a meeting say that there are two 
+> modes of inference:
+> frequentist and Bayesian. That this sort of nonsense should be so 
+> regularly propagated shows how
+> much we have to do. To begin with there is a flourishing school of 
+> likelihood inference, to which I
+> belong.
+> 
+>>>  I would also add that different scientists have different
+>>> goals (belief, prediction, decision, assessing evidence). I too
+>>> think Royall makes a good case for the primacy of
+>>> assessing strength-of-evidence, and he gives the clearest
+>>> explanation I have seen, but I wouldn't completely
+>>> rule out the other frameworks.
+>>>     
+> I tend to think there is a place for Bayesian inference in prediction.
+> 
+> Rub?n
+> 
+
+-- 
+Paulo In?cio de Knegt L?pez de Prado
+Depto. de Ecologia - Instituto de Bioci?ncias - USP
+Rua do Mat?o, travessa 14, n? 321
+Cid. Universit?ria, S?o Paulo - SP - Brasil
+CEP 05508-900
++55-11-30917599 (sala)
++55-11-30917600 (Secretaria)
+
+
+From rroa at udec.cl  Mon Sep 29 18:29:30 2008
+From: rroa at udec.cl (=?ISO-8859-1?Q?Rub=E9n_Roa-Ureta?=)
+Date: Mon, 29 Sep 2008 12:29:30 -0400
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <48E0F3FF.2000903@ib.usp.br>
+References: <mailman.1.1222596002.12800.r-sig-ecology@r-project.org>
+	<20080929002804.M94451@ib.usp.br> <48E0D867.9080106@udec.cl>
+	<48E0F3FF.2000903@ib.usp.br>
+Message-ID: <48E1026A.3020004@udec.cl>
+
+prado wrote:
+> Thanks, Rub?n
+>
+> My point with this topic was to clarify that the likelihood-based 
+> approach is a distinct paradigm in statistical inference, and there is 
+> people in biology applying it successfully.
+It's a very good point to make. Another important paper is Rubin's paper 
+on missing data: Biometrika 63:581-592, 1976. There Rubin basically 
+shows that it is easier to make statistical models for data with 
+Bayesian and likelihoodist inference, because the mechanism generating 
+missing data can be ignored if the missing data is missing at random, 
+whereas in sampling distribution inference this conditions is not 
+sufficient. To ignore the mechanism generating missing data it is also 
+necessary that the observed data be observed at random. Many usual 
+scientific studies involve missing data, such s random sampling from 
+finite populations, randomized experimental set up, etc.
+>
+> I agree with you that this point should be better stressed, specially 
+> for biologists. Taper & Lelle  "The Nature of Scientific Evidence" 
+> (Chigago Univ Press, 2007) is a great help in this respect.
+Thanks for this reference. I've missed it.
+>
+> Could you indicate the best works by Nelder Lindsey that could 
+> contribute to this point?
+In the case of Nelder, I only know of his personal statement in the 
+quote that I gave by mistake in my first post, complemented in the 
+second post.
+Lindsey has a very interesting paper in The Statistician (apart from 
+heresies): Relationship between sample size, model selection and 
+likelihood regions, and scientifically important differences. The 
+Statistician 48:401-411.
+Regards
+Rub?n
+
+
+From rroa at udec.cl  Mon Sep 29 18:45:50 2008
+From: rroa at udec.cl (=?ISO-8859-1?Q?Rub=E9n_Roa-Ureta?=)
+Date: Mon, 29 Sep 2008 12:45:50 -0400
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <48E0E58A.5000909@zoology.ufl.edu>
+References: <OF967AC87D.D4D8DCAD-ON852574D3.004BBC92-852574D3.004C8B5F@epamail.epa.gov>
+	<48E0E58A.5000909@zoology.ufl.edu>
+Message-ID: <48E1063E.2090005@udec.cl>
+
+Ben Bolker wrote:
+> Farrar.David at epamail.epa.gov wrote:
+>   
+>> I'm a little surpised not to see A.W.F. Edwards book on Likelihood cited 
+>> in connection 
+>> with the possibility of a distinctive "likelihoodist" viewpoint, as I 
+>> think the book was influential, 
+>> including for some biologists.  (The first edition of the book was 
+>> sometimes known as 
+>> "Little Red Likelihood.") 
+>>     
+>
+>   I did cite it ...
+>
+>   Ruben: can you give a central Lindsey citation?
+Hi Ben,
+I just posted a reference to his general ideas on model selection to the 
+list.
+
+>   I like
+> "Statistical Heresies" (1999, The Statistician), although
+> I'm bothered by the following passage (bottom of p. 15),
+> on the subject of calibrating differences in deviance
+> for models of differing complexity:
+>
+>   With a fairly large set of 6215 observations, a=0.22
+> might be chosen as a reasonable value for the height
+> of the normed likelihood determining the interval of
+> precision for one parameter; this implies the deviance
+> must be penalized by adding three (equal to -2 log(0.22))
+> times the number of parameters. (This a is smaller than
+> that from the AIC: a = 1/e = 0.37 so twice the number
+> of parameters would be added to the deviance.  It is larger
+> than that from a $\chi^2$-test at 5% with 1 degree of
+> freedom, a=0.14, or adding 3.84 times the number of
+> parameters, but, with p parameters, this does not change
+> to 0.14^p.)
+>
+>   So ... one just gets to pick the penalty term based
+> on common sense (calibrated from decades of statistical
+> practice)?
+>
+>   Ben Bolker
+>
+>   
+I agree with Paulo's answer. If you want a cutoff value from the normed 
+likelihood to make an interval of precision for one parameter, then a 
+socialized reference cutoff value will have to be agreed, like the 
+p-value=0.05 of sampling-distribution inference. But that is not 
+absolutely necessary I believe. If you refrain from making intervals, 
+then you can report your parameter estimate and its precision by means 
+of the curvature of the likelihood around the maximum w.r.t. to that 
+parameter (the formation concept of Edwards, akin to the estimation 
+variance but without the asymptotics, fully conditional on the observed 
+sample), and that's it.
+If you want to make an interval, then I prefer Royall's proposal of a 
+canonical experiment. I think it appeals well to intuition.
+Regards
+Rub?n
+
+
+From nikko at hailmail.net  Mon Sep 29 19:32:35 2008
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Mon, 29 Sep 2008 10:32:35 -0700
+Subject: [R-sig-eco] (no subject)
+In-Reply-To: <mailman.1.1222682402.26134.r-sig-ecology@r-project.org>
+References: <mailman.1.1222682402.26134.r-sig-ecology@r-project.org>
+Message-ID: <1222709555.32074.1276569553@webmail.messagingengine.com>
+
+Hi,
+Mark Taper, Subhash Lele, and I organized an ESA invited session around
+this topic 
+at the 98? ESA meeting in Baltimore MD. Which resulted in 
+Mark L. Taper and Subhash R. Lele (eds): The Nature of Scientific
+Evidence: Statistical, Philosophical, and Empirical Considerations 
+University of Chicago Press. 
+
+Ok shameless self promotion aside, I think there is a little more
+to the argument that Edwards and Royall are putting forward, and how it
+differs from the frequentist
+approach. Once the likelihood (model) is specified, the sampling/design
+is ancillary (Basu's Theorem),
+than the comparison of two competing models is the likelihood ratio. The
+p-value than adds the additional 
+layer of a not very informative null model. The idea here is that the
+sampling or design should dictate the model
+and then competing models should be assessed by the strength of evidence
+given the data. I think far more interesting
+is how well does this translate to non-nested models, ie competing
+mechanisms. 
+
+I don't think that Royall and Edwards are alone, however the Bayesian
+approach
+is usually what is suggested as the alternative, and has its own can of
+worms. 
+There are some other interesting approaches as well, such as the notion
+of model adequacy. 
+I think in Ecology we are rarely interested in the false comfort a
+p-value provides,
+we are more often interested in the evidence for competing mechanisms,
+or prediction
+of future outcomes.
+
+My 2c
+
+Nicholas
+
+> Date: Sun, 28 Sep 2008 21:55:22 -0300
+> From: " Paulo In?cio de Knegt L?pez de Prado "	<prado at ib.usp.br>
+> Subject: [R-sig-eco] Are likelihood approaches frequentist?
+> To: r-sig-ecology at r-project.org
+> Message-ID: <20080929002804.M94451 at ib.usp.br>
+> Content-Type: text/plain;	charset=iso-8859-1
+> 
+> Dear r-sig-ecology users
+> 
+> Here follow the messages I exchanged with Ben Bolker last week about the
+> likelihood and frequentist approaches. We both would like to open this
+> topic
+> for discussion in the list.
+> 
+> Best wishes
+> 
+> Paulo
+> 
+> ----------------------------------------------------------------------------
+> Dear Dr. Bolker, 
+> 
+> I am puzzled why some authors treat likelihood approaches as 
+> frequentist, as it seems you did in page 13 of your book 'Ecological
+> Models
+> and Data'. 
+> This sounds odd to me because  what brought my attention to likelihood
+> was
+> Richard Royall's book 'Statistical Evidence'. His framing of a paradigm
+> based on the likelihood principle, and the clear distinction he makes
+> between this paradigm and frequentist and Bayesian approaches looks
+> quite convincing to me.
+> 
+> I agree with him that we use likelihood criteria to identify, among
+> competing hypotheses, which one attribute the highest probability to  a
+> given dataset. If I understood correctly, this is what Royal calls the
+> 'evidence value' of a data set to a hypothesis 'vis a vis' other
+> hypotheses. I also like his idea that the role of statistics in science
+> is just to gauge this evidence value, no less, no more.
+> 
+> This approach differs from the frequentist because the sampling
+> space is irrelevant, that is, other datasets that might be observed do
+> not
+> affect the evidence value of the observed data set. My favourite example
+> is
+> the comparison of binomial and negative binomial experiments on coin
+> tossing, in the sections 1.11 and 1.12 of his book.
+> 
+> I am not an "orthodox likelihoodist"; on the contrary, I agree with the
+> pragmatic view you express in your book. I'd just like to understand
+> the key differences among the available statistical tools, in order to
+> make
+> a good pragmatic use of them. I'd really appreciate if you can help me
+> with this.
+> 
+> Best wishes
+> 
+> Paulo
+> -----------------------------------------------------------------------------
+> >   Very well put.  Royall, and Edwards (author of _Likelihood_, Johns
+> > Hopkins 1992) are what I would call "pure", or "hard-core",
+> > or "orthodox", likelihoodists. They are satisfied with a statement
+> > of relative likelihood, and don't feel the need to attach a p-value
+> > to the result in order to have a decision rule for hypothesis rejection.
+> >
+> >   Far more commonly, however, people impose (? add ?) an additional
+> > layer of frequentist procedure on top of this basic structure, namely
+> > using the likelihood ratio test to assess the statistical significance
+> > of a given observed likelihood ratio and/or to set a cutoff value
+> > for profile confidence intervals.  Using the LRT puts the inference
+> > back squarely into the frequentist domain, although the sample space
+> > we are now dealing with (sample space of likelihoods derived from
+> > coin-tossing experiments) is quite different from the one
+> > we started with (sample space of outcomes of coin-tossing experiments).
+> > As far as I can see, Edwards and Royall are almost alone in their
+> > adherence to "pure" likelihood -- most of the rest of us pander
+> > to the desire for p-values (or, less cynically, to the desire
+> > for a probabilistically sound decision rule).
+> >
+> >  I would also add that different scientists have different
+> > goals (belief, prediction, decision, assessing evidence). I too
+> > think Royall makes a good case for the primacy of
+> > assessing strength-of-evidence, and he gives the clearest
+> > explanation I have seen, but I wouldn't completely
+> > rule out the other frameworks.
+> >
+> >   Hope that makes sense -- thanks for the kind words!
+> >
+> >   cheers
+> >    Ben Bolker 
+> 
+> --
+> Paulo In?cio de Knegt L?pez de Prado
+> Depto. de Ecologia - Instituto de Bioci?ncias - USP
+> 
+> 
+> 
+> ------------------------------
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> End of R-sig-ecology Digest, Vol 6, Issue 15
+> ********************************************
+
+
+From dhewitt37 at gmail.com  Mon Sep 29 21:41:30 2008
+From: dhewitt37 at gmail.com (Dave Hewitt)
+Date: Mon, 29 Sep 2008 12:41:30 -0700 (PDT)
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <20080929002804.M94451@ib.usp.br>
+References: <20080929002804.M94451@ib.usp.br>
+Message-ID: <1222717290551-1127072.post@n2.nabble.com>
+
+
+As Ben pointed out, the key difference between pure likelihood approaches and
+frequentist approaches is the addition of a layer of "significance"
+assessment based on the idea of repeated experimentation. (The term
+"frequentist" has been stretched in a variety of directions now, perhaps due
+to lazy writing, so sometimes it is unclear what's included under the
+umbrella.)
+
+In his 2001 book "In All Likelihood: Statistical Modelling and Inference
+Using Likelihood", Yudi Pawitan refers to pure likelihood inference as
+"Fisher's third way", a compromise between frequentist and Bayesian
+approaches that began with Fisher himself. Inference based strictly on the
+likelihood function is not probabilistic, so would not conform to either of
+these two other paradigms.
+
+In a model selection context, which can be applied in most ecological
+situations, one often (always?) does not need "significance" assessment and
+can turn instead to model selection criteria for probabilistic statements
+about the evidence. Of course, once you plot estimates with confidence
+intervals you've entered the "gray area".
+
+
+prado wrote:
+> 
+> I am puzzled why some authors treat likelihood approaches as 
+> frequentist, as it seems you did in page 13 of your book 'Ecological
+> Models
+> and Data'. 
+> This sounds odd to me because  what brought my attention to likelihood was
+> Richard Royall's book 'Statistical Evidence'. His framing of a paradigm
+> based on the likelihood principle, and the clear distinction he makes
+> between this paradigm and frequentist and Bayesian approaches looks
+> quite convincing to me.
+> 
+> -----------------------------------------------------------------------------
+>>   Very well put.  Royall, and Edwards (author of _Likelihood_, Johns
+>> Hopkins 1992) are what I would call "pure", or "hard-core",
+>> or "orthodox", likelihoodists. They are satisfied with a statement
+>> of relative likelihood, and don't feel the need to attach a p-value
+>> to the result in order to have a decision rule for hypothesis rejection.
+>>
+>>   Far more commonly, however, people impose (? add ?) an additional
+>> layer of frequentist procedure on top of this basic structure, namely
+>> using the likelihood ratio test to assess the statistical significance
+>> of a given observed likelihood ratio and/or to set a cutoff value
+>> for profile confidence intervals.  Using the LRT puts the inference
+>> back squarely into the frequentist domain, although the sample space
+>> we are now dealing with (sample space of likelihoods derived from
+>> coin-tossing experiments) is quite different from the one
+>> we started with (sample space of outcomes of coin-tossing experiments).
+>> As far as I can see, Edwards and Royall are almost alone in their
+>> adherence to "pure" likelihood -- most of the rest of us pander
+>> to the desire for p-values (or, less cynically, to the desire
+>> for a probabilistically sound decision rule).
+>>
+>>  I would also add that different scientists have different
+>> goals (belief, prediction, decision, assessing evidence). I too
+>> think Royall makes a good case for the primacy of
+>> assessing strength-of-evidence, and he gives the clearest
+>> explanation I have seen, but I wouldn't completely
+>> rule out the other frameworks.
+> 
+
+-- 
+View this message in context: http://n2.nabble.com/Are-likelihood-approaches-frequentist--tp1124898p1127072.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From dhewitt37 at gmail.com  Mon Sep 29 21:50:02 2008
+From: dhewitt37 at gmail.com (Dave Hewitt)
+Date: Mon, 29 Sep 2008 12:50:02 -0700 (PDT)
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <1222717290551-1127072.post@n2.nabble.com>
+References: <20080929002804.M94451@ib.usp.br>
+	<1222717290551-1127072.post@n2.nabble.com>
+Message-ID: <1222717802046-1127094.post@n2.nabble.com>
+
+
+Sorry to be so behind... I missed the posting storm as I was composing mine.
+-- 
+View this message in context: http://n2.nabble.com/Are-likelihood-approaches-frequentist--tp1124898p1127094.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From rroa at udec.cl  Mon Sep 29 22:48:48 2008
+From: rroa at udec.cl (=?ISO-8859-1?Q?Rub=E9n_Roa-Ureta?=)
+Date: Mon, 29 Sep 2008 16:48:48 -0400
+Subject: [R-sig-eco] Are likelihood approaches frequentist?
+In-Reply-To: <1222717290551-1127072.post@n2.nabble.com>
+References: <20080929002804.M94451@ib.usp.br>
+	<1222717290551-1127072.post@n2.nabble.com>
+Message-ID: <48E13F30.8020505@udec.cl>
+
+Dave Hewitt wrote:
+> As Ben pointed out, the key difference between pure likelihood approaches and
+> frequentist approaches is the addition of a layer of "significance"
+> assessment based on the idea of repeated experimentation. (The term
+> "frequentist" has been stretched in a variety of directions now, perhaps due
+> to lazy writing, so sometimes it is unclear what's included under the
+> umbrella.)
+>
+>   
+I think Donald Rubin gave the right term: sampling-distribution 
+inference, because it is an inference based on inspection of the sample 
+space. Frequentist is not precise because a likelihoodist can subscribe 
+to a strictly frequentist view of probabilities (e.g. Edwards) but still 
+think that probabilities are not the correct tool for inferential 
+statements.
+> In his 2001 book "In All Likelihood: Statistical Modelling and Inference
+> Using Likelihood", Yudi Pawitan refers to pure likelihood inference as
+> "Fisher's third way", a compromise between frequentist and Bayesian
+> approaches that began with Fisher himself. Inference based strictly on the
+> likelihood function is not probabilistic, so would not conform to either of
+> these two other paradigms.
+>   
+It seems to me that in the area of inference, Fisher had three 
+offspring: significance tests/confidence intervals, direct-likelihood 
+and fiducial inference. W.r.t. the first child he was a bit embarrassed. 
+He wrote in his 1959 book "Objection has sometimes been made that the 
+method of calculating Confidence Limits by setting an assigned value 
+such as 1% on the frequency of observing [the test statistic] or less  
+[...] is unrealistic in treating the values less than [the test 
+statistic] which have not been observed , in exactly the same manner as 
+the value of the [the test statistic] which is the one that has been 
+observed. This feature is indeed not very defensible, save as an 
+approximation" (p. 68). His favorite child appeared to be fiducial 
+inference, but not many people understood this. It looks like his 
+favorite was ignored, while the one he was a bit embarrassed about 
+prospered. But we have to see what happens with the other child, 
+direct-likelihood, maybe it prevails at the end of the day.
+[snip]
+Rub?n
+
+

@@ -1,0 +1,2469 @@
+From daily.puja at gmail.com  Mon Oct  3 19:46:59 2016
+From: daily.puja at gmail.com (Ansley Silva)
+Date: Mon, 3 Oct 2016 10:46:59 -0700
+Subject: [R-sig-eco] Rarefaction: scaling by individual accumulation as
+ samples are pooled one by one
+Message-ID: <CAK2Sg-3Sh9Gzi6JwgnzjcuZa7Bf7PHsi5cSTVN45F136_nhiOw@mail.gmail.com>
+
+Hello there,
+
+I'm using R Version 3.3.1 and the Vegan package.
+
+I have created rarefaction curves for my invertebrate community dataset.  I
+have 2 sites: Contaminated (ap) and Uncontaminated (st).  Both are centered
+around a pond.  At the contaminated site the contaminated in concentrated
+in the pond.  So there is a gradient: distance away from water.   At each
+site I have transects along a gradient with 4 distances away from the
+ponds.  There is 0, 100, 200, and 300 meter away from the water's edge.  So
+in the Rarefaction graph I have 8 curves representing samples collected
+from the 4 distances for each of the two site (as can be seen from my
+graph).
+What I would like to do is created a rarefaction graph with only two
+curves, representing contaminated and uncontaminated, where the x-axis is
+still scaled by the number of individuals, but there is accumulation by
+pooling distances one by one.  Similar to the example in Fig.3 (the lower
+graph) of old growth vs. second growth in Colwell et al. 2004.  I am just
+having trouble with coding this and haven't found any examples.
+
+Thanks for any help,
+-- 
+Ansley Silva
+
+
+*"The clearest way into the Universe is through a forest wilderness." John
+Muir*
+
+
+*Graduate Research Assistant*
+
+*University of Georgia*
+
+*D.B. Warnell School of Forestry and Natural Resources*
+
+*180 East Green Street*
+
+*Athens, GA 30602*
+-------------- next part --------------
+> data<- read.csv(file="APSTraref.csv", header=TRUE, row.names=1, sep=",")
+> dput(head(data))
+
+
+data<-structure(list(necsur = c(1L, 4L, 0L, 8L, 0L, 1L), necame = c(4L, 
+5L, 9L, 9L, 4L, 7L), niccar = c(1L, 1L, 1L, 2L, 1L, 4L), nicorb = c(2L, 
+20L, 23L, 26L, 3L, 12L), nicpus = c(0L, 0L, 1L, 0L, 0L, 0L), 
+    nictor = c(0L, 2L, 1L, 3L, 2L, 1L), oicina = c(0L, 0L, 0L, 
+    0L, 0L, 0L), delgib = c(10L, 31L, 47L, 48L, 15L, 55L), cancha = c(5L, 
+    6L, 4L, 4L, 1L, 6L), melbis = c(3L, 0L, 1L, 3L, 0L, 1L), 
+    atelec = c(4L, 6L, 28L, 22L, 8L, 52L), copmin = c(0L, 0L, 
+    1L, 1L, 0L, 1L), ontcon = c(3L, 3L, 11L, 7L, 1L, 2L), ontdep = c(2L, 
+    0L, 0L, 0L, 0L, 0L), onthec = c(17L, 15L, 9L, 6L, 6L, 2L), 
+    ontstr = c(0L, 0L, 0L, 1L, 1L, 0L), onttau = c(20L, 13L, 
+    6L, 2L, 0L, 2L), ontpen = c(2L, 3L, 5L, 3L, 2L, 4L), onttub = c(2L, 
+    3L, 4L, 1L, 1L, 0L), ontsub = c(0L, 0L, 0L, 0L, 0L, 0L), 
+    phaign = c(0L, 0L, 0L, 0L, 0L, 0L), phavin = c(1L, 0L, 0L, 
+    0L, 0L, 1L), Phyili = c(0L, 0L, 0L, 0L, 0L, 1L), canvir = c(0L, 
+    1L, 0L, 0L, 0L, 0L), hybill = c(1L, 0L, 0L, 0L, 0L, 0L), 
+    chlema = c(0L, 0L, 0L, 0L, 0L, 0L), cyclev = c(0L, 0L, 0L, 
+    0L, 1L, 1L), dicdil = c(0L, 0L, 0L, 0L, 0L, 0L), galjan = c(0L, 
+    0L, 1L, 1L, 0L, 0L), cyclosig = c(0L, 0L, 0L, 0L, 1L, 0L), 
+    omomon = c(1L, 2L, 4L, 10L, 1L, 6L), trofov = c(1L, 2L, 3L, 
+    1L, 0L, 1L), trouni = c(1L, 0L, 0L, 1L, 0L, 0L), troter = c(0L, 
+    1L, 1L, 0L, 0L, 0L), eusass = c(9L, 8L, 23L, 14L, 11L, 28L
+    ), hiscoe = c(2L, 1L, 10L, 4L, 2L, 4L), hisabb = c(0L, 0L, 
+    0L, 0L, 2L, 0L), sappen = c(0L, 0L, 0L, 0L, 0L, 0L), dercan = c(0L, 
+    0L, 0L, 0L, 0L, 0L), cremax = c(4L, 7L, 1L, 2L, 2L, 5L), 
+    plamac = c(1L, 0L, 3L, 2L, 2L, 2L), plafem = c(0L, 0L, 0L, 
+    0L, 0L, 0L), plafos = c(1L, 1L, 3L, 2L, 1L, 2L), placom = c(6L, 
+    3L, 3L, 10L, 13L, 7L), tacfim = c(0L, 0L, 1L, 0L, 0L, 0L), 
+    cicsex = c(0L, 0L, 0L, 0L, 0L, 0L), spsK = c(0L, 0L, 0L, 
+    0L, 0L, 0L)), .Names = c("necsur", "necame", "niccar", "nicorb", 
+"nicpus", "nictor", "oicina", "delgib", "cancha", "melbis", "atelec", 
+"copmin", "ontcon", "ontdep", "onthec", "ontstr", "onttau", "ontpen", 
+"onttub", "ontsub", "phaign", "phavin", "Phyili", "canvir", "hybill", 
+"chlema", "cyclev", "dicdil", "galjan", "cyclosig", "omomon", 
+"trofov", "trouni", "troter", "eusass", "hiscoe", "hisabb", "sappen", 
+"dercan", "cremax", "plamac", "plafem", "plafos", "placom", "tacfim", 
+"cicsex", "spsK"), row.names = c("AP-0", "AP-100", "AP-200", 
+"AP-300", "ST-0", "ST-100"), class = "data.frame")
+> 
+ap<-data[c(1:4), ]
+st<-data[c(5:8), ]	
+
+s<-specnumber(data)
+raremax<-min(rowSums(data))
+Srare<-rarefy(data, raremax)
+dev.new()
+plot(s, Srare, xlab="Average No. of Species", ylab="Rarefied No. of Species")
+dev.new()
+rarecurve(data, step=5, sample=raremax, col="darkorchid2", cex=1)
+
+
+From daily.puja at gmail.com  Mon Oct  3 21:52:12 2016
+From: daily.puja at gmail.com (Ansley Silva)
+Date: Mon, 3 Oct 2016 12:52:12 -0700
+Subject: [R-sig-eco] Adonis for significance of clusteredness from hclust
+	(vegan package)
+Message-ID: <CAK2Sg-1Td5RTQsu5-iM6PSOXBtnr-T7O==nRTW28pStSMVJSMQ@mail.gmail.com>
+
+Hello:
+
+I have created a dendrograms using hierarchical cluster analysis with the
+vegan package (function: hclust).
+
+By visually observing the dendrogram, I have determined that there are 3
+main clusters if I "cut" the tree at the height 0.25  (please see the
+dendrogram from the code).
+I then created a new dataset, which is essentially the same as the
+original, but I have added the categorical variable Group to represent
+these 3 main clusters.
+ST0 is group a, AP0 and AP100 is group b, and AP200 AP300 ST100 ST200 ST
+300 is group c.
+I want to now if they are significantly different from each other.  I
+understand, from the output pasted below, that I can accept that there is a
+significant effect of Group.  Is this the only thing I can say from
+Permanova?  What would be the code for a follow up test to look at
+pair-wise significant differences?
+Thanks very much.
+
+Call:
+adonis(formula = species ~ Group, data = environ, permutations = 999)
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+          Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)
+Group      2   0.40244 0.201219   4.969 0.66528  0.007 **
+Residuals  5   0.20248 0.040495         0.33472
+Total      7   0.60492                  1.00000
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+
+-- 
+Ansley Silva
+
+
+*"The clearest way into the Universe is through a forest wilderness." John
+Muir*
+
+
+*Graduate Research Assistant*
+
+*University of Georgia*
+
+*D.B. Warnell School of Forestry and Natural Resources*
+
+*180 East Green Street*
+
+*Athens, GA 30602*
+-------------- next part --------------
+R version 3.3.1 Package:Vegan
+
+data<-structure(list(necsur = c(1L, 4L, 0L, 8L, 0L, 1L), necame = c(4L, 
+5L, 9L, 9L, 4L, 7L), niccar = c(1L, 1L, 1L, 2L, 1L, 4L), nicorb = c(2L, 
+20L, 23L, 26L, 3L, 12L), nicpus = c(0L, 0L, 1L, 0L, 0L, 0L), 
+    nictor = c(0L, 2L, 1L, 3L, 2L, 1L), oicina = c(0L, 0L, 0L, 
+    0L, 0L, 0L), delgib = c(10L, 31L, 47L, 48L, 15L, 55L), cancha = c(5L, 
+    6L, 4L, 4L, 1L, 6L), melbis = c(3L, 0L, 1L, 3L, 0L, 1L), 
+    atelec = c(4L, 6L, 28L, 22L, 8L, 52L), copmin = c(0L, 0L, 
+    1L, 1L, 0L, 1L), ontcon = c(3L, 3L, 11L, 7L, 1L, 2L), ontdep = c(2L, 
+    0L, 0L, 0L, 0L, 0L), onthec = c(17L, 15L, 9L, 6L, 6L, 2L), 
+    ontstr = c(0L, 0L, 0L, 1L, 1L, 0L), onttau = c(20L, 13L, 
+    6L, 2L, 0L, 2L), ontpen = c(2L, 3L, 5L, 3L, 2L, 4L), onttub = c(2L, 
+    3L, 4L, 1L, 1L, 0L), ontsub = c(0L, 0L, 0L, 0L, 0L, 0L), 
+    phaign = c(0L, 0L, 0L, 0L, 0L, 0L), phavin = c(1L, 0L, 0L, 
+    0L, 0L, 1L), Phyili = c(0L, 0L, 0L, 0L, 0L, 1L), canvir = c(0L, 
+    1L, 0L, 0L, 0L, 0L), hybill = c(1L, 0L, 0L, 0L, 0L, 0L), 
+    chlema = c(0L, 0L, 0L, 0L, 0L, 0L), cyclev = c(0L, 0L, 0L, 
+    0L, 1L, 1L), dicdil = c(0L, 0L, 0L, 0L, 0L, 0L), galjan = c(0L, 
+    0L, 1L, 1L, 0L, 0L), cyclosig = c(0L, 0L, 0L, 0L, 1L, 0L), 
+    omomon = c(1L, 2L, 4L, 10L, 1L, 6L), trofov = c(1L, 2L, 3L, 
+    1L, 0L, 1L), trouni = c(1L, 0L, 0L, 1L, 0L, 0L), troter = c(0L, 
+    1L, 1L, 0L, 0L, 0L), eusass = c(9L, 8L, 23L, 14L, 11L, 28L
+    ), hiscoe = c(2L, 1L, 10L, 4L, 2L, 4L), hisabb = c(0L, 0L, 
+    0L, 0L, 2L, 0L), sappen = c(0L, 0L, 0L, 0L, 0L, 0L), dercan = c(0L, 
+    0L, 0L, 0L, 0L, 0L), cremax = c(4L, 7L, 1L, 2L, 2L, 5L), 
+    plamac = c(1L, 0L, 3L, 2L, 2L, 2L), plafem = c(0L, 0L, 0L, 
+    0L, 0L, 0L), plafos = c(1L, 1L, 3L, 2L, 1L, 2L), placom = c(6L, 
+    3L, 3L, 10L, 13L, 7L), tacfim = c(0L, 0L, 1L, 0L, 0L, 0L), 
+    cicsex = c(0L, 0L, 0L, 0L, 0L, 0L), spsK = c(0L, 0L, 0L, 
+    0L, 0L, 0L)), .Names = c("necsur", "necame", "niccar", "nicorb", 
+"nicpus", "nictor", "oicina", "delgib", "cancha", "melbis", "atelec", 
+"copmin", "ontcon", "ontdep", "onthec", "ontstr", "onttau", "ontpen", 
+"onttub", "ontsub", "phaign", "phavin", "Phyili", "canvir", "hybill", 
+"chlema", "cyclev", "dicdil", "galjan", "cyclosig", "omomon", 
+"trofov", "trouni", "troter", "eusass", "hiscoe", "hisabb", "sappen", 
+"dercan", "cremax", "plamac", "plafem", "plafos", "placom", "tacfim", 
+"cicsex", "spsK"), row.names = c("AP-0", "AP-100", "AP-200", 
+"AP-300", "ST-0", "ST-100"), class = "data.frame")
+
+> apst.log <- decostand(apst, "log")
+> apst.bray <- vegdist(apst.log)
+> apst.clusters <- hclust(apst.bray, method = "average")
+> dev.new()
+> plot(apst.clusters, which.plot=2, hang=-1)
+
+#Create dataset with Groups a, b, cco
+
+##Data1 <- read.csv(file="APSTperma.csv", header=TRUE, row.names=NULL, sep=",")
+
+Data1<- structure(list(ID = structure(1:6, .Label = c("AP0", "AP100", 
+"AP200", "AP300", "ST0", "ST100", "ST200", "ST300"), class = "factor"), 
+    Treat = c(1L, 1L, 1L, 1L, 0L, 0L), Group = structure(c(2L, 
+    2L, 3L, 3L, 1L, 3L), .Label = c("a", "b", "c"), class = "factor"), 
+    necsur = c(1L, 4L, 0L, 8L, 0L, 1L), necame = c(4L, 5L, 9L, 
+    9L, 4L, 7L), niccar = c(1L, 1L, 1L, 2L, 1L, 4L), nicorb = c(2L, 
+    20L, 23L, 26L, 3L, 12L), nicpus = c(0L, 0L, 1L, 0L, 0L, 0L
+    ), nictor = c(0L, 2L, 1L, 3L, 2L, 1L), delgib = c(10L, 31L, 
+    47L, 48L, 15L, 55L), cancha = c(5L, 6L, 4L, 4L, 1L, 6L), 
+    melbis = c(3L, 0L, 1L, 3L, 0L, 1L), atelec = c(4L, 6L, 28L, 
+    22L, 8L, 52L), copmin = c(0L, 0L, 1L, 1L, 0L, 1L), ontcon = c(3L, 
+    3L, 11L, 7L, 1L, 2L), ontdep = c(2L, 0L, 0L, 0L, 0L, 0L), 
+    onthec = c(17L, 15L, 9L, 6L, 6L, 2L), ontstr = c(0L, 0L, 
+    0L, 1L, 1L, 0L), onttau = c(20L, 13L, 6L, 2L, 0L, 2L), ontpen = c(2L, 
+    3L, 5L, 3L, 2L, 4L), onttub = c(2L, 3L, 4L, 1L, 1L, 0L), 
+    phavin = c(1L, 0L, 0L, 0L, 0L, 1L), Phyili = c(0L, 0L, 0L, 
+    0L, 0L, 1L), canvir = c(0L, 1L, 0L, 0L, 0L, 0L), hybill = c(1L, 
+    0L, 0L, 0L, 0L, 0L), cyclev = c(0L, 0L, 0L, 0L, 1L, 1L), 
+    galjan = c(0L, 0L, 1L, 1L, 0L, 0L), cyclosig = c(0L, 0L, 
+    0L, 0L, 1L, 0L), omomon = c(1L, 2L, 4L, 10L, 1L, 6L), trofov = c(1L, 
+    2L, 3L, 1L, 0L, 1L), trouni = c(1L, 0L, 0L, 1L, 0L, 0L), 
+    troter = c(0L, 1L, 1L, 0L, 0L, 0L), eusass = c(9L, 8L, 23L, 
+    14L, 11L, 28L), hiscoe = c(2L, 1L, 10L, 4L, 2L, 4L), hisabb = c(0L, 
+    0L, 0L, 0L, 2L, 0L), cremax = c(4L, 7L, 1L, 2L, 2L, 5L), 
+    plamac = c(1L, 0L, 3L, 2L, 2L, 2L), plafem = c(0L, 0L, 0L, 
+    0L, 0L, 0L), plafos = c(1L, 1L, 3L, 2L, 1L, 2L), placom = c(6L, 
+    3L, 3L, 10L, 13L, 7L), tacfim = c(0L, 0L, 1L, 0L, 0L, 0L)), .Names = c("ID", 
+"Treat", "Group", "necsur", "necame", "niccar", "nicorb", "nicpus", 
+"nictor", "delgib", "cancha", "melbis", "atelec", "copmin", "ontcon", 
+"ontdep", "onthec", "ontstr", "onttau", "ontpen", "onttub", "phavin", 
+"Phyili", "canvir", "hybill", "cyclev", "galjan", "cyclosig", 
+"omomon", "trofov", "trouni", "troter", "eusass", "hiscoe", "hisabb", 
+"cremax", "plamac", "plafem", "plafos", "placom", "tacfim"), row.names = c(NA, 
+6L), class = "data.frame")
+
+species<-(Data1[,4:41])
+environ<-(Data1[,1:3])
+species.dist<-vegdist(species, method="bray")
+M1<-adonis(species~Group, data=environ, permutations = 999)
+M1 
+   
+
+From oliverhooker at prstatistics.com  Tue Oct  4 12:29:29 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Tue, 04 Oct 2016 11:29:29 +0100
+Subject: [R-sig-eco] 'FINAL CALL - Phylogenetic data analysis using R'
+Message-ID: <b59dfa3033e7920f6675499f01ac9fdd@prstatistics.com>
+
+"Phylogenetic data analysis using R" October 31st ? November 4th
+
+Delivered by Dr. Emmanuel Paradis
+
+http://prstatistics.com/course/introduction-to-phylogenetic-analysis-with-r-phyg/
+
+This course will run from 31st October ? 4th November, Millport Field 
+Station, Ilse of Cumbrae, Scotland
+The main objectives of the course are to teach the theoretical bases of 
+phylogenetic analysis, and to give the ability to initiate a 
+phylogenetic analysis starting from the files of molecular sequences 
+until the interpretation of the results and the graphics.
+
+The introduction will cover a brief historical background and an 
+overview of the different methods of phylogenetic inference. Different 
+kinds of data will be considered, but with a special emphasis on DNA 
+sequences. The software used will be based on R and several specialized 
+packages (particularly ape and phangorn). Other software will be used 
+(e.g., MUSCLE or Clustal) called from R.
+
+Overall, the course will cover almost all aspects of phylogenetic 
+inference from reading/downloading the data to plotting the results. 
+This course is intended for PhD and postgraduate students, researchers 
+and engineers in evolutionary biology, systematics, population genetics, 
+ecology, conservation.
+
+Course content is as follows
+Day 1
+?	Refresher on R: data structures, data manipulation with the indexing 
+system, scripts, using the help system.
+?	Introduction to phylogenetic inference.
+?	Basics on phylogenetic data (sequences, alignments, trees, networks, 
+?splits?) and other data in R.
+?	Reading / writing data from files or from internet.
+?	Matching data. Manipulating labels. Subsetting data.
+?	Main package: ape.
+Day 2
+?	Plotting and annotating trees.
+?	Theory of sequence alignment. Comparing alignments. Graphical 
+analyses of alignments.
+?	Main packages: ape (with MUSCLE and Clustal).
+Day 3
+?	Theory and methods of phylogeny reconstruction.
+?	Parsimony methods.
+?	Evolutionary distances.
+?	Distance-based methods: General principles and the main methods (NJ, 
+BIONJ, FastME, MVR).
+?	Methods for incomplete distances matrices (NJ*, BIONJ*, MVR*). 
+Methods for combining several matrices (SDM).
+?	Main packages: ape, phangorn.
+
+Day 4
+?	Theory of maximum likelihood estimation.
+?	Application to phylogeny reconstruction.
+?	Substitution models.
+?	Tree space and topology estimation.
+?	Main packages: ape, phangorn.
+
+Day 5
+?	Tree comparison, consensus methods.
+?	Topological space and distances.
+?	Bootstrap.
+?	Bayesian methods.
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+
+Upcoming courses - email for details oliverhooker at prstatistics.com
+1.	INTRODUCTION TO PYTHON FOR BIOLOGISTS (October)
+2.	LANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R (October)
+3.	APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS 
+(October)
+4.	SPATIAL ANALYSIS OF ECOLOGIC AL DATA USING R (November)
+5.	ADVANCING IN STATISTICAL MODELLING USING R (December)
+6.	MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R 
+(January)
+7.	ADVANCED PYTHON FOR BIOLOGISTS (February)
+8.      STABLE ISOTOPE MIXING MODELSUSING R (February/Mrch)
+9.	NETWORK ANALYSIS FOR ECOLOGISTS (March)
+10.	INTRODUCTION TO GEOMETRIC MORPHOMETRICS USING R (June)
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+?	INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+?	BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS
+?	ADVANCES IN SPATIAL ANALYSIS OF MULTIVARIATE ECOLOGICAL DATA
+?	INTRODUCTION TO BIOINFORMATICS USING LINUX
+?	GENETIC DATA ANALYSIS / EXPLORATION USING R
+?	INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING
+
+Oliver Hooker
+PR Statistics
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From botta-dukat.zoltan at okologia.mta.hu  Tue Oct  4 14:14:35 2016
+From: botta-dukat.zoltan at okologia.mta.hu (Zoltan Botta-Dukat)
+Date: Tue, 4 Oct 2016 14:14:35 +0200
+Subject: [R-sig-eco] Adonis for significance of clusteredness from
+ hclust (vegan package)
+In-Reply-To: <CAK2Sg-1Td5RTQsu5-iM6PSOXBtnr-T7O==nRTW28pStSMVJSMQ@mail.gmail.com>
+References: <CAK2Sg-1Td5RTQsu5-iM6PSOXBtnr-T7O==nRTW28pStSMVJSMQ@mail.gmail.com>
+Message-ID: <191eeff6-d3a1-45b8-54b3-4ff4e9ec0dae@okologia.mta.hu>
+
+Dear Ansley,
+
+I cannot answer your question, I hope someone else will answer. I'd 
+rather point out a problem in your approach. Statistical tests were 
+developed for testing difference between a priori groups, thus estimated 
+Type I error rate is valid only for this situation. When you calculates 
+Type I error rate for comparison of groups created by cluster analysis 
+of the SAME data, the calculated error rate will be lower than the valid 
+error rate. So you cannot use the term "significant" in this situation.
+
+Sorry for making you sadden by this information.
+
+Zoltan
+
+2016.10.03. 21:52 keltez?ssel, Ansley Silva ?rta:
+> Hello:
+>
+> I have created a dendrograms using hierarchical cluster analysis with the
+> vegan package (function: hclust).
+>
+> By visually observing the dendrogram, I have determined that there are 3
+> main clusters if I "cut" the tree at the height 0.25  (please see the
+> dendrogram from the code).
+> I then created a new dataset, which is essentially the same as the
+> original, but I have added the categorical variable Group to represent
+> these 3 main clusters.
+> ST0 is group a, AP0 and AP100 is group b, and AP200 AP300 ST100 ST200 ST
+> 300 is group c.
+> I want to now if they are significantly different from each other.  I
+> understand, from the output pasted below, that I can accept that there is a
+> significant effect of Group.  Is this the only thing I can say from
+> Permanova?  What would be the code for a follow up test to look at
+> pair-wise significant differences?
+> Thanks very much.
+>
+> Call:
+> adonis(formula = species ~ Group, data = environ, permutations = 999)
+>
+> Permutation: free
+> Number of permutations: 999
+>
+> Terms added sequentially (first to last)
+>
+>            Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)
+> Group      2   0.40244 0.201219   4.969 0.66528  0.007 **
+> Residuals  5   0.20248 0.040495         0.33472
+> Total      7   0.60492                  1.00000
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>
+>
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+
+Botta-Duk?t Zolt?n                                Zolt?n BOTTA-Duk?t
+------------------------------------------------------------------------------------
+?kol?giai ?s Botanikai Int?zet                    Institute of Ecology and Botany
+Magyar Tudom?nyos Akad?mia                        Hungarian Academy of Sciences
+?kol?giai Kutat?k?zpont                           Centre for Ecological Research
+--------------------------------------------------------------------------------------------
+2163. V?cr?t?t, Alkotm?ny u. 2-4.                 H-2163 V?cr?t?t, Alkom?ny u. 2-4.,HUNGARY
+tel: +36 28 360122/157                            Phone: +36 28 360122/157
+fax: +36 28 360110                                Fax +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu                botta-dukat.zoltan at okologia.mta.hu
+http://okologia.mta.hu/Botta-Dukat.Zoltan         http://okologia.mta.hu/en/Zoltan.BOTTA-DUKAT
+
+*New book:*
+Theory-Based Ecology; A Darwinian approach
+Authors: Liz P?sztor, Zolt?n Botta-Duk?t, Gabriella Magyar, Tam?s 
+Cz?r?n, and G?za Mesz?na
+Available at Amazon 
+<https://www.amazon.com/Theory-Based-Ecology-Darwinian-Liz-Pasztor/dp/0199577862/ref=sr_1_1?s=books&ie=UTF8&qid=1467644770&sr=1-1&refinements=p_27%3ATamas+Czaran>, 
+in most major bookstores, or directly from Oxford University Press 
+<https://global.oup.com/academic/product/theory-based-ecology-9780199577866?lang=en&cc=gb>
+Companion website: http://tbe.elte.hu/
+
+	[[alternative HTML version deleted]]
+
+
+From pierre.d.thiriet at gmail.com  Wed Oct  5 16:31:00 2016
+From: pierre.d.thiriet at gmail.com (Pierre THIRIET)
+Date: Wed, 5 Oct 2016 16:31:00 +0200
+Subject: [R-sig-eco] Adonis for significance of clusteredness from
+ hclust (vegan package)
+In-Reply-To: <191eeff6-d3a1-45b8-54b3-4ff4e9ec0dae@okologia.mta.hu>
+References: <CAK2Sg-1Td5RTQsu5-iM6PSOXBtnr-T7O==nRTW28pStSMVJSMQ@mail.gmail.com>
+	<191eeff6-d3a1-45b8-54b3-4ff4e9ec0dae@okologia.mta.hu>
+Message-ID: <3b5fab84-0318-dc5a-1766-b4a0adc7b46d@gmail.com>
+
+Dear Ansley,
+
+I agree with Zoltan.
+
+I suggest SIMPROF test in package "clustsig". A complimentary package 
+for use with hclust; simprof tests to see which (if any) clusters are 
+statistically different. The null hypothesis is that there is no a 
+priori group structure.
+See Clarke, K.R., Somerfield, P.J., and Gorley R.N. 2008. Testing of 
+null hypothesis in exploratory community analyses: similarity profiles 
+and biota-environment linkage. J. Exp. Mar. Biol. Ecol. 366, 56-69
+
+HTH
+Pierre
+
+Le 04/10/2016 ? 14:14, Zoltan Botta-Dukat a ?crit :
+> Dear Ansley,
+>
+> I cannot answer your question, I hope someone else will answer. I'd
+> rather point out a problem in your approach. Statistical tests were
+> developed for testing difference between a priori groups, thus estimated
+> Type I error rate is valid only for this situation. When you calculates
+> Type I error rate for comparison of groups created by cluster analysis
+> of the SAME data, the calculated error rate will be lower than the valid
+> error rate. So you cannot use the term "significant" in this situation.
+>
+> Sorry for making you sadden by this information.
+>
+> Zoltan
+>
+> 2016.10.03. 21:52 keltez?ssel, Ansley Silva ?rta:
+>> Hello:
+>>
+>> I have created a dendrograms using hierarchical cluster analysis with the
+>> vegan package (function: hclust).
+>>
+>> By visually observing the dendrogram, I have determined that there are 3
+>> main clusters if I "cut" the tree at the height 0.25  (please see the
+>> dendrogram from the code).
+>> I then created a new dataset, which is essentially the same as the
+>> original, but I have added the categorical variable Group to represent
+>> these 3 main clusters.
+>> ST0 is group a, AP0 and AP100 is group b, and AP200 AP300 ST100 ST200 ST
+>> 300 is group c.
+>> I want to now if they are significantly different from each other.  I
+>> understand, from the output pasted below, that I can accept that there is a
+>> significant effect of Group.  Is this the only thing I can say from
+>> Permanova?  What would be the code for a follow up test to look at
+>> pair-wise significant differences?
+>> Thanks very much.
+>>
+>> Call:
+>> adonis(formula = species ~ Group, data = environ, permutations = 999)
+>>
+>> Permutation: free
+>> Number of permutations: 999
+>>
+>> Terms added sequentially (first to last)
+>>
+>>             Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)
+>> Group      2   0.40244 0.201219   4.969 0.66528  0.007 **
+>> Residuals  5   0.20248 0.040495         0.33472
+>> Total      7   0.60492                  1.00000
+>> ---
+>> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>>
+>>
+>>
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker at prstatistics.com  Wed Oct  5 16:37:54 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Wed, 05 Oct 2016 15:37:54 +0100
+Subject: [R-sig-eco] 'Last few places - Spatial analysis of ecological data
+	using R'
+Message-ID: <c30d3ea59d4b23c4a04dbd6547c465e9@prstatistics.com>
+
+"Spatial analysis of ecological data using R"
+
+Delivered by Prof. Jason Matthiopoulos, Dr. Jana Jeglinski, Dr. James 
+Grecian
+
+http://prstatistics.com/course/spatial-analysis-of-ecological-data-using-r-spae-2/
+
+This course will run from 21st ? 26th November 2016 at SCENE field 
+station, Loch Lomond national park, Scotland
+The course will cover the concepts and R tools that can be used to 
+analyse spatial data in ecology covering elementary and advanced spatial 
+analysis techniques applicable to both plants and animals. We will 
+investigate analyses appropriate to transect (e.g. line surveys, 
+trapping arrays), grid (e.g. occupancy surveys) and point data (e.g. 
+telemetry). The focal questions will be on deriving species 
+distributions, determining their environmental drivers and quantifying 
+different types of associated uncertainty. Novel methodology for 
+generating predictions will be introduced. We will also address the 
+challenges of applying the results of these methods to wildlife 
+conservation and resource management and communicate the findings to 
+non-experts.
+
+Course content is as follows
+
+Day 1: Elementary concepts
+Module 1 Introductory lectures and practical; this will cover the key 
+questions in spatial ecology, the main types of data on species 
+distributions, concepts and challenges and different types of 
+environmental data, concepts and challenges; useful concepts from 
+statistics; Generalised Linear Models
+Module 2 GIS tools in R: Types and structure of spatial objects in R, 
+generating and manipulating spatial objects,
+projections and transformations, cropping and masking spatial objects, 
+extracting covariate data and other simple
+GIS operations in R, optionally plotting simple maps
+
+Day 2: Overview of basic analyses
+Module 3 Density estimation, Spatial autocorrelation, Smoothing, Kernel 
+Smoothers, Kriging, Trend-fitting (linear, generalised linear, 
+generalised additive models)
+Module 4 Habitat preference, Resource selection functions, MaxEnt: 
+What?s it all about? Overview and caveats related to Niche models
+
+Day 3: Challenging problems
+Module 5 Analysing grid data, Poisson processes, Occupancy models, 
+Use-availability designs
+Module 6 Analysing telemetry data, Presence-only data, Spatial and 
+serial autocorrelation, Partitioning variation by
+mixed effects models
+
+Day 4: Challenging problems
+Module 7 Analysing transect data, Detection functions for point and line 
+transects, Using covariates in transect models. Afternoon for catch up 
+and/or excursion
+
+Day 5: Challenging problems
+Module 8 Advanced methods, Generalised Estimation Equations for 
+difficult survey designs, Generalised additive
+models for habitat preference, Dealing with boundary effects using soap 
+smoothers, Spatial point processes with INLA
+
+Day 6: Delivering advice
+Module 9 Prediction, Validation by resampling, Generalised Functional 
+Responses for species distribution, Quantifying uncertainty, Dealing 
+with the effects of population density
+Module 10 Applications, Designing protected areas, thinking about 
+critical habitat, Representing uncertainty
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+
+Upcoming courses - email for details oliverhooker at prstatistics.com
+LANDSCAPE GENETIC DATA ANALYSIS USING R (October)
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (October)
+PHYLOGENETIC DATA ANALYSIS USING R (October/November)
+ADVANCING IN STATISTICAL MODELLING USING R (December)
+MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R (January)
+ADVANCED PYTHON FOR BIOLOGISTS (February)
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR USING R 
+(Feb/Mar)
+NETWORK ANALYSIS FOR ECOLOGISTS USING R (March)
+INTRODUCTION TO GEOMETRIC MORPHOMETRICS USING R (June)
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR USING R
+INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS
+ADVANCES IN SPATIAL ANALYSIS OF MULTIVARIATE ECOLOGICAL DATA (July)
+INTRODUCTION TO BIOINFORMATICS USING LINUX (August)
+GENETIC DATA ANALYSIS / EXPLORATION USING R (August)
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING (August)
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (October)
+
+
+Oliver Hooker PhD.
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From swamp at blarg.net  Wed Oct  5 16:45:39 2016
+From: swamp at blarg.net (Michael Marsh)
+Date: Wed, 5 Oct 2016 07:45:39 -0700
+Subject: [R-sig-eco] Adonis for significance of clusteredness from,
+ hclust (vegan package)
+In-Reply-To: <mailman.9.1475661603.2793.r-sig-ecology@r-project.org>
+References: <mailman.9.1475661603.2793.r-sig-ecology@r-project.org>
+Message-ID: <35e53a85-bf64-1d03-ff4e-19b86ca0b3b5@blarg.net>
+
+hello Ansley,
+You might want to look at the multi-respnse permutation procedure (mrpp 
+in R), which examines the difference among clusters, that is, how much 
+greater similarity the elements of cluster have to each other as 
+compared to the overall similarity of elements of the data. I am not 
+well enough informed to advise on how the outputs of this test satisfy 
+your requirements, but have used it myself to assess the degree of 
+difference among clusters created by hclust and the "significance" of 
+that difference.
+Mike
+
+On 10/5/2016 3:00 AM, r-sig-ecology-request at r-project.org wrote:
+>   Re: [R-sig-eco] Adonis for significance of clusteredness from
+> 	hclust (vegan package)
+2016.10.03. 21:52 keltez?el, Ansley Silva ?a:
+> Hello:
+>
+> I have created a dendrograms using hierarchical cluster analysis with the
+> vegan package (function: hclust).
+>
+> By visually observing the dendrogram, I have determined that there are 3
+> main clusters if I "cut" the tree at the height 0.25  (please see the
+> dendrogram from the code).
+> I then created a new dataset, which is essentially the same as the
+> original, but I have added the categorical variable Group to represent
+> these 3 main clusters.
+> ST0 is group a, AP0 and AP100 is group b, and AP200 AP300 ST100 ST200 ST
+> 300 is group c.
+> I want to now if they are significantly different from each other.  I
+> understand, from the output pasted below, that I can accept that there is a
+> significant effect of Group.  Is this the only thing I can say from
+> Permanova?  What would be the code for a follow up test to look at
+> pair-wise significant differences?
+> Thanks very much.
+
+
+	[[alternative HTML version deleted]]
+
+
+From ggaldino at gmail.com  Wed Oct  5 18:35:23 2016
+From: ggaldino at gmail.com (Graciliano Galdino)
+Date: Wed, 5 Oct 2016 13:35:23 -0300
+Subject: [R-sig-eco] Adonis for significance of clusteredness from
+ hclust (vegan package)
+In-Reply-To: <3b5fab84-0318-dc5a-1766-b4a0adc7b46d@gmail.com>
+References: <CAK2Sg-1Td5RTQsu5-iM6PSOXBtnr-T7O==nRTW28pStSMVJSMQ@mail.gmail.com>
+	<191eeff6-d3a1-45b8-54b3-4ff4e9ec0dae@okologia.mta.hu>
+	<3b5fab84-0318-dc5a-1766-b4a0adc7b46d@gmail.com>
+Message-ID: <CANgk37PUhXSN1HC2waH2cTt8yX=hNsxakpoJhDdrksZr=-Zskg@mail.gmail.com>
+
+pvclust is a good package to create and test significance of cluster groups.
+
+2016-10-05 11:31 GMT-03:00 Pierre THIRIET <pierre.d.thiriet at gmail.com>:
+
+> Dear Ansley,
+>
+> I agree with Zoltan.
+>
+> I suggest SIMPROF test in package "clustsig". A complimentary package
+> for use with hclust; simprof tests to see which (if any) clusters are
+> statistically different. The null hypothesis is that there is no a
+> priori group structure.
+> See Clarke, K.R., Somerfield, P.J., and Gorley R.N. 2008. Testing of
+> null hypothesis in exploratory community analyses: similarity profiles
+> and biota-environment linkage. J. Exp. Mar. Biol. Ecol. 366, 56-69
+>
+> HTH
+> Pierre
+>
+> Le 04/10/2016 ? 14:14, Zoltan Botta-Dukat a ?crit :
+> > Dear Ansley,
+> >
+> > I cannot answer your question, I hope someone else will answer. I'd
+> > rather point out a problem in your approach. Statistical tests were
+> > developed for testing difference between a priori groups, thus estimated
+> > Type I error rate is valid only for this situation. When you calculates
+> > Type I error rate for comparison of groups created by cluster analysis
+> > of the SAME data, the calculated error rate will be lower than the valid
+> > error rate. So you cannot use the term "significant" in this situation.
+> >
+> > Sorry for making you sadden by this information.
+> >
+> > Zoltan
+> >
+> > 2016.10.03. 21:52 keltez?ssel, Ansley Silva ?rta:
+> >> Hello:
+> >>
+> >> I have created a dendrograms using hierarchical cluster analysis with
+> the
+> >> vegan package (function: hclust).
+> >>
+> >> By visually observing the dendrogram, I have determined that there are 3
+> >> main clusters if I "cut" the tree at the height 0.25  (please see the
+> >> dendrogram from the code).
+> >> I then created a new dataset, which is essentially the same as the
+> >> original, but I have added the categorical variable Group to represent
+> >> these 3 main clusters.
+> >> ST0 is group a, AP0 and AP100 is group b, and AP200 AP300 ST100 ST200 ST
+> >> 300 is group c.
+> >> I want to now if they are significantly different from each other.  I
+> >> understand, from the output pasted below, that I can accept that there
+> is a
+> >> significant effect of Group.  Is this the only thing I can say from
+> >> Permanova?  What would be the code for a follow up test to look at
+> >> pair-wise significant differences?
+> >> Thanks very much.
+> >>
+> >> Call:
+> >> adonis(formula = species ~ Group, data = environ, permutations = 999)
+> >>
+> >> Permutation: free
+> >> Number of permutations: 999
+> >>
+> >> Terms added sequentially (first to last)
+> >>
+> >>             Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)
+> >> Group      2   0.40244 0.201219   4.969 0.66528  0.007 **
+> >> Residuals  5   0.20248 0.040495         0.33472
+> >> Total      7   0.60492                  1.00000
+> >> ---
+> >> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+> >>
+> >>
+> >>
+> >>
+> >> _______________________________________________
+> >> R-sig-ecology mailing list
+> >> R-sig-ecology at r-project.org
+> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> >
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Graciliano Galdino A. dos Santos
+Bi?logo
+Doutorando em Ci?ncias Florestais - PPGCF
+Universidade Federal Rural da Amaz?nia - UFRA
+
+	[[alternative HTML version deleted]]
+
+
+From daily.puja at gmail.com  Fri Oct  7 02:43:58 2016
+From: daily.puja at gmail.com (Ansley Silva)
+Date: Thu, 6 Oct 2016 17:43:58 -0700
+Subject: [R-sig-eco] Errors with Simprof for cluster significance
+Message-ID: <CAK2Sg-2G6XBxjLew+jTknme654_fbD2HqdDLGdUw0T_gFqS=jw@mail.gmail.com>
+
+Hello all,
+
+I'm using R version 3.3.1, clustsig package.
+
+I have a community dataset and I originally used hclust in the vegan
+package to get dendrograms, however I need significance on the groups that
+were formed.  I'd really like to use SIMPROF to look for significance among
+the groups, but I am running into errors.
+
+
+These are the errors I get:
+
+> simprof(apst, num.expected=1000, num.simulated=999,
+method.cluster="average", method.distance="braycurtis", alpha=0.05,
+sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+
+Error: argument "undef.zero" is missing, with no default
+In addition: Warning messages:
+1: This version of the Bray-Curtis index does not use standardization.
+2: To use the standardized version, use "actual-braycurtis".
+3: See the help documentation for more information.
+
+> simprof(apst, num.expected=1000, num.simulated=999,
+method.cluster="average", method.distance="actual-braycurtis", alpha=0.05,
+sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+
+Error in if (denom != 0) { : missing value where TRUE/FALSE needed
+
+> simprof(apst, num.expected=1000, num.simulated=999,
+method.cluster="average", method.distance="braycurtis", alpha=0.05,
+sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+
+Error: argument "undef.zero" is missing, with no default
+In addition: Warning messages:
+1: This version of the Bray-Curtis index does not use standardization.
+2: To use the standardized version, use "actual-braycurtis".
+3: See the help documentation for more information.
+
+> simprof(apst, num.expected=1000, num.simulated=999,
+method.cluster="average",
+method.transform="log",method.distance="braycurtis", alpha=0.05,
+sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+
+Error in if (pval > alpha) { : missing value where TRUE/FALSE needed
+In addition: Warning messages:
+1: This version of the Bray-Curtis index does not use standardization.
+2: To use the standardized version, use "actual-braycurtis".
+3: See the help documentation for more information.
+
+
+
+I have some samples were the columns added up to zero, so I tried removing
+them since I was using method.transform="log".  But that didn't seem to
+change anything.
+I also tried transposing the data, but no luck there.
+I am using braycurtis, but have tried actual-braycurtis and that did not
+help.
+I have also tried tweeking undef.zero.
+
+
+?If anyone could help provide some solutions, that would be greatly
+appreciated.
+Please and thank you,?
+
+-- 
+Ansley Silva
+
+
+*"The clearest way into the Universe is through a forest wilderness." John
+Muir*
+
+
+*Graduate Research Assistant*
+
+*University of Georgia*
+
+*D.B. Warnell School of Forestry and Natural Resources*
+
+*180 East Green Street*
+
+*Athens, GA 30602*
+-------------- next part --------------
+ packages:  vegan, clustsig
+ 
+ data<- structure(list(necsur = c(1L, 4L, 0L, 8L, 0L, 1L), necame = c(4L, 
+5L, 9L, 9L, 4L, 7L), niccar = c(1L, 1L, 1L, 2L, 1L, 4L), nicorb = c(2L, 
+20L, 23L, 26L, 3L, 12L), nicpus = c(0L, 0L, 1L, 0L, 0L, 0L), 
+    nictor = c(0L, 2L, 1L, 3L, 2L, 1L), delgib = c(10L, 31L, 
+    47L, 48L, 15L, 55L), cancha = c(5L, 6L, 4L, 4L, 1L, 6L), 
+    melbis = c(3L, 0L, 1L, 3L, 0L, 1L), atelec = c(4L, 6L, 28L, 
+    22L, 8L, 52L), copmin = c(0L, 0L, 1L, 1L, 0L, 1L), ontcon = c(3L, 
+    3L, 11L, 7L, 1L, 2L), ontdep = c(2L, 0L, 0L, 0L, 0L, 0L), 
+    onthec = c(17L, 15L, 9L, 6L, 6L, 2L), ontstr = c(0L, 0L, 
+    0L, 1L, 1L, 0L), onttau = c(20L, 13L, 6L, 2L, 0L, 2L), ontpen = c(2L, 
+    3L, 5L, 3L, 2L, 4L), onttub = c(2L, 3L, 4L, 1L, 1L, 0L), 
+    phavin = c(1L, 0L, 0L, 0L, 0L, 1L), Phyili = c(0L, 0L, 0L, 
+    0L, 0L, 1L), canvir = c(0L, 1L, 0L, 0L, 0L, 0L), hybill = c(1L, 
+    0L, 0L, 0L, 0L, 0L), cyclev = c(0L, 0L, 0L, 0L, 1L, 1L), 
+    galjan = c(0L, 0L, 1L, 1L, 0L, 0L), cyclosig = c(0L, 0L, 
+    0L, 0L, 1L, 0L), omomon = c(1L, 2L, 4L, 10L, 1L, 6L), trofov = c(1L, 
+    2L, 3L, 1L, 0L, 1L), trouni = c(1L, 0L, 0L, 1L, 0L, 0L), 
+    troter = c(0L, 1L, 1L, 0L, 0L, 0L), eusass = c(9L, 8L, 23L, 
+    14L, 11L, 28L), hiscoe = c(2L, 1L, 10L, 4L, 2L, 4L), hisabb = c(0L, 
+    0L, 0L, 0L, 2L, 0L), cremax = c(4L, 7L, 1L, 2L, 2L, 5L), 
+    plamac = c(1L, 0L, 3L, 2L, 2L, 2L), plafem = c(0L, 0L, 0L, 
+    0L, 0L, 0L), plafos = c(1L, 1L, 3L, 2L, 1L, 2L), placom = c(6L, 
+    3L, 3L, 10L, 13L, 7L), tacfim = c(0L, 0L, 1L, 0L, 0L, 0L)), .Names = c("necsur", 
+"necame", "niccar", "nicorb", "nicpus", "nictor", "delgib", "cancha", 
+"melbis", "atelec", "copmin", "ontcon", "ontdep", "onthec", "ontstr", 
+"onttau", "ontpen", "onttub", "phavin", "Phyili", "canvir", "hybill", 
+"cyclev", "galjan", "cyclosig", "omomon", "trofov", "trouni", 
+"troter", "eusass", "hiscoe", "hisabb", "cremax", "plamac", "plafem", 
+"plafos", "placom", "tacfim"), row.names = c("AP-0", "AP-100", 
+"AP-200", "AP-300", "ST-0", "ST-100"), class = "data.frame")
+
+simprof(apst, num.expected=1000, num.simulated=999, method.cluster="average", method.distance="braycurtis", alpha=0.05, sample.orientation = "column", const = 0, silent = TRUE,increment=100) 
+
+From m.slenker at gmail.com  Fri Oct  7 09:31:33 2016
+From: m.slenker at gmail.com (=?UTF-8?Q?Marek_=C5=A0lenker?=)
+Date: Fri, 7 Oct 2016 09:31:33 +0200
+Subject: [R-sig-eco] Unsubscribe me. Please!
+Message-ID: <CAN-pzjYfMXbn-L_g3k5bq1qtbZ2r_L=-bAh4oauENK643zCQeg@mail.gmail.com>
+
+thx
+
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Fri Oct  7 11:37:34 2016
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Fri, 7 Oct 2016 05:37:34 -0400
+Subject: [R-sig-eco] Unsubscribe me. Please!
+In-Reply-To: <CAN-pzjYfMXbn-L_g3k5bq1qtbZ2r_L=-bAh4oauENK643zCQeg@mail.gmail.com>
+References: <CAN-pzjYfMXbn-L_g3k5bq1qtbZ2r_L=-bAh4oauENK643zCQeg@mail.gmail.com>
+Message-ID: <CAM_vjumZRJkgkH6gixW58fpmr6EKVaU7X0A4N_z2dQePwcMrKg@mail.gmail.com>
+
+You can manage your own subscription at the same place you signed up:
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+Directions are provided there, along with the email address to contact if you
+continue to have trouble.
+
+Sarah
+
+On Friday, October 7, 2016, Marek ?lenker <m.slenker at gmail.com> wrote:
+
+> thx
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org <javascript:;>
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+-- 
+Sarah Goslee
+http://www.stringpage.com
+http://www.sarahgoslee.com
+http://www.functionaldiversity.org
+
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Fri Oct  7 18:21:00 2016
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Fri, 7 Oct 2016 12:21:00 -0400
+Subject: [R-sig-eco] Errors with Simprof for cluster significance
+In-Reply-To: <CAK2Sg-2G6XBxjLew+jTknme654_fbD2HqdDLGdUw0T_gFqS=jw@mail.gmail.com>
+References: <CAK2Sg-2G6XBxjLew+jTknme654_fbD2HqdDLGdUw0T_gFqS=jw@mail.gmail.com>
+Message-ID: <CAM_vjukmQ75sWUZBrTAEDo3RHcs3_ZHgrKhZ3C26zn+Miaxw4Q@mail.gmail.com>
+
+I can't duplicate your error. Assuming the attached document describes
+your data, it works fine. I changed the code to use braycurtis instead
+of euclidean, as you wanted, and it does return a warning, just as the
+help file documents.
+
+So you'll need to provide more information.
+
+
+data<- structure(list(necsur = c(1L, 4L, 0L, 8L, 0L, 1L), necame = c(4L,
+5L, 9L, 9L, 4L, 7L), niccar = c(1L, 1L, 1L, 2L, 1L, 4L), nicorb = c(2L,
+20L, 23L, 26L, 3L, 12L), nicpus = c(0L, 0L, 1L, 0L, 0L, 0L),
+    nictor = c(0L, 2L, 1L, 3L, 2L, 1L), delgib = c(10L, 31L,
+    47L, 48L, 15L, 55L), cancha = c(5L, 6L, 4L, 4L, 1L, 6L),
+    melbis = c(3L, 0L, 1L, 3L, 0L, 1L), atelec = c(4L, 6L, 28L,
+    22L, 8L, 52L), copmin = c(0L, 0L, 1L, 1L, 0L, 1L), ontcon = c(3L,
+    3L, 11L, 7L, 1L, 2L), ontdep = c(2L, 0L, 0L, 0L, 0L, 0L),
+    onthec = c(17L, 15L, 9L, 6L, 6L, 2L), ontstr = c(0L, 0L,
+    0L, 1L, 1L, 0L), onttau = c(20L, 13L, 6L, 2L, 0L, 2L), ontpen = c(2L,
+    3L, 5L, 3L, 2L, 4L), onttub = c(2L, 3L, 4L, 1L, 1L, 0L),
+    phavin = c(1L, 0L, 0L, 0L, 0L, 1L), Phyili = c(0L, 0L, 0L,
+    0L, 0L, 1L), canvir = c(0L, 1L, 0L, 0L, 0L, 0L), hybill = c(1L,
+    0L, 0L, 0L, 0L, 0L), cyclev = c(0L, 0L, 0L, 0L, 1L, 1L),
+    galjan = c(0L, 0L, 1L, 1L, 0L, 0L), cyclosig = c(0L, 0L,
+    0L, 0L, 1L, 0L), omomon = c(1L, 2L, 4L, 10L, 1L, 6L), trofov = c(1L,
+    2L, 3L, 1L, 0L, 1L), trouni = c(1L, 0L, 0L, 1L, 0L, 0L),
+    troter = c(0L, 1L, 1L, 0L, 0L, 0L), eusass = c(9L, 8L, 23L,
+    14L, 11L, 28L), hiscoe = c(2L, 1L, 10L, 4L, 2L, 4L), hisabb = c(0L,
+    0L, 0L, 0L, 2L, 0L), cremax = c(4L, 7L, 1L, 2L, 2L, 5L),
+    plamac = c(1L, 0L, 3L, 2L, 2L, 2L), plafem = c(0L, 0L, 0L,
+    0L, 0L, 0L), plafos = c(1L, 1L, 3L, 2L, 1L, 2L), placom = c(6L,
+    3L, 3L, 10L, 13L, 7L), tacfim = c(0L, 0L, 1L, 0L, 0L, 0L)), .Names
+= c("necsur",
+"necame", "niccar", "nicorb", "nicpus", "nictor", "delgib", "cancha",
+"melbis", "atelec", "copmin", "ontcon", "ontdep", "onthec", "ontstr",
+"onttau", "ontpen", "onttub", "phavin", "Phyili", "canvir", "hybill",
+"cyclev", "galjan", "cyclosig", "omomon", "trofov", "trouni",
+"troter", "eusass", "hiscoe", "hisabb", "cremax", "plamac", "plafem",
+"plafos", "placom", "tacfim"), row.names = c("AP-0", "AP-100",
+"AP-200", "AP-300", "ST-0", "ST-100"), class = "data.frame")
+
+
+>      simprof(data, num.expected=1000, num.simulated=999,
++      method.cluster="average", method.distance="braycurtis",
++      method.transform="identity", alpha=0.05,
++      sample.orientation="row", const=0,
++      silent=TRUE, increment=100,
++      undef.zero=TRUE, warn.braycurtis=TRUE)
+$numgroups
+[1] 2
+
+$pval
+     [,1] [,2]        [,3]
+[1,]   -3   -4          NA
+[2,]   -6    1 0.461461461
+[3,]   -1   -2          NA
+[4,]   -5    3 0.905905906
+[5,]    2    4 0.003003003
+
+$hclust
+
+Call:
+hclust(d = rawdata.dist, method = method.cluster)
+
+Cluster method   : average
+Number of objects: 6
+
+
+$significantclusters
+$significantclusters[[1]]
+[1] "ST-100" "AP-200" "AP-300"
+
+$significantclusters[[2]]
+[1] "ST-0"   "AP-0"   "AP-100"
+
+
+Warning messages:
+1: This version of the Bray-Curtis index does not use standardization.
+2: To use the standardized version, use "actual-braycurtis".
+3: See the help documentation for more information.
+
+
+On Thu, Oct 6, 2016 at 8:43 PM, Ansley Silva <daily.puja at gmail.com> wrote:
+> Hello all,
+>
+> I'm using R version 3.3.1, clustsig package.
+>
+> I have a community dataset and I originally used hclust in the vegan
+> package to get dendrograms, however I need significance on the groups that
+> were formed.  I'd really like to use SIMPROF to look for significance among
+> the groups, but I am running into errors.
+>
+>
+> These are the errors I get:
+>
+>> simprof(apst, num.expected=1000, num.simulated=999,
+> method.cluster="average", method.distance="braycurtis", alpha=0.05,
+> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>
+> Error: argument "undef.zero" is missing, with no default
+> In addition: Warning messages:
+> 1: This version of the Bray-Curtis index does not use standardization.
+> 2: To use the standardized version, use "actual-braycurtis".
+> 3: See the help documentation for more information.
+>
+>> simprof(apst, num.expected=1000, num.simulated=999,
+> method.cluster="average", method.distance="actual-braycurtis", alpha=0.05,
+> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>
+> Error in if (denom != 0) { : missing value where TRUE/FALSE needed
+>
+>> simprof(apst, num.expected=1000, num.simulated=999,
+> method.cluster="average", method.distance="braycurtis", alpha=0.05,
+> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>
+> Error: argument "undef.zero" is missing, with no default
+> In addition: Warning messages:
+> 1: This version of the Bray-Curtis index does not use standardization.
+> 2: To use the standardized version, use "actual-braycurtis".
+> 3: See the help documentation for more information.
+>
+>> simprof(apst, num.expected=1000, num.simulated=999,
+> method.cluster="average",
+> method.transform="log",method.distance="braycurtis", alpha=0.05,
+> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>
+> Error in if (pval > alpha) { : missing value where TRUE/FALSE needed
+> In addition: Warning messages:
+> 1: This version of the Bray-Curtis index does not use standardization.
+> 2: To use the standardized version, use "actual-braycurtis".
+> 3: See the help documentation for more information.
+>
+>
+>
+> I have some samples were the columns added up to zero, so I tried removing
+> them since I was using method.transform="log".  But that didn't seem to
+> change anything.
+> I also tried transposing the data, but no luck there.
+> I am using braycurtis, but have tried actual-braycurtis and that did not
+> help.
+> I have also tried tweeking undef.zero.
+>
+>
+> If anyone could help provide some solutions, that would be greatly
+> appreciated.
+> Please and thank you,
+>
+> --
+> Ansley Silva
+>
+
+
+From jari.oksanen at oulu.fi  Fri Oct  7 19:06:39 2016
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 7 Oct 2016 17:06:39 +0000
+Subject: [R-sig-eco] Errors with Simprof for cluster significance
+In-Reply-To: <CAM_vjukmQ75sWUZBrTAEDo3RHcs3_ZHgrKhZ3C26zn+Miaxw4Q@mail.gmail.com>
+References: <CAK2Sg-2G6XBxjLew+jTknme654_fbD2HqdDLGdUw0T_gFqS=jw@mail.gmail.com>
+	<CAM_vjukmQ75sWUZBrTAEDo3RHcs3_ZHgrKhZ3C26zn+Miaxw4Q@mail.gmail.com>
+Message-ID: <E4E5A17A-8EC3-4080-A58A-6D20B7A42AE6@oulu.fi>
+
+Ansley, I think you may have an old version of clustsig: the current one should not give an error of missing undef.zero. Please check if you need to update.
+
+cheers, j.o.
+> On 7 Oct 2016, at 19:21 pm, Sarah Goslee <sarah.goslee at gmail.com> wrote:
+> 
+> I can't duplicate your error. Assuming the attached document describes
+> your data, it works fine. I changed the code to use braycurtis instead
+> of euclidean, as you wanted, and it does return a warning, just as the
+> help file documents.
+> 
+> So you'll need to provide more information.
+> 
+> 
+> data<- structure(list(necsur = c(1L, 4L, 0L, 8L, 0L, 1L), necame = c(4L,
+> 5L, 9L, 9L, 4L, 7L), niccar = c(1L, 1L, 1L, 2L, 1L, 4L), nicorb = c(2L,
+> 20L, 23L, 26L, 3L, 12L), nicpus = c(0L, 0L, 1L, 0L, 0L, 0L),
+>    nictor = c(0L, 2L, 1L, 3L, 2L, 1L), delgib = c(10L, 31L,
+>    47L, 48L, 15L, 55L), cancha = c(5L, 6L, 4L, 4L, 1L, 6L),
+>    melbis = c(3L, 0L, 1L, 3L, 0L, 1L), atelec = c(4L, 6L, 28L,
+>    22L, 8L, 52L), copmin = c(0L, 0L, 1L, 1L, 0L, 1L), ontcon = c(3L,
+>    3L, 11L, 7L, 1L, 2L), ontdep = c(2L, 0L, 0L, 0L, 0L, 0L),
+>    onthec = c(17L, 15L, 9L, 6L, 6L, 2L), ontstr = c(0L, 0L,
+>    0L, 1L, 1L, 0L), onttau = c(20L, 13L, 6L, 2L, 0L, 2L), ontpen = c(2L,
+>    3L, 5L, 3L, 2L, 4L), onttub = c(2L, 3L, 4L, 1L, 1L, 0L),
+>    phavin = c(1L, 0L, 0L, 0L, 0L, 1L), Phyili = c(0L, 0L, 0L,
+>    0L, 0L, 1L), canvir = c(0L, 1L, 0L, 0L, 0L, 0L), hybill = c(1L,
+>    0L, 0L, 0L, 0L, 0L), cyclev = c(0L, 0L, 0L, 0L, 1L, 1L),
+>    galjan = c(0L, 0L, 1L, 1L, 0L, 0L), cyclosig = c(0L, 0L,
+>    0L, 0L, 1L, 0L), omomon = c(1L, 2L, 4L, 10L, 1L, 6L), trofov = c(1L,
+>    2L, 3L, 1L, 0L, 1L), trouni = c(1L, 0L, 0L, 1L, 0L, 0L),
+>    troter = c(0L, 1L, 1L, 0L, 0L, 0L), eusass = c(9L, 8L, 23L,
+>    14L, 11L, 28L), hiscoe = c(2L, 1L, 10L, 4L, 2L, 4L), hisabb = c(0L,
+>    0L, 0L, 0L, 2L, 0L), cremax = c(4L, 7L, 1L, 2L, 2L, 5L),
+>    plamac = c(1L, 0L, 3L, 2L, 2L, 2L), plafem = c(0L, 0L, 0L,
+>    0L, 0L, 0L), plafos = c(1L, 1L, 3L, 2L, 1L, 2L), placom = c(6L,
+>    3L, 3L, 10L, 13L, 7L), tacfim = c(0L, 0L, 1L, 0L, 0L, 0L)), .Names
+> = c("necsur",
+> "necame", "niccar", "nicorb", "nicpus", "nictor", "delgib", "cancha",
+> "melbis", "atelec", "copmin", "ontcon", "ontdep", "onthec", "ontstr",
+> "onttau", "ontpen", "onttub", "phavin", "Phyili", "canvir", "hybill",
+> "cyclev", "galjan", "cyclosig", "omomon", "trofov", "trouni",
+> "troter", "eusass", "hiscoe", "hisabb", "cremax", "plamac", "plafem",
+> "plafos", "placom", "tacfim"), row.names = c("AP-0", "AP-100",
+> "AP-200", "AP-300", "ST-0", "ST-100"), class = "data.frame")
+> 
+> 
+>>     simprof(data, num.expected=1000, num.simulated=999,
+> +      method.cluster="average", method.distance="braycurtis",
+> +      method.transform="identity", alpha=0.05,
+> +      sample.orientation="row", const=0,
+> +      silent=TRUE, increment=100,
+> +      undef.zero=TRUE, warn.braycurtis=TRUE)
+> $numgroups
+> [1] 2
+> 
+> $pval
+>     [,1] [,2]        [,3]
+> [1,]   -3   -4          NA
+> [2,]   -6    1 0.461461461
+> [3,]   -1   -2          NA
+> [4,]   -5    3 0.905905906
+> [5,]    2    4 0.003003003
+> 
+> $hclust
+> 
+> Call:
+> hclust(d = rawdata.dist, method = method.cluster)
+> 
+> Cluster method   : average
+> Number of objects: 6
+> 
+> 
+> $significantclusters
+> $significantclusters[[1]]
+> [1] "ST-100" "AP-200" "AP-300"
+> 
+> $significantclusters[[2]]
+> [1] "ST-0"   "AP-0"   "AP-100"
+> 
+> 
+> Warning messages:
+> 1: This version of the Bray-Curtis index does not use standardization.
+> 2: To use the standardized version, use "actual-braycurtis".
+> 3: See the help documentation for more information.
+> 
+> 
+> On Thu, Oct 6, 2016 at 8:43 PM, Ansley Silva <daily.puja at gmail.com> wrote:
+>> Hello all,
+>> 
+>> I'm using R version 3.3.1, clustsig package.
+>> 
+>> I have a community dataset and I originally used hclust in the vegan
+>> package to get dendrograms, however I need significance on the groups that
+>> were formed.  I'd really like to use SIMPROF to look for significance among
+>> the groups, but I am running into errors.
+>> 
+>> 
+>> These are the errors I get:
+>> 
+>>> simprof(apst, num.expected=1000, num.simulated=999,
+>> method.cluster="average", method.distance="braycurtis", alpha=0.05,
+>> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>> 
+>> Error: argument "undef.zero" is missing, with no default
+>> In addition: Warning messages:
+>> 1: This version of the Bray-Curtis index does not use standardization.
+>> 2: To use the standardized version, use "actual-braycurtis".
+>> 3: See the help documentation for more information.
+>> 
+>>> simprof(apst, num.expected=1000, num.simulated=999,
+>> method.cluster="average", method.distance="actual-braycurtis", alpha=0.05,
+>> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>> 
+>> Error in if (denom != 0) { : missing value where TRUE/FALSE needed
+>> 
+>>> simprof(apst, num.expected=1000, num.simulated=999,
+>> method.cluster="average", method.distance="braycurtis", alpha=0.05,
+>> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>> 
+>> Error: argument "undef.zero" is missing, with no default
+>> In addition: Warning messages:
+>> 1: This version of the Bray-Curtis index does not use standardization.
+>> 2: To use the standardized version, use "actual-braycurtis".
+>> 3: See the help documentation for more information.
+>> 
+>>> simprof(apst, num.expected=1000, num.simulated=999,
+>> method.cluster="average",
+>> method.transform="log",method.distance="braycurtis", alpha=0.05,
+>> sample.orientation = "column", const = 0, silent = TRUE,increment=100)
+>> 
+>> Error in if (pval > alpha) { : missing value where TRUE/FALSE needed
+>> In addition: Warning messages:
+>> 1: This version of the Bray-Curtis index does not use standardization.
+>> 2: To use the standardized version, use "actual-braycurtis".
+>> 3: See the help documentation for more information.
+>> 
+>> 
+>> 
+>> I have some samples were the columns added up to zero, so I tried removing
+>> them since I was using method.transform="log".  But that didn't seem to
+>> change anything.
+>> I also tried transposing the data, but no luck there.
+>> I am using braycurtis, but have tried actual-braycurtis and that did not
+>> help.
+>> I have also tried tweeking undef.zero.
+>> 
+>> 
+>> If anyone could help provide some solutions, that would be greatly
+>> appreciated.
+>> Please and thank you,
+>> 
+>> --
+>> Ansley Silva
+>> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From Hollister.Jeff at epa.gov  Sat Oct  8 14:03:35 2016
+From: Hollister.Jeff at epa.gov (Hollister, Jeff)
+Date: Sat, 8 Oct 2016 12:03:35 +0000
+Subject: [R-sig-eco] ORISE Position at USEPA in Narragansett,
+ RI: Using R for analysis and viz of cyanobacteria
+In-Reply-To: <mailman.5.1475920802.16165.r-sig-ecology@r-project.org>
+References: <mailman.5.1475920802.16165.r-sig-ecology@r-project.org>
+Message-ID: <BY2PR09MB0676DDF703045AD14DA09D4681D90@BY2PR09MB0676.namprd09.prod.outlook.com>
+
+All,
+
+
+We have an open ORISE position working at the USEPA lab in Narragnsett, RI (with me!)
+
+
+We are looking for someone with strong R skills that can help with  cyanobacteria modelling efforts and visualization of model results.  Freshwater ecology experience is a plus.  Position is for 1 year (renewable if funding available) and pay ranges: BS: 3600/month, MS: 4400/month, PhD: 5300/month.
+
+
+For details and to apply (scroll to the bottom): https://www.zintellect.com/Posting/Details/2511
+
+
+If you have questions, feel free to contact me.
+
+
+Cheers,
+Jeff
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From highstat at highstat.com  Mon Oct 10 17:57:17 2016
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Mon, 10 Oct 2016 16:57:17 +0100
+Subject: [R-sig-eco] Stats course in Montreal
+Message-ID: <0a8333d6-df9f-e957-51c8-654c55cffa20@highstat.com>
+
+
+We would like to announce the following statistics course:
+
+Course: Data exploration, regression, GLM & GAM with R
+
+Where:  Montreal, Canada
+
+When:   9-13 January 2017
+
+Course website: http://www.highstat.com/statscourse.htm
+
+Course flyer: 
+http://highstat.com/Courses/Flyers/Flyer2017_01Montreal_RGG.pdf
+
+
+Kind regards,
+
+Alain Zuur
+
+
+Other open courses in 2017:
+
+Data exploration, regression, GLM & GAM with introduction to R. 13-17 
+February 2017. Lisbon.
+Introduction to Regression Models with Spatial and Temporal Correlation. 
+20-24 February 2017. Lisbon.
+Introduction to Regression Models with Spatial and Temporal Correlation. 
+8-12 May 2017. Genoa.
+Linear Mixed Effects Models and GLMM with R. Frequentist and Bayesian 
+approaches. 9-13 October 2017. Trondheim.
+Introduction to Regression Models with Spatial and Temporal Correlation. 
+23-27 October 2017. Southampton
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+
+
+	[[alternative HTML version deleted]]
+
+
+From david.warton at unsw.edu.au  Tue Oct 11 03:10:51 2016
+From: david.warton at unsw.edu.au (David Warton)
+Date: Tue, 11 Oct 2016 01:10:51 +0000
+Subject: [R-sig-eco] Short course: Model-based multivariate methods in
+ ecology (Sydney November 22-26 2016, Surrey January 16-20 2017)
+Message-ID: <SY3PR01MB1577C68A9198F8B6D6833FA5C4DA0@SY3PR01MB1577.ausprd01.prod.outlook.com>
+
+Model-Based Multivariate Analysis of Abundance Data Using R
+Presenter: Prof David Warton
+
+Sydney Australia, November 22-26 2016 (AU$1000) through Stats Central at UNSW
+Surrey UK, January 16-20 2017 (410 pounds+VAT) through PR Statistics
+
+Multivariate analysis in ecology has been changing rapidly in recent years, with a focus now on formulating a statistical model to capture key properties of the observed data, rather than transformation of data using a dissimilarity-based framework.  In recent years, model-based techniques have been developed for hypothesis testing, identifying indicator species, ordination, clustering, predictive modelling, and use of species traits as predictors to explain interspecific variation in environmental response.  These techniques are more interpretable than alternatives, have better statistical properties, and can be used to address new problems, such as the prediction of a species' spatial distribution from its traits alone.
+
+This course will provide an introduction to modern multivariate techniques, with a special focus on the analysis of abundance or presence/absence data, starting from a revision of fundamental tools in regression analysis, and extending these techniques to the case where there are multiple response variables.  It is targeted at ecologists and applied statisticians who work extensively in ecology.
+
+Registration for Sydney short course:
+https://www.eventbrite.com.au/e/model-based-multivariate-analysis-of-abundance-data-using-r-tickets-28446215396
+Registration for Surrey short course:
+http://prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv/
+
+
+Professor David Warton
+Director, Stats Central
+School of Mathematics and Statistics
+The University of New South Wales NSW 2052 AUSTRALIA
+phone (61)(2) 9385-7031
+fax (61)(2) 9385-7123
+www.statscentral.unsw.edu.au<http://www.statscentral.unsw.edu.au/>
+
+	[[alternative HTML version deleted]]
+
+
+From bjorn.tytgat at ugent.be  Wed Oct 12 12:44:23 2016
+From: bjorn.tytgat at ugent.be (Bjorn)
+Date: Wed, 12 Oct 2016 12:44:23 +0200
+Subject: [R-sig-eco] biplot with most important species
+Message-ID: <70a0ce4d-9533-7a44-d218-a9e9738f448e@ugent.be>
+
+Hi all,
+
+there might be a simple solution to do this, but I don't seem to manage 
+to find it. I have done a PCA using vegan. I now want to create a biplot 
+with only those species that explain a certain (cumulative) amount of 
+the variation along the first 2 PC axes (in order to keep things clear). 
+How could this be done?
+
+Thanks in advance!
+
+Kind regards,
+
+Bjorn
+
+
+From ssefick at gmail.com  Wed Oct 12 14:12:56 2016
+From: ssefick at gmail.com (stephen sefick)
+Date: Wed, 12 Oct 2016 07:12:56 -0500
+Subject: [R-sig-eco] biplot with most important species
+In-Reply-To: <70a0ce4d-9533-7a44-d218-a9e9738f448e@ugent.be>
+References: <70a0ce4d-9533-7a44-d218-a9e9738f448e@ugent.be>
+Message-ID: <CADKEMqiBS+kvZ0Bs0JmRHpnbP+SfejutbX-CW4eson9KqykJeQ@mail.gmail.com>
+
+Hi Bjorn,
+
+I have done this in the past using ggplot2. I think that I plotted
+everything, but only labeled those that were above some threshold. In other
+words, I changed the label in the input data to "". I think that is how I
+solved this problem.
+HTH,
+
+Stephen
+
+On Wed, Oct 12, 2016 at 5:44 AM, Bjorn <bjorn.tytgat at ugent.be> wrote:
+
+> Hi all,
+>
+> there might be a simple solution to do this, but I don't seem to manage to
+> find it. I have done a PCA using vegan. I now want to create a biplot with
+> only those species that explain a certain (cumulative) amount of the
+> variation along the first 2 PC axes (in order to keep things clear). How
+> could this be done?
+>
+> Thanks in advance!
+>
+> Kind regards,
+>
+> Bjorn
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Let's not spend our time and resources thinking about things that are so
+little or so large that all they really do for us is puff us up and make us
+feel like gods.  We are mammals, and have not exhausted the annoying little
+problems of being mammals.
+
+                                -K. Mullis
+
+"A big computer, a complex algorithm and a long time does not equal
+science."
+
+                              -Robert Gentleman
+
+	[[alternative HTML version deleted]]
+
+
+From syrovat at sci.muni.cz  Wed Oct 12 14:59:05 2016
+From: syrovat at sci.muni.cz (syrovat)
+Date: Wed, 12 Oct 2016 14:59:05 +0200
+Subject: [R-sig-eco] biplot with most important species
+In-Reply-To: <70a0ce4d-9533-7a44-d218-a9e9738f448e@ugent.be>
+References: <70a0ce4d-9533-7a44-d218-a9e9738f448e@ugent.be>
+Message-ID: <ff0b63510756204bbe1a0c18795c42cf@sci.muni.cz>
+
+Hi Bjorn,
+
+A common practice in simplifying ordinatin plots is to keep species that 
+show the best fit into the ordination space.
+The position of such species in the ordination diagram really (may) tell 
+something.
+In linear methods like PCA a linear fit is suitable. This can be 
+computed using vegan::envfit function.
+
+For this I have a very simple function reduce.pca, which you can source 
+using this line of code:
+source(url("http://vitsyrovatka.info/lib/exe/fetch.php?media=zpradat:functions:reduce.pca.r"))
+
+The code and example may be viewed here (skip the Czech introduction):
+http://vitsyrovatka.info/doku.php?id=zpradat:cs:fun:reducepca
+
+Your criterion on species selection is more complicated. You can change 
+the function accordingly.
+I am not completely sure but a solution might be multiplying species fit 
+by species variance,
+then ordering species acoording to this fit*variance and add species 
+until the desired variance is achieved.
+I might be wrong, anybody feel free to correct me, please.
+
+Cheers,
+Vit
+
+
+Dne 2016-10-12 12:44, Bjorn napsal:
+> Hi all,
+> 
+> there might be a simple solution to do this, but I don't seem to
+> manage to find it. I have done a PCA using vegan. I now want to create
+> a biplot with only those species that explain a certain (cumulative)
+> amount of the variation along the first 2 PC axes (in order to keep
+> things clear). How could this be done?
+> 
+> Thanks in advance!
+> 
+> Kind regards,
+> 
+> Bjorn
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From rab.mahnaz at gmail.com  Tue Oct 18 09:51:22 2016
+From: rab.mahnaz at gmail.com (Mahnaz Rabbaniha)
+Date: Tue, 18 Oct 2016 11:21:22 +0330
+Subject: [R-sig-eco] CCA INTERPRATE
+Message-ID: <CANLCanX7jg=PkpKjST661wfQF-bm=VWNcbMin5P8i3e1YCe+jg@mail.gmail.com>
+
+Dear all
+
+I have done CCA in vegan on 41 response and 3 environmental variables , i
+have taken this result:
+
+          Inertia Proportion
+
+Total                      5.8796     1.0000
+
+Constrained           0.7079     0.1204
+
+Unconstrained       5.1717     0.8796
+
+
+how do interpate, is this analyses  acceptable or no?
+
+
+
+all the best
+-- 
+*Mahnaz Rabbaniha*
+*Marine Ecologist, PhD*
+*Executive manager of IJFS*
+
+
+
+
+*Iranian Fisheries Research Organization (IFRO) P.O.Box: 14155-6116Tehran,
+IRAN Phone:   +98 21 44580953Fax:      +98 21 44580583*
+
+	[[alternative HTML version deleted]]
+
+
+From szoecs at uni-landau.de  Tue Oct 18 12:24:42 2016
+From: szoecs at uni-landau.de (=?UTF-8?Q?Eduard_Sz=c3=b6cs?=)
+Date: Tue, 18 Oct 2016 12:24:42 +0200
+Subject: [R-sig-eco] CCA INTERPRATE
+In-Reply-To: <CANLCanX7jg=PkpKjST661wfQF-bm=VWNcbMin5P8i3e1YCe+jg@mail.gmail.com>
+References: <CANLCanX7jg=PkpKjST661wfQF-bm=VWNcbMin5P8i3e1YCe+jg@mail.gmail.com>
+Message-ID: <eb862a8e-3634-5d72-6f75-bbe727adfc4a@uni-landau.de>
+
+Hai Mahnaz,
+
+12% of the total Variance can be explained by the 3 constraining
+environmental variables and 88% residual variance is left.
+
+
+
+Cheers,
+
+Eduard
+
+On 18/10/16 09:51, Mahnaz Rabbaniha wrote:
+> Dear all
+> 
+> I have done CCA in vegan on 41 response and 3 environmental variables , i
+> have taken this result:
+> 
+>           Inertia Proportion
+> 
+> Total                      5.8796     1.0000
+> 
+> Constrained           0.7079     0.1204
+> 
+> Unconstrained       5.1717     0.8796
+> 
+> 
+> how do interpate, is this analyses  acceptable or no?
+> 
+> 
+> 
+> all the best
+> 
+
+-- 
+Eduard Sz?cs
+
+Quantitative Landscape Ecology
+Institute for Environmental Sciences
+University Koblenz-Landau
+Tel: +49 6341 280 31552
+Office: Building I, Room 2.27
+http://www.uni-koblenz-landau.de/en/campus-landau/faculty7/environmental-sciences/landscape-ecology/Staff/eduardszoecs
+
+
+From f.krah at mailbox.org  Tue Oct 18 15:35:53 2016
+From: f.krah at mailbox.org (mailbox Franz)
+Date: Tue, 18 Oct 2016 15:35:53 +0200
+Subject: [R-sig-eco] predict community by community and environment
+Message-ID: <209C5BFE-D182-444D-92B8-3A2F48DEB6B3@mailbox.org>
+
+Hi all,
+
+I am searching for a method to test weather a community is better predicted by an other community or by the environment in a mantel-test like framework?
+Any help would be appreciated. Platform preferably R. 
+
+All the best,
+Franz
+
+From vitoraraujo.biologo at gmail.com  Tue Oct 18 15:57:51 2016
+From: vitoraraujo.biologo at gmail.com (Vitor)
+Date: Tue, 18 Oct 2016 07:57:51 -0600
+Subject: [R-sig-eco] biplot with most important species
+In-Reply-To: <70a0ce4d-9533-7a44-d218-a9e9738f448e@ugent.be>
+References: <70a0ce4d-9533-7a44-d218-a9e9738f448e@ugent.be>
+Message-ID: <CAP+ZaGjzsR3h9_3-36YXHB9F9uAJa5+RxGMdo_2OY=xPwrkjog@mail.gmail.com>
+
+Do you know how to fix this error? It hapens when I try to get the raster
+and convert do ASC (because it is a maxent demand)
+
+>bio1 <- "D:/biorecortadobrasil/biobio1.tif"
+>bio1
+>stackbios <- stack(bio1) #stackeando os arquivos
+>rasterstackbios <- raster(stackbios)
+>agregrasterstackbios <- aggregate(rasterstackbios, fact=2)  ## By default
+aggregates using mean, but see fun=
+>writeRaster(agregrasterstackbios, "D:/biorecortadobrasil/asc/outfile.asc",
+format="ascii", overwrite=TRUE)
+
+Warning message:In .local(x, filename, ...) : all cell values are NA
+
+
+
+
+2016-10-12 4:44 GMT-06:00 Bjorn <bjorn.tytgat at ugent.be>:
+
+> Hi all,
+>
+> there might be a simple solution to do this, but I don't seem to manage to
+> find it. I have done a PCA using vegan. I now want to create a biplot with
+> only those species that explain a certain (cumulative) amount of the
+> variation along the first 2 PC axes (in order to keep things clear). How
+> could this be done?
+>
+> Thanks in advance!
+>
+> Kind regards,
+>
+> Bjorn
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From Erick_LeBrun at baylor.edu  Tue Oct 18 16:54:18 2016
+From: Erick_LeBrun at baylor.edu (LeBrun, Erick)
+Date: Tue, 18 Oct 2016 14:54:18 +0000
+Subject: [R-sig-eco] predict community by community and environment
+In-Reply-To: <209C5BFE-D182-444D-92B8-3A2F48DEB6B3@mailbox.org>
+References: <209C5BFE-D182-444D-92B8-3A2F48DEB6B3@mailbox.org>
+Message-ID: <B562017A-5064-4A04-B2E2-3187E04740E3@baylor.edu>
+
+Hello Franz,
+
+One possibility would be to do ordinations (preferably NMDS) and then do a Procrustes analysis. It is touted to be potentially more sensitive than a mantel test and using the protest command, you can get a correlation statistic and significance associated with the two datasets. The simplified explanation is that it scales and rotates the ordinations to the best fit possible. You can also view error plots that show you ?movement? of the points in ordination space that can show trends or differences.
+
+Best regards,
+Erick
+
+Erick LeBrun
+PhD Student, Department of Biology
+Kang Microbial Ecology Laboratory
+Erick_LeBrun at baylor.edu
+
+On 10/18/16, 8:35 AM, "R-sig-ecology on behalf of mailbox Franz" <r-sig-ecology-bounces at r-project.org on behalf of f.krah at mailbox.org> wrote:
+
+    Hi all,
+    
+    I am searching for a method to test weather a community is better predicted by an other community or by the environment in a mantel-test like framework?
+    Any help would be appreciated. Platform preferably R. 
+    
+    All the best,
+    Franz
+    _______________________________________________
+    R-sig-ecology mailing list
+    R-sig-ecology at r-project.org
+    https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+    
+
+
+From oliverhooker at prstatistics.com  Wed Oct 19 11:37:19 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Wed, 19 Oct 2016 10:37:19 +0100
+Subject: [R-sig-eco] Stable Isotope Mixing Models using SIAR MixSIAr and
+ SIBER - STATS COURSE
+Message-ID: <ea0296a06484b581e24adee4284c320d@prstatistics.com>
+
+Stable Isotope Mixing Models using SIAR, SIBER and MixSIAR (SIMM03)
+
+Delivered by Dr. Andrew Parnell and Dr. Andrew Jackson
+
+http://prstatistics.com/course/stable-isotope-mixing-models-using-siar-siber-and-mixsiar-simm/
+
+This 4day course will run from 28th -3rd March 2017 at Millport field 
+centre, Isle of Cumbrae, Scotland (please note that although the field 
+centre in on an island it is extremely easy and uncomplicated to reach 
+by public transport from both within and outside the UK)
+
+http://prstatistics.com/wp-content/uploads/2016/01/MILLPORT-directions-ValiaFinal.pdf
+
+This course will cover the concepts, technical background and use of 
+stable isotope mixing models (SIMMs) with a particular focus on running 
+them in R. This course will cover the concepts, technical background and 
+use of stable isotope mixing models (SIMMs) with a particular focus on 
+running them in R. Recently SIMMs have become a very popular tool for 
+quantifying food webs and thus the diet of predators and prey in an 
+ecosystem.
+
+Starting with only basic understanding of statistical models, we will 
+cover the do?s and don?ts of using SIMMs with a particular focus on 
+the widely used package SIAR and the new, more advanced MixSIAR. 
+Participants will be taught some of the advanced features of these 
+packages, which will enable them to produce a richer class of output, 
+and are encouraged to bring their own data sets and problems to study 
+during the round-table discussions.
+
+(PLEASE NOT THIS COURSE IS FOLLOWED BY 'NETWORK ANALYSIS OF ECOLOGICAL 
+DATA USING R - A COMBINED COURSE PACKAGE IS AVAILABLE - PLEASE EMAIL 
+FOIR DETAILS)
+
+Course content is as follows
+
+Tuesday 28th ? Classes from 09:00 to 17:00
+Basic concepts.
+Module 1: Introduction; why use a SIMM?
+Module 2: An introduction to bayesian statistics.
+Module 3: Differences between regression models and SIMMs.
+Practical: Revision on using R to load data, create plots and fit 
+statistical models.
+Round table discussion: Understanding the output from a Bayesian model.
+Wednesday 1st ? Classes from 09:00 to 17:00
+Understanding and using SIAR.
+Module 4: Do?s and Don?ts of using SIAR.
+Module 5: The statistical model behind SIAR.
+Practical: Using SIAR for real-world data sets; reporting output; 
+creating richer summaries and plots.
+Round table discussion: Issues when using simple SIMMs.
+Thursday 2nd ? Classes from 09:00 to 17:00
+SIBER and MixSIAR.
+Module 6: Creating and understanding Stable Isotope Bayesian Ellipses 
+(SIBER).
+Module 7: What are the differences between SIAR and MixSIAR?
+Practical: Using MixSIAR on real world data sets; benefits over SIAR.
+Round table discussion: When to use which type of SIMM.
+
+Friday 3rd ? Classes from 09:00 to 17:00
+Advanced SIMMs.
+Module 8: Using MixSIAR for complex data sets: time series and mixed 
+effects models.
+Module 9: Source grouping: when and how?
+Module 10: Building your own SIMM with JAGS.
+Practical: Running advanced SIMMs with JAGS.
+Round table discussion: Bring your own data set.
+
+There will be a 15 minute morning coffee break, an hour for lunch, and 
+a15 minute afternoon coffee break. We keep the timing of these flexible 
+depending how the course advances. Breakfast is from 08:00-08:45 and 
+dinner is at 18:00 each day.
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+Upcoming courses - email for details oliverhooker at prstatistics.com
+
+LANDSCAPE GENETIC DATA ANALYSIS USING R (October)
+PHYLOGENETIC DATA ANALYSIS USING R (October/November)
+SPATIAL ANALYSIS OF ECOLOGIC AL DATA USING R (November)
+ADVANCING IN STATISTICAL MODELLING USING R (December)
+MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R (January)
+ADVANCED PYTHON FOR BIOLOGISTS (February)
+NETWORK ANALYSIS FOR ECOLOGISTS USING R (March)
+INTRODUCTION TO GEOMETRIC MORPHOMETRICS USING R (June)
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS
+GENETIC DATA ANALYSIS USING R
+INTRODUCTION TO BIOINFORMATICS USING LINUX
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING
+
+Oliver Hooker
+PR Statistics
+
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From oliverhooker at prstatistics.com  Wed Oct 19 11:40:52 2016
+From: oliverhooker at prstatistics.com (Oliver Hooker)
+Date: Wed, 19 Oct 2016 10:40:52 +0100
+Subject: [R-sig-eco] Network Analysis for ecologists - STATS COURSE
+Message-ID: <e14febb891e9c3c508191c905d67c4e2@prstatistics.com>
+
+Network analysis for ecologists using R (NTWE01)
+
+Delivered by Dr. Marco Scotti
+
+http://prstatistics.com/course/network-analysis-for-ecologists-using-r-ntwa/
+
+This 5 day course will run from 6th ? 10th March 2017 at Millport 
+field centre, Isle of Cumbrae, Scotland (please note that although the 
+field centre in on an island it is extremely easy and uncomplicated to 
+reach by public transport from both within and outside the UK)
+
+http://prstatistics.com/wp-content/uploads/2016/01/MILLPORT-directions-ValiaFinal.pdf
+
+The first graphical representation of a food web dates back to 1880, 
+with the pioneering works of Lorenzo Camerano. Since then, research on 
+ecological networks has further developed and ecology is one of the 
+fields that contributed the most to the growth of network science. 
+Nowadays, ecologists routinely apply network analysis with a diverse set 
+of objectives that range from studying the stability of ecological 
+communities to quantifying energy flows in ecosystems.
+
+The course is intended to provide the participants theoretical knowledge 
+and practical skills for the study of food webs. First, lessons and 
+exercises will introduce basic principles of network theory. Second, 
+ecological examples will be focused on binary food webs, networks 
+depicting who eats whom in ecosystems. Algorithms quantifying either 
+global food web properties or single species features within the trophic 
+network will be introduced. Third, we will study how the architecture of 
+the food webs can be used to investigate robustness to biodiversity 
+loss, thus helping to predict cascading extinction events. Then, 
+ecosystem network analysis (ENA), a suite of matrix manipulation 
+routines for the study of energy/matter circulation in ecosystems, will 
+be presented. We will apply ENA to characterize the trophic structure of 
+food webs and quantify the amount of cycling in ecosystems. Finally, we 
+will learn how to visualize food web graphs to illustrate their features 
+in an intuitive and fancy way.
+
+(PLEASE NOT THIS COURSE IS PRECEDED BY ?STABLE ISOTOPE MIXING MODELS 
+USING SIAR, MIXSIAR AND SIBER?- A COMBINED COURSE PACKAGE IS AVAILABLE 
+PLEASEEMAILFOIR DETAILS)
+
+Course content is as follows
+
+Monday 6th ? Classes from 09:00 to 17:00
+Module 1: Introduction to graph theory and network science.
+Basic terminology for learning the language of networks: from nodes and 
+links to degree distribution.
+Three types of mathematical graphs and their properties: random 
+networks, small-world networks, and scale-free networks.
+
+Tuesday 7th ? Classes from 09:00 to 17:00
+Module 2: The use of graph theory in ecology: (1) networks representing 
+various interactions in ecological communities (e.g., predator-prey and 
+plant-pollinator networks); (2) networks illustrating interactions at 
+different hierarchical levels (e.g., social networks at the population 
+level and species dispersal in the landscape graph).
+Who eats whom in ecosystems and at which rate? Binary and weighted food 
+web networks.
+Quantitative descriptors of food web networks (e.g., fraction of basal, 
+intermediate and top species, connectance and link density).
+
+Wednesday 8th ? Classes from 09:00 to 17:00
+Module 3: The structural properties of food web networks.
+Biodiversity loss and food web network robustness. How to predict 
+secondary extinctions using the information embedded in the network 
+structure of the food webs.
+The relevance of bipartite networks in ecology for the description of 
+various interaction types (e.g., plant-pollinator and plant-seed 
+disperser relationships).
+
+Thursday 9th ? Classes from 09:00 to 17:00
+Module 4: Ecosystem network analysis (ENA): basic principles and 
+algorithms.
+Input-output analysis: partial feeding and partial host matrices. 
+Possible ways to trace indirect effects in ecosystems.
+Trophic considerations: the effective trophic position of species in 
+acyclic food webs.
+Finn cycling index and the amount of cycling in ecosystems.
+
+Friday 10th ? Classes from 09:00 to 16:00
+Module 5: Can network analysis help to better understand possible 
+consequences of global warming on ecological communities?
+Network visualization with Cytoscape: how to change the layout of graphs 
+illustrating food web interactions (the Style interface to modify node, 
+link and network properties).
+
+There will be a 15 minute morning coffee break, an hour for lunch, and 
+a15 minute afternoon coffee break. We keep the timing of these flexible 
+depending how the course advances. Breakfast is from 08:00-08:45 and 
+dinner is at 18:00 each day.
+
+Please email any inquiries to oliverhooker at prstatistics.com or visit our 
+website www.prstatistics.com
+
+Please feel free to distribute this material anywhere you feel is 
+suitable
+Upcoming courses - email for details oliverhooker at prstatistics.com
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (October)
+LANDSCAPE GENETIC DATA ANALYSIS USING R (October)
+PHYLOGENETIC DATA ANALYSIS USING R (October/November)
+SPATIAL ANALYSIS OF ECOLOGIC AL DATA USING R (November)
+ADVANCING IN STATISTICAL MODELLING USING R (December)
+MODEL BASED MULTIVARIATE ANALYSIS OF ECOLOGICAL DATA USING R (January)
+ADVANCED PYTHON FOR BIOLOGISTS (February)
+STABLE ISOTOPE IXING MODELS USING SIAR, MIXSIAR AND SIBER (Feb/Mar)
+INTRODUCTION TO GEOMETRIC MORPHOMETRICS USING R (June)
+
+Dates still to be confirmed - email for details 
+oliverhooker at prstatistics.com
+INTRODUCTION TO R AND STATISTICS FOR BIOLOGISTS
+BIOINFORMATICS FOR GENETICISTS AND BIOLOGISTS
+GENETIC DATA ANALYSIS USING R
+INTRODUCTION TO BIOINFORMATICS USING LINUX
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING
+
+Oliver Hooker PhD.
+PR statistics
+
+3/1
+128 Brunswick Street
+Glasgow
+G1 1TF
+
++44 (0) 7966500340
+
+www.prstatistics.com
+www.prstatistics.com/organiser/oliver-hooker/
+
+
+From mspinola10 at gmail.com  Wed Oct 19 14:47:51 2016
+From: mspinola10 at gmail.com (=?UTF-8?Q?Manuel_Sp=C3=ADnola?=)
+Date: Wed, 19 Oct 2016 06:47:51 -0600
+Subject: [R-sig-eco] Package to analyse population time series (trend
+	analysis)
+Message-ID: <CABkCotTu8-LU_O8f3zV2KALdncG_yZuKfH94yJy-_DuKB2KN7Q@mail.gmail.com>
+
+Dear list members,
+
+What is the appropriate package to analyze population time series (trend
+analysis) when you have one count per year.
+
+Best,
+
+Manuel
+
+-- 
+*Manuel Sp?nola, Ph.D.*
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.cr <mspinola at una.ac.cr>
+mspinola10 at gmail.com
+Tel?fono: (506) 8706 - 4662
+Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/>
+Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+
+	[[alternative HTML version deleted]]
+
+
+From solymos at ualberta.ca  Wed Oct 19 19:58:07 2016
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Wed, 19 Oct 2016 11:58:07 -0600
+Subject: [R-sig-eco] Package to analyse population time series (trend
+	analysis)
+In-Reply-To: <CABkCotTu8-LU_O8f3zV2KALdncG_yZuKfH94yJy-_DuKB2KN7Q@mail.gmail.com>
+References: <CABkCotTu8-LU_O8f3zV2KALdncG_yZuKfH94yJy-_DuKB2KN7Q@mail.gmail.com>
+Message-ID: <CAH9coKZKduXWvH9dVvt-ABx+Bk-Pyo=e+itXrrxEXz02TVHNnA@mail.gmail.com>
+
+Manuel,
+
+There are few ecology focused packages besides ARIMA() and the forecast
+package, for example:
+
+- popbio (based mostly on the Matrix Population Models by Caswell (2001)
+and Quantitative Conservation Biology by Morris and Doak (2002).
+
+- PVAClone, that uses JAGS and is based on Nadeem, K., Lele S. R., 2012.
+Likelihood based population viability analysis in the presence of
+observation error. Oikos 121, 1656?1664.
+
+I am sure there are other packages as well that I am not aware of...
+
+Cheers,
+
+Peter
+
+--
+P?ter S?lymos
+780-492-8534 | solymos at ualberta.ca | peter.solymos.org
+Alberta Biodiversity Monitoring Institute http://www.abmi.ca
+Boreal Avian Modelling Project http://www.borealbirds.ca
+
+On Wed, Oct 19, 2016 at 6:47 AM, Manuel Sp?nola <mspinola10 at gmail.com>
+wrote:
+
+> Dear list members,
+>
+> What is the appropriate package to analyze population time series (trend
+> analysis) when you have one count per year.
+>
+> Best,
+>
+> Manuel
+>
+> --
+> *Manuel Sp?nola, Ph.D.*
+> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> Universidad Nacional
+> Apartado 1350-3000
+> Heredia
+> COSTA RICA
+> mspinola at una.cr <mspinola at una.ac.cr>
+> mspinola10 at gmail.com
+> Tel?fono: (506) 8706 - 4662
+> Personal website: Lobito de r?o <https://sites.google.com/
+> site/lobitoderio/>
+> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+	[[alternative HTML version deleted]]
+
+
+From tom_philippi at nps.gov  Wed Oct 19 20:05:29 2016
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Wed, 19 Oct 2016 11:05:29 -0700
+Subject: [R-sig-eco] Package to analyse population time series (trend
+	analysis)
+In-Reply-To: <CABkCotTu8-LU_O8f3zV2KALdncG_yZuKfH94yJy-_DuKB2KN7Q@mail.gmail.com>
+References: <CABkCotTu8-LU_O8f3zV2KALdncG_yZuKfH94yJy-_DuKB2KN7Q@mail.gmail.com>
+Message-ID: <CAM9kYqjSZUXb3b+WzJ8_Y57CJ06AvF_Rh0AFFUROJ906_ojR0w@mail.gmail.com>
+
+Manuel--
+The proper package depends entirely on what your data are: how many sites
+you collect counts for, whether those sites are a probability sample over
+an area or the only locations you are making inferences about (e.g., census
+counts), whether those counts have Poisson error, overdispersion (e.g.,
+aggregation) or zero-inflation (e.g., extra 0s from bad weather or bad
+sites), imperfect detection, marked individuals, whether you expect a
+linear or only monotonic trend, whether you have covariates that vary by
+year (e.g., annual precipitation or winter NINO3.4), or or other aspects I
+haven't yet dealt with.
+
+A bit more information about what you have in terms of data, and about the
+questions you are interested within the broad definition of "trend" might
+get you informed answers.
+
+Tom 2
+
+
+
+On Wed, Oct 19, 2016 at 5:47 AM, Manuel Sp?nola <mspinola10 at gmail.com>
+wrote:
+
+> Dear list members,
+>
+> What is the appropriate package to analyze population time series (trend
+> analysis) when you have one count per year.
+>
+> Best,
+>
+> Manuel
+>
+> --
+> *Manuel Sp?nola, Ph.D.*
+> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> Universidad Nacional
+> Apartado 1350-3000
+> Heredia
+> COSTA RICA
+> mspinola at una.cr <mspinola at una.ac.cr>
+> mspinola10 at gmail.com
+> Tel?fono: (506) 8706 - 4662
+> Personal website: Lobito de r?o <https://sites.google.com/
+> site/lobitoderio/>
+> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+	[[alternative HTML version deleted]]
+
+
+From mspinola10 at gmail.com  Wed Oct 19 22:01:40 2016
+From: mspinola10 at gmail.com (=?UTF-8?Q?Manuel_Sp=C3=ADnola?=)
+Date: Wed, 19 Oct 2016 14:01:40 -0600
+Subject: [R-sig-eco] Package to analyse population time series (trend
+	analysis)
+In-Reply-To: <CAM9kYqjSZUXb3b+WzJ8_Y57CJ06AvF_Rh0AFFUROJ906_ojR0w@mail.gmail.com>
+References: <CABkCotTu8-LU_O8f3zV2KALdncG_yZuKfH94yJy-_DuKB2KN7Q@mail.gmail.com>
+	<CAM9kYqjSZUXb3b+WzJ8_Y57CJ06AvF_Rh0AFFUROJ906_ojR0w@mail.gmail.com>
+Message-ID: <CABkCotSt2tyb4ykUnCnq_ErvzaJRSCsMjzdpNWD2p+zJYpmmDQ@mail.gmail.com>
+
+Thank you very much to both.
+
+I analyzing counts of flying Ara macaw over a bridge.  I could have the
+data for 2 more sites, but essentially is one site.  There are monthly
+counts, but I am planning to use the maximum count for each year.  These
+are not census data, only counts with imperfect detection.  My goal is to
+do a trend analysis for those counts, of course I know the limitation of
+the data and I know that  the biological interpretation of the results will
+be challenging.
+
+Best,
+
+Manuel
+
+
+
+2016-10-19 12:05 GMT-06:00 Philippi, Tom <tom_philippi at nps.gov>:
+
+> Manuel--
+> The proper package depends entirely on what your data are: how many sites
+> you collect counts for, whether those sites are a probability sample over
+> an area or the only locations you are making inferences about (e.g., census
+> counts), whether those counts have Poisson error, overdispersion (e.g.,
+> aggregation) or zero-inflation (e.g., extra 0s from bad weather or bad
+> sites), imperfect detection, marked individuals, whether you expect a
+> linear or only monotonic trend, whether you have covariates that vary by
+> year (e.g., annual precipitation or winter NINO3.4), or or other aspects I
+> haven't yet dealt with.
+>
+> A bit more information about what you have in terms of data, and about the
+> questions you are interested within the broad definition of "trend" might
+> get you informed answers.
+>
+> Tom 2
+>
+>
+>
+> On Wed, Oct 19, 2016 at 5:47 AM, Manuel Sp?nola <mspinola10 at gmail.com>
+> wrote:
+>
+>> Dear list members,
+>>
+>> What is the appropriate package to analyze population time series (trend
+>> analysis) when you have one count per year.
+>>
+>> Best,
+>>
+>> Manuel
+>>
+>> --
+>> *Manuel Sp?nola, Ph.D.*
+>> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+>> Universidad Nacional
+>> Apartado 1350-3000
+>> Heredia
+>> COSTA RICA
+>> mspinola at una.cr <mspinola at una.ac.cr>
+>> mspinola10 at gmail.com
+>> Tel?fono: (506) 8706 - 4662
+>> Personal website: Lobito de r?o <https://sites.google.com/site
+>> /lobitoderio/>
+>> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+
+
+-- 
+*Manuel Sp?nola, Ph.D.*
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.cr <mspinola at una.ac.cr>
+mspinola10 at gmail.com
+Tel?fono: (506) 8706 - 4662
+Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/>
+Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+
+	[[alternative HTML version deleted]]
+
+
+From leonardorejorge at gmail.com  Tue Oct 25 21:01:33 2016
+From: leonardorejorge at gmail.com (=?UTF-8?Q?Leonardo_R=C3=A9_Jorge?=)
+Date: Tue, 25 Oct 2016 17:01:33 -0200
+Subject: [R-sig-eco] predict community by community and environment
+In-Reply-To: <B562017A-5064-4A04-B2E2-3187E04740E3@baylor.edu>
+References: <209C5BFE-D182-444D-92B8-3A2F48DEB6B3@mailbox.org>
+	<B562017A-5064-4A04-B2E2-3187E04740E3@baylor.edu>
+Message-ID: <CAAAuqBoqx1AN1sg6W6_zo3R07FD8urM+6JKXQPfMcFh1Sz0Y7Q@mail.gmail.com>
+
+Dear Franz,
+
+An approach that should fit quite well to your intention is Generalized
+Dissimilarity Modellling (GDMs - Ferrier 2007:
+http://doi.wiley.com/10.1111/j.1472-4642.2007.00341.x). You can model the
+compositional dissimilarities among your communities relative to both
+environmental differences and differences in composition of another
+taxonomic group. This has also the advantage of allowing you to include the
+spatial distance among your communities as a predictor, accounting for
+spatial autocorrelation. Your final output should give you a measure of
+relative effects of each predictor. GDMs are implemented in the R package
+gdm.
+
+Best regards,
+Leonardo
+
+On Tue, Oct 18, 2016 at 12:54 PM, LeBrun, Erick <Erick_LeBrun at baylor.edu>
+wrote:
+
+> Hello Franz,
+>
+> One possibility would be to do ordinations (preferably NMDS) and then do a
+> Procrustes analysis. It is touted to be potentially more sensitive than a
+> mantel test and using the protest command, you can get a correlation
+> statistic and significance associated with the two datasets. The simplified
+> explanation is that it scales and rotates the ordinations to the best fit
+> possible. You can also view error plots that show you ?movement? of the
+> points in ordination space that can show trends or differences.
+>
+> Best regards,
+> Erick
+>
+> Erick LeBrun
+> PhD Student, Department of Biology
+> Kang Microbial Ecology Laboratory
+> Erick_LeBrun at baylor.edu
+>
+> On 10/18/16, 8:35 AM, "R-sig-ecology on behalf of mailbox Franz" <
+> r-sig-ecology-bounces at r-project.org on behalf of f.krah at mailbox.org>
+> wrote:
+>
+>     Hi all,
+>
+>     I am searching for a method to test weather a community is better
+> predicted by an other community or by the environment in a mantel-test like
+> framework?
+>     Any help would be appreciated. Platform preferably R.
+>
+>     All the best,
+>     Franz
+>     _______________________________________________
+>     R-sig-ecology mailing list
+>     R-sig-ecology at r-project.org
+>     https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From f.krah at mailbox.org  Wed Oct 26 10:13:55 2016
+From: f.krah at mailbox.org (mailbox Franz)
+Date: Wed, 26 Oct 2016 10:13:55 +0200
+Subject: [R-sig-eco] predict community by community and environment
+In-Reply-To: <CAAAuqBoqx1AN1sg6W6_zo3R07FD8urM+6JKXQPfMcFh1Sz0Y7Q@mail.gmail.com>
+References: <209C5BFE-D182-444D-92B8-3A2F48DEB6B3@mailbox.org>
+	<B562017A-5064-4A04-B2E2-3187E04740E3@baylor.edu>
+	<CAAAuqBoqx1AN1sg6W6_zo3R07FD8urM+6JKXQPfMcFh1Sz0Y7Q@mail.gmail.com>
+Message-ID: <7D4C6EC6-4202-40B5-B28B-647F94041EBB@mailbox.org>
+
+Thanks Leonard and Erick,
+
+I found ecodist function MRM to fulfill my purpose!
+Seems to be a ?hard test? of several independent distance matrixes (community and env data) and a response distance matrix. 
+
+I am new to this whole community explains community thing and find it quit confusing. 
+I had a sig. correlation using mantel test, no sig. with the procrustes test; then I had a sig. predicting relation using coccorrespondance analysis. 
+Then I ran the MRM and had again no sig. effect. 
+I thought the cocorrespondance (R package cocorresp) is already a hard test weather a community can predict another community. 
+Thus I am confused why the MRM says no sig? I mean internally they work quit different, however, what to trust?
+
+Maybe someone can help?
+
+Best, Franz
+
+> Am 25.10.2016 um 21:01 schrieb Leonardo R? Jorge <leonardorejorge at gmail.com>:
+> 
+> Dear Franz,
+> 
+> An approach that should fit quite well to your intention is Generalized Dissimilarity Modellling (GDMs - Ferrier 2007: http://doi.wiley.com/10.1111/j.1472-4642.2007.00341.x <http://doi.wiley.com/10.1111/j.1472-4642.2007.00341.x>). You can model the compositional dissimilarities among your communities relative to both environmental differences and differences in composition of another taxonomic group. This has also the advantage of allowing you to include the spatial distance among your communities as a predictor, accounting for spatial autocorrelation. Your final output should give you a measure of relative effects of each predictor. GDMs are implemented in the R package gdm.
+> 
+> Best regards,
+> Leonardo
+> 
+> On Tue, Oct 18, 2016 at 12:54 PM, LeBrun, Erick <Erick_LeBrun at baylor.edu <mailto:Erick_LeBrun at baylor.edu>> wrote:
+> Hello Franz,
+> 
+> One possibility would be to do ordinations (preferably NMDS) and then do a Procrustes analysis. It is touted to be potentially more sensitive than a mantel test and using the protest command, you can get a correlation statistic and significance associated with the two datasets. The simplified explanation is that it scales and rotates the ordinations to the best fit possible. You can also view error plots that show you ?movement? of the points in ordination space that can show trends or differences.
+> 
+> Best regards,
+> Erick
+> 
+> Erick LeBrun
+> PhD Student, Department of Biology
+> Kang Microbial Ecology Laboratory
+> Erick_LeBrun at baylor.edu <mailto:Erick_LeBrun at baylor.edu>
+> 
+> On 10/18/16, 8:35 AM, "R-sig-ecology on behalf of mailbox Franz" <r-sig-ecology-bounces at r-project.org <mailto:r-sig-ecology-bounces at r-project.org> on behalf of f.krah at mailbox.org <mailto:f.krah at mailbox.org>> wrote:
+> 
+>     Hi all,
+> 
+>     I am searching for a method to test weather a community is better predicted by an other community or by the environment in a mantel-test like framework?
+>     Any help would be appreciated. Platform preferably R.
+> 
+>     All the best,
+>     Franz
+>     _______________________________________________
+>     R-sig-ecology mailing list
+>     R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>
+>     https://stat.ethz.ch/mailman/listinfo/r-sig-ecology <https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology <https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>
+
+
+	[[alternative HTML version deleted]]
+
+

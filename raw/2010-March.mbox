@@ -1,0 +1,2656 @@
+From tdomingu at staffmail.ed.ac.uk  Tue Mar  2 15:54:59 2010
+From: tdomingu at staffmail.ed.ac.uk (Tomas)
+Date: Tue, 02 Mar 2010 14:54:59 +0000
+Subject: [R-sig-eco] Anova in quantile regressions
+Message-ID: <4B8D26C3.5090004@staffmail.ed.ac.uk>
+
+Dear list members
+
+I'm using the "quantreq" package to perform quantile regressions on leaf 
+traits (photosynthesis and leaf nutrients). The rq function is great for 
+this because its clear that there are other things that limits 
+photosynthesis)
+I'm interested in determining the 90% quantile regression for the 
+Photosynthesis vs. leaf nitrogen for two independent data sets. I was 
+able to do that as bellow:
+
+ > head(data1)
+   TRIP      SLA Vcmax.mass  N.mass P.mass
+1  CAM 42.10000 0.24216835 11.2530 0.6800
+2  CAM 42.40000 0.09373972  4.7430 2.4800
+3  CAM 44.80000 0.19999955  6.6360 3.1500
+4  CAM 46.60000 0.11043004  5.1780 0.7800
+5  CAM 47.00000 0.24968015 11.4540 0.7200
+6   WA 47.15013 0.41529054 11.0038 0.7901
+
+# Here I divide my data set into 2 subsets (samples from Cameroon and
+# from West Africa). This was a tip I got from Nikhil Kaza on I previous
+# post I placed on the R-Help list.
+
+ > data_sub1 <- data1[data1$TRIP=="CAM",]
+ > data_sub2 <- data1[data1$TRIP=="WA",]
+
+ > ab1 <- rq(Vcmax.mass~N.mass, data=data_sub1, tau=0.9)
+ > ab2 <- rq(Vcmax.mass~N.mass, data=data_sub2, tau=0.9)
+
+ > summary(ab1)
+
+Call: rq(formula = Vcmax.mass ~ N.mass, tau = 0.9, data = data_sub1)
+
+tau: [1] 0.9
+
+Coefficients:
+             coefficients lower bd upper bd
+(Intercept) -0.01013     -0.02926  0.07401
+N.mass       0.03181      0.02808  0.03444
+Warning message:
+In rq.fit.br(x, y, tau = tau, ci = TRUE, ...) : Solution may be nonunique
+
+ > summary(ab2)
+
+Call: rq(formula = Vcmax.mass ~ N.mass, tau = 0.9, data = data_sub2)
+
+tau: [1] 0.9
+
+Coefficients:
+             coefficients lower bd upper bd
+(Intercept) 0.28323      0.11667  0.37078
+N.mass      0.02496      0.02226  0.03583
+
+
+So far so good, but when I try to do an ANOVA I get an error message:
+
+ > anova(ab1, ab2)
+Error in drop(.Call("La_dgesv", a, as.matrix(b), tol, PACKAGE = "base")) 
+: 'a' is 0-diml
+ > traceback()
+8: .Call("La_dgesv", a, as.matrix(b), tol, PACKAGE = "base")
+7: drop(.Call("La_dgesv", a, as.matrix(b), tol, PACKAGE = "base"))
+6: solve.default((V[[1]])[nullH, nullH], (coef[[1]])[nullH])
+5: solve((V[[1]])[nullH, nullH], (coef[[1]])[nullH])
+4: solve((V[[1]])[nullH, nullH], (coef[[1]])[nullH])
+3: anova.rqlist(object, ...)
+2: anova.rq(ab1, ab2)
+1: anova(ab1, ab2)
+
+I have no problem comparing slopes between different quantiles for the 
+complete data set (or any of the sub data sets):
+
+ > ab.5<-rq(Vcmax.mass~N.mass, data=data1, tau=.5)
+ > ab.9<-rq(Vcmax.mass~N.mass, data=data1, tau=.9)
+ > anova(ab.5,ab.9)
+trace: anova(ab.5, ab.9)
+Quantile Regression Analysis of Deviance Table
+
+Model: Vcmax.mass ~ N.mass
+Joint Test of Equality of Slopes: tau in {  0.5 0.9  }
+
+     Df Resid Df F value    Pr(>F)
+1    1     1061  12.454 0.0004349 ***
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+Any ideas would be most appreciated.
+Tomas Ferreira Domingues
+
+-- 
+The University of Edinburgh is a charitable body, registered in
+Scotland, with registration number SC005336.
+
+
+From gavin.simpson at ucl.ac.uk  Tue Mar  2 16:29:25 2010
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 02 Mar 2010 15:29:25 +0000
+Subject: [R-sig-eco] Anova in quantile regressions
+In-Reply-To: <4B8D26C3.5090004@staffmail.ed.ac.uk>
+References: <4B8D26C3.5090004@staffmail.ed.ac.uk>
+Message-ID: <1267543765.23630.59.camel@localhost>
+
+On Tue, 2010-03-02 at 14:54 +0000, Tomas wrote:
+> Dear list members
+> 
+> I'm using the "quantreq" package to perform quantile regressions on leaf 
+> traits (photosynthesis and leaf nutrients). The rq function is great for 
+> this because its clear that there are other things that limits 
+> photosynthesis)
+> I'm interested in determining the 90% quantile regression for the 
+> Photosynthesis vs. leaf nitrogen for two independent data sets. I was 
+> able to do that as bellow:
+> 
+>  > head(data1)
+>    TRIP      SLA Vcmax.mass  N.mass P.mass
+> 1  CAM 42.10000 0.24216835 11.2530 0.6800
+> 2  CAM 42.40000 0.09373972  4.7430 2.4800
+> 3  CAM 44.80000 0.19999955  6.6360 3.1500
+> 4  CAM 46.60000 0.11043004  5.1780 0.7800
+> 5  CAM 47.00000 0.24968015 11.4540 0.7200
+> 6   WA 47.15013 0.41529054 11.0038 0.7901
+> 
+> # Here I divide my data set into 2 subsets (samples from Cameroon and
+> # from West Africa). This was a tip I got from Nikhil Kaza on I previous
+> # post I placed on the R-Help list.
+> 
+>  > data_sub1 <- data1[data1$TRIP=="CAM",]
+>  > data_sub2 <- data1[data1$TRIP=="WA",]
+
+It would be more R-ish to use the subset argument if rq's formula method
+allows (which it does)
+
+ > ab1 <- rq(Vcmax.mass~N.mass, data=data1, 
+             subset = TRIP == "CAM", tau=0.9)
+ > ab2 <- rq(Vcmax.mass~N.mass, data=data1, 
+             subset = TRIP == "CAM", tau=0.9)
+
+This keeps all your data together etc...
+
+> 
+>  > ab1 <- rq(Vcmax.mass~N.mass, data=data_sub1, tau=0.9)
+>  > ab2 <- rq(Vcmax.mass~N.mass, data=data_sub2, tau=0.9)
+> 
+<snip />
+> 
+> So far so good, but when I try to do an ANOVA I get an error message:
+
+That just doesn't make any sense. Those models aren't in any way shape
+or form "nested" so you can't compare them that way. Whatever gave you
+the impression that you could do this with *any* anova method in R (at
+least that which I have come across)??
+
+Read the Warning section in ?anova.rq which explicitly states that the
+models have be be fitted to the *same* data.
+
+The two models need different covariates but be fitted to the same data
+to use anova this way. For example:
+
+ab1 <- rq(Vcmax.mass~N.mass, data=data1, tau=0.9)
+ab2 <- rq(Vcmax.mass~N.mass + foo, data=data1, tau=0.9)
+
+anova(ab1, ab2)
+
+would be fine, because the model described by ab1 can be reached by
+setting the coefficient for covariate 'foo' in ab2 to 0. This is
+nesting. AFAIK, this is the only model comparison that can be done with
+anova methods in R.
+
+> 
+>  > anova(ab1, ab2)
+> Error in drop(.Call("La_dgesv", a, as.matrix(b), tol, PACKAGE = "base")) 
+> : 'a' is 0-diml
+>  > traceback()
+> 8: .Call("La_dgesv", a, as.matrix(b), tol, PACKAGE = "base")
+> 7: drop(.Call("La_dgesv", a, as.matrix(b), tol, PACKAGE = "base"))
+> 6: solve.default((V[[1]])[nullH, nullH], (coef[[1]])[nullH])
+> 5: solve((V[[1]])[nullH, nullH], (coef[[1]])[nullH])
+> 4: solve((V[[1]])[nullH, nullH], (coef[[1]])[nullH])
+> 3: anova.rqlist(object, ...)
+> 2: anova.rq(ab1, ab2)
+> 1: anova(ab1, ab2)
+> 
+> I have no problem comparing slopes between different quantiles for the 
+> complete data set (or any of the sub data sets):
+
+That is because the package author wrote code to handle this particular
+feature and documented it. See ?anova.rq
+
+> 
+>  > ab.5<-rq(Vcmax.mass~N.mass, data=data1, tau=.5)
+>  > ab.9<-rq(Vcmax.mass~N.mass, data=data1, tau=.9)
+>  > anova(ab.5,ab.9)
+> trace: anova(ab.5, ab.9)
+> Quantile Regression Analysis of Deviance Table
+> 
+> Model: Vcmax.mass ~ N.mass
+> Joint Test of Equality of Slopes: tau in {  0.5 0.9  }
+> 
+>      Df Resid Df F value    Pr(>F)
+> 1    1     1061  12.454 0.0004349 ***
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+> 
+> Any ideas would be most appreciated.
+> Tomas Ferreira Domingues
+
+What is it you are trying to do, compare the slopes between the two
+trips? If so, the usual way would be to include TRIP as an extra
+covariate *in* the model:
+
+## If I have this right myself,
+## this model assumes same slope but different intercepts
+m1 <- rq(Vcmax.mass ~ N.mass + TRIP, data=data1, tau=0.9)
+
+## whilst this model allows the slopes to vary
+m2 <- rq(Vcmax.mass ~ N.mass * TRIP, data=data1, tau=0.9)
+## equivalent to
+m2 <- rq(Vcmax.mass ~ N.mass + TRIP + N.mass:TRIP, data=data1, tau=0.9)
+
+## we can then test the full nesting of models using:
+m0 <- rq(Vcmax.mass ~ N.mass, data=data1, tau=0.9)
+anova(m0, m1, m2)
+
+Of course, I haven't tested any of this, but the above should work given
+my reading of the quantreg help (and that I understood it correctly, of
+course!).
+
+I strongly recommend you read ?anova.rq and the related references etc
+as the author is at pains to stress the need to understand what
+hypotheses can be tested using the anova method for rq objects.
+
+HTH
+
+G
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From tdomingu at staffmail.ed.ac.uk  Wed Mar  3 12:17:18 2010
+From: tdomingu at staffmail.ed.ac.uk (Tomas F Domingues)
+Date: Wed, 03 Mar 2010 11:17:18 +0000
+Subject: [R-sig-eco] Anova in quantile regressions (Gavin Simpson)
+Message-ID: <20100303111718.trgw0q3lkwos88s0@www.staffmail.ed.ac.uk>
+
+dear Gavin
+You did helped me a lot. For that, I'm very grateful.
+
+
+
+Cheers,
+Tomas Domingues.
+
+-- 
+The University of Edinburgh is a charitable body, registered in
+Scotland, with registration number SC005336.
+
+
+From lemoine.nathan at gmail.com  Wed Mar  3 20:04:54 2010
+From: lemoine.nathan at gmail.com (Nathan Lemoine)
+Date: Wed, 3 Mar 2010 13:04:54 -0600
+Subject: [R-sig-eco] lme post-hoc help
+Message-ID: <DE063D70-0155-4DE7-8DE6-569E6AFB9121@gmail.com>
+
+Hi all,
+
+I'm attempting to analyze some data on log-transformed algae grazing  
+rates that I've collected in different habitats. I when collecting the  
+data, I blocked for day to account for temporal variation in grazing  
+intensity, and I'm considering DAY as a random factor in my model. As  
+such, I've used the lme model to construct the mixed-effects model as  
+follows:
+
+ > al_lme <- lme(grazing~habitat, random = ~1|day, data=algae)
+
+The ANOVA summary shows a significant result:
+
+ > anova(al_lme)
+
+            numDF   denDF   F-value        p-value
+(Intercept)     1    32        174.97322    <.0001
+HAB               3    32          3.31776       0.0321
+
+Yet, when I do a post-hoc comparison, none of the pairwise tests are  
+significant:
+
+ > pairs <- glht(al_lme, linfct = mcp("habitat"="Tukey")
+ > summary(pairs)
+
+                                       Estimate Std. Error  z value  
+Pr(>|z|)
+Fake - Complex == 0    0.2125     0.5390   0.394    0.978
+Far - Complex == 0       1.1937     0.5390   2.215    0.114
+Near - Complex == 0   0.7758     0.3623   2.142    0.134
+Far - Fake == 0              0.9813     0.4437   2.211    0.115
+Near - Fake == 0           0.5633     0.5390   1.045    0.715
+Near - Far == 0             -0.4179     0.5390  -0.775    0.861
+(Adjusted p values reported -- single-step method)
+
+How is this possible? In visually inspecting the data, it is apparent  
+that at least the Far-Complex ought to be significant. To be sure, I  
+double checked my statistics using SPSS, which is where I'm getting  
+more confused.
+
+In SPSS, I built a blocked, general linear model with Loss as the  
+dependent, Habitat as the fixed factor, and Day as a random factor. I  
+used the default Type III SS because the design was not balanced. SPSS  
+also returns a significant effect:
+
+Habitat F = 4.741, denom df = 33, p = 0.015
+
+and the Tukey's HSD post-hoc test returns a significant difference  
+between the Far-Complex habitats, like expected. My questions are:  
+First, how can I receive a significant result in R and have no  
+significant pairwise effects? Second, what are the differences between  
+SPSS and R, that SPSS uses a different denominator df to calculate the  
+F-statistic? This is probably the reason that the p-value for SPSS is  
+lower, but I'm not sure that this is part of the reason for the  
+different post-hoc results.
+
+Thanks for any help,
+
+Nate Lemoine
+
+
+From graham.smith at myotis.co.uk  Thu Mar  4 12:25:01 2010
+From: graham.smith at myotis.co.uk (Graham Smith)
+Date: Thu, 04 Mar 2010 11:25:01 +0000
+Subject: [R-sig-eco] Kite diagrams
+In-Reply-To: <4B7D9AED.3050606@myotis.co.uk>
+References: <4B7D9AED.3050606@myotis.co.uk>
+Message-ID: <4B8F988D.6010308@myotis.co.uk>
+
+
+> Is there a package in R that produces Kite Diagrams?
+
+Given that no one replied to this, and although now off topic, what do 
+people use to produce kite diagrams as it would seem R doesn't have that 
+facility "off the shelf".
+
+Any OS would be relevant as my students use Windows, where as I tend to 
+use Linux/Mac.
+
+Thanks,
+
+Graham
+
+
+From mdu at ceh.ac.uk  Thu Mar  4 12:32:24 2010
+From: mdu at ceh.ac.uk (Dunbar, Michael)
+Date: Thu, 4 Mar 2010 11:32:24 +0000
+Subject: [R-sig-eco] lme post-hoc help
+In-Reply-To: <DE063D70-0155-4DE7-8DE6-569E6AFB9121@gmail.com>
+References: <DE063D70-0155-4DE7-8DE6-569E6AFB9121@gmail.com>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD056098470A@nerckwmb1.ad.nerc.ac.uk>
+
+Hi Nathan
+
+At first glance, I'd say this is perfectly possible. Your p-value for HAB as a whole is 0.03, and you are still losing power by undertaking multiple comparisons, albeit in an efficient way. The Far - Complex effect may be significant if you treat it as a planned comparison, but sadly not in the multiple comparison framework in this instance, it's p-value is diluted by all the other comparisons you have done. That's the downside of unplanned comparisons.
+
+Cheers
+
+Mike
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Nathan Lemoine
+Sent: 03 March 2010 19:05
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] lme post-hoc help
+
+Hi all,
+
+I'm attempting to analyze some data on log-transformed algae grazing  
+rates that I've collected in different habitats. I when collecting the  
+data, I blocked for day to account for temporal variation in grazing  
+intensity, and I'm considering DAY as a random factor in my model. As  
+such, I've used the lme model to construct the mixed-effects model as  
+follows:
+
+ > al_lme <- lme(grazing~habitat, random = ~1|day, data=algae)
+
+The ANOVA summary shows a significant result:
+
+ > anova(al_lme)
+
+            numDF   denDF   F-value        p-value
+(Intercept)     1    32        174.97322    <.0001
+HAB               3    32          3.31776       0.0321
+
+Yet, when I do a post-hoc comparison, none of the pairwise tests are  
+significant:
+
+ > pairs <- glht(al_lme, linfct = mcp("habitat"="Tukey")
+ > summary(pairs)
+
+                                       Estimate Std. Error  z value  
+Pr(>|z|)
+Fake - Complex == 0    0.2125     0.5390   0.394    0.978
+Far - Complex == 0       1.1937     0.5390   2.215    0.114
+Near - Complex == 0   0.7758     0.3623   2.142    0.134
+Far - Fake == 0              0.9813     0.4437   2.211    0.115
+Near - Fake == 0           0.5633     0.5390   1.045    0.715
+Near - Far == 0             -0.4179     0.5390  -0.775    0.861
+(Adjusted p values reported -- single-step method)
+
+How is this possible? In visually inspecting the data, it is apparent  
+that at least the Far-Complex ought to be significant. To be sure, I  
+double checked my statistics using SPSS, which is where I'm getting  
+more confused.
+
+In SPSS, I built a blocked, general linear model with Loss as the  
+dependent, Habitat as the fixed factor, and Day as a random factor. I  
+used the default Type III SS because the design was not balanced. SPSS  
+also returns a significant effect:
+
+Habitat F = 4.741, denom df = 33, p = 0.015
+
+and the Tukey's HSD post-hoc test returns a significant difference  
+between the Far-Complex habitats, like expected. My questions are:  
+First, how can I receive a significant result in R and have no  
+significant pairwise effects? Second, what are the differences between  
+SPSS and R, that SPSS uses a different denominator df to calculate the  
+F-statistic? This is probably the reason that the p-value for SPSS is  
+lower, but I'm not sure that this is part of the reason for the  
+different post-hoc results.
+
+Thanks for any help,
+
+Nate Lemoine
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+This message (and any attachments) is for the recipient ...{{dropped:6}}
+
+
+From graham.smith at myotis.co.uk  Thu Mar  4 15:56:40 2010
+From: graham.smith at myotis.co.uk (Graham Smith)
+Date: Thu, 04 Mar 2010 14:56:40 +0000
+Subject: [R-sig-eco] Kite diagrams
+In-Reply-To: <4B8FBBC4.9040206@ufl.edu>
+References: <4B7D9AED.3050606@myotis.co.uk> <4B8F988D.6010308@myotis.co.uk>
+	<4B8FBBC4.9040206@ufl.edu>
+Message-ID: <4B8FCA28.6040601@myotis.co.uk>
+
+Ben
+
+>  I don't do kite diagrams at all, but here are some quick & dirty solutions.
+
+That is really useful, as you suggest, not exactly an "off the shelf" 
+solution, but still workable.
+
+Graham
+
+
+From nikko at hailmail.net  Thu Mar  4 17:32:56 2010
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Thu, 04 Mar 2010 08:32:56 -0800
+Subject: [R-sig-eco]  lme post-hoc help
+In-Reply-To: <mailman.1.1267700401.563.r-sig-ecology@r-project.org>
+References: <mailman.1.1267700401.563.r-sig-ecology@r-project.org>
+Message-ID: <1267720376.23423.1363116911@webmail.messagingengine.com>
+
+Hi Nathan,
+I don't use SPSS, so I can't comment on what it is doing,
+but if you look at the bottom of the output from multcomp
+it says:(Adjusted p values reported -- single-step method)
+What that means is that multcomp is adjusting for the fact 
+that you are doing six comparisons. So a quick and dirty
+explanation is that worst case (Bonferonni), if you were
+rejecting at 0.05, you would have to reject at 0.05/6=0.0083
+and the p-values are adjusted accordingly. The adjustment
+multcomp uses as default is not as severe as that.
+
+Might I ask how many days you have? If you only have a small
+number of days, you may not be able to estimate the variance
+of the random effects very accurately, and you are better off
+putting it in as a fixed effect.
+
+lastly, your effect sizes aren't all that big, you may
+need to look at your measurement instrument, are you using
+% cover? or some other measure.
+
+Best
+Nicholas 
+
+> Message: 2
+> Date: Wed, 3 Mar 2010 13:04:54 -0600
+> From: Nathan Lemoine <lemoine.nathan at gmail.com>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] lme post-hoc help
+> Message-ID: <DE063D70-0155-4DE7-8DE6-569E6AFB9121 at gmail.com>
+> Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+> 
+> Hi all,
+> 
+> I'm attempting to analyze some data on log-transformed algae grazing  
+> rates that I've collected in different habitats. I when collecting the  
+> data, I blocked for day to account for temporal variation in grazing  
+> intensity, and I'm considering DAY as a random factor in my model. As  
+> such, I've used the lme model to construct the mixed-effects model as  
+> follows:
+> 
+>  > al_lme <- lme(grazing~habitat, random = ~1|day, data=algae)
+> 
+> The ANOVA summary shows a significant result:
+> 
+>  > anova(al_lme)
+> 
+>             numDF   denDF   F-value        p-value
+> (Intercept)     1    32        174.97322    <.0001
+> HAB               3    32          3.31776       0.0321
+> 
+> Yet, when I do a post-hoc comparison, none of the pairwise tests are  
+> significant:
+> 
+>  > pairs <- glht(al_lme, linfct = mcp("habitat"="Tukey")
+>  > summary(pairs)
+> 
+>                                        Estimate Std. Error  z value  
+> Pr(>|z|)
+> Fake - Complex == 0    0.2125     0.5390   0.394    0.978
+> Far - Complex == 0       1.1937     0.5390   2.215    0.114
+> Near - Complex == 0   0.7758     0.3623   2.142    0.134
+> Far - Fake == 0              0.9813     0.4437   2.211    0.115
+> Near - Fake == 0           0.5633     0.5390   1.045    0.715
+> Near - Far == 0             -0.4179     0.5390  -0.775    0.861
+> (Adjusted p values reported -- single-step method)
+> 
+> How is this possible? In visually inspecting the data, it is apparent  
+> that at least the Far-Complex ought to be significant. To be sure, I  
+> double checked my statistics using SPSS, which is where I'm getting  
+> more confused.
+> 
+> In SPSS, I built a blocked, general linear model with Loss as the  
+> dependent, Habitat as the fixed factor, and Day as a random factor. I  
+> used the default Type III SS because the design was not balanced. SPSS  
+> also returns a significant effect:
+> 
+> Habitat F = 4.741, denom df = 33, p = 0.015
+> 
+> and the Tukey's HSD post-hoc test returns a significant difference  
+> between the Far-Complex habitats, like expected. My questions are:  
+> First, how can I receive a significant result in R and have no  
+> significant pairwise effects? Second, what are the differences between  
+> SPSS and R, that SPSS uses a different denominator df to calculate the  
+> F-statistic? This is probably the reason that the p-value for SPSS is  
+> lower, but I'm not sure that this is part of the reason for the  
+> different post-hoc results.
+> 
+> Thanks for any help,
+> 
+> Nate Lemoine
+> 
+> 
+> 
+> ------------------------------
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> End of R-sig-ecology Digest, Vol 24, Issue 2
+> ********************************************
+>
+
+
+From lemoine.nathan at gmail.com  Thu Mar  4 22:03:26 2010
+From: lemoine.nathan at gmail.com (Nathan Lemoine)
+Date: Thu, 4 Mar 2010 15:03:26 -0600
+Subject: [R-sig-eco] lme post-hoc help
+In-Reply-To: <1267720376.23423.1363116911@webmail.messagingengine.com>
+References: <mailman.1.1267700401.563.r-sig-ecology@r-project.org>
+	<1267720376.23423.1363116911@webmail.messagingengine.com>
+Message-ID: <9BE5ED99-E333-4183-A8B5-BEBD69692CBF@gmail.com>
+
+Thanks for the responses,
+
+So my design is an unbalanced incomplete randomized block design,  
+actually. There are 4 replicates per day over the course of three days  
+for the Simple and Complex habitats, and 4 replicates per day over the  
+course of 2 separate days for the Fake and Far habitats.
+
+So it looks like this:
+Habitat		Day
+Near		1
+Near		2
+Near		3
+Complex	1
+Complex	2
+Complex	3
+Far			4
+Far			5
+Fake		4
+Fake		5
+
+With four replicates in each of those categories. The metric I used  
+was the hourly % loss of a tethered set of algae. Basically, I set the  
+tether out, came back an hour later, and quantified the percent loss  
+in terms of mass.
+
+
+
+On Mar 4, 2010, at 10:32 AM, Nicholas Lewin-Koh wrote:
+
+> Hi Nathan,
+> I don't use SPSS, so I can't comment on what it is doing,
+> but if you look at the bottom of the output from multcomp
+> it says:(Adjusted p values reported -- single-step method)
+> What that means is that multcomp is adjusting for the fact
+> that you are doing six comparisons. So a quick and dirty
+> explanation is that worst case (Bonferonni), if you were
+> rejecting at 0.05, you would have to reject at 0.05/6=0.0083
+> and the p-values are adjusted accordingly. The adjustment
+> multcomp uses as default is not as severe as that.
+>
+> Might I ask how many days you have? If you only have a small
+> number of days, you may not be able to estimate the variance
+> of the random effects very accurately, and you are better off
+> putting it in as a fixed effect.
+>
+> lastly, your effect sizes aren't all that big, you may
+> need to look at your measurement instrument, are you using
+> % cover? or some other measure.
+>
+> Best
+> Nicholas
+>
+>> Message: 2
+>> Date: Wed, 3 Mar 2010 13:04:54 -0600
+>> From: Nathan Lemoine <lemoine.nathan at gmail.com>
+>> To: r-sig-ecology at r-project.org
+>> Subject: [R-sig-eco] lme post-hoc help
+>> Message-ID: <DE063D70-0155-4DE7-8DE6-569E6AFB9121 at gmail.com>
+>> Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+>>
+>> Hi all,
+>>
+>> I'm attempting to analyze some data on log-transformed algae grazing
+>> rates that I've collected in different habitats. I when collecting  
+>> the
+>> data, I blocked for day to account for temporal variation in grazing
+>> intensity, and I'm considering DAY as a random factor in my model. As
+>> such, I've used the lme model to construct the mixed-effects model as
+>> follows:
+>>
+>>> al_lme <- lme(grazing~habitat, random = ~1|day, data=algae)
+>>
+>> The ANOVA summary shows a significant result:
+>>
+>>> anova(al_lme)
+>>
+>>            numDF   denDF   F-value        p-value
+>> (Intercept)     1    32        174.97322    <.0001
+>> HAB               3    32          3.31776       0.0321
+>>
+>> Yet, when I do a post-hoc comparison, none of the pairwise tests are
+>> significant:
+>>
+>>> pairs <- glht(al_lme, linfct = mcp("habitat"="Tukey")
+>>> summary(pairs)
+>>
+>>                                       Estimate Std. Error  z value
+>> Pr(>|z|)
+>> Fake - Complex == 0    0.2125     0.5390   0.394    0.978
+>> Far - Complex == 0       1.1937     0.5390   2.215    0.114
+>> Near - Complex == 0   0.7758     0.3623   2.142    0.134
+>> Far - Fake == 0              0.9813     0.4437   2.211    0.115
+>> Near - Fake == 0           0.5633     0.5390   1.045    0.715
+>> Near - Far == 0             -0.4179     0.5390  -0.775    0.861
+>> (Adjusted p values reported -- single-step method)
+>>
+>> How is this possible? In visually inspecting the data, it is apparent
+>> that at least the Far-Complex ought to be significant. To be sure, I
+>> double checked my statistics using SPSS, which is where I'm getting
+>> more confused.
+>>
+>> In SPSS, I built a blocked, general linear model with Loss as the
+>> dependent, Habitat as the fixed factor, and Day as a random factor. I
+>> used the default Type III SS because the design was not balanced.  
+>> SPSS
+>> also returns a significant effect:
+>>
+>> Habitat F = 4.741, denom df = 33, p = 0.015
+>>
+>> and the Tukey's HSD post-hoc test returns a significant difference
+>> between the Far-Complex habitats, like expected. My questions are:
+>> First, how can I receive a significant result in R and have no
+>> significant pairwise effects? Second, what are the differences  
+>> between
+>> SPSS and R, that SPSS uses a different denominator df to calculate  
+>> the
+>> F-statistic? This is probably the reason that the p-value for SPSS is
+>> lower, but I'm not sure that this is part of the reason for the
+>> different post-hoc results.
+>>
+>> Thanks for any help,
+>>
+>> Nate Lemoine
+>>
+>>
+>>
+>> ------------------------------
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>> End of R-sig-ecology Digest, Vol 24, Issue 2
+>> ********************************************
+>>
+
+
+From turcomania at gmail.com  Fri Mar  5 10:43:52 2010
+From: turcomania at gmail.com (Mustafa Tufan Turp)
+Date: Fri, 5 Mar 2010 11:43:52 +0200
+Subject: [R-sig-eco] Which statistical methods should I use?
+Message-ID: <1c983b861003050143k263bf21fq1d73757bcc64f125@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100305/55f6fd3e/attachment.pl>
+
+From jas2339 at yahoo.com  Fri Mar  5 13:59:22 2010
+From: jas2339 at yahoo.com (Jason S)
+Date: Fri, 5 Mar 2010 04:59:22 -0800 (PST)
+Subject: [R-sig-eco] estimating the MLE of a covariance matrix under
+	specific constraints
+Message-ID: <160724.27402.qm@web35407.mail.mud.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100305/b2818831/attachment.pl>
+
+From sarah.goslee at gmail.com  Fri Mar  5 15:29:05 2010
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Fri, 5 Mar 2010 09:29:05 -0500
+Subject: [R-sig-eco] Which statistical methods should I use?
+In-Reply-To: <1c983b861003050143k263bf21fq1d73757bcc64f125@mail.gmail.com>
+References: <1c983b861003050143k263bf21fq1d73757bcc64f125@mail.gmail.com>
+Message-ID: <efb536d51003050629s38317df1n4253ccede8d563ab@mail.gmail.com>
+
+Hi,
+
+We're happy to try to help, but we really need either a specific R
+question or a clearer statement of problem. For instance, I have
+no idea what a NAO index is, or what its statistical properties might
+be. You don't describe what kind of temperature and precipitation data
+you have, or give a clear idea of just what you are trying to test.
+
+R has good facilities for CCA. This article by Gonzalez et al. in the
+Journal of Statistical Software might be of use:
+http://www.jstatsoft.org/v23/i12/
+along with the associated R package.
+
+If you have questions about applying those methods after you
+read the paper and the package help and work through the
+examples, then please explain more clearly what you need so
+that we can help you.
+
+Sarah
+
+On Fri, Mar 5, 2010 at 4:43 AM, Mustafa Tufan Turp <turcomania at gmail.com> wrote:
+> Dear members,
+>
+> I have a research on different NAO indices and its impacts on local
+> temperature and precipitation trends. So which correlation method is the
+> best to see their statistical relationship? I thought using Canonical
+> Correlation Analysis works well. By the way I am new at R and can you
+> recommend some packages? Does the CCA help me for analyzing and plots? I
+> need your answers urgently. Thank you.
+>
+> Regards.
+>
+> Tufan Turp
+> Bogazici University
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From turcomania at gmail.com  Fri Mar  5 16:19:45 2010
+From: turcomania at gmail.com (Mustafa Tufan Turp)
+Date: Fri, 5 Mar 2010 17:19:45 +0200
+Subject: [R-sig-eco] Which statistical methods should I use?
+In-Reply-To: <efb536d51003050629s38317df1n4253ccede8d563ab@mail.gmail.com>
+References: <1c983b861003050143k263bf21fq1d73757bcc64f125@mail.gmail.com>
+	<efb536d51003050629s38317df1n4253ccede8d563ab@mail.gmail.com>
+Message-ID: <1c983b861003050719q2e2010e2ye07edcd88274f0@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100305/40c10d12/attachment.pl>
+
+From jmmolina at engr.colostate.edu  Sat Mar  6 01:29:36 2010
+From: jmmolina at engr.colostate.edu (Jose Manuel Molina)
+Date: Fri, 05 Mar 2010 17:29:36 -0700
+Subject: [R-sig-eco] Which statistical methods should I use?
+In-Reply-To: <1c983b861003050143k263bf21fq1d73757bcc64f125@mail.gmail.com>
+References: <1c983b861003050143k263bf21fq1d73757bcc64f125@mail.gmail.com>
+Message-ID: <4B91A1F0.9090708@engr.colostate.edu>
+
+Mustafa,
+
+I have been working with these kind of statistical relationships, and I 
+find that using spatial Pearson cross-correlation is very helpful to 
+analyze  hydroclimatological associations. You can see this abstract:
+http://hydrologydays.colostate.edu/Abstracts_09/Molina_poster_abs.pdf
+Additional to CCA packages in R, if you feel the correlation maps and 
+information that I mention in that abstract can be useful for your work, 
+I will be pleased to give you more details.
+Jose.
+
+Mustafa Tufan Turp wrote:
+> Dear members,
+>
+> I have a research on different NAO indices and its impacts on local
+> temperature and precipitation trends. So which correlation method is the
+> best to see their statistical relationship? I thought using Canonical
+> Correlation Analysis works well. By the way I am new at R and can you
+> recommend some packages? Does the CCA help me for analyzing and plots? I
+> need your answers urgently. Thank you.
+>
+> Regards.
+>
+> Tufan Turp
+> Bogazici University
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>   
+
+-- 
+Jose M Molina
+Hydrologic Sciences and Engineering
+Civil & Environmental Engineering Department
+Colorado State University
+jmmolina at engr.colostate.edu
+
+"Decide what you are. Decide what you are willing to exchange for it. Establish your priorities and go to work"
+H. L. Hunt
+
+
+From nikko at hailmail.net  Sat Mar  6 17:28:03 2010
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Sat, 06 Mar 2010 08:28:03 -0800
+Subject: [R-sig-eco] lme post-hoc help
+In-Reply-To: <9BE5ED99-E333-4183-A8B5-BEBD69692CBF@gmail.com>
+References: <mailman.1.1267700401.563.r-sig-ecology@r-project.org>
+	<1267720376.23423.1363116911@webmail.messagingengine.com>
+	<9BE5ED99-E333-4183-A8B5-BEBD69692CBF@gmail.com>
+Message-ID: <1267892883.13328.1363439605@webmail.messagingengine.com>
+
+Hi Nathan,
+Seeing as no one has replied, the problem seems to be that you have no
+overlap
+in your blocking :( So the model you would like to fit is not really
+well identified.
+You have near and complex as one experiment and far and fake in another.
+Unless you are willing to code far and fake as Day 1 2, assuming that
+day 4 and 5 is the
+same as day 1 and 2. I wouldn't do that. 
+
+Nicholas
+
+On Thu, 04 Mar 2010 15:03 -0600, "Nathan Lemoine"
+<lemoine.nathan at gmail.com> wrote:
+> Thanks for the responses,
+> 
+> So my design is an unbalanced incomplete randomized block design,  
+> actually. There are 4 replicates per day over the course of three days  
+> for the Simple and Complex habitats, and 4 replicates per day over the  
+> course of 2 separate days for the Fake and Far habitats.
+> 
+> So it looks like this:
+> Habitat         Day
+> Near            1
+> Near            2
+> Near            3
+> Complex 1
+> Complex 2
+> Complex 3
+> Far                     4
+> Far                     5
+> Fake            4
+> Fake            5
+> 
+> With four replicates in each of those categories. The metric I used  
+> was the hourly % loss of a tethered set of algae. Basically, I set the  
+> tether out, came back an hour later, and quantified the percent loss  
+> in terms of mass.
+> 
+> 
+> 
+> On Mar 4, 2010, at 10:32 AM, Nicholas Lewin-Koh wrote:
+> 
+> > Hi Nathan,
+> > I don't use SPSS, so I can't comment on what it is doing,
+> > but if you look at the bottom of the output from multcomp
+> > it says:(Adjusted p values reported -- single-step method)
+> > What that means is that multcomp is adjusting for the fact
+> > that you are doing six comparisons. So a quick and dirty
+> > explanation is that worst case (Bonferonni), if you were
+> > rejecting at 0.05, you would have to reject at 0.05/6=0.0083
+> > and the p-values are adjusted accordingly. The adjustment
+> > multcomp uses as default is not as severe as that.
+> >
+> > Might I ask how many days you have? If you only have a small
+> > number of days, you may not be able to estimate the variance
+> > of the random effects very accurately, and you are better off
+> > putting it in as a fixed effect.
+> >
+> > lastly, your effect sizes aren't all that big, you may
+> > need to look at your measurement instrument, are you using
+> > % cover? or some other measure.
+> >
+> > Best
+> > Nicholas
+> >
+> >> Message: 2
+> >> Date: Wed, 3 Mar 2010 13:04:54 -0600
+> >> From: Nathan Lemoine <lemoine.nathan at gmail.com>
+> >> To: r-sig-ecology at r-project.org
+> >> Subject: [R-sig-eco] lme post-hoc help
+> >> Message-ID: <DE063D70-0155-4DE7-8DE6-569E6AFB9121 at gmail.com>
+> >> Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+> >>
+> >> Hi all,
+> >>
+> >> I'm attempting to analyze some data on log-transformed algae grazing
+> >> rates that I've collected in different habitats. I when collecting  
+> >> the
+> >> data, I blocked for day to account for temporal variation in grazing
+> >> intensity, and I'm considering DAY as a random factor in my model. As
+> >> such, I've used the lme model to construct the mixed-effects model as
+> >> follows:
+> >>
+> >>> al_lme <- lme(grazing~habitat, random = ~1|day, data=algae)
+> >>
+> >> The ANOVA summary shows a significant result:
+> >>
+> >>> anova(al_lme)
+> >>
+> >>            numDF   denDF   F-value        p-value
+> >> (Intercept)     1    32        174.97322    <.0001
+> >> HAB               3    32          3.31776       0.0321
+> >>
+> >> Yet, when I do a post-hoc comparison, none of the pairwise tests are
+> >> significant:
+> >>
+> >>> pairs <- glht(al_lme, linfct = mcp("habitat"="Tukey")
+> >>> summary(pairs)
+> >>
+> >>                                       Estimate Std. Error  z value
+> >> Pr(>|z|)
+> >> Fake - Complex == 0    0.2125     0.5390   0.394    0.978
+> >> Far - Complex == 0       1.1937     0.5390   2.215    0.114
+> >> Near - Complex == 0   0.7758     0.3623   2.142    0.134
+> >> Far - Fake == 0              0.9813     0.4437   2.211    0.115
+> >> Near - Fake == 0           0.5633     0.5390   1.045    0.715
+> >> Near - Far == 0             -0.4179     0.5390  -0.775    0.861
+> >> (Adjusted p values reported -- single-step method)
+> >>
+> >> How is this possible? In visually inspecting the data, it is apparent
+> >> that at least the Far-Complex ought to be significant. To be sure, I
+> >> double checked my statistics using SPSS, which is where I'm getting
+> >> more confused.
+> >>
+> >> In SPSS, I built a blocked, general linear model with Loss as the
+> >> dependent, Habitat as the fixed factor, and Day as a random factor. I
+> >> used the default Type III SS because the design was not balanced.  
+> >> SPSS
+> >> also returns a significant effect:
+> >>
+> >> Habitat F = 4.741, denom df = 33, p = 0.015
+> >>
+> >> and the Tukey's HSD post-hoc test returns a significant difference
+> >> between the Far-Complex habitats, like expected. My questions are:
+> >> First, how can I receive a significant result in R and have no
+> >> significant pairwise effects? Second, what are the differences  
+> >> between
+> >> SPSS and R, that SPSS uses a different denominator df to calculate  
+> >> the
+> >> F-statistic? This is probably the reason that the p-value for SPSS is
+> >> lower, but I'm not sure that this is part of the reason for the
+> >> different post-hoc results.
+> >>
+> >> Thanks for any help,
+> >>
+> >> Nate Lemoine
+> >>
+> >>
+> >>
+> >> ------------------------------
+> >>
+> >> _______________________________________________
+> >> R-sig-ecology mailing list
+> >> R-sig-ecology at r-project.org
+> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >>
+> >>
+> >> End of R-sig-ecology Digest, Vol 24, Issue 2
+> >> ********************************************
+> >>
+> 
+>
+
+
+From nikko at hailmail.net  Mon Mar  8 17:42:51 2010
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Mon, 08 Mar 2010 08:42:51 -0800
+Subject: [R-sig-eco] lme post-hoc help
+In-Reply-To: <9BE5ED99-E333-4183-A8B5-BEBD69692CBF@gmail.com>
+References: <mailman.1.1267700401.563.r-sig-ecology@r-project.org>
+	<1267720376.23423.1363116911@webmail.messagingengine.com>
+	<9BE5ED99-E333-4183-A8B5-BEBD69692CBF@gmail.com>
+Message-ID: <1268066571.3270.1363711191@webmail.messagingengine.com>
+
+Hi Nathan,
+One more thing, as someone rightly pointed out to me.
+Your model is identified in the mixed effect setting.
+If you treat day as fixed, it is not for the reasons
+I pointed out. 
+
+Nicholas
+
+
+On Thu, 04 Mar 2010 15:03 -0600, "Nathan Lemoine"
+<lemoine.nathan at gmail.com> wrote:
+> Thanks for the responses,
+> 
+> So my design is an unbalanced incomplete randomized block design,  
+> actually. There are 4 replicates per day over the course of three days  
+> for the Simple and Complex habitats, and 4 replicates per day over the  
+> course of 2 separate days for the Fake and Far habitats.
+> 
+> So it looks like this:
+> Habitat         Day
+> Near            1
+> Near            2
+> Near            3
+> Complex 1
+> Complex 2
+> Complex 3
+> Far                     4
+> Far                     5
+> Fake            4
+> Fake            5
+> 
+> With four replicates in each of those categories. The metric I used  
+> was the hourly % loss of a tethered set of algae. Basically, I set the  
+> tether out, came back an hour later, and quantified the percent loss  
+> in terms of mass.
+> 
+> 
+> 
+> On Mar 4, 2010, at 10:32 AM, Nicholas Lewin-Koh wrote:
+> 
+> > Hi Nathan,
+> > I don't use SPSS, so I can't comment on what it is doing,
+> > but if you look at the bottom of the output from multcomp
+> > it says:(Adjusted p values reported -- single-step method)
+> > What that means is that multcomp is adjusting for the fact
+> > that you are doing six comparisons. So a quick and dirty
+> > explanation is that worst case (Bonferonni), if you were
+> > rejecting at 0.05, you would have to reject at 0.05/6=0.0083
+> > and the p-values are adjusted accordingly. The adjustment
+> > multcomp uses as default is not as severe as that.
+> >
+> > Might I ask how many days you have? If you only have a small
+> > number of days, you may not be able to estimate the variance
+> > of the random effects very accurately, and you are better off
+> > putting it in as a fixed effect.
+> >
+> > lastly, your effect sizes aren't all that big, you may
+> > need to look at your measurement instrument, are you using
+> > % cover? or some other measure.
+> >
+> > Best
+> > Nicholas
+> >
+> >> Message: 2
+> >> Date: Wed, 3 Mar 2010 13:04:54 -0600
+> >> From: Nathan Lemoine <lemoine.nathan at gmail.com>
+> >> To: r-sig-ecology at r-project.org
+> >> Subject: [R-sig-eco] lme post-hoc help
+> >> Message-ID: <DE063D70-0155-4DE7-8DE6-569E6AFB9121 at gmail.com>
+> >> Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+> >>
+> >> Hi all,
+> >>
+> >> I'm attempting to analyze some data on log-transformed algae grazing
+> >> rates that I've collected in different habitats. I when collecting  
+> >> the
+> >> data, I blocked for day to account for temporal variation in grazing
+> >> intensity, and I'm considering DAY as a random factor in my model. As
+> >> such, I've used the lme model to construct the mixed-effects model as
+> >> follows:
+> >>
+> >>> al_lme <- lme(grazing~habitat, random = ~1|day, data=algae)
+> >>
+> >> The ANOVA summary shows a significant result:
+> >>
+> >>> anova(al_lme)
+> >>
+> >>            numDF   denDF   F-value        p-value
+> >> (Intercept)     1    32        174.97322    <.0001
+> >> HAB               3    32          3.31776       0.0321
+> >>
+> >> Yet, when I do a post-hoc comparison, none of the pairwise tests are
+> >> significant:
+> >>
+> >>> pairs <- glht(al_lme, linfct = mcp("habitat"="Tukey")
+> >>> summary(pairs)
+> >>
+> >>                                       Estimate Std. Error  z value
+> >> Pr(>|z|)
+> >> Fake - Complex == 0    0.2125     0.5390   0.394    0.978
+> >> Far - Complex == 0       1.1937     0.5390   2.215    0.114
+> >> Near - Complex == 0   0.7758     0.3623   2.142    0.134
+> >> Far - Fake == 0              0.9813     0.4437   2.211    0.115
+> >> Near - Fake == 0           0.5633     0.5390   1.045    0.715
+> >> Near - Far == 0             -0.4179     0.5390  -0.775    0.861
+> >> (Adjusted p values reported -- single-step method)
+> >>
+> >> How is this possible? In visually inspecting the data, it is apparent
+> >> that at least the Far-Complex ought to be significant. To be sure, I
+> >> double checked my statistics using SPSS, which is where I'm getting
+> >> more confused.
+> >>
+> >> In SPSS, I built a blocked, general linear model with Loss as the
+> >> dependent, Habitat as the fixed factor, and Day as a random factor. I
+> >> used the default Type III SS because the design was not balanced.  
+> >> SPSS
+> >> also returns a significant effect:
+> >>
+> >> Habitat F = 4.741, denom df = 33, p = 0.015
+> >>
+> >> and the Tukey's HSD post-hoc test returns a significant difference
+> >> between the Far-Complex habitats, like expected. My questions are:
+> >> First, how can I receive a significant result in R and have no
+> >> significant pairwise effects? Second, what are the differences  
+> >> between
+> >> SPSS and R, that SPSS uses a different denominator df to calculate  
+> >> the
+> >> F-statistic? This is probably the reason that the p-value for SPSS is
+> >> lower, but I'm not sure that this is part of the reason for the
+> >> different post-hoc results.
+> >>
+> >> Thanks for any help,
+> >>
+> >> Nate Lemoine
+> >>
+> >>
+> >>
+> >> ------------------------------
+> >>
+> >> _______________________________________________
+> >> R-sig-ecology mailing list
+> >> R-sig-ecology at r-project.org
+> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >>
+> >>
+> >> End of R-sig-ecology Digest, Vol 24, Issue 2
+> >> ********************************************
+> >>
+> 
+>
+
+
+From bdz at botanika.hu  Tue Mar  9 08:58:19 2010
+From: bdz at botanika.hu (Zoltan Botta-Dukat)
+Date: Tue, 09 Mar 2010 08:58:19 +0100
+Subject: [R-sig-eco] explained variation in GAM/GAMM
+In-Reply-To: <2ad0cc111002141615w178722c7u1e47315a7b8aa110@mail.gmail.com>
+References: <4B7155FC.4040403@ebc.uu.se>
+	<2ad0cc111002141615w178722c7u1e47315a7b8aa110@mail.gmail.com>
+Message-ID: <4B95FF9B.7010105@botanika.hu>
+
+Dear All,
+
+I would like to estimate the variation explained by different sets of 
+predictors. My response is binary, and I want to capture the possible 
+non-linear relationships, thus first I chooose GAM with binomial family.
+Summary of the model gives adjusted R-squared and explained deviance (in 
+%). The latter seems to be what I need, and I'm not sure what  the 
+R-squared is in this situation. Could someone explain it?
+
+Then, I recognzed that residuals are highly spatially autocorrelated, so 
+I changed to GAMM. It handle the spatial autocorrelation, but the 
+summary of gam part of the fitted model gives adjusted R-squared only, 
+but not the expalined variance. R-squared is lower in GAMM than in GAM, 
+so I think  considering spatial autocorrelation is necessary. My 
+question is whether I can use this adjusted R-squared or I should 
+calculate something else, for example Efron's pseudo-R-squared, from the 
+predicted values.
+
+Thanks for your advice
+
+Zoltan
+
+
+From lquinn at hotmail.com  Wed Mar 10 18:33:29 2010
+From: lquinn at hotmail.com (L Quinn)
+Date: Wed, 10 Mar 2010 17:33:29 +0000
+Subject: [R-sig-eco] plotting CCA results in vegan
+In-Reply-To: <mailman.1.1268132401.24349.r-sig-ecology@r-project.org>
+References: <mailman.1.1268132401.24349.r-sig-ecology@r-project.org>
+Message-ID: <COL103-W288E0EC4B181D2865D6D22CE330@phx.gbl>
+
+
+
+Hello, I have two related questions:
+
+1.) Is there a way to use ordipointlabel to jitter species names on a CCA plot AND get biplot arrows to be displayed as well? I tried
+
+ordipointlabel(cca.inv,display=c("species","bp"))
+
+But biplot arrows came out as points instead (see attached file). 
+
+2.) Can I combine the output of the above (assuming there's a way to do it) with ordihull, so that I have jittered species names, biplot arrows, and convex hulls around factor centroids all on the same figure??
+
+
+A subset of my data is attached, and the model I'm using is this (with spp<-inv[22:37] and env<-inv[13:21]):
+
+cca.inv<-cca(spp~LU+cond+pH+po4+no3,env)
+
+Thank you in advance.
+
+LQ
+
+
+
+
+
+
+ 		 	   		  
+_________________________________________________________________
+Hotmail: Powerful Free email with security by Microsoft.
+
+-------------- next part --------------
+An embedded and charset-unspecified text was scrubbed...
+Name: sample_data.txt
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100310/3e8bc808/attachment.txt>
+
+From jari.oksanen at oulu.fi  Thu Mar 11 10:08:40 2010
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 11 Mar 2010 11:08:40 +0200
+Subject: [R-sig-eco] plotting CCA results in vegan
+In-Reply-To: <COL103-W288E0EC4B181D2865D6D22CE330@phx.gbl>
+References: <mailman.1.1268132401.24349.r-sig-ecology@r-project.org>
+	<COL103-W288E0EC4B181D2865D6D22CE330@phx.gbl>
+Message-ID: <1268298520.1924.5.camel@biol102145>
+
+On Wed, 2010-03-10 at 17:33 +0000, L Quinn wrote:
+> 
+> Hello, I have two related questions:
+> 
+> 1.) Is there a way to use ordipointlabel to jitter species names on a CCA plot AND get biplot arrows to be displayed as well? I tried
+> 
+> ordipointlabel(cca.inv,display=c("species","bp"))
+> 
+> But biplot arrows came out as points instead (see attached file). 
+> 
+> 2.) Can I combine the output of the above (assuming there's a way to do it) with ordihull, so that I have jittered species names, biplot arrows, and convex hulls around factor centroids all on the same figure??
+> 
+> 
+> A subset of my data is attached, and the model I'm using is this (with spp<-inv[22:37] and env<-inv[13:21]):
+> 
+> cca.inv<-cca(spp~LU+cond+pH+po4+no3,env)
+> 
+> Thank you in advance.
+
+Functions like 'ordipointlabel' and 'orditkplot' really cannot handle
+biplot arrows -- contributions to improve the code are welcome, and they
+will be credited to the authors when incorporated in vegan.
+
+The only thing that you can do here is something like this:
+
+ordipointlabel(cca.inv,display="species")
+text(cca.inv, dis = "bp")
+
+This adds biplot arrows to the jittered plot of species that
+ordipointlabel() made. If you are lucky, the arrow labels won't
+overwrite species names. You can adjust arrow scaling by setting
+argument arrow.mul to a suitable value (the default is to find the value
+of arrow.mul so that the arrows nicely fill the figure frame):
+
+text(cca.inv, dis = "bp", arrow.mul = 0.9)
+
+HTH,
+
+Jari Oksanen
+
+
+From aitor.gaston at upm.es  Thu Mar 11 15:48:05 2010
+From: aitor.gaston at upm.es (=?iso-8859-1?Q?Aitor_Gast=F3n?=)
+Date: Thu, 11 Mar 2010 15:48:05 +0100
+Subject: [R-sig-eco] explained variation in GAM/GAMM
+In-Reply-To: <4B95FF9B.7010105@botanika.hu>
+References: <4B7155FC.4040403@ebc.uu.se><2ad0cc111002141615w178722c7u1e47315a7b8aa110@mail.gmail.com>
+	<4B95FF9B.7010105@botanika.hu>
+Message-ID: <0F702C8698664EA4B4BD853753B7BDF8@botanica1>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100311/172a53c5/attachment.pl>
+
+From trevor.avery at acadiau.ca  Thu Mar 11 17:03:34 2010
+From: trevor.avery at acadiau.ca (tavery)
+Date: Thu, 11 Mar 2010 12:03:34 -0400
+Subject: [R-sig-eco] ZINB or density data models with lots of zeros
+In-Reply-To: <mailman.1.1268305201.17885.r-sig-ecology@r-project.org>
+References: <mailman.1.1268305201.17885.r-sig-ecology@r-project.org>
+Message-ID: <4B991456.3080307@acadiau.ca>
+
+I have completed zero-inflation negative binomial (ZINB) models on count 
+data for the absolute counts of ectoparasites on fish where there are 
+lots of zeros (everything worked well using Zuur et al. and a host of 
+other sources). The fish are of different sizes with corresponding 
+differences in surface areas of fins etc. and I would now like to 
+compare density of parasites among each area. Densities were calculated 
+by dividing the counts for each parasite by the surface area of the fin 
+(etc.) and surface areas were different for each individual i.e. scaled 
+for size of fish.
+
+The comparisons are then of non-integer values that do not play nice 
+with Poisson or Negative Binomial models. However, the issue of having 
+lots of zeros remains and will affect mean values if I were to use some 
+sort of ANOVA based analysis.
+
+Does anyone have any suggestions on how to deal with the many zeros for 
+the density data (assuming I was to use an ANOVA type analysis)? I have 
+also thought to just include fish size as a covariate in the ZINB 
+models, but a) have not seen an example of such, b) do not want to over 
+complicate the analysis, and/or c) this will only scale the counts to 
+overall fish size, not to fin etc. surface areas. Of course, fin surface 
+areas probably scale linearly and, if so, body size might be an 
+appropriate covariate to remove the effect from the ZINB comparisons of 
+counts on fins i.e. essentially the same comparison (density = ZINB with 
+fish size covariate). Does that make sense?
+
+This ZINB model works well (yes, the 'false' zeros are independent of 
+factors hence the "| 1"). Where would I insert the fish size covariate?
+location_on_body = where parasites were found (7 body areas)
+location = site of fish capture (2 sites)
+
+zinb2<-zeroinfl(caligus_elongatus~location_on_body+location | 1, 
+dist="negbin", link="logit", data=sturg)
+
+I would assume this:
+
+zinb2<-zeroinfl(caligus_elongatus~fish_size+location_on_body+location | 
+1, dist="negbin", link="logit", data=sturg)
+
+thanks in advance,
+trevor
+
+
+From solymos at ualberta.ca  Thu Mar 11 17:22:38 2010
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Thu, 11 Mar 2010 09:22:38 -0700
+Subject: [R-sig-eco] ZINB or density data models with lots of zeros
+In-Reply-To: <4B991456.3080307@acadiau.ca>
+References: <mailman.1.1268305201.17885.r-sig-ecology@r-project.org>
+	<4B991456.3080307@acadiau.ca>
+Message-ID: <34896f091003110822g579eea0ah87577d95ffbbe1e9@mail.gmail.com>
+
+Trevor,
+
+You can use weights in the model to provide the surface area (or
+sqrt(surface area) to enhance linearity) and leave the counts as they
+are in the ZINB model. (In the zeroinfl function weights are used to
+weight the log-likelihood and to scale the residuals.)
+
+Cheers,
+
+Peter
+
+P?ter S?lymos
+Alberta Biodiversity Monitoring Institute
+and Boreal Avian Modelling project
+Department of Biological Sciences
+CW 405, Biological Sciences Bldg
+University of Alberta
+Edmonton, Alberta, T6G 2E9, Canada
+Phone: 780.492.8534
+Fax: 780.492.7635
+
+
+On Thu, Mar 11, 2010 at 9:03 AM, tavery <trevor.avery at acadiau.ca> wrote:
+> I have completed zero-inflation negative binomial (ZINB) models on count
+> data for the absolute counts of ectoparasites on fish where there are lots
+> of zeros (everything worked well using Zuur et al. and a host of other
+> sources). The fish are of different sizes with corresponding differences in
+> surface areas of fins etc. and I would now like to compare density of
+> parasites among each area. Densities were calculated by dividing the counts
+> for each parasite by the surface area of the fin (etc.) and surface areas
+> were different for each individual i.e. scaled for size of fish.
+>
+> The comparisons are then of non-integer values that do not play nice with
+> Poisson or Negative Binomial models. However, the issue of having lots of
+> zeros remains and will affect mean values if I were to use some sort of
+> ANOVA based analysis.
+>
+> Does anyone have any suggestions on how to deal with the many zeros for the
+> density data (assuming I was to use an ANOVA type analysis)? I have also
+> thought to just include fish size as a covariate in the ZINB models, but a)
+> have not seen an example of such, b) do not want to over complicate the
+> analysis, and/or c) this will only scale the counts to overall fish size,
+> not to fin etc. surface areas. Of course, fin surface areas probably scale
+> linearly and, if so, body size might be an appropriate covariate to remove
+> the effect from the ZINB comparisons of counts on fins i.e. essentially the
+> same comparison (density = ZINB with fish size covariate). Does that make
+> sense?
+>
+> This ZINB model works well (yes, the 'false' zeros are independent of
+> factors hence the "| 1"). Where would I insert the fish size covariate?
+> location_on_body = where parasites were found (7 body areas)
+> location = site of fish capture (2 sites)
+>
+> zinb2<-zeroinfl(caligus_elongatus~location_on_body+location | 1,
+> dist="negbin", link="logit", data=sturg)
+>
+> I would assume this:
+>
+> zinb2<-zeroinfl(caligus_elongatus~fish_size+location_on_body+location | 1,
+> dist="negbin", link="logit", data=sturg)
+>
+> thanks in advance,
+> trevor
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From scott.foster at csiro.au  Thu Mar 11 22:25:26 2010
+From: scott.foster at csiro.au (Scott Foster)
+Date: Fri, 12 Mar 2010 08:25:26 +1100
+Subject: [R-sig-eco] ZINB or density data models with lots of zeros
+In-Reply-To: <34896f091003110822g579eea0ah87577d95ffbbe1e9@mail.gmail.com>
+References: <mailman.1.1268305201.17885.r-sig-ecology@r-project.org>	<4B991456.3080307@acadiau.ca>
+	<34896f091003110822g579eea0ah87577d95ffbbe1e9@mail.gmail.com>
+Message-ID: <4B995FC6.7080706@csiro.au>
+
+Hi,
+
+I, and many others, would not use the density as the outcome.  If you 
+are using the log-link for the NB part of the model then it is 
+appropriate to use log( size) as an offset.  This is because
+
+log( E( count / size)) = log( E( count) / size); as expectation is 
+w.r.t. counts, not size
+                                 = log( E( count)) - log( size)
+                                 = linear predictor
+
+So
+
+log( E( count)) = linear predictor + log( size).
+
+This can be done in R by simply appending +offset( log( size)) in your 
+model formula for the NB model.  This essentially adds a term to your 
+linear predictor with a set coefficient of 1.  If you think that this 
+may not be appropriate then you can add it as a covariate (as Peter just 
+suggested).
+
+Just a cautionary note:  If you start to look at counts within 
+particular areas of a fish (i.e. test if more parasites are on fins or 
+on body or on ...) then you will start to require nested models, ala 
+mixed effects.  After all, if a fish is infected then it is(?) more 
+likely to have parasites in all areas (and vice versa for a fish that 
+isn't infected).  I've not used random effects in a zero inflated model 
+but I have seen a paper that includes random effects in zero-inflated 
+models (Hall 2000).  I'm not aware of any software that will do this 
+automatically for you.  Someone else might know...
+
+If you really *must* use the ratio as an outcome and do not use the 
+offset approach then you are left with two options: delta approaches 
+(often called hurdle models), or Tweedie type models.  I won't say any 
+more now as I suspect that this is probably not exactly what you want to 
+be doing (I do have particular opinions though).
+
+HTH,
+
+Scott
+
+Hall, D.B. Zero-Inflated Poisson and Binomial Regression with Random 
+Effects: A Case Study.  Biometrics 56, 1030-1039.
+
+
+Peter Solymos wrote:
+> Trevor,
+>
+> You can use weights in the model to provide the surface area (or
+> sqrt(surface area) to enhance linearity) and leave the counts as they
+> are in the ZINB model. (In the zeroinfl function weights are used to
+> weight the log-likelihood and to scale the residuals.)
+>
+> Cheers,
+>
+> Peter
+>
+> P?ter S?lymos
+> Alberta Biodiversity Monitoring Institute
+> and Boreal Avian Modelling project
+> Department of Biological Sciences
+> CW 405, Biological Sciences Bldg
+> University of Alberta
+> Edmonton, Alberta, T6G 2E9, Canada
+> Phone: 780.492.8534
+> Fax: 780.492.7635
+>
+>
+> On Thu, Mar 11, 2010 at 9:03 AM, tavery <trevor.avery at acadiau.ca> wrote:
+>   
+>> I have completed zero-inflation negative binomial (ZINB) models on count
+>> data for the absolute counts of ectoparasites on fish where there are lots
+>> of zeros (everything worked well using Zuur et al. and a host of other
+>> sources). The fish are of different sizes with corresponding differences in
+>> surface areas of fins etc. and I would now like to compare density of
+>> parasites among each area. Densities were calculated by dividing the counts
+>> for each parasite by the surface area of the fin (etc.) and surface areas
+>> were different for each individual i.e. scaled for size of fish.
+>>
+>> The comparisons are then of non-integer values that do not play nice with
+>> Poisson or Negative Binomial models. However, the issue of having lots of
+>> zeros remains and will affect mean values if I were to use some sort of
+>> ANOVA based analysis.
+>>
+>> Does anyone have any suggestions on how to deal with the many zeros for the
+>> density data (assuming I was to use an ANOVA type analysis)? I have also
+>> thought to just include fish size as a covariate in the ZINB models, but a)
+>> have not seen an example of such, b) do not want to over complicate the
+>> analysis, and/or c) this will only scale the counts to overall fish size,
+>> not to fin etc. surface areas. Of course, fin surface areas probably scale
+>> linearly and, if so, body size might be an appropriate covariate to remove
+>> the effect from the ZINB comparisons of counts on fins i.e. essentially the
+>> same comparison (density = ZINB with fish size covariate). Does that make
+>> sense?
+>>
+>> This ZINB model works well (yes, the 'false' zeros are independent of
+>> factors hence the "| 1"). Where would I insert the fish size covariate?
+>> location_on_body = where parasites were found (7 body areas)
+>> location = site of fish capture (2 sites)
+>>
+>> zinb2<-zeroinfl(caligus_elongatus~location_on_body+location | 1,
+>> dist="negbin", link="logit", data=sturg)
+>>
+>> I would assume this:
+>>
+>> zinb2<-zeroinfl(caligus_elongatus~fish_size+location_on_body+location | 1,
+>> dist="negbin", link="logit", data=sturg)
+>>
+>> thanks in advance,
+>> trevor
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>>     
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>   
+
+-- 
+Scott Foster
+CSIRO Mathematics, Informatics and Statistics
+GPO Box 1538
+Castray Esplanade
+Hobart 7001
+Tasmania 
+Australia
+
+Phone:     (03) 6232 5178
+Fax:       (03) 6232 5000
+Email:     scott.foster at csiro.au
+
+
+From trevor.avery at acadiau.ca  Thu Mar 11 22:54:00 2010
+From: trevor.avery at acadiau.ca (tavery)
+Date: Thu, 11 Mar 2010 17:54:00 -0400
+Subject: [R-sig-eco] ZINB or density data models with lots of zeros
+In-Reply-To: <4B991AD2.5060206@ufl.edu>
+References: <mailman.1.1268305201.17885.r-sig-ecology@r-project.org>
+	<4B991456.3080307@acadiau.ca> <4B991AD2.5060206@ufl.edu>
+Message-ID: <4B996678.7070308@acadiau.ca>
+
+Thanks for the replies (including the last one from Scott as I was 
+writing this reply). I'll summarize better what I did and what happens 
+when I try weights and offsets (both implemented in the zeroinfl() 
+function of package pscl). [Scott, no, I do not have to use the 
+densities, but I would like to account for the surface area in the 
+model. As well, yes, I would like to compare among body parts so I will 
+look into the random effects - later.]
+
+I am using AIC for model selection (although most of the NB models are 
+quite similar. In that case, I select the simplest model). I test each 
+model with lrtest() as well to simplify the models. The result works 
+great with using counts directly and I am happy with the results.
+
+The best model for this species is below and the estimates line up 
+nicely with the data:
+zinb3<-zeroinfl(caligus_elongatus~location_on_body | 1, dist="negbin", 
+link="logit", data=sturg)
+
+As suggested, weighting by surface area sounds like a great way to solve 
+the issue. When I add weights = surface_area as:
+zinb3<-zeroinfl(caligus_elongatus~location_on_body | 1, 
+weights=surface_area, dist="negbin", link="logit", data=sturg)
+
+I get the following errors:
+Error in solve.default(as.matrix(fit$hessian)) :
+  Lapack routine dgesv: system is exactly singular
+In addition: Warning messages:
+1: In eval(expr, envir, enclos) :
+  non-integer #successes in a binomial glm!
+2: In glm.fit(Z, as.integer(Y0), weights = weights, family = 
+binomial(link = linkstr)) :
+  fitted probabilities numerically 0 or 1 occurred
+
+There are two factor levels of location_on_body that have no counts so I 
+removed those, but the same error occurs (the errors above are actually 
+without those two factor levels - and I made sure to refactor the factor 
+to remove empty levels).
+
+When I add in an offset, as suggested by Scott, the model runs. It does 
+not run if I log(caligus_elongatus) counts - possibly I am interpreting 
+the log( E( count)) = linear predictor + log( size) model setup as 
+suggested by Scott?
+
+zinb3<-zeroinfl(caligus_elongatus~location_on_body | 1, 
+offset=log(surface_area), dist="negbin", link="logit", data=sturg)
+
+Finally, I tried surface area as a covariate as it seems reasonable to 
+assume that the effect of surface area is related to counts and this 
+would be one way to mitigate the relationship. Please correct me if this 
+seems out to lunch :-)
+
+The model then is below and works fine producing a nice coefficient 
+output with a significant surface area factor. The rest of the 
+coefficients (and multiple comparisons I can build from that by changing 
+the baseline) are quite similar to the model without a covariate i.e. 
+significant differences remain, but p-values change.
+
+zinb3<-zeroinfl(caligus_elongatus~surface_area+location_on_body | 1, 
+dist="negbin", link="logit", data=sturg)
+
+All well and good, but now the offset model produces no significant 
+differences, whereas the covariate model (either as surface_area or 
+log(surface_area)) produces similar significant differences as the model 
+without either offset or covariate. I suspect this may be due to a 
+incomplete model as I have not accounted for nesting body parts in 
+individuals, but in case it is not, anyone have ideas why the outcomes 
+are quite different? Or suggestions on which model to give the thumbs up 
+to (AICs are so close as to not be of much use: 399-408 where other 
+models were 500+)?
+
+many thanks!
+trevor
+
+
+From solymos at ualberta.ca  Fri Mar 12 02:10:28 2010
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Thu, 11 Mar 2010 18:10:28 -0700
+Subject: [R-sig-eco] ZINB or density data models with lots of zeros
+In-Reply-To: <4B995FC6.7080706@csiro.au>
+References: <mailman.1.1268305201.17885.r-sig-ecology@r-project.org>
+	<4B991456.3080307@acadiau.ca>
+	<34896f091003110822g579eea0ah87577d95ffbbe1e9@mail.gmail.com>
+	<4B995FC6.7080706@csiro.au>
+Message-ID: <34896f091003111710i64ad161dh8d4140ad036414ec@mail.gmail.com>
+
+Scott,
+
+thanks for pointing out the Hall paper. BTW the Negative Binomial
+model itself is a kind or random intercept model, where the random
+effect is not Normal on the linear predictor scale, but Gamma on the
+response scale. But you are right, it can be tricky to define more
+complicated random effects in R for zero-inflated data, or at least I
+am not aware of any instant solutions.
+
+Trevor: you can try transforming the surface area for the weights, but
+if you are interested in prediction, the best way could be to simply
+take the covariate model, that is something like an abundance-area
+relationship.
+
+Cheers,
+
+Peter
+
+P?ter S?lymos
+Alberta Biodiversity Monitoring Institute
+and Boreal Avian Modelling project
+Department of Biological Sciences
+CW 405, Biological Sciences Bldg
+University of Alberta
+Edmonton, Alberta, T6G 2E9, Canada
+Phone: 780.492.8534
+Fax: 780.492.7635
+
+
+
+On Thu, Mar 11, 2010 at 2:25 PM, Scott Foster <scott.foster at csiro.au> wrote:
+> Hi,
+>
+> I, and many others, would not use the density as the outcome. ?If you are
+> using the log-link for the NB part of the model then it is appropriate to
+> use log( size) as an offset. ?This is because
+>
+> log( E( count / size)) = log( E( count) / size); as expectation is w.r.t.
+> counts, not size
+> ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?= log( E( count)) - log( size)
+> ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?= linear predictor
+>
+> So
+>
+> log( E( count)) = linear predictor + log( size).
+>
+> This can be done in R by simply appending +offset( log( size)) in your model
+> formula for the NB model. ?This essentially adds a term to your linear
+> predictor with a set coefficient of 1. ?If you think that this may not be
+> appropriate then you can add it as a covariate (as Peter just suggested).
+>
+> Just a cautionary note: ?If you start to look at counts within particular
+> areas of a fish (i.e. test if more parasites are on fins or on body or on
+> ...) then you will start to require nested models, ala mixed effects. ?After
+> all, if a fish is infected then it is(?) more likely to have parasites in
+> all areas (and vice versa for a fish that isn't infected). ?I've not used
+> random effects in a zero inflated model but I have seen a paper that
+> includes random effects in zero-inflated models (Hall 2000). ?I'm not aware
+> of any software that will do this automatically for you. ?Someone else might
+> know...
+>
+> If you really *must* use the ratio as an outcome and do not use the offset
+> approach then you are left with two options: delta approaches (often called
+> hurdle models), or Tweedie type models. ?I won't say any more now as I
+> suspect that this is probably not exactly what you want to be doing (I do
+> have particular opinions though).
+>
+> HTH,
+>
+> Scott
+>
+> Hall, D.B. Zero-Inflated Poisson and Binomial Regression with Random
+> Effects: A Case Study. ?Biometrics 56, 1030-1039.
+>
+>
+> Peter Solymos wrote:
+>>
+>> Trevor,
+>>
+>> You can use weights in the model to provide the surface area (or
+>> sqrt(surface area) to enhance linearity) and leave the counts as they
+>> are in the ZINB model. (In the zeroinfl function weights are used to
+>> weight the log-likelihood and to scale the residuals.)
+>>
+>> Cheers,
+>>
+>> Peter
+>>
+>> P?ter S?lymos
+>> Alberta Biodiversity Monitoring Institute
+>> and Boreal Avian Modelling project
+>> Department of Biological Sciences
+>> CW 405, Biological Sciences Bldg
+>> University of Alberta
+>> Edmonton, Alberta, T6G 2E9, Canada
+>> Phone: 780.492.8534
+>> Fax: 780.492.7635
+>>
+>>
+>> On Thu, Mar 11, 2010 at 9:03 AM, tavery <trevor.avery at acadiau.ca> wrote:
+>>
+>>>
+>>> I have completed zero-inflation negative binomial (ZINB) models on count
+>>> data for the absolute counts of ectoparasites on fish where there are
+>>> lots
+>>> of zeros (everything worked well using Zuur et al. and a host of other
+>>> sources). The fish are of different sizes with corresponding differences
+>>> in
+>>> surface areas of fins etc. and I would now like to compare density of
+>>> parasites among each area. Densities were calculated by dividing the
+>>> counts
+>>> for each parasite by the surface area of the fin (etc.) and surface areas
+>>> were different for each individual i.e. scaled for size of fish.
+>>>
+>>> The comparisons are then of non-integer values that do not play nice with
+>>> Poisson or Negative Binomial models. However, the issue of having lots of
+>>> zeros remains and will affect mean values if I were to use some sort of
+>>> ANOVA based analysis.
+>>>
+>>> Does anyone have any suggestions on how to deal with the many zeros for
+>>> the
+>>> density data (assuming I was to use an ANOVA type analysis)? I have also
+>>> thought to just include fish size as a covariate in the ZINB models, but
+>>> a)
+>>> have not seen an example of such, b) do not want to over complicate the
+>>> analysis, and/or c) this will only scale the counts to overall fish size,
+>>> not to fin etc. surface areas. Of course, fin surface areas probably
+>>> scale
+>>> linearly and, if so, body size might be an appropriate covariate to
+>>> remove
+>>> the effect from the ZINB comparisons of counts on fins i.e. essentially
+>>> the
+>>> same comparison (density = ZINB with fish size covariate). Does that make
+>>> sense?
+>>>
+>>> This ZINB model works well (yes, the 'false' zeros are independent of
+>>> factors hence the "| 1"). Where would I insert the fish size covariate?
+>>> location_on_body = where parasites were found (7 body areas)
+>>> location = site of fish capture (2 sites)
+>>>
+>>> zinb2<-zeroinfl(caligus_elongatus~location_on_body+location | 1,
+>>> dist="negbin", link="logit", data=sturg)
+>>>
+>>> I would assume this:
+>>>
+>>> zinb2<-zeroinfl(caligus_elongatus~fish_size+location_on_body+location |
+>>> 1,
+>>> dist="negbin", link="logit", data=sturg)
+>>>
+>>> thanks in advance,
+>>> trevor
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>>
+>>>
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+> --
+> Scott Foster
+> CSIRO Mathematics, Informatics and Statistics
+> GPO Box 1538
+> Castray Esplanade
+> Hobart 7001
+> Tasmania Australia
+>
+> Phone: ? ? (03) 6232 5178
+> Fax: ? ? ? (03) 6232 5000
+> Email: ? ? scott.foster at csiro.au
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From trevor.avery at acadiau.ca  Fri Mar 12 02:46:56 2010
+From: trevor.avery at acadiau.ca (tavery)
+Date: Thu, 11 Mar 2010 21:46:56 -0400
+Subject: [R-sig-eco] ZINB or density data models with lots of zeros
+In-Reply-To: <34896f091003111710i64ad161dh8d4140ad036414ec@mail.gmail.com>
+References: <mailman.1.1268305201.17885.r-sig-ecology@r-project.org>	
+	<4B991456.3080307@acadiau.ca>	
+	<34896f091003110822g579eea0ah87577d95ffbbe1e9@mail.gmail.com>	
+	<4B995FC6.7080706@csiro.au>
+	<34896f091003111710i64ad161dh8d4140ad036414ec@mail.gmail.com>
+Message-ID: <4B999D10.9060705@acadiau.ca>
+
+Thanks to all for further comments!
+The covariate solution appears to be what I want/require with the 
+offset. I will look into a more complicated model with random effects 
+ala Hall (2000) as well.
+
+I may have further questions, but done for now!
+
+cheers,
+trevor
+
+
+From lannajin at gmail.com  Fri Mar 12 15:22:30 2010
+From: lannajin at gmail.com (Lanna Jin)
+Date: Fri, 12 Mar 2010 08:22:30 -0600
+Subject: [R-sig-eco] Species CoOccurance
+Message-ID: <397fe8b41003120622t35a57e7ev681b4c8ca54bf4b2@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100312/90a43d5d/attachment.pl>
+
+From solymos at ualberta.ca  Fri Mar 12 16:01:27 2010
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Fri, 12 Mar 2010 08:01:27 -0700
+Subject: [R-sig-eco] Species CoOccurance
+In-Reply-To: <397fe8b41003120622t35a57e7ev681b4c8ca54bf4b2@mail.gmail.com>
+References: <397fe8b41003120622t35a57e7ev681b4c8ca54bf4b2@mail.gmail.com>
+Message-ID: <34896f091003120701od1e2ee3ue6e60994c942f194@mail.gmail.com>
+
+Lanna,
+
+I don't know exactly what do you mean by co-occurrence data frame, but
+if you'd like to get a species-by-species matrix, in which you count
+the co-occurrences of the species (columns in the sites-by-species
+community matrix) with each other, you can use the crossprod function
+or the %*% operator for a presence/absence matrix:
+
+m <- matrix(rbinom(15,1,0.6),5,3)
+t(m) %*% m
+crossprod(m, m)
+
+HTH,
+
+Peter
+
+
+On Fri, Mar 12, 2010 at 7:22 AM, Lanna Jin <lannajin at gmail.com> wrote:
+> Hello All,
+>
+> I've been sifting through tons of R Documentation, trying to find a command
+> that converts a community matrix dataset into a species pair co-occurance
+> data frame, and have failed miserably to find one. ?Does a function already
+> exist in one of the community analysis packages?
+>
+> Thanks in advance for your response!
+>
+> --
+> Lanna Jin
+>
+> lannajin at gmail.com
+> 510-898-8525
+>
+> ? ? ? ?[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From lannajin at gmail.com  Fri Mar 12 16:07:39 2010
+From: lannajin at gmail.com (Lanna Jin)
+Date: Fri, 12 Mar 2010 09:07:39 -0600
+Subject: [R-sig-eco] Species CoOccurance
+In-Reply-To: <34896f091003120701od1e2ee3ue6e60994c942f194@mail.gmail.com>
+References: <397fe8b41003120622t35a57e7ev681b4c8ca54bf4b2@mail.gmail.com> 
+	<34896f091003120701od1e2ee3ue6e60994c942f194@mail.gmail.com>
+Message-ID: <397fe8b41003120707k4b4ebe53w122cf53ee489a8db@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100312/53f8370f/attachment.pl>
+
+From wilfried.thuiller at ujf-grenoble.fr  Fri Mar 12 16:09:58 2010
+From: wilfried.thuiller at ujf-grenoble.fr (Wilfried Thuiller)
+Date: Fri, 12 Mar 2010 16:09:58 +0100
+Subject: [R-sig-eco] Species CoOccurance
+In-Reply-To: <397fe8b41003120707k4b4ebe53w122cf53ee489a8db@mail.gmail.com>
+References: <397fe8b41003120622t35a57e7ev681b4c8ca54bf4b2@mail.gmail.com>
+	<34896f091003120701od1e2ee3ue6e60994c942f194@mail.gmail.com>
+	<397fe8b41003120707k4b4ebe53w122cf53ee489a8db@mail.gmail.com>
+Message-ID: <2461B8B7-AF74-47C0-94A2-D240FCB11970@ujf-grenoble.fr>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100312/b95f564e/attachment.pl>
+
+From tyler.smith at eku.edu  Fri Mar 12 16:19:03 2010
+From: tyler.smith at eku.edu (Tyler Smith)
+Date: Fri, 12 Mar 2010 10:19:03 -0500
+Subject: [R-sig-eco] Species CoOccurance
+References: <397fe8b41003120622t35a57e7ev681b4c8ca54bf4b2@mail.gmail.com>
+	<34896f091003120701od1e2ee3ue6e60994c942f194@mail.gmail.com>
+	<397fe8b41003120707k4b4ebe53w122cf53ee489a8db@mail.gmail.com>
+Message-ID: <87wrxheffc.fsf@eku238261.eku.edu>
+
+Lanna Jin <lannajin at gmail.com> writes:
+
+> Hi Peter,
+>
+> Thanks for your quick response.  I am working with a dataframe that has
+> columns of Year, Location, Type (pertains to type of location), Species, and
+> Presence/Absence.  What I'm interested in doing is generating a data frame
+> that would not lose the "Year" , "Location" and "Type" data.  I would
+> ultimately like it to have the columns: "Year", "Location", "Type",
+> "SpeciesA", "SpeciesB", and "Co-occurance", where Co-occurance is either a 0
+> or 1 for if the species co-occur at the particular location at that exact
+> particular point in time.
+>
+> Is there a function that exists out there that could quickly convert my data
+> into this form?  Or do I have to generate my own?
+
+mydata$cooccur <- mydata$SpeciesA & mydata$SpeciesB
+
+Where 'mydata' is the name of your dataframe.
+
+Tyler
+
+
+From jpinzon at ualberta.ca  Fri Mar 12 19:12:11 2010
+From: jpinzon at ualberta.ca (Jaime Pinzon)
+Date: Fri, 12 Mar 2010 11:12:11 -0700
+Subject: [R-sig-eco] adonis question
+Message-ID: <3C5D0E0FC8294A65830D5B5E84F3AD8E@JAIME>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100312/e2d4e92e/attachment.pl>
+
+From gabriel.singer at univie.ac.at  Fri Mar 12 22:02:22 2010
+From: gabriel.singer at univie.ac.at (gabriel singer)
+Date: Fri, 12 Mar 2010 22:02:22 +0100
+Subject: [R-sig-eco] adonis question
+In-Reply-To: <3C5D0E0FC8294A65830D5B5E84F3AD8E@JAIME>
+References: <3C5D0E0FC8294A65830D5B5E84F3AD8E@JAIME>
+Message-ID: <4B9AABDE.9060503@univie.ac.at>
+
+Hi Jaime,
+
+
+The interactions are just a matter of defining the formula as such, e.g. 
+adonis(dist~factor1*factor2).
+I suppose, a multiple comparison (with the reasoning of a post-hoc test) 
+can just be done using adonis() for pairwise comparisons and then use 
+p.adjust().
+
+Cheers, gabriel
+
+On 12/03/2010 19:12, Jaime Pinzon wrote:
+> Hi
+>
+>
+>
+> After performing a permutational ANOVA with adonis in vegan, is there a way
+> to do multiple comparisons for significant factors with more than 2 levels
+> as well for significant interactions? Any help would be very much
+> appreciated
+>
+>
+>
+> Thanks,
+>
+>
+>
+> Jaime
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>    
+
+--
+
+
+From etiennelaliberte at gmail.com  Sat Mar 13 22:14:39 2010
+From: etiennelaliberte at gmail.com (Etienne =?ISO-8859-1?Q?Lalibert=E9?=)
+Date: Sun, 14 Mar 2010 10:14:39 +1300
+Subject: [R-sig-eco] Species Co0ccurance
+In-Reply-To: <mailman.1.1268478001.991.r-sig-ecology@r-project.org>
+References: <mailman.1.1268478001.991.r-sig-ecology@r-project.org>
+Message-ID: <1268514879.2212.1.camel@globetrotter>
+
+Hi Lanna,
+
+What you're describing can be easily done via the reshape package:
+
+# test data
+data <- data.frame(year = factor(2001:2010), location = gl(2, 5), type =
+gl(10, 1), species = gl(5, 2), freq = rbinom(10, 1, .5) )
+
+library(reshape)
+
+data <- melt(data)
+data2 <- cast(data, year + location + type ~ species, fill = 0)
+
+Cheers
+
+-- 
+Etienne Lalibert?
+================================
+School of Forestry
+University of Canterbury
+Private Bag 4800
+Christchurch 8140, New Zealand
+Phone: +64 3 366 7001 ext. 8365
+Fax: +64 3 364 2124
+www.elaliberte.info
+
+
+From daviddouter at hotmail.com  Sun Mar 21 10:50:24 2010
+From: daviddouter at hotmail.com (David Douterlungne)
+Date: Sun, 21 Mar 2010 10:50:24 +0100
+Subject: [R-sig-eco] general lineal mixed model with unbalanced data
+In-Reply-To: <mailman.1.1267959601.19611.r-sig-ecology@r-project.org>
+References: <mailman.1.1267959601.19611.r-sig-ecology@r-project.org>
+Message-ID: <SNT141-w42D908D34C1CA95A5FFC1DAC280@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100321/27fd3fa2/attachment.pl>
+
+From lailaliana78 at yahoo.com  Wed Mar 24 20:28:01 2010
+From: lailaliana78 at yahoo.com (Claudia liliana Ballesteros Mejia)
+Date: Wed, 24 Mar 2010 12:28:01 -0700 (PDT)
+Subject: [R-sig-eco] Handling lots of zero + spatial autocorrelation
+Message-ID: <344339.76193.qm@web112706.mail.gq1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100324/716a306c/attachment.pl>
+
+From etiennelaliberte at gmail.com  Thu Mar 25 20:29:51 2010
+From: etiennelaliberte at gmail.com (Etienne =?ISO-8859-1?Q?Lalibert=E9?=)
+Date: Fri, 26 Mar 2010 08:29:51 +1300
+Subject: [R-sig-eco] Handling lots of zero + spatial autocorrelation
+In-Reply-To: <mailman.1.1269514801.30633.r-sig-ecology@r-project.org>
+References: <mailman.1.1269514801.30633.r-sig-ecology@r-project.org>
+Message-ID: <1269545391.2238.1.camel@globetrotter>
+
+Hi Claudia,
+
+I think you'll find the following article most useful:
+
+Dormann, C. F., J. M. McPherson, M. B. Araujo, R. Bivand, J. Bolliger,
+G. Carl, R. G. Davies, A. Hirzel, W. Jetz, W. Daniel Kissling, I. Kuhn,
+R. Ohlemuller, P. R. Peres-Neto, B. Reineking, B. Schroder, F. M.
+Schurr, et R. Wilson. 2007. Methods to account for spatial
+autocorrelation in the analysis of species distributional data: a
+review. Ecography 30:609-628.  
+
+Cheers
+
+Etienne
+
+Le jeudi 25 mars 2010 ? 12:00 +0100, r-sig-ecology-request at r-project.org
+a ?crit :
+> Send R-sig-ecology mailing list submissions to
+> 	r-sig-ecology at r-project.org
+> 
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+> 	r-sig-ecology-request at r-project.org
+> 
+> You can reach the person managing the list at
+> 	r-sig-ecology-owner at r-project.org
+> 
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+> 
+> 
+> Today's Topics:
+> 
+>    1. Handling lots of zero + spatial autocorrelation
+>       (Claudia liliana Ballesteros Mejia)
+> 
+> 
+> ----------------------------------------------------------------------
+> 
+> Message: 1
+> Date: Wed, 24 Mar 2010 12:28:01 -0700 (PDT)
+> From: Claudia liliana Ballesteros Mejia <lailaliana78 at yahoo.com>
+> To: R-list <r-sig-ecology at r-project.org>
+> Subject: [R-sig-eco] Handling lots of zero + spatial autocorrelation
+> Message-ID: <344339.76193.qm at web112706.mail.gq1.yahoo.com>
+> Content-Type: text/plain
+> 
+> Dear list,
+> 
+> I'm trying to model the distribution of records that I have collected in my study area affected by parameters as population density and access. I have non normal distribution of the data,  lots of zeros and an important level of spatial autocorrelation. So, I wonder if there is a way in R to handle at the same time the 3 problems, because so far, I've tried the zero inflation poisson regression but it doesn't take into account the spatial autocorrelation, and gls, but it doesn't solve my problem of the zeros and nonnormal distribution.
+> 
+> I would appreciate any hint,
+> 
+> Liliana.
+> 
+> 
+> 
+>       
+> 	[[alternative HTML version deleted]]
+> 
+> 
+> 
+> ------------------------------
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> End of R-sig-ecology Digest, Vol 24, Issue 12
+> *********************************************
+
+
+-- 
+Etienne Lalibert?
+================================
+School of Forestry
+University of Canterbury
+Private Bag 4800
+Christchurch 8140, New Zealand
+Phone: +64 3 366 7001 ext. 8365
+Fax: +64 3 364 2124
+www.elaliberte.info
+
+
+From solymos at ualberta.ca  Thu Mar 25 20:43:39 2010
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Thu, 25 Mar 2010 13:43:39 -0600
+Subject: [R-sig-eco] Handling lots of zero + spatial autocorrelation
+In-Reply-To: <1269545391.2238.1.camel@globetrotter>
+References: <mailman.1.1269514801.30633.r-sig-ecology@r-project.org>
+	<1269545391.2238.1.camel@globetrotter>
+Message-ID: <34896f091003251243q2d67dfc9wd9542669026cbe34@mail.gmail.com>
+
+Claudia,
+
+Here is a more specific paper with hierarchical Bayesian model:
+	
+Stephen L. Rathbun and Songlin Fei
+A spatial zero-inflated poisson regression model for oak regeneration
+Environmental and Ecological Statistics, 2006, 13: 409-426
+http://www.springerlink.com/content/r327264t016x2873/
+
+I am not sure if the zero probability part is fully identifiable, but
+if you use a constant probability model for the zeros, that might work
+out even better. (The paper comes with no R implementation.)
+
+Peter
+
+P?ter S?lymos
+Alberta Biodiversity Monitoring Institute
+and Boreal Avian Modelling project
+Department of Biological Sciences
+CW 405, Biological Sciences Bldg
+University of Alberta
+Edmonton, Alberta, T6G 2E9, Canada
+Phone: 780.492.8534
+Fax: 780.492.7635
+
+
+
+2010/3/25 Etienne Lalibert? <etiennelaliberte at gmail.com>:
+> Hi Claudia,
+>
+> I think you'll find the following article most useful:
+>
+> Dormann, C. F., J. M. McPherson, M. B. Araujo, R. Bivand, J. Bolliger,
+> G. Carl, R. G. Davies, A. Hirzel, W. Jetz, W. Daniel Kissling, I. Kuhn,
+> R. Ohlemuller, P. R. Peres-Neto, B. Reineking, B. Schroder, F. M.
+> Schurr, et R. Wilson. 2007. Methods to account for spatial
+> autocorrelation in the analysis of species distributional data: a
+> review. Ecography 30:609-628.
+>
+> Cheers
+>
+> Etienne
+>
+> Le jeudi 25 mars 2010 ? 12:00 +0100, r-sig-ecology-request at r-project.org
+> a ?crit :
+>> Send R-sig-ecology mailing list submissions to
+>> ? ? ? r-sig-ecology at r-project.org
+>>
+>> To subscribe or unsubscribe via the World Wide Web, visit
+>> ? ? ? https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> or, via email, send a message with subject or body 'help' to
+>> ? ? ? r-sig-ecology-request at r-project.org
+>>
+>> You can reach the person managing the list at
+>> ? ? ? r-sig-ecology-owner at r-project.org
+>>
+>> When replying, please edit your Subject line so it is more specific
+>> than "Re: Contents of R-sig-ecology digest..."
+>>
+>>
+>> Today's Topics:
+>>
+>> ? ?1. Handling lots of zero + spatial autocorrelation
+>> ? ? ? (Claudia liliana Ballesteros Mejia)
+>>
+>>
+>> ----------------------------------------------------------------------
+>>
+>> Message: 1
+>> Date: Wed, 24 Mar 2010 12:28:01 -0700 (PDT)
+>> From: Claudia liliana Ballesteros Mejia <lailaliana78 at yahoo.com>
+>> To: R-list <r-sig-ecology at r-project.org>
+>> Subject: [R-sig-eco] Handling lots of zero + spatial autocorrelation
+>> Message-ID: <344339.76193.qm at web112706.mail.gq1.yahoo.com>
+>> Content-Type: text/plain
+>>
+>> Dear list,
+>>
+>> I'm trying to model the distribution of records that I have collected in my study area affected by parameters as population density and access. I have non normal distribution of the data, ?lots of zeros and an important level of spatial autocorrelation. So, I wonder if there is a way in R to handle at the same time the 3 problems, because so far, I've tried the zero inflation poisson regression but it doesn't take into account the spatial autocorrelation, and gls, but it doesn't solve my problem of the zeros and nonnormal distribution.
+>>
+>> I would appreciate any hint,
+>>
+>> Liliana.
+>>
+>>
+>>
+>>
+>> ? ? ? [[alternative HTML version deleted]]
+>>
+>>
+>>
+>> ------------------------------
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>> End of R-sig-ecology Digest, Vol 24, Issue 12
+>> *********************************************
+>
+>
+> --
+> Etienne Lalibert?
+> ================================
+> School of Forestry
+> University of Canterbury
+> Private Bag 4800
+> Christchurch 8140, New Zealand
+> Phone: +64 3 366 7001 ext. 8365
+> Fax: +64 3 364 2124
+> www.elaliberte.info
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From samantha.patrick at plymouth.ac.uk  Sun Mar 28 15:06:00 2010
+From: samantha.patrick at plymouth.ac.uk (Samantha Patrick)
+Date: Sun, 28 Mar 2010 14:06:00 +0100
+Subject: [R-sig-eco] as.ltraj and fpt from AdeHabitat
+Message-ID: <7D14B0574D3F30499CC2B4B4EADC342A91D4233A99@ILS131.uopnet.plymouth.ac.uk>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100328/fdaf6c77/attachment.pl>
+
+From pinaud at cebc.cnrs.fr  Mon Mar 29 08:38:13 2010
+From: pinaud at cebc.cnrs.fr (Pinaud David)
+Date: Mon, 29 Mar 2010 08:38:13 +0200
+Subject: [R-sig-eco] as.ltraj and fpt from AdeHabitat
+In-Reply-To: <7D14B0574D3F30499CC2B4B4EADC342A91D4233A99@ILS131.uopnet.plymouth.ac.uk>
+References: <7D14B0574D3F30499CC2B4B4EADC342A91D4233A99@ILS131.uopnet.plymouth.ac.uk>
+Message-ID: <4BB04AD5.2050609@cebc.cnrs.fr>
+
+Dear Sam,
+Maybe one idea is that XY units are in decimal degrees but you asked for 
+radii=seq(300,1000,length=30), which seem to be in meters. As fpt() uses 
+the same units as yaya coords, it seems that it returns FPT for radii 
+from 300 to 1000 decimal degrees, possibly NAs... It seems that you need 
+to project your data in m or km before using fpt().
+Be aware also that FPT needs to be calculated every /d/ constant 
+distance (not raw relocations) as mentionned in Fauchald & Tveraa 
+(2003), so use redisltraj() before fpt().
+HTH
+David
+
+Samantha Patrick a ?crit :
+> Hi
+>
+> I am using adehabitat to calculate first passage time (fpt) for a series of GPS locations at a specific date and time.
+>
+> When I use as.ltraj to workout trajectories the output I get for each data point looks like this:
+>
+> x                     y                 date                                     dx   dy   dist  dt    R2n    abs.angle    rel.angle
+> -6.070993  51.59435  2006-06-17 15:03:04     NA  NA  NA   NA   0        NA      102        NA
+>
+> When I use fpt I get a series of NA for all points and I'm guessing this is to do with the NAs for dx/dy/dt from ltraj.  Does anyone know what may be causing this error?
+>
+> The full code is below
+>
+> Thanks!
+>
+> Sam
+>
+> FOR LTRAJ
+> str(dddate)
+> dddate<-as.character(dddate)
+> str(dddate)
+> tttime<-as.character(tttime)
+> datetime<-paste(dddate, tttime)
+> ddate <- as.POSIXct(datetime)
+> xy<-data.frame (x, y)
+> id<-data.frame (FPT[,5])
+> xy<-data.frame (FPT[,4], FPT[,3])
+> yaya<-as.ltraj(xy,ddate,id, burst, typeII = TRUE, slsp = c("remove", "missing"))
+>
+> FOR FPT
+> fptyaya=fpt(yaya, seq(300,1000,length=30))
+>
+>
+>
+> Dr Samantha Patrick
+> EU INTERREG Post Doc
+> Marine Biology & Ecology Research Centre
+> University of Plymouth
+> Plymouth
+> PL4 8AA
+>
+> T: 01752 584699
+> M: 07740472719
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> __________ Information from ESET Mail Security, version of virus signature database 4979 (20100328) __________
+>
+> The message was checked by ESET Mail Security.
+> http://www.eset.com
+>
+>
+>
+>
+>
+>   
+
+-- 
+***************************************************
+David PINAUD
+Ing?nieur de Recherche "Analyses spatiales"
+
+Centre d'Etudes Biologiques de Chiz? - CNRS UPR1934
+79360 Villiers-en-Bois, France 
+poste 485
+Tel: +33 (0)5.49.09.35.58
+Fax: +33 (0)5.49.09.65.26
+http://www.cebc.cnrs.fr/
+
+***************************************************
+
+
+
+
+__________ Information from ESET Mail Security, version of virus signature database 4980 (20100328) __________
+
+The message was checked by ESET Mail Security.
+http://www.eset.com
+
+
+From zaha_dragos at yahoo.com  Tue Mar 30 20:45:19 2010
+From: zaha_dragos at yahoo.com (Dragos Zaharescu)
+Date: Tue, 30 Mar 2010 11:45:19 -0700 (PDT)
+Subject: [R-sig-eco] normalising 0 inflated data
+Message-ID: <418241.82067.qm@web113502.mail.gq1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100330/1bbe79e0/attachment.pl>
+
+From hba at aqua.dtu.dk  Tue Mar 30 22:33:43 2010
+From: hba at aqua.dtu.dk (Henrik Baktoft)
+Date: Tue, 30 Mar 2010 22:33:43 +0200
+Subject: [R-sig-eco] First mixed effects model - any comments are highly
+	appreciated
+Message-ID: <88431FCDD055A44BA5EEE1EC14E7E15101C8AC8F@lu-mail-san.dfu.local>
+
+Hi all.
+
+After plowing through quite a few chapters and several web-pages on the
+subject, I have just made my first attempt at mixed effect modeling on
+one of my own datasets (using lme from the nlme-package). The primary
+reason for choosing a mixed effect model is that the data are
+longitudinal with repeated measures on the same individuals. Being a
+phd-student with limited statistical background (I am a biologist), I
+would really appreciate it, if any of you would comment on this. 
+
+The dataset arises from automated telemetric monitoring of a number of
+fish tagged with acoustic transmitters and basically consists of a
+measure of activity (moved dist per day) for each fish. During the study
+period we have 'recorded' four cannibalistic events where one of the
+tagged fish eats another tagged fish. The change in activity of these
+cannibals (activity before vs. activity after the cannibalistic event)
+compared to the remaining fish is the primary interest in this analysis.
+The hypothesis is that the cannibal in each event expressed reduced
+activity in the days following the cannibalistic event, while the
+remaining fish showed no changes. For each fish the activity for five
+days before and five days after each event are included. Note that the
+number of fish in each event differs (range 12 - 20).
+
+The data structure looks like this:
+
+Event - Before_After - Cannibal - Dist/Day - Fish
+
+where Event(1,2,3,4) = the cannibalistic event, Before_After(-1,1) =
+describes whether a row represents a value before or after the
+cannibalistic event, Cannibal(0,1) = whether or not the fish is the
+cannibal in that event, Dist/Day(numerical) = the measured activity,
+Fish(factor representing each fish).
+
+To fit a model to this dataset I followed the ten-step protocol given in
+Alain F. Zuur et al (2009): "Mixed Effects Models and Extensions in
+Ecology with R". I started out with the three-way interaction
+Before_After*Cannibal*Event and after model-reduction based on step-wise
+term deletion ended up with the following model:
+
+M.Final <- lme(Dist/Day ~ Before_After * Cannibal, random = ~ 1 |
+Fish/Event, correlation=corAR1(form=~1|Fish/Event))  
+
+The summary(M.Final) shows that the interaction term is highly
+significant (p=0.0001). The various model validation plots looks quite
+okay.
+
+To the best of my knowledge, M.Final models the activity (Distance per
+day) explained by the Before_After*Cannibal interaction as well as the
+main effects. The random term (1 | Fish/Event) allows a different
+intercept for each individual fish in each event, while the correlation
+structure takes care of the fact that the activity on consecutive  days
+were highly correlated. The fact that the interaction term is
+significant shows that the cannibals and the remaining fish indeed
+responded differently to the cannibalistic events. A graphical
+representation of this clearly shows that the cannibals indeed had lower
+activity after the events compared to before while the remaining fish
+did not show any changes in activity.
+
+The above paragraph is what I believe the model is doing, so please do
+correct me, if I am wrong!
+
+
+Being a biologist a few question arises after this, e.g.
+Is it (at least somewhat) correct to do it as described above? 
+Could the final model be improved to better fit the biological reality? 
+Is my interpretation of the output correct? 
+Can I somehow get more numerical information about the interaction term?
+At present, I rely on the graphs to see the 'direction' of the
+interaction.
+
+So if any of you could spare a few minutes to share your thoughts on the
+above, I would be VERY happy!
+
+All the best, 
+Henrik B
+
+
+From josh.rasmussen1 at gmail.com  Wed Mar 31 07:00:38 2010
+From: josh.rasmussen1 at gmail.com (Josh Rasmussen)
+Date: Tue, 30 Mar 2010 22:00:38 -0700
+Subject: [R-sig-eco] NMDS Usage
+Message-ID: <85216f011003302200n34fa1222ke70f5440e51b7adf@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100330/88429007/attachment.pl>
+
+From jari.oksanen at oulu.fi  Wed Mar 31 10:15:46 2010
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 31 Mar 2010 11:15:46 +0300
+Subject: [R-sig-eco] NMDS Usage
+In-Reply-To: <85216f011003302200n34fa1222ke70f5440e51b7adf@mail.gmail.com>
+References: <85216f011003302200n34fa1222ke70f5440e51b7adf@mail.gmail.com>
+Message-ID: <1270023346.1874.4.camel@biol102145>
+
+Hello,
+
+This is only a technical comment: I won't  have no opinion on the
+sensibility of the analysis nor on the choice of the method.
+
+On Tue, 2010-03-30 at 22:00 -0700, Josh Rasmussen wrote:
+> I have a dataset of monthly hydrologic parameters by year, including this
+> year, with a matrix of 48r x 24c.
+> 
+> > my.data
+>          Octinflow    Novinflow . . . OctPrecip . . .
+> 1963     400             357                 0.25
+> 1964     567             429                 0.89
+> .
+> .
+> .
+> 2010     150             210                 0.12
+> 
+> 
+> I would like to use NMDS to rank years based on similarity to 2010.
+> 
+> >library(vegan)
+> >my.model <- metaMDS(my.data, distance='euclidean', autotransform=T, k=6)
+> 
+> Is it possible to use the euclidean distance of the points to determine the
+> overall (dis)similarity of years...
+> 
+Euclidean distance sounds sensible, but 'autotransform = TRUE' does not.
+I suggest you have 'autotransform = FALSE' and transform data prior to
+analysing them. The data clearly need transformation since your
+variables seem to be measured in different units. The variables
+(columns) must be commensurable for meaningful Euclidean distances. 
+
+> > dist(my.model$points)
+> 
+> And then from this extract the values of interest (i.e. the last row) and
+> rank these values?
+> 
+Technically, you can do this, but why do you need NMDS? You could do
+this with original data. Another point is that your observations are
+noisy and just comparing all sites to one noisy site gives you noisy
+ranking.
+
+Cheers, Jari Oksanen
+
+

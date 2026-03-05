@@ -1,0 +1,175 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2017-09",
+  "messages": [
+    {
+      "id": "msg-94824c95be6a",
+      "message_id": "<1553b7e1-32a8-aad5-1c44-025abbb05433@highstat.com>",
+      "from_name": "Highland Statistics Ltd",
+      "from_email_hash": "d43054e1bf20a3b5b133a436acf0fb618425fad892ef36118bc175ac01f3183d",
+      "date": "2017-09-11T09:35:21+01:00",
+      "subject": "[R-sig-eco] Course: Introduction to regression models with spatial and temporal correlation using R-INLA",
+      "subject_clean": "Course: Introduction to regression models with spatial and temporal correlation using R-INLA",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "We would like to announce the following statistics course:\n\nCourse: Introduction to Regression Models with Spatial and Temporal \nCorrelation using R-INLA\nWhere:? Southampton, UK\nWhen:?? 23-27 October 2017\n\nCourse website: http://highstat.com/index.php/courses\nCourse flyer: \nhttp://highstat.com/Courses/Flyers/2017/Flyer2017_10Southampton_SpatTemp.pdf\n\n\nKind regards,\n\nAlain Zuur\n\n-- \n\nDr. Alain F. Zuur\nHighland Statistics Ltd.\n9 St Clair Wynd\nAB41 6DZ Newburgh, UK\nEmail: highstat at highstat.com\nURL:   www.highstat.com\n\nAnd:\nNIOZ Royal Netherlands Institute for Sea Research,\nDepartment of Coastal Systems, and Utrecht University,\nP.O. Box 59, 1790 AB Den Burg,\nTexel, The Netherlands\n\n\n\nAuthor of:\n1. Beginner's Guide to Spatial, Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA. (2017).\n2. Beginner's Guide to Zero-Inflated Models with R (2016).\n3. Beginner's Guide to Data Exploration and Visualisation with R (2015).\n4. Beginner's Guide to GAMM with R (2014).\n5. Beginner's Guide to GLM and GLMM with R (2013).\n6. Beginner's Guide to GAM with R (2012).\n7. Zero Inflated Models and GLMM with R (2012).\n8. A Beginner's Guide to R (2009).\n9. Mixed effects models and extensions in ecology with R (2009).\n10. Analysing Ecological Data (2007).",
+      "body_snippet": "We would like to announce the following statistics course:\n\nCourse: Introduction to Regression Models with Spatial and Temporal \nCorrelation using R-INLA\nWhere:? Southampton, UK\nWhen:?? 23-27 October ",
+      "thread_id": "thread-94824c95be6a",
+      "thread_depth": 0,
+      "month": "2017-09"
+    },
+    {
+      "id": "msg-7b4434532b65",
+      "message_id": "<CADiqS84Vvi3xkXsb0h5dh7iDAsYiJZ9oUfArkn9Vcnae8WjpMA@mail.gmail.com>",
+      "from_name": "Jaime Burbano Girón",
+      "from_email_hash": "5bc48d17b6b3c75ad26f1f9e65b2a56b6cd55cdefda2917b600c6fe28e3b6a24",
+      "date": "2017-09-14T18:25:00+02:00",
+      "subject": "[R-sig-eco] Parallel processing doesn´t use all cores",
+      "subject_clean": "Parallel processing doesn´t use all cores",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi every one.\n\nI?m trying to parallelize a process that runs over the rows of a matrix. I\nexpect for each element of the row, which is a species, that the process\nextracts and writes a file (raster) corresponding to the distribution of\neach species over their habitats.\n\nHabitas layer is a raster file and each species distribution is a polygon\n(or group of polygons) from a shapefile. I first convert the species\npolygon(s) to a raster, second extract the habitats for the species (stored\nin a matrix where the species habitats codes are matched with the habitats\nraster values), and third intersect (multiply) the distribution and the\nhabitats.\n\nIn addition, I would like to produce a richness (number of species map)\nfile (raster). Then, I add (sum) to an empty raster (with values of zero)\neach final species distribution. I wrote the following function:\n\nextract_habitats=function(k,spp_data,spp_polygons,sep,habitat_codes,cover){\n  #Libraries\n  library(rgdal)\n  library(raster)\n  #raster file with zeros\n  richness_cur=raster(\"richness_current.tif\")\n  #Selection of species polygons\n  rows=as.numeric(which(as.character(spp_polygons at data$binomial)==\n                          as.character(spp_data$binomial[k])))\n  spp_poly=spp_polygons[rows,]\n  #Covert polygon(s) to raster\n  spp_poly=rasterize(spp_poly,cover,1,background=0)\n  #Match species habitats codes with habitats raster values\n  habs=as.character(spp_data$hab_code[k])\n  habs=unlist(strsplit(habs, split=sep))#habitat codes are separeted by a \";\"\n  cov_classes=as.numeric(as.character(habitat_codes[,2]#Get the hab\n\n[which(as.character(habitat_codes[,1])%in%habs)]))\n  #Intersect species distributions with habitats\n  cov_mask=spp_poly*cover\n  #Extract species habitats\n  cov_mask=Which(cov_mask%in%cov_classes)\n  writeRaster(cov_mask,paste(spp_data$binomial[k],\" current.tif\",sep=\"\"))\n  #Sum species richness\n  richness_cur=richness_cur+cov_mask\n  return (richness_cur)}\n\nI try to parallelize the process using clusterApply and foreach functions.\nHowever, I couldn't return a raster object from the function (which is\nsomething obvious to get in a regular loop function) in any of both\nfunctions to add to that object the sum of the species richness. So, here\nis my first question. *1. Does anyone know how to return an object\ndifferent from a list (I could save each raster inside a single list but no\nsum each one of them to the previos one), matrix, or vector in a\nparallelization process?*\n\nI solve this problem writing the richness file in each \"iteration\".\nNevertheless, this option causes the process to be slower, so for me, it is\nnot the ideal. Then, the function was rewritten as follows:\n\nextract_habitats=function(k,spp_data,spp_polygons,sep,habitat_codes,cover){\n  #Libraries\n  library(rgdal)\n  library(raster)\n  #raster file with zeros\n  richness_cur=raster(\"richness_current.tif\")\n  #Selection of species polygons\n  rows=as.numeric(which(as.character(spp_polygons at data$binomial)==\n                          as.character(spp_data$binomial[k])))\n  spp_poly=spp_polygons[rows,]\n  #Covert polygon(s) to raster\n  spp_poly=rasterize(spp_poly,cover,1,background=0)\n  #Match species habitats codes with habitats raster values\n  habs=as.character(spp_data$hab_code[k])\n  habs=unlist(strsplit(habs, split=sep))#habitat codes are separeted by a \";\"\n  cov_classes=as.numeric(as.character(habitat_codes[,2]#Get the hab\n\n[which(as.character(habitat_codes[,1])%in%habs)]))\n  #Intersect species distributions with habitats\n  cov_mask=spp_poly*cover\n  #Extract species habitats\n  cov_mask=Which(cov_mask%in%cov_classes)\n  writeRaster(cov_mask,paste(spp_data$binomial[k],\" current.tif\",sep=\"\"))\n  #Sum species richness\n  richness_cur=richness_cur+cov_mask\n  writeRaster(richness_cur,\"richness_current.tif\")}\n\nComplete code to run parallelization was:\n\n#Number of cores\nno_cores=detectCores()-1#Initiate cluster\ncl=makeCluster(no_cores,type=\"PSOCK\")\nregisterDoParallel(cl)\n#Table with name and habitat information (columns) for each species (rows)\nspp_data=read.xlsx2(\"species_file.xls\",sheetIndex=1)#Shape file with\nspecies distributions as polygons\nspp_polygons=readOGR(\"distributions.shp\")#Separation symbol for\nspecies habitats stored in spp_data\nsep=\";\"#Tabla joining habitas species codes with habitats raster\nhabitat_codes=read.xlsx2(\"spp_habitats_final.xls\",sheetIndex=1)#Habitats raster\ncover=raster(\"Z:/Data/cover_2015_proj_fixed_reclas_1km.tif\")\n#Paralelization\nforeach(k=1:nrow(spp_data)) %dopar% extract_habitats(k=k,\n                                                     spp_data=spp_data,\n\nspp_polygons=spp_polygons,sep=sep,\n\nhabitat_codes=habitat_codes,\n                                                     cover=cover)\nstopImplicitCluster()\nstopCluster(cl)\n\nThe parallelization process runs; however, it didn't works how I expected,\nsince it is not using all the cores: Image of processors working\n<https://i.stack.imgur.com/m4h5y.jpg>. So, what the parallelization process\ndoes, is to start 39 (the number of cores) processes: Image of processes\nopened <https://i.stack.imgur.com/nDkX4.jpg>, but it does't write one by\none the files, how I could expect in a regular loop. It suddenly write\nblocks of 39 files (something that I can understand), but taking a lot of\ntime (because it seems to work in few cores), even more than if I ran a\nregular loop (running the regular loop each file is written each two or\nthree minutes, while the block of 39 files is written approximately each\none hour).\n\n*So, here is my second group of questions. 2. What I?m doing bad? 3. Why it\nis not using all the 39 processors, or if it uses them, why it doesn't use\nthem at the maximum level? 4. Why it not begins another task (run an other\nprocess, e.g., the process 40) when it finishes one (I suppose it because\nit always write the files in blocks of 39)?*\n\nThanks in advance for your help.\n\nCheers,\n\nJaime\n-- \nJaime Burbano Gir?n\nEstudiante Doctoral\nDoctorado en Estudios Ambientales y Rurales\nPontificia Universidad Javeriana\nBogot?, Colombia\n(57-1) 3208320 Ext. 4844\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi every one.\n\nI?m trying to parallelize a process that runs over the rows of a matrix. I\nexpect for each element of the row, which is a species, that the process\nextracts and writes a file (raster) c",
+      "thread_id": "thread-7b4434532b65",
+      "thread_depth": 0,
+      "month": "2017-09"
+    },
+    {
+      "id": "msg-d7e5eb802af4",
+      "message_id": "<4c53dfb7f4b5049037566c1778dcedd4@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2017-09-18T15:07:52+01:00",
+      "subject": "[R-sig-eco] Course on the VEGAN package - Multivariate analysis of ecological communities in R with the VEGAN package",
+      "subject_clean": "Course on the VEGAN package - Multivariate analysis of ecological communities in R with the VEGAN package",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Multivariate analysis of ecological communities in R with the VEGAN \npackage (VGNR01)\n\nhttps://www.prstatistics.com/course/multivariate-analysis-of-ecological-communities-in-r-with-the-vegan-package-vgnr01/\n\nInstructors:\nDr. Peter Solymos and Dr. Guillaume Blanchet\n\nWhen:\n23rd - 27th April 2018\n\nWhere:\nSCENE field station, Loch Lomond, Glasgow\n\nIntended Audience:\nResearch postgraduates, practicing academics and primary investigators \nin\nspatial ecology and management and environmental professionals in\ngovernment and industry.\n\nCourse Overview:\nThis 5-day course will cover the concepts, methods, and R tools that can \nbe\nused to analyse community ecology data. The course will review data\nprocessing techniques relevant to multivariate data sets. We will cover\ndiversity and null-model analysis, distance measures and distance based\nmultivariate methods, clustering, classification, and dimension \nreduction\ntechniques using the vegan R extension package. We will use real world \ndata\nsets to motivate the analyses, e.g. describing patterns along \nenvironmental\nor anthropogenic disturbance gradients, quantifying the effects of\ncontinuous and discrete predictors, and making predictions based on\nmultivariate model results. We will emphasize visualization and\nreproducible workflows. Modules will consist of introductory lectures,\nguided computer coding, and exercises for the participants. The course \nis\nintended for intermediate R users with interest in community ecology,\nespecially in the fields of terrestrial and wetland ecology, microbial\necology, and natural resource management.\n\nCourse syllabus:\nMonday 23rd ? Classes from 08:30 to 16:30\nModule 1: Introduction to community data analysis, basics of programming \nin\nR\nModule 2: Data processing (long and wide data representations, single \nand\nmultiple table operations, data aggregation and transformation)\n\nTuesday 24th ? Classes from 08:30 to 16:30\nModule 3: Diversity analysis, species-abundance distributions, \nnull-model\nanalysis\nModule 4: Distance measures and distance based methods (Mantel test,\ndistance decay, etc.)\n\nWednesday 25th ? Classes from 08:30 to 16:30\nModule 5: Hierarchical and nonhierarchical clustering and classification\nModule 6: Dispersion and permutational MANOVA\n\nThursday 26th ? Classes from 08:30 to 16:30\nModule 7: Response curves, ordination (correspondence analysis, \nnonmetric\nscaling, constrained ordination).\nModule 8: Fitting environmental variables to ordination, permutation \nbased\ntesting of the significance of constraints.\n\nFriday 27th ? Classes from 08:30 to 16:30\nModule 9: Indicator species analysis and multivariate calibration.\nModules 10: special topics and discussion, analyzing participants? own \ndata.\n\nIf you have any questions please feel free to mail\noliverhooker at prstatistics.com or visit www.prstatisticas.com\n\nUpcoming courses for 2017/2018 below\n\nECOLOGICAL NICHE MODELLING USING R #ENMR\n16th ? 20th October 2017, Scotland, Dr. Neftali Sillero\nhttp://www.prstatistics.com/course/ecological-niche-modelling-using-r-\nenmr01/\n\n2.\tREPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS #RDPG\n23rd ? 27th October 2017, Wales, Dr. Thibaut Jombart, Zhian Kavar\nhttps://www.prstatistics.com/course/reproducible-data-science-for-\npopulation-genetics-rdpg01/\n\n3.\tSTRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY\nBIOLOGISTS USING R #SEMR\n23rd ? 27th October 2017, Wales, Prof Jarrett Byrnes, Dr. Jon Lefcheck\nhttp://www.prstatistics.com/course/structural-equation-modelling-for-\necologists-and-evolutionary-biologists-semr01/\n\n4.\tLANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R #LNDG\n6th ? 10th November 2017, Wales, Prof. Rodney Dyer\nhttp://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-\nlndg02/\n\n5.\tAPPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS #ABME\n20th - 25th November 2017, Scotland, Dr. Matt Denwood\nhttp://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-\nepidemiologists-abme03/\n\n6.\tADVANCING IN STATISTICAL MODELLING USING R #ADVR\n11th ? 15th December 2017, Wales, Dr. Luc Bussiere, Dr. Tom Houslay, \nDr.\nAne Timenes Laugen,\nhttp://www.prstatistics.com/course/advancing-statistical-modelling-using-r-\nadvr07/\n\n7.\tINTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING #IBHM\n29th Jan ? 2nd Feb 2018, Scotland, Dr. Andrew Parnell\nhttp://www.prstatistics.com/course/introduction-to-bayesian-hierarchical-\nmodelling-using-r-ibhm02/\n\n8.\tPHYLOGENETIC DATA ANALYSIS USING R (TBC) #PHYL\n28th Jan ? Feb 2nd 2018 Dr. Emmanuel Paradis\nhttps://www.prstatistics.com/course/introduction-to-phylogenetic-analysis-\nwith-r-phyg-phyl02/\n\n9.\tANIMAL MOVEMENT ECOLOGY #ANME\n19th ? 23rd February 2018, Wales, Dr Luca Borger, Dr. John Fieberg\n\n10.\tGEOMETRIC MORPHOMETRICS USING R #GMMR\n19th ? 23rd February 2018, Scotland, Prof. Dean Adams, Prof. Michael\nCollyer, Dr. Antigoni Kaliontzopoulou\nhttp://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/\n\n11.\tFUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND\nCOMPUTATION #FEER\n5th ? 9th March 2018, Scotland, Dr. Francesco de Bello, Dr. Lars\nG?tzenberger, Dr. Carlos Carmona\nhttp://www.prstatistics.com/course/functional-ecology-from-organism-to-\necosystem-theory-and-computation-feer01/\n\n12.\tSPATIAL PRIORITIZATION USING MARXAN\n5th - 9th March 2018, Wales, Jennifer McGowan\nhttps://www.prstatistics.com/course/introduction-to-marxan-mrxn01/\n\n13.\tECOLOGICAL NICHE MODELLING USING R #ENMR\n12th - 16th March 2018, Scotland, Dr. Neftali Sillero\nhttp://www.prstatistics.com/course/ecological-niche-modelling-using-r-\nenmr02/\n\n14.\tMULTIVARIATE ANALYSIS OF ECOLOGICAL COMMUNITIES USING THE VEGAN\nPACKAGE #VGNR\n23rd ? 27th April 2018, Scotland, Dr. Peter Solymos, Dr. Guillaume\nBlanchet\nhttps://www.prstatistics.com/course/multivariate-analysis-of-ecological-\ncommunities-in-r-with-the-vegan-package-vgnr01/\n\n15.\tNETWORK ANAYLSIS FOR ECOLOGISTS USING R #NTWA\n9th ? 13th April 2018, Scotland, Dr. Marco Scotti\nhttps://www.prstatistics.com/course/network-analysis-ecologists-ntwa02/\n\n16.\tQUANTITATIVE GEOGRAPHIC ECOLOGY: MODELING GENOMES, NICHES, AND\nCOMMUNITIES\n30th April ? 4th May 2018, Scotland, Dr. Dan Warren, Dr. Matt \nFitzpatrick\n\n17.\tINTRODUCTION TO MIXED MODELS FOR ECOLOGISTS #IMMR\n28th May ? 1st June 2018, Canada, Prof Subhash Lele, Dr. Guillaume \nBlanchet\n\n18.\tMODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R #MBMV0\n8th ? 12th July 2018, Prof David Warton\nhttps://www.prstatistics.com/course/model-base-multivariate-analysis-of-\nabundance-data-using-r-mbmv02/\n\n19.\tADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA USING\nR #MVSP\nProf. Pierre Legendre, Dr. Olivier Gauthier - Date and location to be\nconfirmed\n\n20.\tSTABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR #SIMM\nDr. Andrew Parnell, Dr. Andrew Jackson ? Date and location to be \nconfirmed\n\n21.\tMULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA #MASE\nProf. Subhash Lele, Dr. Peter Solymos - Date and location to be \nconfirmed\n\n22.\tTIME SERIES MODELS FOR ECOLOGISTS USING R (JUNE 2017 #TSME\nDr. Andrew Parnell - Date and location to be confirmed\n\n23.\tSPATIAL ANALYSIS OF ECOLOGICAL DATA USING R #METR\nProf. Jason Matthiopoulos ? Date and location to be confirmed\n\n24.\tMETA-ANALYSIS IN ECOLOGY, EVOLUTION AND ENVIRONMENTAL SCIENCES #METR\nProf. Julia Koricheva, Prof. Elena Kulinskaya ? Date and location to \nbe confirmed\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2017 publications -\n\nEcosystem size predicts eco-morphological variability in post-glacial \ndiversification. Ecology and Evolution. In press.\n\nThe physiological costs of prey switching reinforce foraging \nspecialization. Journal of animal ecology.\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "Multivariate analysis of ecological communities in R with the VEGAN \npackage (VGNR01)\n\nhttps://www.prstatistics.com/course/multivariate-analysis-of-ecological-communities-in-r-with-the-vegan-package-v",
+      "thread_id": "thread-d7e5eb802af4",
+      "thread_depth": 0,
+      "month": "2017-09"
+    },
+    {
+      "id": "msg-1dbfa6c494db",
+      "message_id": "<3125a0daa94acb89414ce206bd37e2f2@prstatistics.com>",
+      "from_name": "Oliver Hooker",
+      "from_email_hash": "8d85adc6b153d8e80093a9f8e89d7f46369fdd650fe394f7644a0e0697798998",
+      "date": "2017-09-18T15:15:44+01:00",
+      "subject": "[R-sig-eco] Course on remote sensing - Introduction to remote sensing and GIS for ecological applications",
+      "subject_clean": "Course on remote sensing - Introduction to remote sensing and GIS for ecological applications",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "This course will use a combination of R and Python.\n\nIntroduction to remote sensing and GIS for ecological applications \n(IRMS01)\n\nhttps://www.prinformatics.com/course/introduction-to-remote-sensing-and-gis-for-ecological-applications-irms01/\n\nInstructors:\nProf. Duccio Rocchini and Dr. Luca Delucchi\n\nWhen:\n27 November 2017 - 1 December 2017\n\nWhere:\nMargam discovery centre, Wales, UK\n\nIntended Audience:\nThis course is oriented to MSc and PhD students and to Post-Doc \nresearchers aiming at increasing their skills in self-programming GIS \nrelated algorithms.\n\nCourse Overview:\nThe course will deal with different aspects related to the use of remote \nsensing and GIS in spatial ecology by using the Free and Open Source \nSoftware GRASS GIS coupled with R. By the end of this 5-day practical \ncourse, attendees will have the capacity to deal with ecological \npatterns and processes by using GIS and remote sensing algorithms. The \nincreasing availability of open ecological and geographical data through \nnetworks such as the Global Biodiversity Information Facility (GBIF, \nhttp://www.gbif.org) or the Data Observation Network for Earth (DataONE) \nfederated data archive (http://www.dataone.org) makes it increasingly \npossible to test cutting-edge ecological theories. In using a shared \nopen-source code for testing these ecological theories, researchers can \nbe sure that their results are reliable and also that the code they have \nused is robust. Attendees will be able to process spatial and ecological \ndata by free and open source algorithms. The course will be mainly \npractical, but grounded on robust theory. All the analyses will be \nperformed in GRASS GIS and the code will be shared with attendees.\n\nCourse syllabus:\n\nMonday 27th ? Classes from 09:00 to 17:00\nDay 1: Introduction to GIS and Remote Sensing concepts. a theoretical \nintroduction to the main GIS and RS concepts.\n\nTuesday 28th ? Classes from 09:00 to 17:00\nDay 2: GRASS GIS: Introduction to the GRASS GIS software; Open source \ncoding; main GIS analysis possibilities.\n\nWednesday 29th ? Classes from 09:00 to 17:00\nDay 3: Spatial Ecology and application of RS algorithms to solve \necological issues.\n\nThursday 30th ? Classes from 09:00 to 17:00\nDay 4: Use the GRASS GIS temporal framework to analyse big data.\n\nFriday 1st ? Classes from 09:00 to 16:00\nDay 5: Throughput scripting in bash and python.If you have any questions \nplease feel free to email\noliverhooker at prinformatics.com or visit www.prinformatics.com\n\nUpcoming courses for 2017/2018 below\n\nECOLOGICAL NICHE MODELLING USING R #ENMR\n16th ? 20th October 2017, Scotland, Dr. Neftali Sillero\nhttp://www.prstatistics.com/course/ecological-niche-modelling-using-r-\nenmr01/\n\n2.\tREPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS #RDPG\n23rd ? 27th October 2017, Wales, Dr. Thibaut Jombart, Zhian Kavar\nhttps://www.prstatistics.com/course/reproducible-data-science-for-\npopulation-genetics-rdpg01/\n\n3.\tSTRUCTURAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY\nBIOLOGISTS USING R #SEMR\n23rd ? 27th October 2017, Wales, Prof Jarrett Byrnes, Dr. Jon Lefcheck\nhttp://www.prstatistics.com/course/structural-equation-modelling-for-\necologists-and-evolutionary-biologists-semr01/\n\n4.\tLANDSCAPE (POPULATION) GENETIC DATA ANALYSIS USING R #LNDG\n6th ? 10th November 2017, Wales, Prof. Rodney Dyer\nhttp://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-\nlndg02/\n\n5.\tAPPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS #ABME\n20th - 25th November 2017, Scotland, Dr. Matt Denwood\nhttp://www.prstatistics.com/course/applied-bayesian-modelling-ecologists-\nepidemiologists-abme03/\n\n6.\tADVANCING IN STATISTICAL MODELLING USING R #ADVR\n11th ? 15th December 2017, Wales, Dr. Luc Bussiere, Dr. Tom Houslay, \nDr.\nAne Timenes Laugen,\nhttp://www.prstatistics.com/course/advancing-statistical-modelling-using-r-\nadvr07/\n\n7.\tINTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING #IBHM\n29th Jan ? 2nd Feb 2018, Scotland, Dr. Andrew Parnell\nhttp://www.prstatistics.com/course/introduction-to-bayesian-hierarchical-\nmodelling-using-r-ibhm02/\n\n8.\tPHYLOGENETIC DATA ANALYSIS USING R (TBC) #PHYL\n28th Jan ? Feb 2nd 2018 Dr. Emmanuel Paradis\nhttps://www.prstatistics.com/course/introduction-to-phylogenetic-analysis-\nwith-r-phyg-phyl02/\n\n9.\tANIMAL MOVEMENT ECOLOGY #ANME\n19th ? 23rd February 2018, Wales, Dr Luca Borger, Dr. John Fieberg\n\n10.\tGEOMETRIC MORPHOMETRICS USING R #GMMR\n19th ? 23rd February 2018, Scotland, Prof. Dean Adams, Prof. Michael\nCollyer, Dr. Antigoni Kaliontzopoulou\nhttp://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr01/\n\n11.\tFUNCTIONAL ECOLOGY FROM ORGANISM TO ECOSYSTEM: THEORY AND\nCOMPUTATION #FEER\n5th ? 9th March 2018, Scotland, Dr. Francesco de Bello, Dr. Lars\nG?tzenberger, Dr. Carlos Carmona\nhttp://www.prstatistics.com/course/functional-ecology-from-organism-to-\necosystem-theory-and-computation-feer01/\n\n12.\tSPATIAL PRIORITIZATION USING MARXAN\n5th - 9th March 2018, Wales, Jennifer McGowan\nhttps://www.prstatistics.com/course/introduction-to-marxan-mrxn01/\n\n13.\tECOLOGICAL NICHE MODELLING USING R #ENMR\n12th - 16th March 2018, Scotland, Dr. Neftali Sillero\nhttp://www.prstatistics.com/course/ecological-niche-modelling-using-r-\nenmr02/\n\n14.\tMULTIVARIATE ANALYSIS OF ECOLOGICAL COMMUNITIES USING THE VEGAN\nPACKAGE #VGNR\n23rd ? 27th April 2018, Scotland, Dr. Peter Solymos, Dr. Guillaume\nBlanchet\nhttps://www.prstatistics.com/course/multivariate-analysis-of-ecological-\ncommunities-in-r-with-the-vegan-package-vgnr01/\n\n15.\tNETWORK ANAYLSIS FOR ECOLOGISTS USING R #NTWA\n9th ? 13th April 2018, Scotland, Dr. Marco Scotti\nhttps://www.prstatistics.com/course/network-analysis-ecologists-ntwa02/\n\n16.\tQUANTITATIVE GEOGRAPHIC ECOLOGY: MODELING GENOMES, NICHES, AND\nCOMMUNITIES\n30th April ? 4th May 2018, Scotland, Dr. Dan Warren, Dr. Matt \nFitzpatrick\n\n17.\tINTRODUCTION TO MIXED MODELS FOR ECOLOGISTS #IMMR\n28th May ? 1st June 2018, Canada, Prof Subhash Lele, Dr. Guillaume \nBlanchet\n\n18.\tMODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R #MBMV0\n8th ? 12th July 2018, Prof David Warton\nhttps://www.prstatistics.com/course/model-base-multivariate-analysis-of-\nabundance-data-using-r-mbmv02/\n\n19.\tADVANCES IN MULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA USING\nR #MVSP\nProf. Pierre Legendre, Dr. Olivier Gauthier - Date and location to be\nconfirmed\n\n20.\tSTABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR #SIMM\nDr. Andrew Parnell, Dr. Andrew Jackson ? Date and location to be \nconfirmed\n\n21.\tMULTIVARIATE ANALYSIS OF SPATIAL ECOLOGICAL DATA #MASE\nProf. Subhash Lele, Dr. Peter Solymos - Date and location to be \nconfirmed\n\n22.\tTIME SERIES MODELS FOR ECOLOGISTS USING R (JUNE 2017 #TSME\nDr. Andrew Parnell - Date and location to be confirmed\n\n23.\tSPATIAL ANALYSIS OF ECOLOGICAL DATA USING R #METR\nProf. Jason Matthiopoulos ? Date and location to be confirmed\n\n24.\tMETA-ANALYSIS IN ECOLOGY, EVOLUTION AND ENVIRONMENTAL SCIENCES #METR\nProf. Julia Koricheva, Prof. Elena Kulinskaya ? Date and location to \nbe confirmed\n\n-- \nOliver Hooker PhD.\nPR statistics\n\n2017 publications -\n\nEcosystem size predicts eco-morphological variability in post-glacial \ndiversification. Ecology and Evolution. In press.\n\nThe physiological costs of prey switching reinforce foraging \nspecialization. Journal of animal ecology.\n\nprstatistics.com\nfacebook.com/prstatistics/\ntwitter.com/PRstatistics\ngroups.google.com/d/forum/pr-statistics-post-course-forum\nprstatistics.com/organiser/oliver-hooker/\n\n6 Hope Park Crescent\nEdinburgh\nEH8 9NA\n\n+44 (0) 7966500340",
+      "body_snippet": "This course will use a combination of R and Python.\n\nIntroduction to remote sensing and GIS for ecological applications \n(IRMS01)\n\nhttps://www.prinformatics.com/course/introduction-to-remote-sensing-a",
+      "thread_id": "thread-1dbfa6c494db",
+      "thread_depth": 0,
+      "month": "2017-09"
+    },
+    {
+      "id": "msg-4ab320ae2937",
+      "message_id": "<70955839.143226.1506035793465@mail.yahoo.com>",
+      "from_name": "kin onn",
+      "from_email_hash": "2c091904c406ad4a7b2987e50e9e75b5772d32c6c24aa2a73fcea200e7d0945f",
+      "date": "2017-09-21T23:16:33Z",
+      "subject": "[R-sig-eco] Transform pairwise resistance matrix (from Circuitscape)",
+      "subject_clean": "Transform pairwise resistance matrix (from Circuitscape)",
+      "in_reply_to": null,
+      "references": [
+        "<70955839.143226.1506035793465.ref@mail.yahoo.com>"
+      ],
+      "body_plain": "Dear R-sig users,\nI have independent variables in the form of pairwise resistance matrices from Circuitscape that I would like to use in a dbRDA analysis using (eg. using capscale() in vegan). Does anyone know of a way that I can transform a pairwise matrix into a matrix that can be used as independent variables in a RDA analysis? I read a paper that z-transformed and standardized a pairwise resistance matrix but I'm not sure how to do that. Any help would be greatly appreciated. Below is an example of a resistance matrix I am trying to transform\n\n0 1 2 3 4 5 6 7 8 91 0 0.5148327242 0.5354623905 0.5479114511 0.5479114511 0.5601841697 0.639462287 0.6379687417 0.70380367092 0.5148327242 0 0.381577923 0.4123364573 0.4123364573 0.381580919 0.4868878634 0.506852375 0.58775979543 0.5354623905 0.381577923 0 0.4358470864 0.4358470864 0.4453216218 0.5311204258 0.5313504077 0.59827291434 0.5479114511 0.4123364573 0.4358470864 0 0.375 0.4349403022 0.4954025248 0.4906177218 0.55455258345 0.5479114511 0.4123364573 0.4358470864 0.375 0 0.4349403022 0.4954025248 0.4906177218 0.55455258346 0.5601841697 0.381580919 0.4453216218 0.4349403022 0.4349403022 0 0.5084746282 0.5295915461 0.60014816337 0.639462287 0.4868878634 0.5311204258 0.4954025248 0.4954025248 0.5084746282 0 0.5624537263 0.72640964028 0.6379687417 0.506852375 0.5313504077 0.4906177218 0.4906177218 0.5295915461 0.5624537263 0 0.65419523879 0.7038036709 0.5877597954 0.5982729143 0.5545525834 0.5545525834 0.6001481633 0.7264096402 0.6541952387 0\n\nBest regards,?Chan?\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear R-sig users,\nI have independent variables in the form of pairwise resistance matrices from Circuitscape that I would like to use in a dbRDA analysis using (eg. using capscale() in vegan). Does an",
+      "thread_id": "thread-4ab320ae2937",
+      "thread_depth": 0,
+      "month": "2017-09"
+    },
+    {
+      "id": "msg-3d22e48fba4b",
+      "message_id": "<1282445915.9164393.1506381447559@mail.yahoo.com>",
+      "from_name": "David Bryan",
+      "from_email_hash": "8ef17ed9a0d87515b7bc11e3cd5e19bd207686283bcc99c0f97dfc57be75bac4",
+      "date": "2017-09-25T23:17:27Z",
+      "subject": "[R-sig-eco] Finding 'clumps' of individuals in transect data",
+      "subject_clean": "Finding 'clumps' of individuals in transect data",
+      "in_reply_to": null,
+      "references": [
+        "<1282445915.9164393.1506381447559.ref@mail.yahoo.com>"
+      ],
+      "body_plain": "I am looking for an algorithm that would help me find and quantifyclumps of values in a vector.? My datainclude a count of individuals at every meter along a line transect line.\n\n\n?\nTwo constraints:\n\n1) I would like the clump size to be consistent (i.e. include only 10 consecutivelocations)\n\n2) I am interested in maximum total values for clumps and do not want values from a single location to be used in the calculations formore than one clump.? For example iftotal number of individuals counted from locations 2-11 = 14 and the totalnumber of individuals from locations 5-14 =20 I would only like to identify the latterclump because it is larger and there is overlap between the two possible clumps from locations 5-11. \n\n\n?\nMy data look something like this:\n\n\n?\nlocation<-seq(from=1, to=1000,by=1)\n\ndat<-data.frame(location)\n\ndat$count<-rbinom(round(1000), 1, .1)\n\ndat$count[dat$count==1]<-round(sample(runif(sum(dat$count), 1,10),replace=T))\n\n\nThanks,\nDavid\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "I am looking for an algorithm that would help me find and quantifyclumps of values in a vector.? My datainclude a count of individuals at every meter along a line transect line.\n\n\n?\nTwo constraints:\n\n",
+      "thread_id": "thread-3d22e48fba4b",
+      "thread_depth": 0,
+      "month": "2017-09"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-94824c95be6a",
+      "subject": "Course: Introduction to regression models with spatial and temporal correlation using R-INLA",
+      "message_count": 1,
+      "participants": [
+        "Highland Statistics Ltd"
+      ],
+      "started": "2017-09-11T09:35:21+01:00",
+      "last_reply": "2017-09-11T09:35:21+01:00",
+      "root_message_id": "msg-94824c95be6a"
+    },
+    {
+      "id": "thread-7b4434532b65",
+      "subject": "Parallel processing doesn´t use all cores",
+      "message_count": 1,
+      "participants": [
+        "Jaime Burbano Girón"
+      ],
+      "started": "2017-09-14T18:25:00+02:00",
+      "last_reply": "2017-09-14T18:25:00+02:00",
+      "root_message_id": "msg-7b4434532b65"
+    },
+    {
+      "id": "thread-d7e5eb802af4",
+      "subject": "Course on the VEGAN package - Multivariate analysis of ecological communities in R with the VEGAN package",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2017-09-18T15:07:52+01:00",
+      "last_reply": "2017-09-18T15:07:52+01:00",
+      "root_message_id": "msg-d7e5eb802af4"
+    },
+    {
+      "id": "thread-1dbfa6c494db",
+      "subject": "Course on remote sensing - Introduction to remote sensing and GIS for ecological applications",
+      "message_count": 1,
+      "participants": [
+        "Oliver Hooker"
+      ],
+      "started": "2017-09-18T15:15:44+01:00",
+      "last_reply": "2017-09-18T15:15:44+01:00",
+      "root_message_id": "msg-1dbfa6c494db"
+    },
+    {
+      "id": "thread-4ab320ae2937",
+      "subject": "Transform pairwise resistance matrix (from Circuitscape)",
+      "message_count": 1,
+      "participants": [
+        "kin onn"
+      ],
+      "started": "2017-09-21T23:16:33+00:00",
+      "last_reply": "2017-09-21T23:16:33+00:00",
+      "root_message_id": "msg-4ab320ae2937"
+    },
+    {
+      "id": "thread-3d22e48fba4b",
+      "subject": "Finding 'clumps' of individuals in transect data",
+      "message_count": 1,
+      "participants": [
+        "David Bryan"
+      ],
+      "started": "2017-09-25T23:17:27+00:00",
+      "last_reply": "2017-09-25T23:17:27+00:00",
+      "root_message_id": "msg-3d22e48fba4b"
+    }
+  ]
+}

@@ -1,0 +1,2660 @@
+From lien.sim at monash.edu  Mon Oct  3 03:57:23 2011
+From: lien.sim at monash.edu (Lien Sim)
+Date: Mon, 3 Oct 2011 12:57:23 +1100
+Subject: [R-sig-eco] Repeated measures RDA in vegan
+Message-ID: <CAP_TsuCmz+FpGYy610SYVGyOvDdEx11G2x_3p-b2YgwK2bvACw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111003/60de40bc/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Tue Oct  4 11:59:40 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 04 Oct 2011 10:59:40 +0100
+Subject: [R-sig-eco] Repeated measures RDA in vegan
+In-Reply-To: <CAP_TsuCmz+FpGYy610SYVGyOvDdEx11G2x_3p-b2YgwK2bvACw@mail.gmail.com>
+References: <CAP_TsuCmz+FpGYy610SYVGyOvDdEx11G2x_3p-b2YgwK2bvACw@mail.gmail.com>
+Message-ID: <1317722380.25196.35.camel@prometheus.geog.ucl.ac.uk>
+
+On Mon, 2011-10-03 at 12:57 +1100, Lien Sim wrote:
+> Hi,
+> 
+> I am trying to run a repeated measures RDA in vegan but am unsure about how
+> to implement this, and whether I also need to use the permute package to run
+> permutations.
+
+Technically yes, you should be using a restricted, but as yet we vegan
+developers have not hooked permute into most of the functions in the
+package that use permutation tests, like the anova() method for cca
+objects.
+
+Until we do this, the best you can do is use the strata argument to at
+least stratify the permutations on your 9 sites (i.e. samples will only
+be exchanged within a site, not between sites.) When we get permute
+fully hooked into vegan, you would still use strata, but keep the Block
+level (strata) fixed and set the Within level to use cyclic shift
+permutations rather than randomisation.
+
+The change you need to make to permutest.cca is relatively simple, if
+you know the workings of that function and permute and only want to
+implement this one type of permutation.
+
+Doing this in general for all the types of permutation offered is a
+little bit more work and is something I will be embarking upon next
+month.
+
+You should split the Site/Date info out into a Site factor and a Date.
+permute doesn't know anything about Dates/Times, so you will need to put
+the samples into temporal order within Sites. As I develop permute and
+learn from the experiences of getting vegan to use it more, we may be
+able to expand the API to allow you to specify a variable that indicates
+the ordering.
+
+I'm quite busy with work and teaching till the end of October, so I
+can't guarantee I will be able to help quickly, but if you would like
+some help producing a local/personal version of permutest.cca for this
+one type of permutation, please email me off list with the data and I'll
+see about writing a version for you.
+
+HTH
+
+G
+
+> I have time series data  - one data frame with community composition data
+> (aquatic invertebrates) for 9 sites sampled on 16 dates (not all site/dates
+> combinations have data), then another data frame with environmental
+> constraints (water quality data) for the same 9 sites and 16 dates. At first
+> I ran the analysis as a fairly simple RDA using
+> JInvRDA <- rda(JInvHel ~ ., JEnvT.stand, na=na.omit, subset =
+> complete.cases(JInvHel), scale=TRUE)
+> 
+> where JInvHel - Hellinger-transformed invertebrate data
+> JEnvT.stand - transformed and standardised environmental data
+> 
+> I then ran permutation tests on the output using
+> anova.cca (JInvRDA, step=1000)
+> 
+> However, I have since realised that since my data are time series and likely
+> to be temporally autocorrelated, that I should be using a repeated measures
+> type RDA e.g. a split plot design in which permutations are performed within
+> each block of plots (sites). In my searching I have seen lots of mention of
+> the two references below, which outline examples of this analysis using
+> CANOCO, but am not sure how to do this in R.
+> 
+> Lep?, J. 1999. Nutrient status, disturbance and composition: an experimental
+> test of relationships in a wet meadow. J. Veg. Sci. 10: 219?230.
+> Leps, J. & Smilauer, P. 2003. Multivariate analysis of ecological data using
+> CANOCO. Cambridge University Press, Cambridge, UK.
+> 
+> I am unsure about whether I need to reorganise my data frames (currently
+> samples (first column) are coded with a combined site/date code - does this
+> need to be split so that sites and dates are separate - into two columns?)
+> and also about how to structure the analysis so that the time component is
+> incorporated correctly. Finally, when I want to run permutation tests,
+> should I be using the permute package, and how should this be structured?
+> 
+> Many thanks,
+> Lien
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From Emma.Gothe at slu.se  Wed Oct  5 10:25:12 2011
+From: Emma.Gothe at slu.se (Emma Gothe)
+Date: Wed, 5 Oct 2011 10:25:12 +0200
+Subject: [R-sig-eco] Help PCNM analysis
+Message-ID: <6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>
+
+Dear list members!
+
+I am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial ecological data analysis with R). I recently ran into a problem. I have a triangular distance matrix based on the shortest distance between my sampling points which I am using in the PCNM function instead of geographic coordinates. When I tried to perform the analysis on this distance matrix I got an error message (see below) that says I have "empty neighbor sites". I have used the same code and the exactly same type of distance matrices before and I did not have any problem. I have also searched my distance matrix for ev. missing values/other obvious errors and tried to search for a solution online but without any luck.
+
+The file "Eucl stream order1.txt" is attached and my code is:
+
+> dist.matr <- read.delim("Eucl stream order1.txt",row.names=1)
+> dist <- as.dist(dist.matr)
+> PCNM.auto=PCNM(dist)
+Truncation level = 1092.48
+Error in as.matrix(listw2sn(nb2listw(nb))[, 1:2]) :
+  error in evaluating the argument 'x' in selecting a method for function 'as.matrix': Error in nb2listw(nb) : Empty neighbour sets found
+Timing stopped at: 0.01 0 0.02
+
+If anyone could help me to figure this out, and have suggestions for a solution I would be very greatful!
+
+Best Emma
+
+_______________________________________
+
+Emma G?the, PhD-student
+Department of Aquatic Sciences and Assessment
+Swedish University of Agricultural Sciences
+Box 7050
+750 07 Uppsala
+
+Tel: +46-(0)18-673138
+Fax: +46-(0)18-673156
+OBS! New E-mail: emma.gothe at slu.se<mailto:emma.gothe at slu.se>
+
+-------------- next part --------------
+An embedded and charset-unspecified text was scrubbed...
+Name: Eucl stream order1.txt
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/b33c7679/attachment.txt>
+
+From jari.oksanen at oulu.fi  Wed Oct  5 12:46:25 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 05 Oct 2011 13:46:25 +0300
+Subject: [R-sig-eco] Help PCNM analysis
+In-Reply-To: <6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>
+References: <6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>
+Message-ID: <1317811585.3715.1.camel@tagine>
+
+On Wed, 2011-10-05 at 10:25 +0200, Emma Gothe wrote:
+> Dear list members!
+> 
+> I am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial ecological data analysis with R). I recently ran into a problem. I have a triangular distance matrix based on the shortest distance between my sampling points which I am using in the PCNM function instead of geographic coordinates. When I tried to perform the analysis on this distance matrix I got an error message (see below) that says I have "empty neighbor sites". I have used the same code and the exactly same type of distance matrices before and I did not have any problem. I have also searched my distance matrix for ev. missing values/other obvious errors and tried to search for a solution online but without any luck.
+> 
+> The file "Eucl stream order1.txt" is attached and my code is:
+> 
+> > dist.matr <- read.delim("Eucl stream order1.txt",row.names=1)
+> > dist <- as.dist(dist.matr)
+> > PCNM.auto=PCNM(dist)
+> Truncation level = 1092.48
+> Error in as.matrix(listw2sn(nb2listw(nb))[, 1:2]) :
+>   error in evaluating the argument 'x' in selecting a method for function 'as.matrix': Error in nb2listw(nb) : Empty neighbour sets found
+> Timing stopped at: 0.01 0 0.02
+> 
+> If anyone could help me to figure this out, and have suggestions for a solution I would be very greatful!
+> 
+Emma,
+
+I don't know about the PCNM package, but the matrix goes smoothly true
+vegan::pcnm:
+
+> library(vegan)
+Loading required package: permute
+This is vegan 2.0-0
+> dist.matr <- read.delim("Eucl stream order1.txt",row.names=1)
+> dist <- as.dist(dist.matr)
+> p <- pcnm(dist)
+> str(p)
+List of 4
+ $ vectors  : num [1:30, 1:19] -0.2245 -0.2239 -0.2249 -0.2907
+-0.0212 ...
+  ..- attr(*, "dimnames")=List of 2
+  .. ..$ : chr [1:30] "A2" "A3" "A4" "A5" ...
+  .. ..$ : chr [1:19] "PCNM1" "PCNM2" "PCNM3" "PCNM4" ...
+ $ values   : num [1:29] 71640230 66080002 58129580 29179643
+16447538 ...
+ $ weights  : num [1:30] 1 1 1 1 1 1 1 1 1 1 ...
+ $ threshold: num 1092
+ - attr(*, "class")= chr "pcnm"
+
+Cheers, Jari Oksanen
+
+
+From Emma.Gothe at slu.se  Wed Oct  5 14:23:44 2011
+From: Emma.Gothe at slu.se (Emma Gothe)
+Date: Wed, 5 Oct 2011 14:23:44 +0200
+Subject: [R-sig-eco] Help PCNM analysis
+In-Reply-To: <1317811585.3715.1.camel@tagine>
+References: <6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>
+	<1317811585.3715.1.camel@tagine>
+Message-ID: <6CA0B71E0995194A91434060D9C7031615D8E1E383@exmbx1.ad.slu.se>
+
+Thank you Jari for a fast reply!
+
+I will try the vegan function asap as it seems to work smoothly. I am still wondering what causes the problem in the PCNM () function though... If anyone else knows, then please let me know. 
+
+Best Emma 
+
+-----Ursprungligt meddelande-----
+Fr?n: Jari Oksanen [mailto:jari.oksanen at oulu.fi] 
+Skickat: den 5 oktober 2011 12:46
+Till: Emma Gothe
+Kopia: r-sig-ecology at r-project.org
+?mne: Re: [R-sig-eco] Help PCNM analysis
+
+On Wed, 2011-10-05 at 10:25 +0200, Emma Gothe wrote:
+> Dear list members!
+> 
+> I am trying to perform a PCNM analysis with function PCNM() (binary package provided by the provided by project Spatial ecological data analysis with R). I recently ran into a problem. I have a triangular distance matrix based on the shortest distance between my sampling points which I am using in the PCNM function instead of geographic coordinates. When I tried to perform the analysis on this distance matrix I got an error message (see below) that says I have "empty neighbor sites". I have used the same code and the exactly same type of distance matrices before and I did not have any problem. I have also searched my distance matrix for ev. missing values/other obvious errors and tried to search for a solution online but without any luck.
+> 
+> The file "Eucl stream order1.txt" is attached and my code is:
+> 
+> > dist.matr <- read.delim("Eucl stream order1.txt",row.names=1)
+> > dist <- as.dist(dist.matr)
+> > PCNM.auto=PCNM(dist)
+> Truncation level = 1092.48
+> Error in as.matrix(listw2sn(nb2listw(nb))[, 1:2]) :
+>   error in evaluating the argument 'x' in selecting a method for function 'as.matrix': Error in nb2listw(nb) : Empty neighbour sets found
+> Timing stopped at: 0.01 0 0.02
+> 
+> If anyone could help me to figure this out, and have suggestions for a solution I would be very greatful!
+> 
+Emma,
+
+I don't know about the PCNM package, but the matrix goes smoothly true
+vegan::pcnm:
+
+> library(vegan)
+Loading required package: permute
+This is vegan 2.0-0
+> dist.matr <- read.delim("Eucl stream order1.txt",row.names=1)
+> dist <- as.dist(dist.matr)
+> p <- pcnm(dist)
+> str(p)
+List of 4
+ $ vectors  : num [1:30, 1:19] -0.2245 -0.2239 -0.2249 -0.2907
+-0.0212 ...
+  ..- attr(*, "dimnames")=List of 2
+  .. ..$ : chr [1:30] "A2" "A3" "A4" "A5" ...
+  .. ..$ : chr [1:19] "PCNM1" "PCNM2" "PCNM3" "PCNM4" ...
+ $ values   : num [1:29] 71640230 66080002 58129580 29179643
+16447538 ...
+ $ weights  : num [1:30] 1 1 1 1 1 1 1 1 1 1 ...
+ $ threshold: num 1092
+ - attr(*, "class")= chr "pcnm"
+
+Cheers, Jari Oksanen
+
+From matteo.dossena at gmail.com  Wed Oct  5 19:19:46 2011
+From: matteo.dossena at gmail.com (matteo dossena)
+Date: Wed, 5 Oct 2011 18:19:46 +0100
+Subject: [R-sig-eco] trouble in fitting a distirbution
+Message-ID: <608BF773-D9AA-4CFD-A5C1-2C510ED0344A@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/2da4ab37/attachment.pl>
+
+From corymredman at gmail.com  Wed Oct  5 19:42:30 2011
+From: corymredman at gmail.com (Cory Redman)
+Date: Wed, 5 Oct 2011 12:42:30 -0500
+Subject: [R-sig-eco] Calculating an AIC for the Fisher's log series.....
+Message-ID: <CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/f33e5846/attachment.pl>
+
+From solymos at ualberta.ca  Wed Oct  5 22:03:02 2011
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Wed, 5 Oct 2011 14:03:02 -0600
+Subject: [R-sig-eco] Calculating an AIC for the Fisher's log series.....
+In-Reply-To: <CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>
+References: <CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>
+Message-ID: <CAH9coKZq+udb4w=dkPr0ym2wCZCH2FPpvPYXbLqUejCcy--Qig@mail.gmail.com>
+
+Cory,
+
+There is a profile method for fisherfit. If that's not enough, you can
+have a look inside of fisherfit, and you'll see the Dev.logseries
+internal function and how it is used in nlm to get estimate of alpha.
+The same function can be used for manual profiling to get likelihood
+values for a sequence of alphas. Note that Dev.logseries returns minus
+log-likelihood. You get AIC as -2*logLik+2*p, or just define a logLik
+method for fisherfit as
+
+logLik.fisherfit <- function(object, ...) {
+    ll <- -object$minimum
+    attr(ll, "df") <- length(object$estimate)
+    attr(ll, "nobs") <- length(object$fisher)
+    class(ll) <- "logLik"
+    ll
+}
+
+This way, AIC, BIC, etc will work naturally:
+
+data(BCI)
+mod <- fisherfit(BCI[5,])
+logLik(mod)
+AIC(mod)
+BIC(mod)
+
+Cheers,
+
+Peter
+
+P?ter S?lymos
+Alberta Biodiversity Monitoring Institute
+and Boreal Avian Modelling project
+Department of Biological Sciences
+CW 405, Biological Sciences Bldg
+University of Alberta
+Edmonton, Alberta, T6G 2E9, Canada
+Phone: 780.492.8534
+Fax: 780.492.7635
+email <- paste("solymos", "ualberta.ca", sep = "@")
+http://www.abmi.ca
+http://www.borealbirds.ca
+http://sites.google.com/site/psolymos
+
+
+
+On Wed, Oct 5, 2011 at 11:42 AM, Cory Redman <corymredman at gmail.com> wrote:
+> I am trying to calculate an AIC for my Fisher's log series (fisherfit). ?In
+> order to do this I need the log likelihood. ?Does anyone know how to
+> calculate the log likelihood for a specific alpha value. ?I know that the
+> second derivative of the log-likelihood is used to calculate the standard
+> error of alpha, but does anyone know how to retrieve these values (Oksanen,
+> Vegan: ecological diversity).
+>
+> Cheers,
+> ? ? Cory
+>
+> --
+> __________________________________
+> Cory M. Redman
+> Doctoral Candidate
+> Texas A&M University
+> Department of Geology & Geophysics
+> 3115 TAMU
+> College Station, TX ?77843-3115
+>
+> Your point of view of the world depends greatly on where you stand and what
+> you had to do to get there.
+>
+> ? ? ? ?[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From jari.oksanen at oulu.fi  Wed Oct  5 22:21:30 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 05 Oct 2011 23:21:30 +0300
+Subject: [R-sig-eco] Calculating an AIC for the Fisher's log series.....
+In-Reply-To: <CAHXZ6+gc8twiwaouJqYmdmOwD=ub3Ppyj5f0vzQehDaE4Ba=CQ@mail.gmail.com>
+Message-ID: <CAB296FA.18DD2%jari.oksanen@oulu.fi>
+
+On 5/10/11 20:42 PM, "Cory Redman" <corymredman at gmail.com> wrote:
+
+> I am trying to calculate an AIC for my Fisher's log series (fisherfit).  In
+> order to do this I need the log likelihood.  Does anyone know how to
+> calculate the log likelihood for a specific alpha value.  I know that the
+> second derivative of the log-likelihood is used to calculate the standard
+> error of alpha, but does anyone know how to retrieve these values (Oksanen,
+> Vegan: ecological diversity).
+> 
+Cory,
+
+Peter Solymos already told you how to write the logLik.fisherfit() function.
+However, I think it is difficult to find a legitimate use for this function:
+what would you do with the AIC? Log-likelihood and AIC defined only up to an
+additive constant, and those constants do vary. You need a model where
+log-likelihood is defined in with the same additive constant. The function
+used in fisherfit() ignores constant terms of type -log(2 * pi) since these
+do not influence the point estimates or estimates of their standard errors,
+but these would influence the level of AIC. What ever you do, don't use the
+AIC to compare your Fisher models to models fit with different addtivie
+constants.
+
+Cheers, Jari Oksanen
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+From francois.gillet at univ-fcomte.fr  Wed Oct  5 23:59:08 2011
+From: francois.gillet at univ-fcomte.fr (=?ISO-8859-1?Q?Fran=E7ois_Gillet?=)
+Date: Wed, 5 Oct 2011 23:59:08 +0200
+Subject: [R-sig-eco] Help PCNM analysis
+In-Reply-To: <6CA0B71E0995194A91434060D9C7031615D8E1E383@exmbx1.ad.slu.se>
+References: <6CA0B71E0995194A91434060D9C7031615D8E1E357@exmbx1.ad.slu.se>
+	<1317811585.3715.1.camel@tagine>
+	<6CA0B71E0995194A91434060D9C7031615D8E1E383@exmbx1.ad.slu.se>
+Message-ID: <CACpb48QX4wgTnU7pg1z5Wpo5KFGRW_g8xX-MFZtdZ_Q3m_+j5g@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111005/ca84e25a/attachment.pl>
+
+From Andrew.Edwards at dfo-mpo.gc.ca  Fri Oct  7 02:20:24 2011
+From: Andrew.Edwards at dfo-mpo.gc.ca (Edwards, Andrew)
+Date: Thu, 6 Oct 2011 17:20:24 -0700
+Subject: [R-sig-eco] trouble in fitting a distirbution (matteo dossena)
+In-Reply-To: <mailman.1.1317895201.21152.r-sig-ecology@r-project.org>
+Message-ID: <63F107BCC37AEA49A75FD94AA3E07CB0091EC65D@pacpbsex01.pac.dfo-mpo.ca>
+
+Dear Matteo,
+
+I haven't looked into the details of the mle2 code, but three potential issues spring to mind.
+
+1. It looks like you're trying to find the maximum likelihood estimate (MLE) for each of the two parameters of the Pareto distribution (for which the probability density function is a power-law above some value, call it a, and zero elsewhere). I'll write the probability density function as
+
+f(x) = C x^(- mu), x >= a, where C is the normalisation constant; C = (mu - 1) a^(mu - 1).
+
+The MLEs can be found analytically, you don't need do it numerically. The MLE for mu is just
+ 
+1 - n / (n log a - sum (log x_i) )
+
+where x_i are the data with sample size n.
+
+The MLE for a is just the minimum of your x_i.
+
+2. Trying to estimate the MLE for a numerically may be what's causing trouble. The likelihood function value won't be have a zero gradient at the MLE (unlike what usually happens), because the gradient is always positive.
+
+To see this, I actually have the log-likelihood function given as equation (4) in a recent paper (Using likelihood to test for L?vy flight search patterns and for general power-law distributions in nature, Journal of Animal Ecology 77:1212-1222. If you take that equation and differentiate with respect to a (which I presume is the same as your 'location' parameter), you just get
+
+n (mu - 1) / a  
+
+where n is the sample size and mu>1 is the power-law exponent term (I think the negative of your shape parameter). This derivative is therefore always positive, so does not have a local maximum, and so the maximum likelihood attainable happens when a is as large as possible. However, since a is, by definition, the minimum value of the distribution, the maximum value it can take is the minimum value of your data (since otherwise you would invalidate an assumption of your distribution).  
+
+So if your numerical procedure is looking for a zero gradient of the likelihood function, it won't find it with respect to a, as the gradient is always positive.
+
+3. I'm wondering if the - sign in your line:
+
+> 	density <- -(location+1)*(location^(shape+1))*x^shape
+
+is correct, as I would have thought density should be positive.
+
+I hope this helps. People across several fields have made fitting Pareto distributions much more complicated than it needs to be, but you're on the right track using likelihood. It's just that you can do it analytically, so there's no need for any optimisation. 
+
+Also useful might be: 
+White, E.P., Enquist, B.J., & Green, J.L. (2008) On estimating the exponent of power-law frequency distributions. Ecology, 89, 905-912.
+
+Edwards, A.M. (2011) Overturning conclusions of L?vy flight movement patterns by fishing boats and foraging animals. Ecology, 92(6):1247-1257. 
+
+which both also discuss bounded distributions (which can't be solved analytically).
+
+I hope that this helps,
+
+Andy
+
+-- 
+Dr. Andrew Edwards 
+Andrew.Edwards at dfo-mpo.gc.ca  **NEW** 
+http://www.chebucto.ns.ca/~english 
+
+Pacific Biological Station, 
+Fisheries and Oceans Canada, 
+3190 Hammond Bay Road, 
+Nanaimo, British Columbia, 
+V9T 6N7, Canada. 
+Tel: +1 250-756-7146 
+Fax: +1 250 756-7053 
+
+> ------------------------------
+> 
+> Message: 3
+> Date: Wed, 5 Oct 2011 18:19:46 +0100
+> From: matteo dossena <matteo.dossena at gmail.com>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] trouble in fitting a distirbution
+> Message-ID: <608BF773-D9AA-4CFD-A5C1-2C510ED0344A at gmail.com>
+> Content-Type: text/plain
+> 
+> Hi All,
+> 
+> I'm trying to fit a theoretical distribution to some data, 
+> following the procedure on Bolker's Ecological Models and 
+> Data in R, but I'm having some problem... could someone 
+> please point me out what I'm doing  wrong?
+> 
+> here is the code
+> 
+> #create a random variable 
+> x <- sort(rpareto(100,1,0.5))
+> 
+> #the pdf
+> pdf.pareto <- function(x,location,shape){
+> 	density <- -(location+1)*(location^(shape+1))*x^shape
+> 	return(density)}
+> 
+> #predict the probability according to my pdf
+> y <- pdf.pareto(x,1,0.5)
+> 
+> #check that pdf function does what it should
+> plot(x,y,typ="l")
+> 
+> #the negative log-likelihood function
+> NLL.pareto <- function(location,shape){
+> 	density <- pdf.pareto(x,location,shape)
+> 	-sum(dpareto(density,location=location,shape=shape,log=TRUE))}
+>  
+> #run the optimisation with mle2 to derive the parameters of the pdf
+> fit.pareto <- mle2(NLL.pareto,start=list(location=1,shape=0.5))
+> 
+> 
+> when i run it, I get this message:
+> Error in optim(par = c(1, 0.5), fn = function (p)  : 
+>   initial value in 'vmmin' is not finite
+> 
+> I was almost convinced that the reasoning behind was correct, 
+> and to show it to myself i did the same thing with a less 
+> "exotic" distribution. In that case the code doesn't crash 
+> but the estimate i get are pretty weird...I'm starting to 
+> think that I'm trying to do something totally wrong...  
+> really appreciate any help
+> thanks
+> matteo
+> 
+
+
+From nac37 at cam.ac.uk  Fri Oct  7 16:51:30 2011
+From: nac37 at cam.ac.uk (Dr N.A. Cutler)
+Date: 07 Oct 2011 15:51:30 +0100
+Subject: [R-sig-eco] Multivariate ANOVA/repeated measures
+Message-ID: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>
+
+Dear All,
+
+I have a query about multivariate analysis of community data.
+
+In my experiment, 24 microbial communities in different locations were 
+sampled using Sampling Technique 1 (ST1). A site X species matrix was then 
+derived by molecular analysis.
+
+The same 24 locations were then sampled again using a different sampling 
+technique (ST2) and a second site X species matrix was derived. It is 
+assumed that community structure remains intact after sampling by Technique 
+1 i.e. the two techniques can sample from the same pool of organisms.
+
+I want to compare the results of the two sampling exercises in order to 
+test the performance of the two sampling techniques. My research question 
+is: does Technique 1 produce a similar signal to Technique 2? Or do the 
+different techniques give significantly different pictures of community 
+structure? The null hypotheses is that there is no significant difference 
+between the two sampling techniques i.e. they both capture community 
+structure with the same degree of accuracy.
+
+It occurred to be that I could use a multivariate ANOVA technique (e.g. 
+Adonis) to distinguish between the results of the two sampling exercises, 
+using sampling technique as a factor. But I am not sure how to deal with 
+the obvious correlation between sample pairs. Should this situation be 
+addressed as a repeated measures experiment with two time steps? If so, 
+what is the best technique to use (a mixed model, perhaps?)
+
+Any advice would be gratefully received.
+
+Best wishes,
+
+Nick Cutler
+
+
+From matteo.dossena at gmail.com  Fri Oct  7 17:21:35 2011
+From: matteo.dossena at gmail.com (matteo dossena)
+Date: Fri, 7 Oct 2011 16:21:35 +0100
+Subject: [R-sig-eco] trouble in fitting a distirbution (matteo dossena)
+In-Reply-To: <63F107BCC37AEA49A75FD94AA3E07CB0091EC65D@pacpbsex01.pac.dfo-mpo.ca>
+References: <63F107BCC37AEA49A75FD94AA3E07CB0091EC65D@pacpbsex01.pac.dfo-mpo.ca>
+Message-ID: <FE18F009-BACD-41B0-AB5A-0DF0201EC7C7@gmail.com>
+
+> Thanks Andy, thats really helpful..
+> 
+> I'm moving my first step into MLE, so far i've been using the binning method and fit linear regression using a mixed effect model to derive the average exponent across my replicates, but i'm not very happy with this approach, i need a more accurate way yo estimate the exponent. So i followed White et al 2008 and solved the MLE for mu (or lambda). I'm happy with that.. but my concern, and what's pointed me toward the approach i outlined in the previous post, is once i get the estimate of the exponent of the distribution of my variable for each replicate, would i be doing right if i compare it across treatments, and also i would asses the goodness of my fits?
+> 
+> but as i said I'm a beginner in all this, so i might miss out something rally obvious..i might find the answer in your works...
+> 
+> By the way the way the real data I'm trying to fit the distribution to are actually a body size distributions, which i assume is bounded (if bounded means with a lower and upper limits...actually the distribution i have to fit is a truncated pareto), so as you said can't be solved analytically..
+> but I'll read your papers to make clearer to myself what I'm trying to do, and if you don't mind, let you know how the process goes on..
+> 
+> with regard to point 3, i apologise but there are errors in that line, as what i called location (which actually is a) and shape (which actually is lambda), were messed up the right way would have been 
+> 
+> density <- -(lambda+1)*(a^(lambda+1))*x^lambda
+> 
+> about the minus sign instead is there in the White et al 2007 tab. 1, which is from where i got the function of the PDF... but yes you are right, how can the density be negative...i might got this wrong too
+> 
+> thanks al lot
+> m. 
+
+
+Il giorno 7 Oct 2011, alle ore 01:20, Edwards, Andrew ha scritto:
+
+> Dear Matteo,
+> 
+> I haven't looked into the details of the mle2 code, but three potential issues spring to mind.
+> 
+> 1. It looks like you're trying to find the maximum likelihood estimate (MLE) for each of the two parameters of the Pareto distribution (for which the probability density function is a power-law above some value, call it a, and zero elsewhere). I'll write the probability density function as
+> 
+> f(x) = C x^(- mu), x >= a, where C is the normalisation constant; C = (mu - 1) a^(mu - 1).
+> 
+> The MLEs can be found analytically, you don't need do it numerically. The MLE for mu is just
+> 
+> 1 - n / (n log a - sum (log x_i) )
+> 
+> where x_i are the data with sample size n.
+> 
+> The MLE for a is just the minimum of your x_i.
+> 
+> 2. Trying to estimate the MLE for a numerically may be what's causing trouble. The likelihood function value won't be have a zero gradient at the MLE (unlike what usually happens), because the gradient is always positive.
+> 
+> To see this, I actually have the log-likelihood function given as equation (4) in a recent paper (Using likelihood to test for L?vy flight search patterns and for general power-law distributions in nature, Journal of Animal Ecology 77:1212-1222. If you take that equation and differentiate with respect to a (which I presume is the same as your 'location' parameter), you just get
+> 
+> n (mu - 1) / a  
+> 
+> where n is the sample size and mu>1 is the power-law exponent term (I think the negative of your shape parameter). This derivative is therefore always positive, so does not have a local maximum, and so the maximum likelihood attainable happens when a is as large as possible. However, since a is, by definition, the minimum value of the distribution, the maximum value it can take is the minimum value of your data (since otherwise you would invalidate an assumption of your distribution).  
+> 
+> So if your numerical procedure is looking for a zero gradient of the likelihood function, it won't find it with respect to a, as the gradient is always positive.
+> 
+> 3. I'm wondering if the - sign in your line:
+> 
+>> 	density <- -(location+1)*(location^(shape+1))*x^shape
+> 
+> is correct, as I would have thought density should be positive.
+> 
+> I hope this helps. People across several fields have made fitting Pareto distributions much more complicated than it needs to be, but you're on the right track using likelihood. It's just that you can do it analytically, so there's no need for any optimisation. 
+> 
+> Also useful might be: 
+> White, E.P., Enquist, B.J., & Green, J.L. (2008) On estimating the exponent of power-law frequency distributions. Ecology, 89, 905-912.
+> 
+> Edwards, A.M. (2011) Overturning conclusions of L?vy flight movement patterns by fishing boats and foraging animals. Ecology, 92(6):1247-1257. 
+> 
+> which both also discuss bounded distributions (which can't be solved analytically).
+> 
+> I hope that this helps,
+> 
+> Andy
+> 
+> -- 
+> Dr. Andrew Edwards 
+> Andrew.Edwards at dfo-mpo.gc.ca  **NEW** 
+> http://www.chebucto.ns.ca/~english 
+> 
+> Pacific Biological Station, 
+> Fisheries and Oceans Canada, 
+> 3190 Hammond Bay Road, 
+> Nanaimo, British Columbia, 
+> V9T 6N7, Canada. 
+> Tel: +1 250-756-7146 
+> Fax: +1 250 756-7053 
+> 
+>> ------------------------------
+>> 
+>> Message: 3
+>> Date: Wed, 5 Oct 2011 18:19:46 +0100
+>> From: matteo dossena <matteo.dossena at gmail.com>
+>> To: r-sig-ecology at r-project.org
+>> Subject: [R-sig-eco] trouble in fitting a distirbution
+>> Message-ID: <608BF773-D9AA-4CFD-A5C1-2C510ED0344A at gmail.com>
+>> Content-Type: text/plain
+>> 
+>> Hi All,
+>> 
+>> I'm trying to fit a theoretical distribution to some data, 
+>> following the procedure on Bolker's Ecological Models and 
+>> Data in R, but I'm having some problem... could someone 
+>> please point me out what I'm doing  wrong?
+>> 
+>> here is the code
+>> 
+>> #create a random variable 
+>> x <- sort(rpareto(100,1,0.5))
+>> 
+>> #the pdf
+>> pdf.pareto <- function(x,location,shape){
+>> 	density <- -(location+1)*(location^(shape+1))*x^shape
+>> 	return(density)}
+>> 
+>> #predict the probability according to my pdf
+>> y <- pdf.pareto(x,1,0.5)
+>> 
+>> #check that pdf function does what it should
+>> plot(x,y,typ="l")
+>> 
+>> #the negative log-likelihood function
+>> NLL.pareto <- function(location,shape){
+>> 	density <- pdf.pareto(x,location,shape)
+>> 	-sum(dpareto(density,location=location,shape=shape,log=TRUE))}
+>> 
+>> #run the optimisation with mle2 to derive the parameters of the pdf
+>> fit.pareto <- mle2(NLL.pareto,start=list(location=1,shape=0.5))
+>> 
+>> 
+>> when i run it, I get this message:
+>> Error in optim(par = c(1, 0.5), fn = function (p)  : 
+>>  initial value in 'vmmin' is not finite
+>> 
+>> I was almost convinced that the reasoning behind was correct, 
+>> and to show it to myself i did the same thing with a less 
+>> "exotic" distribution. In that case the code doesn't crash 
+>> but the estimate i get are pretty weird...I'm starting to 
+>> think that I'm trying to do something totally wrong...  
+>> really appreciate any help
+>> thanks
+>> matteo
+>> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From dvrbts at ecology.msu.montana.edu  Mon Oct 10 17:47:35 2011
+From: dvrbts at ecology.msu.montana.edu (Dave Roberts)
+Date: Mon, 10 Oct 2011 09:47:35 -0600
+Subject: [R-sig-eco] Multivariate ANOVA/repeated measures
+In-Reply-To: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>
+References: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>
+Message-ID: <4E931397.3040200@ecology.msu.montana.edu>
+
+
+
+On 10/07/2011 08:51 AM, Dr N.A. Cutler wrote:
+> Dear All,
+>
+> I have a query about multivariate analysis of community data.
+>
+> In my experiment, 24 microbial communities in different locations were
+> sampled using Sampling Technique 1 (ST1). A site X species matrix was
+> then derived by molecular analysis.
+>
+> The same 24 locations were then sampled again using a different sampling
+> technique (ST2) and a second site X species matrix was derived. It is
+> assumed that community structure remains intact after sampling by
+> Technique 1 i.e. the two techniques can sample from the same pool of
+> organisms.
+>
+> I want to compare the results of the two sampling exercises in order to
+> test the performance of the two sampling techniques. My research
+> question is: does Technique 1 produce a similar signal to Technique 2?
+> Or do the different techniques give significantly different pictures of
+> community structure? The null hypotheses is that there is no significant
+> difference between the two sampling techniques i.e. they both capture
+> community structure with the same degree of accuracy.
+>
+> It occurred to be that I could use a multivariate ANOVA technique (e.g.
+> Adonis) to distinguish between the results of the two sampling
+> exercises, using sampling technique as a factor. But I am not sure how
+> to deal with the obvious correlation between sample pairs. Should this
+> situation be addressed as a repeated measures experiment with two time
+> steps? If so, what is the best technique to use (a mixed model, perhaps?)
+>
+> Any advice would be gratefully received.
+>
+> Best wishes,
+>
+> Nick Cutler
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+Nick,
+
+    I would try something pretty direct.  Any appeal to differences in 
+dissimilarities confounds the effects with the particular 
+dissimilarity/distance matrix you use.  Assuming the samples and species 
+are in the same order, and that the data.frames are the same size, you 
+might try
+
+ > actual <- sum((ST1-ST2)^2)
+
+and then permute one of the two matrices numerous times
+
+res <- rep(NA,999)
+for (i in 1:999) {
+      res[i] <- sum((ST1-ST2[sample(1:nrow(ST2),replace=FALSE),])^2)
+}
+final <- (sum(res <= actual) + 1)/1000
+
+and see what fraction of the permuted matrices are as similar.
+
+Hopefully Gavin will weigh in with a better randomization.
+
+    If you do go with a multivariate approach I might try a procrustes 
+analysis of PCO ordinations.
+
+Dave
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+David W. Roberts                                     office 406-994-4548
+Professor and Head                                      FAX 406-994-3190
+Department of Ecology                         email droberts at montana.edu
+Montana State University
+Bozeman, MT 59717-3460
+
+
+From rshepard at appl-ecosys.com  Mon Oct 10 18:11:07 2011
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 10 Oct 2011 09:11:07 -0700 (PDT)
+Subject: [R-sig-eco] Multivariate ANOVA/repeated measures
+In-Reply-To: <4E931397.3040200@ecology.msu.montana.edu>
+References: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>
+	<4E931397.3040200@ecology.msu.montana.edu>
+Message-ID: <alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>
+
+On Mon, 10 Oct 2011, Dave Roberts wrote:
+
+>> I want to compare the results of the two sampling exercises in order to
+>> test the performance of the two sampling techniques.
+
+>   I would try something pretty direct. Any appeal to differences in
+> dissimilarities confounds the effects with the particular
+> dissimilarity/distance matrix you use. Assuming the samples and species
+> are in the same order, and that the data.frames are the same size, you
+> might try
+
+   I did not read the original message, so I hope you'll allow me to join the
+thread. My recommendation is to use univariate tree models, particularly a
+classification tree (for ordinal explanatory variables; i.e., ST1 and ST2).
+
+   This is fully, carefully, and non-technically explained in Chapter 9
+(particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith "Analysing
+Ecological Data." For that matter, I highly recommend reading the whole
+book.
+
+Rich
+
+
+From gavin.simpson at ucl.ac.uk  Mon Oct 10 22:15:23 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Mon, 10 Oct 2011 21:15:23 +0100
+Subject: [R-sig-eco] Multivariate ANOVA/repeated measures
+In-Reply-To: <alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>
+References: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>
+	<4E931397.3040200@ecology.msu.montana.edu>
+	<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>
+Message-ID: <1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:
+> On Mon, 10 Oct 2011, Dave Roberts wrote:
+> 
+> >> I want to compare the results of the two sampling exercises in order to
+> >> test the performance of the two sampling techniques.
+> 
+> >   I would try something pretty direct. Any appeal to differences in
+> > dissimilarities confounds the effects with the particular
+> > dissimilarity/distance matrix you use. Assuming the samples and species
+> > are in the same order, and that the data.frames are the same size, you
+> > might try
+> 
+>    I did not read the original message, so I hope you'll allow me to join the
+> thread. My recommendation is to use univariate tree models, particularly a
+> classification tree (for ordinal explanatory variables; i.e., ST1 and ST2).
+
+But the response here is *multivariate* - of course, one could use Glen
+De'Ath's multivariate regression trees (despite the name it is really a
+constrained clustering/classification) - but I think there are better
+ways of solving this particular problem. And unless one has many 100s of
+observations, the model will need some sort of variance reduction
+applied (via bagging, or some such) as the one fitted model is
+potentially highly unstable.
+
+G
+
+>    This is fully, carefully, and non-technically explained in Chapter 9
+> (particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith "Analysing
+> Ecological Data." For that matter, I highly recommend reading the whole
+> book.
+> 
+> Rich
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From dvrbts at ecology.msu.montana.edu  Mon Oct 10 23:32:45 2011
+From: dvrbts at ecology.msu.montana.edu (Dave Roberts)
+Date: Mon, 10 Oct 2011 15:32:45 -0600
+Subject: [R-sig-eco] Multivariate ANOVA/repeated measures
+In-Reply-To: <1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>
+References: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>	<4E931397.3040200@ecology.msu.montana.edu>	<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>
+	<1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <4E93647D.8070901@ecology.msu.montana.edu>
+
+
+
+On 10/10/2011 02:15 PM, Gavin Simpson wrote:
+> On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:
+>> On Mon, 10 Oct 2011, Dave Roberts wrote:
+>>
+>>>> I want to compare the results of the two sampling exercises in order to
+>>>> test the performance of the two sampling techniques.
+>>
+>>>    I would try something pretty direct. Any appeal to differences in
+>>> dissimilarities confounds the effects with the particular
+>>> dissimilarity/distance matrix you use. Assuming the samples and species
+>>> are in the same order, and that the data.frames are the same size, you
+>>> might try
+>>
+>>     I did not read the original message, so I hope you'll allow me to join the
+>> thread. My recommendation is to use univariate tree models, particularly a
+>> classification tree (for ordinal explanatory variables; i.e., ST1 and ST2).
+>
+> But the response here is *multivariate* - of course, one could use Glen
+> De'Ath's multivariate regression trees (despite the name it is really a
+> constrained clustering/classification) - but I think there are better
+> ways of solving this particular problem. And unless one has many 100s of
+> observations, the model will need some sort of variance reduction
+> applied (via bagging, or some such) as the one fitted model is
+> potentially highly unstable.
+>
+> G
+>
+>>     This is fully, carefully, and non-technically explained in Chapter 9
+>> (particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith "Analysing
+>> Ecological Data." For that matter, I highly recommend reading the whole
+>> book.
+>>
+>> Rich
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+It would be fairly simple to boil down to a univariate question.  You 
+could do something as simple as a paired t-test of plot-level species 
+richness or the number of individuals sampled (to compare sampling 
+efficiency), but I still don't see an independent and a dependent variable.
+
+Dave
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+David W. Roberts                                     office 406-994-4548
+Professor and Head                                      FAX 406-994-3190
+Department of Ecology                         email droberts at montana.edu
+Montana State University
+Bozeman, MT 59717-3460
+
+
+From gavin.simpson at ucl.ac.uk  Tue Oct 11 00:11:10 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Mon, 10 Oct 2011 23:11:10 +0100
+Subject: [R-sig-eco] Multivariate ANOVA/repeated measures
+In-Reply-To: <4E93647D.8070901@ecology.msu.montana.edu>
+References: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>
+	<4E931397.3040200@ecology.msu.montana.edu>
+	<alpine.LNX.2.00.1110100906160.11484@salmo.appl-ecosys.com>
+	<1318277723.2739.4.camel@chrysothemis.geog.ucl.ac.uk>
+	<4E93647D.8070901@ecology.msu.montana.edu>
+Message-ID: <1318284670.2739.29.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Mon, 2011-10-10 at 15:32 -0600, Dave Roberts wrote:
+> 
+> On 10/10/2011 02:15 PM, Gavin Simpson wrote:
+> > On Mon, 2011-10-10 at 09:11 -0700, Rich Shepard wrote:
+> >> On Mon, 10 Oct 2011, Dave Roberts wrote:
+> >>
+> >>>> I want to compare the results of the two sampling exercises in order to
+> >>>> test the performance of the two sampling techniques.
+> >>
+> >>>    I would try something pretty direct. Any appeal to differences in
+> >>> dissimilarities confounds the effects with the particular
+> >>> dissimilarity/distance matrix you use. Assuming the samples and species
+> >>> are in the same order, and that the data.frames are the same size, you
+> >>> might try
+> >>
+> >>     I did not read the original message, so I hope you'll allow me to join the
+> >> thread. My recommendation is to use univariate tree models, particularly a
+> >> classification tree (for ordinal explanatory variables; i.e., ST1 and ST2).
+> >
+> > But the response here is *multivariate* - of course, one could use Glen
+> > De'Ath's multivariate regression trees (despite the name it is really a
+> > constrained clustering/classification) - but I think there are better
+> > ways of solving this particular problem. And unless one has many 100s of
+> > observations, the model will need some sort of variance reduction
+> > applied (via bagging, or some such) as the one fitted model is
+> > potentially highly unstable.
+> >
+> > G
+> >
+> >>     This is fully, carefully, and non-technically explained in Chapter 9
+> >> (particularly Sections 9.3 and 9.4) in Zuur, Ieno, and Smith "Analysing
+> >> Ecological Data." For that matter, I highly recommend reading the whole
+> >> book.
+> >>
+> >> Rich
+> >>
+> >> _______________________________________________
+> >> R-sig-ecology mailing list
+> >> R-sig-ecology at r-project.org
+> >> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> 
+> It would be fairly simple to boil down to a univariate question.  You 
+> could do something as simple as a paired t-test of plot-level species 
+> richness or the number of individuals sampled (to compare sampling 
+> efficiency), but I still don't see an independent and a dependent variable.
+> 
+> Dave
+
+Indeed, but species richness is quite a different "comparison" of the
+two sampling strategies. The original Q was quite broad so might be what
+the OP wants.
+
+The predictor would be the sampling strategy I guess - can you
+explain/cluster the data on the basis of sampling strategy?
+
+Compositionally, adonis() would seem to be an appropriate technique here
+- it would be effectively a multivariate t-test - and would test if the
+multivariate centroids of the species compositions in the two samples
+are similar or not (difference of centroids is 0). Of course, if that
+Null is rejected, you must test if the difference in centroids is due to
+a difference in multivariate dispersions (the spread of the points about
+the centroid), which can be done via betadisper().
+
+The issue I'm still thinking about is the permutation - at first look,
+your randomisation seems appropriate, especially if the two sampling
+strategies can be considered random sampling methods - i.e. all sites
+have equal chance of being selected, /and/ that there is no underlying
+clustering in the population that should be respected.
+
+The Null hypothesis seems to be that ST1 and ST2 are just two random
+samples of some population of species composition/samples that would
+arise if you did lots of sampling using ST2.
+
+G
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From gavin.simpson at ucl.ac.uk  Tue Oct 11 13:54:12 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 11 Oct 2011 12:54:12 +0100
+Subject: [R-sig-eco] Multivariate ANOVA/repeated measures
+In-Reply-To: <4E931397.3040200@ecology.msu.montana.edu>
+References: <Prayer.1.3.4.1110071551300.4015@hermes-2.csi.cam.ac.uk>
+	<4E931397.3040200@ecology.msu.montana.edu>
+Message-ID: <1318334052.22039.44.camel@prometheus.geog.ucl.ac.uk>
+
+On Mon, 2011-10-10 at 09:47 -0600, Dave Roberts wrote:
+</ snip>
+> 
+> Nick,
+> 
+>     I would try something pretty direct.  Any appeal to differences in 
+> dissimilarities confounds the effects with the particular 
+> dissimilarity/distance matrix you use.  Assuming the samples and species 
+> are in the same order, and that the data.frames are the same size, you 
+> might try
+> 
+>  > actual <- sum((ST1-ST2)^2)
+> 
+> and then permute one of the two matrices numerous times
+> 
+> res <- rep(NA,999)
+> for (i in 1:999) {
+>       res[i] <- sum((ST1-ST2[sample(1:nrow(ST2),replace=FALSE),])^2)
+> }
+> final <- (sum(res <= actual) + 1)/1000
+> 
+> and see what fraction of the permuted matrices are as similar.
+> 
+> Hopefully Gavin will weigh in with a better randomization.
+
+I guess it does depend on what is exchangeable under the Null
+Hypothesis? I suppose that technically, we should condition the
+permutation on the 24 sampling locations. Under the Null, we are
+assuming that ST1 and ST2 are equivalent and therefore drawn from the
+same population of samples that doing lots of ST2 sampling would produce
+if it were repeated many times. However, the samples from an individual
+location are not necessarily exchangeable between locations; we need to
+respect the clustering inherent in the data.
+
+If the samples for ST1 were collected at the same time, and the ones for
+ST2 were also collected together at another time point, we could be very
+pedantic and say that all sampling locations "experienced" the same
+"time" process and that we have to use the same permutation in each
+sampling location. That would suck as then you would only have two valid
+permutations; the observed one and the samples in the other order. So we
+could perhaps relax that assumption... or give up now :-)
+
+Anyway - if you want to condition the permutation on the sampling
+locations in adonis(), include that as a factor via the `strata`
+argument and the permutation test will put the samples in random order
+within sampling location but allow for different ordering (ST1 then ST2,
+or ST2 then ST1) within each location during each permutation. To my
+mind this does capture the proposed Null; ST1 and ST2 are exchangeable
+as we are testing the hypothesis that they are from the same population,
+but samples are not exchangeable between sampling locations as we have
+repeated measures.
+
+>     If you do go with a multivariate approach I might try a procrustes 
+> analysis of PCO ordinations.
+
+That is a good suggestion, Dave. I would add that this will test the
+similarity of the configuration of points in ordination space. adonis()
+will test if the two sampling methods are drawn from populations with
+the same mean species "composition". These are two different aspects of
+the problem. I would probably try both i) adonis() and ii) separate
+ordinations of the ST1 and ST2 species matrices followed by a procrustes
+rotation of the two configurations - see ?procrustes for the latter.
+both need the `strata` argument supplying to get the correct NULL.
+
+> Dave
+
+G
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From winnie56100 at 163.com  Wed Oct 12 05:38:48 2011
+From: winnie56100 at 163.com (=?GBK?B?yfLTwg==?=)
+Date: Wed, 12 Oct 2011 11:38:48 +0800 (CST)
+Subject: [R-sig-eco] K function
+Message-ID: <7947b90f.12eb7.132f636091a.Coremail.winnie56100@163.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/edd4c35b/attachment.pl>
+
+From lsrzggod at gmail.com  Wed Oct 12 05:44:00 2011
+From: lsrzggod at gmail.com (=?gb2312?B?wfXLt8jm?=)
+Date: Wed, 12 Oct 2011 11:44:00 +0800
+Subject: [R-sig-eco] How can get P value of regression tree and LOWESS in R.
+Message-ID: <201110121143570303639@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/787baf59/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Wed Oct 12 10:41:41 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 12 Oct 2011 09:41:41 +0100
+Subject: [R-sig-eco] How can get P value of regression tree and LOWESS
+ in R.
+In-Reply-To: <201110121143570303639@gmail.com>
+References: <201110121143570303639@gmail.com>
+Message-ID: <1318408901.24607.7.camel@prometheus.geog.ucl.ac.uk>
+
+On Wed, 2011-10-12 at 11:44 +0800, ??? wrote:
+> Dear all,
+> I want to use Regression tree and Lowess methods for calculating
+> ecological threshold. but I don't know that what codes did I use to
+> get P value. 
+> Thanks for your time, best wishes. 
+
+Regression trees, in the spirit of the CART book by Breiman et al, are
+available in recommended package rpart. It doesn't give p-values, but
+rather focusses on building the best model from a set of features as
+measured by some concept of deviance (MSE). This predictive ability is
+assessed via k-fold cross-validation during fitting or an independent
+test set.
+
+If you want p-values here, and know what conditional inference trees
+are, then try the party package.
+
+LO[W]?ESS is available in lowess() or loess() (the latter is more modern
+and feature-rich). Again, these don't give p-values
+
+If you want p-values here, perhaps try the additive model framework in
+recommended package mgcv or package gam. The latter can include loess
+smooths but mgcv contains a better suite of functions for fitting GAMs.
+
+That said - it all you are interested in are the p-values, then I might
+suggest you find interest in some other aspects of the
+modelling/statistics. Plugging data into these techniques to churn out
+p-values is a recipe for getting bitten.
+
+G
+
+> 
+> 2011-10-12 
+> 
+> 
+> 
+> ?
+> ????
+> ???
+> ????
+>  ? ?1 
+> 
+>  
+> Liu Shouru
+> Department of Entomology
+> Nanjing Agricultural University
+> Nanjing, Jiangsu Province 210095
+> P. R. China
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From marcelino.delacruz at upm.es  Wed Oct 12 11:23:15 2011
+From: marcelino.delacruz at upm.es (marcelino.delacruz at upm.es)
+Date: Wed, 12 Oct 2011 10:23:15 +0100
+Subject: [R-sig-eco] K function
+In-Reply-To: <7947b90f.12eb7.132f636091a.Coremail.winnie56100@163.com>
+Message-ID: <mvthPK9i.1318411395.0197430.marcelino.delacruz@upm.es>
+
+Hi Yong,
+
+You are talking about two different things.
+
+Usually, analyzing the spatial pattern of tree mortality involves testing
+against the random labeling  hypothesis (i.e., testing against random
+mortality). For this you should go through the following steps:
+
+1) build a marked point pattern, e.g.,
+
+trees <- ppp(x= yourXcoordinates, y=yourYcoordinates,
+marks=yourmortalitydata, window=yourwindow)
+
+The mortality data should be a factor with two levels like yes/no,
+dead/alive, etc.
+
+2)Compute a summary statistics (e.g. the K-cross function, although you
+could use the simple K-function with more scripting) and compute
+envelopes simulating from the random labelling null model:
+
+mortality.test <- envelope(trees, Kcross, i="death", j="alive",
+nsim=99, simulation=expression(rlabel(trees)))
+
+The important thing for your test here is the simulation that you get
+with the rlabel function
+
+3) plot the results, e.g.
+
+plot(mortality.test, sqrt(./pi)-r~r, ylabel=expression(L[d,a](r)))
+
+I published some "new" approaches for testing spatial patterns of
+mortality in a paper in Ecography (2008) and included some functions for
+this  in the R package "ecespa" (for example functions K012 and K1K2)
+that you may also consider.
+
+To "test" the patterns of tree recruitment, it depends on the
+hypotehsis that you want to test. The old one was the CSR hipothesis,
+just
+
+envelope (recruitedtrees, Kest)
+
+but this is not much informative.
+
+HTH,
+
+Marcelino
+
+
+
+Con fecha 12/10/2011, "????" <winnie56100 at 163.com> escribi?:
+
+>Hi all,
+>  I have a question for using the K  function (package "spatstat", spatial pattern), I want to test the spatial pattern of mortality tree using K function, is it the same as testing the spatial pattern of tree? Random simulation by removing the points which number is equal to the mortality tree from the original data set, are there any functions can implement this analysis? Or I should write a programming to perform it? And if I want to test the spatial pattern of recruitment tree, how to perform that? Thank you very much!
+>Best wishes!
+>                                                                                                                                                         Yong
+>	[[alternative HTML version deleted]]
+>
+>_______________________________________________
+>R-sig-ecology mailing list
+>R-sig-ecology at r-project.org
+>https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From villers.alexandre at gmail.com  Wed Oct 12 12:39:22 2011
+From: villers.alexandre at gmail.com (Alexandre Villers)
+Date: Wed, 12 Oct 2011 13:39:22 +0300
+Subject: [R-sig-eco] number of pixels in a circular window for GRASS
+	r.neighbors function
+Message-ID: <4E956E5A.20009@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111012/c200e17d/attachment.pl>
+
+From cparker at pdx.edu  Wed Oct 12 15:40:34 2011
+From: cparker at pdx.edu (cparker at pdx.edu)
+Date: Wed, 12 Oct 2011 06:40:34 -0700
+Subject: [R-sig-eco] number of pixels in a circular window for GRASS
+	r.neighbors function
+In-Reply-To: <4E956E5A.20009@gmail.com>
+References: <4E956E5A.20009@gmail.com>
+Message-ID: <7CAD6F5F-43D7-41A9-9647-AFE1EA36F90B@pdx.edu>
+
+I am going out on a limb here as I have never uses this function but based on what you wrote you could probably just change function=sum to function=mean. I am assuming (based on what you said) that the function (r.neighbors) imposes the condition first (eg x==1) and then sums the resulting 0s and 1s to get the number equal to 1. If that's the case you can change sum to mean to get the proportion. 
+
+
+
+On Oct 12, 2011, at 3:39 AM, Alexandre Villers <villers.alexandre at gmail.com> wrote:
+
+> Dear list,
+> 
+> I have calculated the number of pixels whose value=1 for different radii 
+> using the r.neighbors function (method= circular, function=sum). I would 
+> like to compute the proportion of cells with this value and for that,  
+> I'm trying to figure out the effective number of pixels that are used 
+> for each radius. From the documentation 
+> <http://grass.osgeo.org/gdp/html_grass64/r.neighbors.html>, above a 
+> diameter of d = 9 cells, the result seems to be d^2-  4 * (d-1)  cells 
+> but I was wondering if someone could confirm this to me? Is this 
+> relationship conserved for larger diameter.
+> 
+> Thanks for any hint
+> 
+> Alexandre
+> 
+> 
+> P.S.: I already posted this message on the Grass stats list but maybe I 
+> wasn't clear enough and as a result didn't get any answer
+> 
+>    [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From m.c.zwart at newcastle.ac.uk  Thu Oct 13 12:20:37 2011
+From: m.c.zwart at newcastle.ac.uk (Maria Zwart)
+Date: Thu, 13 Oct 2011 11:20:37 +0100
+Subject: [R-sig-eco] adehabitat: GNESFA - first and last axes
+Message-ID: <54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>
+
+Dear list,
+
+I am looking at habitat selection in chaffinches with point data (type I study).
+I am trying to do the GNESFA (package adehabitatHS). All goes well up to where the function asks to choose the number of first and last axes. Although there is some information about this in the supplied manual supplied by the package (see below), my knowledge of the function is not enough to be able to understand which axes to choose.
+
+"The first axes correspond to the directions where the utilization distribution as a whole is the furthest from the centroid of the availability distribution (these directions often correspond to directions where the marginality is strong; i.e. the criterion y1 defined previously is maximized). The last axes correspond to the directions where the width of the utilization distribution is the smallest relative to the width of the availability distribution (these directions often correspond to directions where the specialization is strong, i.e. the criterion y1 defined previously is minimized)."
+
+Attached are the eigenvalues plots that I get. My interpertation is that for the first axes I have to choose 3, because after that there is a huge drop. And for the last axes I choose 16, because there is an increase there. The results indicate that they select coniferous woodland and mixed woodland, which makes sense since chaffinches are usually found in those habitats. Any advice is greatly appreciated!
+
+Code:
+cp <- count.points(locs, towlaw_spdf) #locs are the coordinates of the locations where the chaffinches are. towlaw_spdf is a SpatialPixelsDataFrame, a map with the different habitat variables.
+tab <- slot(towlaw_spdf, "data")
+pr <- slot(cp, "data")[, 1]
+histniche(tab, pr)
+pc <- dudi.pca(tab, scannf = FALSE)
+gn <- gnesfa(pc, Focus = pr)
+
+Many thanks,
+
+Mieke
+Maria Zwart
+PhD student
+Room 4.65
+School of Biology
+Ridley 2
+Newcastle University
+Newcastle upon Tyne
+NE1 7RU
+United Kingdom
+
+From samirabei at mans.edu.eg  Fri Oct 14 20:22:59 2011
+From: samirabei at mans.edu.eg (Sami Rabei)
+Date: Fri, 14 Oct 2011 11:22:59 -0700 (PDT)
+Subject: [R-sig-eco] TWINSPAN file format
+Message-ID: <1318616579468-6893550.post@n2.nabble.com>
+
+Dear All
+
+All my greeting for the all.
+
+Can any one show and send me how I can use TWINSPAN which include : 
+
+          1 : input file format
+          2 : analysis
+          3 : output interpretation
+
+I have the program
+
+TWINSPAN 
+WinTWINS 
+
+ 
+Thanks in advance
+
+all the best
+
+sami
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/TWINSPAN-file-format-tp6893550p6893550.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From gavin.simpson at ucl.ac.uk  Fri Oct 14 20:30:10 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Fri, 14 Oct 2011 19:30:10 +0100
+Subject: [R-sig-eco] TWINSPAN file format
+In-Reply-To: <1318616579468-6893550.post@n2.nabble.com>
+References: <1318616579468-6893550.post@n2.nabble.com>
+Message-ID: <1318617010.2750.1.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Fri, 2011-10-14 at 11:22 -0700, Sami Rabei wrote:
+> Dear All
+> 
+> All my greeting for the all.
+> 
+> Can any one show and send me how I can use TWINSPAN which include : 
+> 
+>           1 : input file format
+>           2 : analysis
+>           3 : output interpretation
+> 
+> I have the program
+> 
+> TWINSPAN 
+> WinTWINS 
+
+This *is* a list for R, not WinTwins nor Twinspan.
+
+Invariably they take cornel formatted files, e.g. cornel condensed
+formats. As for the other two Q, that is beyond the scope of a mailing
+list dedicated to the use of R in ecology.
+
+G
+
+>  
+> Thanks in advance
+> 
+> all the best
+> 
+> sami
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/TWINSPAN-file-format-tp6893550p6893550.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From mspinola10 at gmail.com  Sat Oct 15 01:09:56 2011
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Fri, 14 Oct 2011 17:09:56 -0600
+Subject: [R-sig-eco] Predict with 2 factors in an additive model
+Message-ID: <CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111014/0125e802/attachment.pl>
+
+From cparker at pdx.edu  Sat Oct 15 02:50:37 2011
+From: cparker at pdx.edu (cparker at pdx.edu)
+Date: Fri, 14 Oct 2011 17:50:37 -0700
+Subject: [R-sig-eco] Predict with 2 factors in an additive model
+In-Reply-To: <CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>
+References: <CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>
+Message-ID: <E120E5F1-7025-42BC-ACB3-830E3E576437@pdx.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111014/5128f2da/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Sat Oct 15 11:06:11 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Sat, 15 Oct 2011 10:06:11 +0100
+Subject: [R-sig-eco] Predict with 2 factors in an additive model
+In-Reply-To: <CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>
+References: <CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>
+Message-ID: <1318669571.2794.1.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Fri, 2011-10-14 at 17:09 -0600, Manuel Sp?nola wrote:
+> Dear list members,
+> 
+> I have an additive linear model (see below fro a reproducible example) and I
+> want to use the function "predict" to have the value of the response
+> variable for each level of factor f1 and each level of factor f2 in the
+> additive model (not interaction). When I did predict I only get 2 values.
+
+Because there are only two rows in `newdata`! If you want f1-a with f2-a
+and f1-a with f2-b, and f1-b with f2-a and f1-b with f2-b, that
+necessitates four rows in `newdata` to contain the combinations.
+
+G
+
+> y=rnorm(40,1,1)
+> 
+> f1=c(rep("a",20),rep("b",20))
+> f2=c(rep("a",10),rep("b",10),rep("a",10),rep("b",10))
+> 
+> data=data.frame(y,f1,f2)
+> 
+> mod1 = lm(y ~ f1 + f2, data=data)
+> 
+> summary(mod1)
+> 
+> newData = data.frame(f1 = factor(c("a", "b")), f2 = factor(c("b", "a")))
+> 
+> > predict(mod1, newdata = newData, appendData  =  TRUE)
+>         1         2
+> 1.0460148 0.9468983
+> 
+> Thank you very much in advance.
+> 
+> Best,
+> 
+> Manuel
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From jradinger at gmx.at  Sun Oct 16 13:45:19 2011
+From: jradinger at gmx.at (Johannes Radinger)
+Date: Sun, 16 Oct 2011 13:45:19 +0200
+Subject: [R-sig-eco] Calculate Prediction Interval for Regression by hand...
+In-Reply-To: <54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>
+References: <54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>
+Message-ID: <C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>
+
+Hi UseRs,
+
+I calculated with lm(Y~X1+X2) successfully a linear regression.
+Based on this linear regression with multiple independent variables
+I'd like to calculate manually prediction intervals. Therefore I have a few
+questions:
+
+1) I want a prediction interval for Y (like Y+-PI) for a given value
+for X1 and X2.
+2) I want to calculate the predicition intervall for Y by hand (either
+with the mathematical functions of R or with python etc.
+
+So I think I have to extract the prediction interval for the single
+regression parameters (intercept and slopes) from the lm model.
+
+I tried to google for a simple solution but wasn't succesfully yet.
+I think following link: Prediction interval in Regression analysis explains very well
+what I want to do.
+
+There it says: "...one may use the standard error of the estimates for the intercept and slope ( and ) to compute a prediction interval". So is that the right approach?
+If yes how can I get the standard error for a and b and which formula
+has to used for the calculation?
+
+
+Thank you very much in advance
+
+Have a nice sunday!
+
+cheers
+Johannes
+
+
+From chris at trickysolutions.com.au  Mon Oct 17 01:36:35 2011
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Mon, 17 Oct 2011 10:36:35 +1100
+Subject: [R-sig-eco] Calculate Prediction Interval for Regression by
+	hand...
+In-Reply-To: <C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>
+References: <54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>
+	<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>
+Message-ID: <b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>
+
+Hi Johannes,
+
+predict() will give u SE's and confidence intervals.
+
+U can either use the original data as an input and get a prediction for
+all the original data points. Or create an input data set and get
+predictions for them.
+
+If your doing an ANOVA type analysis with discrete factors I often use
+expand.grid to quickly get a matrix for all combinations. So something
+like this
+(predict.ci <- data.frame(expand.grid(model$xlevels), predict(model,
+expand.grid(model$xlevels), interval="conf")))
+
+
+There's also confint() which is for single parameters.
+
+
+Chris Howden B.Sc. (Hons) GStat.
+Founding Partner
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(fax) +612 4782 9023
+chris at trickysolutions.com.au
+
+
+
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Johannes
+Radinger
+Sent: Sunday, 16 October 2011 10:45 PM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Calculate Prediction Interval for Regression by
+hand...
+
+Hi UseRs,
+
+I calculated with lm(Y~X1+X2) successfully a linear regression.
+Based on this linear regression with multiple independent variables
+I'd like to calculate manually prediction intervals. Therefore I have a
+few
+questions:
+
+1) I want a prediction interval for Y (like Y+-PI) for a given value
+for X1 and X2.
+2) I want to calculate the predicition intervall for Y by hand (either
+with the mathematical functions of R or with python etc.
+
+So I think I have to extract the prediction interval for the single
+regression parameters (intercept and slopes) from the lm model.
+
+I tried to google for a simple solution but wasn't succesfully yet.
+I think following link: Prediction interval in Regression analysis
+explains very well
+what I want to do.
+
+There it says: "...one may use the standard error of the estimates for the
+intercept and slope ( and ) to compute a prediction interval". So is that
+the right approach?
+If yes how can I get the standard error for a and b and which formula
+has to used for the calculation?
+
+
+Thank you very much in advance
+
+Have a nice sunday!
+
+cheers
+Johannes
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From chris at trickysolutions.com.au  Mon Oct 17 01:47:08 2011
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Mon, 17 Oct 2011 10:47:08 +1100
+Subject: [R-sig-eco] Predict with 2 factors in an additive model
+In-Reply-To: <E120E5F1-7025-42BC-ACB3-830E3E576437@pdx.edu>
+References: <CABkCotQHqantf=VCJSBEm38FpZv_iXKNsgivtdx1hNhE2hj_sw@mail.gmail.com>
+	<E120E5F1-7025-42BC-ACB3-830E3E576437@pdx.edu>
+Message-ID: <f8d189fb32fd84b16682ec7ae1e9e61f@mail.gmail.com>
+
+Expand.grid() is also an easy way to get all the different combination for
+input factors.
+
+Chris Howden B.Sc. (Hons) GStat.
+Founding Partner
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(fax) +612 4782 9023
+chris at trickysolutions.com.au
+
+
+
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of cparker at pdx.edu
+Sent: Saturday, 15 October 2011 11:51 AM
+To: Manuel Sp?nola
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Predict with 2 factors in an additive model
+
+Try this
+
+newData = data.frame(f1 = factor(c("a","a","b","b")), f2 = factor(c("b",
+"a","b","a")))
+
+And use that newData in your predict statement
+
+On Oct 14, 2011, at 4:09 PM, Manuel SpC-nola <mspinola10 at gmail.com> wrote:
+
+> newData = data.frame(f1 = factor(c("a", "b")), f2 = factor(c("b", "a")))
+
+	[[alternative HTML version deleted]]
+
+
+From JRadinger at gmx.at  Mon Oct 17 10:59:42 2011
+From: JRadinger at gmx.at (Johannes Radinger)
+Date: Mon, 17 Oct 2011 10:59:42 +0200
+Subject: [R-sig-eco] Calculate Prediction Interval for Regression by
+ hand...
+In-Reply-To: <b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>
+References: <54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>
+	<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>
+	<b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>
+Message-ID: <20111017085942.99510@gmx.net>
+
+Hi again,
+
+thank you all for you tips with predict, predict.lm etc.
+>From summary(lm-model), I can get the Estimate and the Standard
+Error for intercept and slopes. With confint I can get confidence
+intervals (?) for these parameters for different levels.
+
+I want to calculate it by hand, rather then by using R's predict
+function, due to some reasons:
+
+1) I want to get the mathematical background
+2) I want to use it in a model outside of grass (python-model, and
+I don't want to use a direct interaction python-R)
+3) I want to calculate it with simple programming languages (e.g. simplest form of basic etc.)
+
+In wikipedia it says that it is possible to calculate the prediction interval from the standard error of the parameters. So how is that done exactly? Can anyone guide me to the formula? Or is it just 
+
+Y=b+Intercept + (a1+SE(a1))*X1+(a2+SE(a2)*X2 (of course with all variations in plus and minus SE)?
+
+Your help is greatly appreciated!
+
+/johannes
+
+-------- Original-Nachricht --------
+> Datum: Mon, 17 Oct 2011 10:36:35 +1100
+> Von: Chris Howden <chris at trickysolutions.com.au>
+> An: Johannes Radinger <jradinger at gmx.at>, r-sig-ecology at r-project.org
+> Betreff: RE: [R-sig-eco] Calculate Prediction Interval for Regression by hand...
+
+> Hi Johannes,
+> 
+> predict() will give u SE's and confidence intervals.
+> 
+> U can either use the original data as an input and get a prediction for
+> all the original data points. Or create an input data set and get
+> predictions for them.
+> 
+> If your doing an ANOVA type analysis with discrete factors I often use
+> expand.grid to quickly get a matrix for all combinations. So something
+> like this
+> (predict.ci <- data.frame(expand.grid(model$xlevels), predict(model,
+> expand.grid(model$xlevels), interval="conf")))
+> 
+> 
+> There's also confint() which is for single parameters.
+> 
+> 
+> Chris Howden B.Sc. (Hons) GStat.
+> Founding Partner
+> Evidence Based Strategic Development, IP Commercialisation and Innovation,
+> Data Analysis, Modelling and Training
+> (mobile) 0410 689 945
+> (fax) +612 4782 9023
+> chris at trickysolutions.com.au
+> 
+> 
+> 
+> 
+> Disclaimer: The information in this email and any attachments to it are
+> confidential and may contain legally privileged information.?If you are
+> not the named or intended recipient, please delete this communication and
+> contact us immediately.?Please note you are not authorised to copy, use
+> or
+> disclose this communication or any attachments without our consent.
+> Although this email has been checked by anti-virus software, there is a
+> risk that email messages may be corrupted or infected by viruses or other
+> interferences. No responsibility is accepted for such interference. Unless
+> expressly stated, the views of the writer are not those of the company.
+> Tricky Solutions always does our best to provide accurate forecasts and
+> analyses based on the data supplied, however it is possible that some
+> important predictors were not included in the data sent to us. Information
+> provided by us should not be solely relied upon when making decisions and
+> clients should use their own judgement.
+> 
+> 
+> -----Original Message-----
+> From: r-sig-ecology-bounces at r-project.org
+> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Johannes
+> Radinger
+> Sent: Sunday, 16 October 2011 10:45 PM
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] Calculate Prediction Interval for Regression by
+> hand...
+> 
+> Hi UseRs,
+> 
+> I calculated with lm(Y~X1+X2) successfully a linear regression.
+> Based on this linear regression with multiple independent variables
+> I'd like to calculate manually prediction intervals. Therefore I have a
+> few
+> questions:
+> 
+> 1) I want a prediction interval for Y (like Y+-PI) for a given value
+> for X1 and X2.
+> 2) I want to calculate the predicition intervall for Y by hand (either
+> with the mathematical functions of R or with python etc.
+> 
+> So I think I have to extract the prediction interval for the single
+> regression parameters (intercept and slopes) from the lm model.
+> 
+> I tried to google for a simple solution but wasn't succesfully yet.
+> I think following link: Prediction interval in Regression analysis
+> explains very well
+> what I want to do.
+> 
+> There it says: "...one may use the standard error of the estimates for the
+> intercept and slope ( and ) to compute a prediction interval". So is that
+> the right approach?
+> If yes how can I get the standard error for a and b and which formula
+> has to used for the calculation?
+> 
+> 
+> Thank you very much in advance
+> 
+> Have a nice sunday!
+> 
+> cheers
+> Johannes
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+--
+
+
+From KKober at gmx.de  Mon Oct 17 15:33:18 2011
+From: KKober at gmx.de (Kerstin Kober)
+Date: Mon, 17 Oct 2011 15:33:18 +0200
+Subject: [R-sig-eco] (no subject)
+Message-ID: <20111017133318.143740@gmx.net>
+
+Hi,
+This is a question from an R-newby! 
+I?ve got a very extensive data set and will need to run a large number of Mann-Whitney U tests (in R: wilcox.test) between several sets of data. I am trying to automate this as far as possible so I won?t need to run each test one by one. I asked already somebody for help which provided a short piece of code which enables me to run several tests one after another. However, I will need to re-adjust this code as there are missing values and it stops every time it encounters this.
+
+
+The data (I?ve attached a small file with some example data, so you can have an idea how it looks like and run code on it):
+We?ve got bird density data from various locations, collected over the course of several years. One location (?0?) is our control, which is supposed to be tested against each of the other locations (?1? ? ?3?). We would like to run this test only on data collected during the same year, so we would test ?0? vs ?1? in 1980, ?0? vs ?1? in 1981 etc.
+
+This is the code I?ve got so far and which works fine as long as there exists data from all years in all locations:
+
+for(i in 1980:1983){
+    for(j in 1:3){ 
+        tmp<- d[d$year == i & d$hotspot %in% c(0, j), ]
+        print(c(i, j))
+        print(wilcox.test(densities~factor(hotspot), data= tmp))
+    }
+}
+
+Now, the problem is, that I don?t have data from all years in all locations: during some years some locations are missing and some years are missing entirely.
+
+I tried to find my way through the R help files, but because I am not quite sure where exactly I would need to insert information about the dealing with missing values (is the problem with the for-loop or in the wilcox.test, possibly in both???), I am not entirely sure how to do this.
+
+If anybody has an idea how to do this, please let me know.
+Thank you very much for your help!!!
+
+Kerstin
+
+-- 
+Dr. Kerstin Kober
+Joint Nature Conservation Committee
+7 Thistle Place
+Aberdeen
+AB10 1UZ
+United Kingdom
+
+e-mail: kerstin.kober at jncc.gov.uk
+
+
+
+
+From gavin.simpson at ucl.ac.uk  Mon Oct 17 15:59:08 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Mon, 17 Oct 2011 14:59:08 +0100
+Subject: [R-sig-eco] (no subject)
+In-Reply-To: <20111017133318.143740@gmx.net>
+References: <20111017133318.143740@gmx.net>
+Message-ID: <1318859948.17723.90.camel@prometheus.geog.ucl.ac.uk>
+
+On Mon, 2011-10-17 at 15:33 +0200, Kerstin Kober wrote:
+> Hi,
+> This is a question from an R-newby! 
+> I?ve got a very extensive data set and will need to run a large number of Mann-Whitney U tests (in R: wilcox.test) between several sets of data. I am trying to automate this as far as possible so I won?t need to run each test one by one. I asked already somebody for help which provided a short piece of code which enables me to run several tests one after another. However, I will need to re-adjust this code as there are missing values and it stops every time it encounters this.
+> 
+> 
+> The data (I?ve attached a small file with some example data, so you can have an idea how it looks like and run code on it):
+> We?ve got bird density data from various locations, collected over the course of several years. One location (?0?) is our control, which is supposed to be tested against each of the other locations (?1? ? ?3?). We would like to run this test only on data collected during the same year, so we would test ?0? vs ?1? in 1980, ?0? vs ?1? in 1981 etc.
+> 
+> This is the code I?ve got so far and which works fine as long as there exists data from all years in all locations:
+> 
+> for(i in 1980:1983){
+>     for(j in 1:3){ 
+>         tmp<- d[d$year == i & d$hotspot %in% c(0, j), ]
+>         print(c(i, j))
+>         print(wilcox.test(densities~factor(hotspot), data= tmp))
+>     }
+> }
+
+Two options (not immediately clear where the missingness issue arises):
+
+1) From ?wilcox.test we note that the formula method accepts (as is
+common to most R functions that employ a formula interface) an na.action
+argument.
+
+Try:
+
+print(wilcox.test(densities~factor(hotspot), data= tmp, 
+                  na.action = na.omit))
+
+for example. See ?na.omit for details and other possible options. But
+this should have defaulted to na.omit. What does:
+
+> getOption("na.action")
+[1] "na.omit"
+
+return for you?
+
+2) If the problem is that the `tmp` you are creating contains no rows or
+certain locations are missing, then wrap the `print(wilcox.test(....))`
+in `try(....)`. This will try to evaluate the function and catch any
+errors, allowing your loop to continue should an error happen.
+
+Having given you the rope, duty demands that I at least mention that
+this seems a strange, if not downright dangerous, thing to be doing. Not
+least because you are not doing any adjustment of p-values. I most
+certainly wouldn't believe that the p-values printed in the output have
+their usual meaning. Especially if the number of tests performed is, as
+you say, large.
+
+If you save each of the wilcox.test objects you could grab the p-values
+later and adjust them: ?p.adjust
+
+HTH
+
+G
+
+> Now, the problem is, that I don?t have data from all years in all locations: during some years some locations are missing and some years are missing entirely.
+> 
+> I tried to find my way through the R help files, but because I am not quite sure where exactly I would need to insert information about the dealing with missing values (is the problem with the for-loop or in the wilcox.test, possibly in both???), I am not entirely sure how to do this.
+> 
+> If anybody has an idea how to do this, please let me know.
+> Thank you very much for your help!!!
+> 
+> Kerstin
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From renatofilogonio at gmail.com  Thu Oct 20 14:18:49 2011
+From: renatofilogonio at gmail.com (Renato Filogonio)
+Date: Thu, 20 Oct 2011 10:18:49 -0200
+Subject: [R-sig-eco] 3-way ANOVA with 2 repeated measures
+Message-ID: <CAFErUnDKOdqW2mM-mr+jjY=gh-QicLZ-Qn2YOuo0ezpfy53mgw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111020/4d4d4f28/attachment.pl>
+
+From roman.lustrik at gmail.com  Thu Oct 20 15:28:46 2011
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Thu, 20 Oct 2011 15:28:46 +0200
+Subject: [R-sig-eco] 3-way ANOVA with 2 repeated measures
+In-Reply-To: <CAFErUnDKOdqW2mM-mr+jjY=gh-QicLZ-Qn2YOuo0ezpfy53mgw@mail.gmail.com>
+References: <CAFErUnDKOdqW2mM-mr+jjY=gh-QicLZ-Qn2YOuo0ezpfy53mgw@mail.gmail.com>
+Message-ID: <CAHT1vpiFhtBnEorvNKkNU0H9e0EKOQC_t1T3JWfiTMBjKTYp3A@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111020/a1ba3f63/attachment.pl>
+
+From lgj200306 at 163.com  Thu Oct 20 21:26:35 2011
+From: lgj200306 at 163.com (lgj200306)
+Date: Fri, 21 Oct 2011 03:26:35 +0800 (CST)
+Subject: [R-sig-eco] NaNs produced in the process of maximum likelihood
+Message-ID: <7366ed6a.20e.13322cc9ffa.Coremail.lgj200306@163.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111021/d261d1fc/attachment.pl>
+
+From lgj200306 at 163.com  Thu Oct 20 22:19:08 2011
+From: lgj200306 at 163.com (lgj200306)
+Date: Fri, 21 Oct 2011 04:19:08 +0800 (CST)
+Subject: [R-sig-eco] NaNs produced in the process of maximum likelihood
+In-Reply-To: <CAAy4ZDTt5jRAurMUfPFiZepmdUjy7DHDRCRPVkzgxDcUvAxWag@mail.gmail.com>
+References: <CAAy4ZDTt5jRAurMUfPFiZepmdUjy7DHDRCRPVkzgxDcUvAxWag@mail.gmail.com>
+	<7366ed6a.20e.13322cc9ffa.Coremail.lgj200306@163.com>
+Message-ID: <1d4f37f.15a.13322fcbbb6.Coremail.lgj200306@163.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111021/18934035/attachment.pl>
+
+From augusto_sc at yahoo.com.br  Sat Oct 22 23:06:35 2011
+From: augusto_sc at yahoo.com.br (Augusto Silva Costa)
+Date: Sat, 22 Oct 2011 14:06:35 -0700 (PDT)
+Subject: [R-sig-eco] vegan cca
+Message-ID: <1319317595.29357.YahooMailNeo@web110208.mail.gq1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111022/88bcc5e5/attachment.pl>
+
+From higuchip at gmail.com  Sat Oct 22 23:51:58 2011
+From: higuchip at gmail.com (Pedro Higuchi)
+Date: Sat, 22 Oct 2011 19:51:58 -0200
+Subject: [R-sig-eco] vegan cca
+In-Reply-To: <1319317595.29357.YahooMailNeo@web110208.mail.gq1.yahoo.com>
+References: <1319317595.29357.YahooMailNeo@web110208.mail.gq1.yahoo.com>
+Message-ID: <CAA280MxkJKF1aBbeSsVhLJmSri2353BQtn1Dns6oNXJ6AOjiJQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111022/e093118f/attachment.pl>
+
+From bbolker at gmail.com  Mon Oct 24 03:05:51 2011
+From: bbolker at gmail.com (Ben Bolker)
+Date: Mon, 24 Oct 2011 01:05:51 +0000 (UTC)
+Subject: [R-sig-eco] NaNs produced in the process of maximum likelihood
+References: <CAAy4ZDTt5jRAurMUfPFiZepmdUjy7DHDRCRPVkzgxDcUvAxWag@mail.gmail.com>
+	<7366ed6a.20e.13322cc9ffa.Coremail.lgj200306@163.com>
+	<1d4f37f.15a.13322fcbbb6.Coremail.lgj200306@163.com>
+Message-ID: <loom.20111024T030140-666@post.gmane.org>
+
+lgj200306 <lgj200306 at ...> writes:
+
+> 
+> Thaks David very much, but how can I 
+>  improve my model? Should I change my likelihood function 
+> or do some thing else?
+> Best wishes for all list members!
+
+  Your choices are:
+
+ (1) if the final result looks sensible, and none of the final
+predicted values lead to NA/NaN results, you can *probably* ignore these
+warnings
+
+ (2) depending on your model, you may be able to bound
+some of the parameters (e.g. using method="L-BFGS-B"
+and specifying lower/upper values) *or* fit them on a different scale
+(e.g. the log scale) to prevent zero/negative predicted
+values of lambda (predicted values of zero will be OK
+as long as they always go with observed values of zero --
+otherwise you'll get infinite (negative) log-likelihood
+values. There are some simple examples of bounded optimization
+in the ?mle2 examples ...
+
+> 
+> At 2011-10-21 04:05:10,"David Valentim Dias" 
+> <dvdscripter <at> gmail.com> wrote:
+> Should be a bad parameter like you get from dpois(1, -1)
+> 
+> 2011/10/20 lgj200306<lgj200306 <at> 163.com>
+> Hi, all
+> I have a problem about the log maximum likelihood.
+> I want to estimate several parameters using 
+> log maximum likelihood method (mle2() in package "bbmle" ),
+> and the likelihood fucton was based on poisson distribution.
+> When finished, there were some warnings said that:
+>  >In dpois(x, lambda, log) : NaNs produced
+> Will this situation influence my result of 
+> parameters estimating or not? If my parameters estimated have
+> been influenced, how can I improve my R code 
+> or data to achieve a exact estimating?
+> Thanks for you attention and best wishes for all of you!
+> Guojun Lin
+> South China Botanical Garden, Chinese Academy of Science, China
+> Department of Renewable Resources, University of Alberta, Canada
+
+
+From bbolker at gmail.com  Mon Oct 24 03:10:53 2011
+From: bbolker at gmail.com (Ben Bolker)
+Date: Mon, 24 Oct 2011 01:10:53 +0000 (UTC)
+Subject: [R-sig-eco] Confidence intervals in lmer
+References: <CALQiR0_y12p4WgHdmEE4p7XTs3SOy1_KKGBzVdTDpWCGODHLgg@mail.gmail.com>
+	<1929208526897803633@unknownmsgid>
+Message-ID: <loom.20111024T030814-339@post.gmane.org>
+
+Chris Howden <chris at ...> writes:
+
+> 
+> U could try the predict function with se.fit=true. I believe this
+> should give u the predicted score and se and u can calculate CI from
+> there.
+> 
+> U'll have to create an input matrix with the score u want to predict for.
+
+  Unfortunately, predict() doesn't currently exist for lmer models,
+and se.fit doesn't even work for lme models.
+
+  There's some code on http://glmm.wikidot.com/faq for computing
+predictions and standard errors of predictions.  Note, however,
+that these recipes do not take into account the uncertainty in the 
+estimates of the random-effects variance (something that as far
+as I can tell no-one has a recipe for).
+
+> 
+> Chris Howden
+> 
+> On 27/09/2011, at 23:23, Adam Hayward <a.hayward at ...> wrote:
+> 
+> > Dear list members,
+> >
+> > I have a significant interaction between two continuous variables (it
+> > happens to be a mixed model in lmer, but I imagine the same is applicable to
+> > a glm). The interaction tells me that the relationship between z and y
+> > changes as a function of x, but I want to know whether y has a significant
+> > effect on z at a given value of x. For instance, the interaction might show
+> > that the relationship between body weight and fitness changes with age, but
+> > I want to know if the association between body weight and fitness is
+> > significantly positive at the age of 1. Therefore, I'd like to estimate 95%
+> > CIs or SEs around the association between body weight and fitness at a given
+> > age, but have yet to work out how to do it. Any suggestions would be greatly
+> > appreciated.
+> >
+> > Best wishes,
+> > Adam
+> >
+> >
+
+
+From bbolker at gmail.com  Tue Oct 25 04:20:23 2011
+From: bbolker at gmail.com (Ben Bolker)
+Date: Tue, 25 Oct 2011 02:20:23 +0000 (UTC)
+Subject: [R-sig-eco] Calculate Prediction Interval for Regression by
+	hand...
+References: <54DEE632BA30084D8F754AD5024CDCC3D07B16668B@EXCCR03.campus.ncl.ac.uk>
+	<C3B9F9C7-D9EE-44E0-B8B7-2CA58DCEAC4E@gmx.at>
+	<b35c21eea17f7f4e1ad25a0ba5fa16f7@mail.gmail.com>
+	<20111017085942.99510@gmx.net>
+Message-ID: <loom.20111025T040757-473@post.gmane.org>
+
+Johannes Radinger <JRadinger at ...> writes:
+
+> thank you all for you tips with predict, predict.lm etc.
+> >From summary(lm-model), I can get the Estimate and the Standard
+> Error for intercept and slopes. With confint I can get confidence
+> intervals (?) for these parameters for different levels.
+> 
+> I want to calculate it by hand, rather then by using R's predict
+> function, due to some reasons:
+> 
+> 1) I want to get the mathematical background
+> 2) I want to use it in a model outside of grass (python-model, and
+> I don't want to use a direct interaction python-R)
+> 3) I want to calculate it with simple 
+> programming languages (e.g. simplest form of basic etc.)
+> 
+> In wikipedia it says that it is possible to 
+> calculate the prediction interval from the standard error of the
+> parameters. So how is that done exactly? Can anyone guide me 
+> to the formula? Or is it just 
+> 
+> Y=b+Intercept + (a1+SE(a1))*X1+(a2+SE(a2)*X2 
+> (of course with all variations in plus and minus SE)?
+> 
+> Your help is greatly appreciated!
+> 
+> /johannes
+> 
+
+ [snip]
+
+  You need to take the covariance of the parameters into account.
+Suppose you want to calculate the prediction interval for values
+X1=a1, X2=a2.  Form a vector X=c(1,a1,a2) (the first term is for
+the intercept).  If you (matrix) multiply this by your parameter vector
+beta (X %*% beta), i.e. beta_0 + beta_1*a1+beta_2*a2 
+you get your predicted value.  If you have variance-covariance
+matrix V for the intercept and slopes (a 3x3 symmetric matrix)
+then the variance of the prediction is X %*% V %*% X^T.
+  Code following this approach can be found at http://glmm.wikidot.com/faq .
+
+
+From raphaelm at sccwrp.org  Tue Oct 25 19:11:31 2011
+From: raphaelm at sccwrp.org (Raphael Mazor)
+Date: Tue, 25 Oct 2011 10:11:31 -0700
+Subject: [R-sig-eco] Sources for learning mapping/GIS with R?
+Message-ID: <4EA6EDC3.1010209@sccwrp.org>
+
+Can anyone recommend some basic resources for learning how to create 
+maps with R?
+Or recommend packages that are particularly helpful?
+
+Thanks!
+
+-- 
+Raphael D. Mazor
+Freshwater Biologist
+Southern California Coastal Water Research Project
+3535 Harbor Blv Suite 110
+Costa Mesa, CA 92626
+
+Tel. (714) 755-3235
+Fax. (714) 755-3299
+
+
+From sarah.goslee at gmail.com  Tue Oct 25 19:47:43 2011
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Tue, 25 Oct 2011 13:47:43 -0400
+Subject: [R-sig-eco] Sources for learning mapping/GIS with R?
+In-Reply-To: <4EA6EDC3.1010209@sccwrp.org>
+References: <4EA6EDC3.1010209@sccwrp.org>
+Message-ID: <CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.gmail.com>
+
+There's a spatial taskview that's the perfect place to start:
+installing the taskview will
+give you very nearly all the related packages.
+
+http://cran.r-project.org/web/views/Spatial.html
+
+For learning how to use them, Bivand et al's Spatial Analysis book is good:
+http://books.google.com/books/about/Applied_spatial_data_analysis_with_R.html?id=4gg8yx_lcj0C
+
+Sarah
+
+On Tue, Oct 25, 2011 at 1:11 PM, Raphael Mazor <raphaelm at sccwrp.org> wrote:
+> Can anyone recommend some basic resources for learning how to create maps
+> with R?
+> Or recommend packages that are particularly helpful?
+>
+> Thanks!
+>
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From marcelino.delacruz at upm.es  Tue Oct 25 19:58:48 2011
+From: marcelino.delacruz at upm.es (Marcelino de la Cruz)
+Date: Tue, 25 Oct 2011 19:58:48 +0200
+Subject: [R-sig-eco] Sources for learning mapping/GIS with R?
+In-Reply-To: <CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.g
+	mail.com>
+References: <4EA6EDC3.1010209@sccwrp.org>
+	<CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.gmail.com>
+Message-ID: <201110251758.p9PHwoYH023069@smtp.upm.es>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111025/2b8e76b2/attachment.pl>
+
+From dvrbts at ecology.msu.montana.edu  Tue Oct 25 23:27:32 2011
+From: dvrbts at ecology.msu.montana.edu (Dave Roberts)
+Date: Tue, 25 Oct 2011 15:27:32 -0600
+Subject: [R-sig-eco] Sources for learning mapping/GIS with R?
+In-Reply-To: <201110251758.p9PHwoYH023069@smtp.upm.es>
+References: <4EA6EDC3.1010209@sccwrp.org>	<CAM_vjumg_u33me-mgEVn3D1VzjsvP_LdtVLtphO4DogmuvO3hA@mail.gmail.com>
+	<201110251758.p9PHwoYH023069@smtp.upm.es>
+Message-ID: <4EA729C4.1060809@ecology.msu.montana.edu>
+
+R and GRASS can both be made to talk to the same database (I use 
+PostgreSQL) at the same time, allowing you you to use the best tool for 
+each job and keep everything in sync.
+
+You might also want to look at
+
+http://pvanb.wordpress.com/
+
+and Dylan Beaudette at
+
+http://casoilresource.lawr.ucdavis.edu/drupal/node/905
+
+Dave Roberts
+
+On 10/25/2011 11:58 AM, Marcelino de la Cruz wrote:
+>
+> Also, for open source GIS ( GRASS and R)
+>
+> Neteler, M., Mitasova, H., 2008. Open Source GIS: A GRASS GIS
+> Approach, 3rd Edt. Springer, The International Series in Engineering
+> and Computer Science: Volume 773. 406 p.
+>
+> By the way, you can find a lot of useful resources in the home page
+> of Tomislav Hengl:
+> http://spatial-analyst.net/wiki/index.php?title=Main_Page
+>
+> Cheers,
+> Marcelino
+>
+>
+> At 19:47 25/10/2011, Sarah Goslee wrote:
+>> There's a spatial taskview that's the perfect place to start:
+>> installing the taskview will
+>> give you very nearly all the related packages.
+>>
+>> http://cran.r-project.org/web/views/Spatial.html
+>>
+>> For learning how to use them, Bivand et al's Spatial Analysis book is good:
+>> http://books.google.com/books/about/Applied_spatial_data_analysis_with_R.html?id=4gg8yx_lcj0C
+>>
+>> Sarah
+>>
+>> On Tue, Oct 25, 2011 at 1:11 PM, Raphael Mazor<raphaelm at sccwrp.org>  wrote:
+>>> Can anyone recommend some basic resources for learning how to create maps
+>>> with R?
+>>> Or recommend packages that are particularly helpful?
+>>>
+>>> Thanks!--
+
+>>>
+>> --
+>> Sarah Goslee
+>> http://www.functionaldiversity.org
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> ____________________________________
+>
+> Marcelino de la Cruz Rot
+> Depto. Biologia Vegetal
+> EUIT Agricola
+> Universidad Politecnica de Madrid
+>
+> tel: 34 + 913365435
+> ____________________________________
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From ajrominger at gmail.com  Wed Oct 26 02:44:33 2011
+From: ajrominger at gmail.com (Andy Rominger)
+Date: Tue, 25 Oct 2011 17:44:33 -0700
+Subject: [R-sig-eco] Job Announcement: Research Technician in the Harte Lab
+	at UC Berkeley
+Message-ID: <CAPdoLAc=CidqOi1cdo5smkwgOve0ahanuGDq9_mqay8TEkJYyQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111025/7a31b9b3/attachment.pl>
+
+From daniel.cornelis at cirad.fr  Wed Oct 26 20:25:44 2011
+From: daniel.cornelis at cirad.fr (Daniel CORNELIS)
+Date: Wed, 26 Oct 2011 20:25:44 +0200 (CEST)
+Subject: [R-sig-eco] brb function in adehabitatHR
+Message-ID: <001a01cc940c$a977c960$fc675c20$@cornelis@cirad.fr>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111026/0ef034b9/attachment.pl>
+
+From eperry at chesapeake.net  Thu Oct 27 15:24:55 2011
+From: eperry at chesapeake.net (Elgin Perry)
+Date: Thu, 27 Oct 2011 09:24:55 -0400
+Subject: [R-sig-eco] Maximum Autocorrelation Factor (MAF) transform
+Message-ID: <4EA95BA7.17078.4C8FBB@eperry.chesapeake.net>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111027/bc96d644/attachment.pl>
+
+From danclune at yahoo.com  Thu Oct 27 21:26:03 2011
+From: danclune at yahoo.com (dan clune)
+Date: Thu, 27 Oct 2011 12:26:03 -0700 (PDT)
+Subject: [R-sig-eco] expected abundances from vegan radfit output
+Message-ID: <1319743563.89999.YahooMailNeo@web125714.mail.ne1.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20111027/9761275c/attachment.pl>
+
+From Andrew.Edwards at dfo-mpo.gc.ca  Fri Oct 28 00:01:04 2011
+From: Andrew.Edwards at dfo-mpo.gc.ca (Edwards, Andrew)
+Date: Thu, 27 Oct 2011 15:01:04 -0700
+Subject: [R-sig-eco] Sources for learning mapping/GIS with R? (Raphael
+	Mazor)
+In-Reply-To: <mailman.1.1319623201.18166.r-sig-ecology@r-project.org>
+Message-ID: <63F107BCC37AEA49A75FD94AA3E07CB0093755E0@pacpbsex01.pac.dfo-mpo.ca>
+
+Dear Raphael,
+
+You may want to take a look at the R package PBSmapping  (Mapping
+Fisheries Data and Spatial Analysis Tools). It's available on CRAN.
+
+The description is:
+
+"This software has evolved from fisheries research conducted at the
+Pacific Biological Station (PBS) in Nanaimo, British Columbia, Canada.
+It extends the R language to include two-dimensional plotting features
+similar to those commonly available in a Geographic Information System
+(GIS). Embedded C code speeds algorithms from computational geometry,
+such as finding polygons that contain specified point events or
+converting between longitude-latitude and Universal Transverse Mercator
+(UTM) coordinates. It includes data for a global shoreline and other
+data sets in the public domain. The R directory
+'.../library/PBSmapping/doc' includes a complete user's guide
+PBSmapping-UG.pdf. To use this package effectively, please consult the
+guide."
+
+The CRAN page is:
+
+http://cran.r-project.org/web/packages/PBSmapping/index.html
+
+including a link to the reference manual.
+
+Let me know if it is useful for your needs. We do maintain it here,
+often employing students or contractors, so it's useful to know how
+useful people find it.
+
+Cheers,
+
+Andrew Edwards
+ 
+-- 
+Dr. Andrew Edwards 
+Andrew.Edwards at dfo-mpo.gc.ca 
+http://www.chebucto.ns.ca/~english 
+
+Pacific Biological Station, 
+Fisheries and Oceans Canada, 
+3190 Hammond Bay Road, 
+Nanaimo, British Columbia, 
+V9T 6N7, Canada. 
+Tel: +1 250-756-7146 
+Fax: +1 250 756-7053 
+> Message: 1
+> Date: Tue, 25 Oct 2011 10:11:31 -0700
+> From: Raphael Mazor <raphaelm at sccwrp.org>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] Sources for learning mapping/GIS with R?
+> Message-ID: <4EA6EDC3.1010209 at sccwrp.org>
+> Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+> 
+> Can anyone recommend some basic resources for learning how to create 
+> maps with R?
+> Or recommend packages that are particularly helpful?
+> 
+> Thanks!
+> 
+> -- 
+> Raphael D. Mazor
+> Freshwater Biologist
+> Southern California Coastal Water Research Project
+> 3535 Harbor Blv Suite 110
+> Costa Mesa, CA 92626
+> 
+> Tel. (714) 755-3235
+> Fax. (714) 755-3299
+>
+
+
+From christian at setzkorn.eu  Fri Oct 28 15:55:31 2011
+From: christian at setzkorn.eu (Christian Setzkorn)
+Date: Fri, 28 Oct 2011 14:55:31 +0100
+Subject: [R-sig-eco] location data format for adehabitat package
+Message-ID: <CAEeY+MuzEgNTYFZW37=m6WW+TuZ00v+Dm4CCdp=-q7-hy4N8CQ@mail.gmail.com>
+
+I have a file in this format:
+
+http://docs.codehaus.org/display/GEOTOOLS/ArcInfo+ASCII+Grid+format#ASCIIGrid
+
+The first rows look like this:
+
+ncols 1440
+nrows 720
+xllcorner -180.0
+yllcorner -90
+cellsize 0.25
+NODATA_value -9999
+
+Basically I have the world with 1440 'tiles' in x direction
+(longitude) and 720 'tiles' in y direction (latitude). Each 'tile' is
+a square with a length of 0.25 degrees. I think I have xllcorner and
+yllcorner correct. I can draw this map like this in R:
+
+library("adehabitat")
+bio1 <- import.asc("D:/ENFA/data.asc")
+maps <- as.kasc(list(data = bio1))
+image(maps, col = cm.colors(256), clfac = list(Aspect = cl))
+
+The map looks fine.
+
+I would like to perform some ecological niche factor analysis (ENFA)
+using the adehabitat package and am not too sure about the location
+data. Basically I have them as longitudes and latitudes at the moment
+but I could also generate then as 'tile index' (e.g. lower left corner
+has the latitude -90 and longitude -180 so the 'tile index' would be
+0, 0 - right?). Which is the correct location data format? I would use
+ENFA code like this:
+
+locs <- read.table("D:/ENFA/Locs.txt", header = TRUE, sep="\t")
+dataenfa1 <- data2enfa(maps, locs)
+pc <- dudi.pca(dataenfa1$tab, scannf = FALSE)
+enfa1 <- enfa(pc, dataenfa1$pr,scannf = FALSE)
+hist(enfa1)
+
+I would appreciate any comments please. Thanks in advance.
+
+Christian
+
+
+From clement.calenge at oncfs.gouv.fr  Mon Oct 31 12:15:55 2011
+From: clement.calenge at oncfs.gouv.fr (Clement Calenge)
+Date: Mon, 31 Oct 2011 12:15:55 +0100
+Subject: [R-sig-eco] location data format for adehabitat package
+In-Reply-To: <CAEeY+MuzEgNTYFZW37=m6WW+TuZ00v+Dm4CCdp=-q7-hy4N8CQ@mail.gmail.com>
+References: <CAEeY+MuzEgNTYFZW37=m6WW+TuZ00v+Dm4CCdp=-q7-hy4N8CQ@mail.gmail.com>
+Message-ID: <4EAE836B.2090903@oncfs.gouv.fr>
+
+Dear Christian,
+
+> I would like to perform some ecological niche factor analysis (ENFA)
+> using the adehabitat package and am not too sure about the location
+> data. Basically I have them as longitudes and latitudes at the moment
+> but I could also generate then as 'tile index' (e.g. lower left corner
+> has the latitude -90 and longitude -180 so the 'tile index' would be
+> 0, 0 - right?). Which is the correct location data format?
+
+The location data should be in the same coordinate system as the maps. 
+Therefore, the locations should be expressed as longitude/latitudes.
+HTH,
+
+Cl?ment Calenge
+
+-- 
+Cl?ment CALENGE
+Cellule d'appui ? l'analyse de donn?es
+Direction des Etudes et de la Recherche
+Office national de la chasse et de la faune sauvage
+Saint Benoist - 78610 Auffargis
+tel. (33) 01.30.46.54.14
+
+

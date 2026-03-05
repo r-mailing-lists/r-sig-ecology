@@ -1,0 +1,4645 @@
+From abedimail at gmail.com  Wed Jul  8 09:56:37 2015
+From: abedimail at gmail.com (Mehdi Abedi)
+Date: Wed, 8 Jul 2015 12:26:37 +0430
+Subject: [R-sig-eco] Zero infalted model- T50
+Message-ID: <CADGhagjkQx8Uf18WT_XSzvmPdTE529qkK96t7=B92z1Xw9XtSw@mail.gmail.com>
+
+Hi,
+I want to calculate time to 50 percent reduction of seed viability. Mainly
+researcher calculate P50 using probit model for calculation T50.
+
+In some treatments seed viability decline quit fast therefore i have only
+value 100 and 0 values . Can i calculate T50 for this data using probit?!
+Could we apply Zero inflated model for this conditions with 0?
+
+All the best,
+Mehdi
+
+  Time(weed) Seed viability  0 100  8 0  16 0  24 0  32 0  40 0
+
+-- 
+
+
+*Mehdi Abedi Department of Range Management*
+
+*Faculty of Natural Resources & Marine Sciences *
+
+*Tarbiat Modares University (TMU) *
+
+*46417-76489, Noor*
+
+*Mazandaran, IRAN *
+
+*mehdi.abedi at modares.ac.ir <Mehdi.abedi at modares.ac.ir>*
+
+*Homepage
+<http://www.modares.ac.ir/en/Schools/nat/Academic_Staff/~mehdi.abedi>*
+
+*Tel: +98-122-6253101 *
+
+*Fax: +98-122-6253499*
+
+	[[alternative HTML version deleted]]
+
+
+From bohara at senckenberg.de  Wed Jul  8 11:22:40 2015
+From: bohara at senckenberg.de (Bob O'Hara)
+Date: Wed, 08 Jul 2015 11:22:40 +0200
+Subject: [R-sig-eco] Zero infalted model- T50
+In-Reply-To: <CADGhagjkQx8Uf18WT_XSzvmPdTE529qkK96t7=B92z1Xw9XtSw@mail.gmail.com>
+References: <CADGhagjkQx8Uf18WT_XSzvmPdTE529qkK96t7=B92z1Xw9XtSw@mail.gmail.com>
+Message-ID: <559CEBE0.7050403@senckenberg.de>
+
+On 08/07/15 09:56, Mehdi Abedi wrote:
+> Hi,
+> I want to calculate time to 50 percent reduction of seed viability. Mainly
+> researcher calculate P50 using probit model for calculation T50.
+>
+> In some treatments seed viability decline quit fast therefore i have only
+> value 100 and 0 values . Can i calculate T50 for this data using probit?!
+> Could we apply Zero inflated model for this conditions with 0?
+>
+> All the best,
+> Mehdi
+>
+>    Time(weed) Seed viability  0 100  8 0  16 0  24 0  32 0  40 0
+>
+You can use a probit, but it'll be unhappy. The problem is that the 
+curve is steep compared to the times, so you don't see it. The only real 
+solution is to change the assays, so you observe more times. But I 
+appreciate this might not be practical.
+
+I don't think zero inflation will help. There isn't a unique maximum 
+likelihood estimate for this, but I think a sensible estimate would be 
+mid way between the times where you observe 100 and the first 0. If you 
+want to be Bayesian, this would be the posterior mean. The best 
+confidence interval is probably the central 95% of the interval that the 
+T50 is in (i.e. assuming the likelihood is flat). It's probably a little 
+bit wider than it should be, but I doubt that will be a big problem.
+
+I used to get data where the data would flip between 0 and 100 over a 
+range of doses. In the end I gave up with those problems and became an 
+ecologist
+
+Bob
+
+-- 
+
+Bob O'Hara
+
+Biodiversity and Climate Research Centre
+Senckenberganlage 25
+D-60325 Frankfurt am Main,
+Germany
+
+Tel: +49 69 7542 1863
+Mobile: +49 1515 888 5440
+WWW:   http://www.bik-f.de/root/index.php?page_id=219
+Blog: http://blogs.nature.com/boboh
+Journal of Negative Results - EEB: www.jnr-eeb.org
+
+
+From stinekramer at gmail.com  Thu Jul  9 14:55:42 2015
+From: stinekramer at gmail.com (Stine Kramer Jacobsen)
+Date: Thu, 9 Jul 2015 14:55:42 +0200
+Subject: [R-sig-eco] Rarefaction trouble
+Message-ID: <CAFNkJO=ckwBM3i4io_Pz9VxPHkue4C+R++YPcXnuByxdbCV+Dw@mail.gmail.com>
+
+Hi!
+
+
+I am struggling with some data - hoping to find some answers. My main
+question is regarding the output when using the rarefaction function,
+rarefy().
+
+
+
+I have a dataset of six locations (in rows) and 45 species of insects (in
+columns), and I want to express the diversity of insects in these six
+locations and clarify the differences between locations. Pretty
+straightforward I guess.
+
+
+
+I have rarefied the data by this code:
+
+rarefy(rarefactionlocation, 5, se=TRUE, MARGIN=1)
+
+
+And get an output like this:
+
+
+
+       [,1]      [,2]      [,3]      [,4]      [,5]      [,6]
+
+S  3.3946786 3.6740240 3.8372812 4.0785534 3.8305276 3.7252981
+
+se 0.9639723 0.9112285 0.8641984 0.8093713 0.8859364 0.9109916
+
+attr(,"Subsample")
+
+[1] 5
+
+
+
+I am also able to get a nice curve of the data, showing the six locations
+in separate lines, though I have been unable to distinguish lines with
+different colours - yet. I did this by:
+
+
+
+raremax<-min(rowSums(rarefactionlocation))
+
+rarecurve(rarefactionlocation, step = 5, sample = raremax, col = TRUE, cex
+= 0.6)
+
+
+
+A colleague of mine have used the rarefaction function by Jenna Jacobs (I
+could not get it to work), and she received an output in an excel file with
+SE and approximate confidence interval for each 5 individuals for each
+location. By these she could find if there were significant differences
+between the different locations.
+
+
+
+My question is: How can I implement the SE from the output to calculate the
+differences (significance) between locations? Should I implement it into a
+new code?
+
+
+Or would another function be more appropriate in this case? I have also
+been reading about specaccum and accumpcomp, but rarefaction seems to be
+right for my data and for what I want to achieve... I just don?t know how I
+can tell the differences between locations.
+
+
+
+Thanks!
+
+
+
+Stine
+
+	[[alternative HTML version deleted]]
+
+
+From davidbecas at gmail.com  Mon Jul 13 13:47:38 2015
+From: davidbecas at gmail.com (dmaa)
+Date: Mon, 13 Jul 2015 04:47:38 -0700 (MST)
+Subject: [R-sig-eco] problem with kernel UD estimation using adehabitatHR
+In-Reply-To: <1410893106084-7579082.post@n2.nabble.com>
+References: <1401829426442-7578930.post@n2.nabble.com>
+	<1410893106084-7579082.post@n2.nabble.com>
+Message-ID: <1436788058580-7579498.post@n2.nabble.com>
+
+Any news on this? I'm having a similar problem.
+
+In addition, 
+kernel.area(x,percent=c(50,95),unout="m2",standardize=F) provides different
+area values when compared with those obtained by using getverticeshr(kudvej,
+95,unout="m2")
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/problem-with-kernel-UD-estimation-using-adehabitatHR-tp7578930p7579498.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From andrezehnder at hotmail.com  Mon Jul 13 17:38:52 2015
+From: andrezehnder at hotmail.com (=?iso-8859-1?Q?Andr=E9_Zehnder?=)
+Date: Mon, 13 Jul 2015 17:38:52 +0200
+Subject: [R-sig-eco] problem with kernel UD estimation using adehabitatHR
+In-Reply-To: <1436788058580-7579498.post@n2.nabble.com>
+References: <1401829426442-7578930.post@n2.nabble.com>	<1410893106084-7579082.post@n2.nabble.com>
+	<1436788058580-7579498.post@n2.nabble.com>
+Message-ID: <DUB406-EAS1184CDD0225F9F6B66CCF88D99C0@phx.gbl>
+
+Hi dmaa,
+
+I got this error when I used too low grid values to quickly checked the
+results. Try different values for the "grid" parameter (e.g. grid=450).
+
+In addition, the extent values of alittle seem to be rather high. As I
+understand it (and please correct me if I am wrong), the extent is a factor
+that defines by how much percent of the range of coordinates included in a
+dataset is extended, so that the UD is not cut off too early. For example:
+If the bounding box around your coordinates is 300x300 km, a extent of 0.1
+would expand this area by 10% (in total 330x330 km). Therefore, unless you
+have enormously high smoothing parameters and/or tiny home ranges to expect,
+extents of 0.1?0.5 will be enough.
+
+About the area issue: Are the differences large or so small that they are
+negligible and possibly only a result of different precisions? Another
+reason could be that one of the two methods considers holes and subtract
+their areas while the other does not.
+
+Best regards,
+Andr?
+
+-----Urspr?ngliche Nachricht-----
+Von: R-sig-ecology [mailto:r-sig-ecology-bounces at r-project.org] Im Auftrag
+von dmaa
+Gesendet: Montag, 13. Juli 2015 13:48
+An: r-sig-ecology at r-project.org
+Betreff: Re: [R-sig-eco] problem with kernel UD estimation using
+adehabitatHR
+
+Any news on this? I'm having a similar problem.
+
+In addition,
+kernel.area(x,percent=c(50,95),unout="m2",standardize=F) provides different
+area values when compared with those obtained by using getverticeshr(kudvej,
+95,unout="m2")
+
+
+
+--
+View this message in context:
+http://r-sig-ecology.471788.n2.nabble.com/problem-with-kernel-UD-estimation-
+using-adehabitatHR-tp7578930p7579498.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From karlashikev at gmail.com  Tue Jul 14 01:03:29 2015
+From: karlashikev at gmail.com (Karla Shikev)
+Date: Mon, 13 Jul 2015 20:03:29 -0300
+Subject: [R-sig-eco] altitudinal overlap
+Message-ID: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+
+Hi there,
+
+This is a newbie question, and I'm sure there are simple ways to do this,
+but I've spent my entire afternoon and I couldn't get it to work.
+
+Imagine that I got the altitudinal range of different species. For instance:
+
+> dat<-matrix(c(1,3,2.5,4), ncol=2, byrow=TRUE)
+> dat
+     [,1] [,2]
+[1,]  1.0    3
+[2,]  2.5    4
+
+
+The first line indicates that this species is found between 1 and 3,
+whereas the second species was found between 2.5 and 4.
+
+I need a simple way to calculate the overlap of their extents (0.5 in this
+case). This way should provide 0 if there is no overlap, and it should also
+work in the case where one subject is found only within the extent of the
+second subject.
+
+Any help will be greatly appreciated.
+
+Karla
+
+	[[alternative HTML version deleted]]
+
+
+From stefano.leonardi at unipr.it  Tue Jul 14 10:14:55 2015
+From: stefano.leonardi at unipr.it (Stefano Leonardi)
+Date: Tue, 14 Jul 2015 10:14:55 +0200
+Subject: [R-sig-eco] altitudinal overlap
+In-Reply-To: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+References: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+Message-ID: <55A4C4FF.4000709@unipr.it>
+
+
+The first think that came to my mind:
+
+overlap <- function(v1,v2) {
+ov <-min(max(v1), max(v2)) - max(min(v1), min(v2))
+ifelse(ov > 0, ov, 0)
+}
+
+overlap(dat[1,], dat[2,])
+[1] 0.5
+
+
+Ciao
+Stefano
+
+On 14/07/2015 01:03, Karla Shikev wrote:
+> Hi there,
+>
+> This is a newbie question, and I'm sure there are simple ways to do this,
+> but I've spent my entire afternoon and I couldn't get it to work.
+>
+> Imagine that I got the altitudinal range of different species. For instance:
+>
+>> dat<-matrix(c(1,3,2.5,4), ncol=2, byrow=TRUE)
+>> dat
+>       [,1] [,2]
+> [1,]  1.0    3
+> [2,]  2.5    4
+>
+>
+> The first line indicates that this species is found between 1 and 3,
+> whereas the second species was found between 2.5 and 4.
+>
+> I need a simple way to calculate the overlap of their extents (0.5 in this
+> case). This way should provide 0 if there is no overlap, and it should also
+> work in the case where one subject is found only within the extent of the
+> second subject.
+>
+> Any help will be greatly appreciated.
+>
+> Karla--
+======================================================================
+  Stefano Leonardi
+  Dipartimento di Bioscienze
+  Universita` di Parma
+  Viale Usberti 11a                             Phone : +39-0521-905659
+  43124 PARMA  (Italy)                          Fax   : +39-0521-905402
+
+  Il mio photoblog:                http://stefanoleonardi.wordpress.com
+
+
+From karlashikev at gmail.com  Tue Jul 14 15:19:38 2015
+From: karlashikev at gmail.com (Karla Shikev)
+Date: Tue, 14 Jul 2015 10:19:38 -0300
+Subject: [R-sig-eco] altitudinal overlap
+In-Reply-To: <55A4C36F.7030507@unipr.it>
+References: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+	<55A4C36F.7030507@unipr.it>
+Message-ID: <CAPU4_4qGH98kOe5nbKuou96HBySwFF4YOx60VHjKRm1RP2+3Zw@mail.gmail.com>
+
+Excellent. Thanks!
+
+On Tue, Jul 14, 2015 at 5:08 AM, Stefano Leonardi <
+stefano.leonardi at gmail.com> wrote:
+
+>
+> The first think that came to my mind:
+>
+> overlap <- function(v1,v2) {
+> ov <-min(max(v1), max(v2)) - max(min(v1), min(v2))
+> ifelse(ov > 0, ov, 0)
+> }
+>
+> overlap(dat[1,], dat[2,])
+> [1] 0.5
+>
+>
+> Ciao
+> Stefano
+>
+> On 14/07/2015 01:03, Karla Shikev wrote:
+>
+>> Hi there,
+>>
+>> This is a newbie question, and I'm sure there are simple ways to do this,
+>> but I've spent my entire afternoon and I couldn't get it to work.
+>>
+>> Imagine that I got the altitudinal range of different species. For
+>> instance:
+>>
+>>  dat<-matrix(c(1,3,2.5,4), ncol=2, byrow=TRUE)
+>>> dat
+>>>
+>>       [,1] [,2]
+>> [1,]  1.0    3
+>> [2,]  2.5    4
+>>
+>>
+>> The first line indicates that this species is found between 1 and 3,
+>> whereas the second species was found between 2.5 and 4.
+>>
+>> I need a simple way to calculate the overlap of their extents (0.5 in this
+>> case). This way should provide 0 if there is no overlap, and it should
+>> also
+>> work in the case where one subject is found only within the extent of the
+>> second subject.
+>>
+>> Any help will be greatly appreciated.
+>>
+>> Karla--
+>>
+> ======================================================================
+>  Stefano Leonardi
+>  Dipartimento di Bioscienze
+>  Universita` di Parma
+>  Viale Usberti 11a                             Phone : +39-0521-905659
+>  43124 PARMA  (Italy)                          Fax   : +39-0521-905402
+>
+>  Il mio photoblog:                http://stefanoleonardi.wordpress.com
+> ======================================================================
+>
+
+	[[alternative HTML version deleted]]
+
+
+From karlashikev at gmail.com  Wed Jul 15 01:37:28 2015
+From: karlashikev at gmail.com (Karla Shikev)
+Date: Tue, 14 Jul 2015 20:37:28 -0300
+Subject: [R-sig-eco] altitudinal overlap
+In-Reply-To: <55A4C4FF.4000709@unipr.it>
+References: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+	<55A4C4FF.4000709@unipr.it>
+Message-ID: <CAPU4_4rhXwqXZ_qyjaCnLV=EZCWss93nOP7+YSEnr7J2RSSrgw@mail.gmail.com>
+
+Ok, here's another (a bit more challenging) question.
+
+Imagine that I have a S species and a S x 2 matrix of altitudinal limits
+(min and max elevation). How would you compute the number of co-occurring
+species for each of the S species?
+
+Thanks again for your assistance.
+
+Karla
+
+On Tue, Jul 14, 2015 at 5:14 AM, Stefano Leonardi <stefano.leonardi at unipr.it
+> wrote:
+
+>
+> The first think that came to my mind:
+>
+> overlap <- function(v1,v2) {
+> ov <-min(max(v1), max(v2)) - max(min(v1), min(v2))
+> ifelse(ov > 0, ov, 0)
+> }
+>
+> overlap(dat[1,], dat[2,])
+> [1] 0.5
+>
+>
+> Ciao
+> Stefano
+>
+> On 14/07/2015 01:03, Karla Shikev wrote:
+>
+>> Hi there,
+>>
+>> This is a newbie question, and I'm sure there are simple ways to do this,
+>> but I've spent my entire afternoon and I couldn't get it to work.
+>>
+>> Imagine that I got the altitudinal range of different species. For
+>> instance:
+>>
+>>  dat<-matrix(c(1,3,2.5,4), ncol=2, byrow=TRUE)
+>>> dat
+>>>
+>>       [,1] [,2]
+>> [1,]  1.0    3
+>> [2,]  2.5    4
+>>
+>>
+>> The first line indicates that this species is found between 1 and 3,
+>> whereas the second species was found between 2.5 and 4.
+>>
+>> I need a simple way to calculate the overlap of their extents (0.5 in this
+>> case). This way should provide 0 if there is no overlap, and it should
+>> also
+>> work in the case where one subject is found only within the extent of the
+>> second subject.
+>>
+>> Any help will be greatly appreciated.
+>>
+>> Karla--
+>>
+> ======================================================================
+>  Stefano Leonardi
+>  Dipartimento di Bioscienze
+>  Universita` di Parma
+>  Viale Usberti 11a                             Phone : +39-0521-905659
+>  43124 PARMA  (Italy)                          Fax   : +39-0521-905402
+>
+>  Il mio photoblog:                http://stefanoleonardi.wordpress.com
+> ======================================================================
+>
+
+	[[alternative HTML version deleted]]
+
+
+From gsargeant at usgs.gov  Wed Jul 15 02:02:32 2015
+From: gsargeant at usgs.gov (Sargeant, Glen)
+Date: Tue, 14 Jul 2015 19:02:32 -0500
+Subject: [R-sig-eco] altitudinal overlap
+In-Reply-To: <CAPU4_4rhXwqXZ_qyjaCnLV=EZCWss93nOP7+YSEnr7J2RSSrgw@mail.gmail.com>
+References: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+	<55A4C4FF.4000709@unipr.it>
+	<CAPU4_4rhXwqXZ_qyjaCnLV=EZCWss93nOP7+YSEnr7J2RSSrgw@mail.gmail.com>
+Message-ID: <CAATPAJaZARZfOepPE9nFFSHos8u3FNbA1s9n579m-TLtap8yUA@mail.gmail.com>
+
+Here you go.
+
+> #Data.  Each row gives altitudinal limits for a species
+>
+> x <- matrix(runif(20),10,2)
+
+> x <- t(apply(x,1,sort))
+
+> dimnames(x) <- list(NULL, c("min","max"))
+
+> species <- paste("species",1:10,sep="")
+
+> x <- data.frame(species,x)
+
+> x
+     species        min       max
+1   species1 0.20903724 0.8232747
+2   species2 0.25137925 0.7794901
+3   species3 0.09128804 0.2311824
+4   species4 0.07792821 0.8668317
+5   species5 0.34627541 0.5385044
+6   species6 0.14072631 0.3356345
+7   species7 0.52154781 0.9216631
+8   species8 0.03126684 0.3382409
+9   species9 0.43925482 0.4398011
+10 species10 0.41146614 0.4611622
+
+> #Order by min and then by max within min
+> x <- x[order(x$min,x$max),]
+
+> x
+     species        min       max
+8   species8 0.03126684 0.3382409
+4   species4 0.07792821 0.8668317
+3   species3 0.09128804 0.2311824
+6   species6 0.14072631 0.3356345
+1   species1 0.20903724 0.8232747
+2   species2 0.25137925 0.7794901
+5   species5 0.34627541 0.5385044
+10 species10 0.41146614 0.4611622
+9   species9 0.43925482 0.4398011
+7   species7 0.52154781 0.9216631
+
+> #Compare each minimum to preceding maxima.
+
+> #This is where the reordering comes in.
+> #The only way two species can overlap is if
+> #the minimum for the second one is less than
+> #or equal to the maximum for the first one.
+> mat <- matrix(NA,nrow(x),nrow(x))
+
+> dimnames(mat) <- list(x$species,x$species)
+
+> for(i in 1:(nrow(x)-1)){
++   for(j in (i+1):nrow(x)){
++     mat[i,j] <- x$min[j] <= x$max[i]
++   }
++ }
+
+> mat
+          species8 species4 species3 species6 species1 species2 species5
+species10 species9 species7
+species8        NA     TRUE     TRUE     TRUE     TRUE     TRUE
+FALSE     FALSE    FALSE    FALSE
+species4        NA       NA     TRUE     TRUE     TRUE     TRUE
+TRUE      TRUE     TRUE     TRUE
+species3        NA       NA       NA     TRUE     TRUE    FALSE
+FALSE     FALSE    FALSE    FALSE
+species6        NA       NA       NA       NA     TRUE     TRUE
+FALSE     FALSE    FALSE    FALSE
+species1        NA       NA       NA       NA       NA     TRUE
+TRUE      TRUE     TRUE     TRUE
+species2        NA       NA       NA       NA       NA       NA
+TRUE      TRUE     TRUE     TRUE
+species5        NA       NA       NA       NA       NA       NA
+NA      TRUE     TRUE     TRUE
+species10       NA       NA       NA       NA       NA       NA
+NA        NA     TRUE    FALSE
+species9        NA       NA       NA       NA       NA       NA
+NA        NA       NA    FALSE
+species7        NA       NA       NA       NA       NA       NA
+NA        NA       NA       NA
+
+> apply(mat,1,sum,na.rm=TRUE)
+ species8  species4  species3  species6  species1  species2  species5
+species10  species9  species7
+        5         8         2         2         5         4
+3         1         0         0
+
+On Tue, Jul 14, 2015 at 6:37 PM, Karla Shikev <karlashikev at gmail.com> wrote:
+
+> Ok, here's another (a bit more challenging) question.
+>
+> Imagine that I have a S species and a S x 2 matrix of altitudinal limits
+> (min and max elevation). How would you compute the number of co-occurring
+> species for each of the S species?
+>
+> Thanks again for your assistance.
+>
+> Karla
+>
+> On Tue, Jul 14, 2015 at 5:14 AM, Stefano Leonardi <
+> stefano.leonardi at unipr.it
+> > wrote:
+>
+> >
+> > The first think that came to my mind:
+> >
+> > overlap <- function(v1,v2) {
+> > ov <-min(max(v1), max(v2)) - max(min(v1), min(v2))
+> > ifelse(ov > 0, ov, 0)
+> > }
+> >
+> > overlap(dat[1,], dat[2,])
+> > [1] 0.5
+> >
+> >
+> > Ciao
+> > Stefano
+> >
+> > On 14/07/2015 01:03, Karla Shikev wrote:
+> >
+> >> Hi there,
+> >>
+> >> This is a newbie question, and I'm sure there are simple ways to do
+> this,
+> >> but I've spent my entire afternoon and I couldn't get it to work.
+> >>
+> >> Imagine that I got the altitudinal range of different species. For
+> >> instance:
+> >>
+> >>  dat<-matrix(c(1,3,2.5,4), ncol=2, byrow=TRUE)
+> >>> dat
+> >>>
+> >>       [,1] [,2]
+> >> [1,]  1.0    3
+> >> [2,]  2.5    4
+> >>
+> >>
+> >> The first line indicates that this species is found between 1 and 3,
+> >> whereas the second species was found between 2.5 and 4.
+> >>
+> >> I need a simple way to calculate the overlap of their extents (0.5 in
+> this
+> >> case). This way should provide 0 if there is no overlap, and it should
+> >> also
+> >> work in the case where one subject is found only within the extent of
+> the
+> >> second subject.
+> >>
+> >> Any help will be greatly appreciated.
+> >>
+> >> Karla--
+> >>
+> > ======================================================================
+> >  Stefano Leonardi
+> >  Dipartimento di Bioscienze
+> >  Universita` di Parma
+> >  Viale Usberti 11a                             Phone : +39-0521-905659
+> >  43124 PARMA  (Italy)                          Fax   : +39-0521-905402
+> >
+> >  Il mio photoblog:                http://stefanoleonardi.wordpress.com
+> > ======================================================================
+> >
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Glen Sargeant, Ph.D.
+Research Wildlife Biologist/Statistician
+USGS Northern Prairie Wildlife Research Center
+E-mail: gsargeant at usgs.gov
+Phone: (701) 253-5528
+
+	[[alternative HTML version deleted]]
+
+
+From gsargeant at usgs.gov  Wed Jul 15 02:31:26 2015
+From: gsargeant at usgs.gov (Sargeant, Glen)
+Date: Tue, 14 Jul 2015 19:31:26 -0500
+Subject: [R-sig-eco] altitudinal overlap
+In-Reply-To: <CAATPAJaZARZfOepPE9nFFSHos8u3FNbA1s9n579m-TLtap8yUA@mail.gmail.com>
+References: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+	<55A4C4FF.4000709@unipr.it>
+	<CAPU4_4rhXwqXZ_qyjaCnLV=EZCWss93nOP7+YSEnr7J2RSSrgw@mail.gmail.com>
+	<CAATPAJaZARZfOepPE9nFFSHos8u3FNbA1s9n579m-TLtap8yUA@mail.gmail.com>
+Message-ID: <CAATPAJZdwc_PsWDznvnNUHdBYnLMWrCsLm+PbtAze7t=iYhUNg@mail.gmail.com>
+
+Oops!  Tally the entire matrix, not just the upper triangular portion.
+Adding the code in red (4th line from top) should rectify the error.
+
+for(i in 1:(nrow(x)-1)){
+    for(j in (i+1):nrow(x)){
+      mat[i,j] <- x$min[j] <= x$max[i]
+      *mat[j,i] <- mat[i,j]*
+    }
+}
+
+
+
+
+
+
+On Tue, Jul 14, 2015 at 7:02 PM, Sargeant, Glen <gsargeant at usgs.gov> wrote:
+
+> Here you go.
+>
+> > #Data.  Each row gives altitudinal limits for a species
+> >
+> > x <- matrix(runif(20),10,2)
+>
+> > x <- t(apply(x,1,sort))
+>
+> > dimnames(x) <- list(NULL, c("min","max"))
+>
+> > species <- paste("species",1:10,sep="")
+>
+> > x <- data.frame(species,x)
+>
+> > x
+>      species        min       max
+> 1   species1 0.20903724 0.8232747
+> 2   species2 0.25137925 0.7794901
+> 3   species3 0.09128804 0.2311824
+> 4   species4 0.07792821 0.8668317
+> 5   species5 0.34627541 0.5385044
+> 6   species6 0.14072631 0.3356345
+> 7   species7 0.52154781 0.9216631
+> 8   species8 0.03126684 0.3382409
+> 9   species9 0.43925482 0.4398011
+> 10 species10 0.41146614 0.4611622
+>
+> > #Order by min and then by max within min
+> > x <- x[order(x$min,x$max),]
+>
+> > x
+>      species        min       max
+> 8   species8 0.03126684 0.3382409
+> 4   species4 0.07792821 0.8668317
+> 3   species3 0.09128804 0.2311824
+> 6   species6 0.14072631 0.3356345
+> 1   species1 0.20903724 0.8232747
+> 2   species2 0.25137925 0.7794901
+> 5   species5 0.34627541 0.5385044
+> 10 species10 0.41146614 0.4611622
+> 9   species9 0.43925482 0.4398011
+> 7   species7 0.52154781 0.9216631
+>
+> > #Compare each minimum to preceding maxima.
+>
+> > #This is where the reordering comes in.
+> > #The only way two species can overlap is if
+> > #the minimum for the second one is less than
+> > #or equal to the maximum for the first one.
+> > mat <- matrix(NA,nrow(x),nrow(x))
+>
+> > dimnames(mat) <- list(x$species,x$species)
+>
+> > for(i in 1:(nrow(x)-1)){
+> +   for(j in (i+1):nrow(x)){
+> +     mat[i,j] <- x$min[j] <= x$max[i]
+> +   }
+> + }
+>
+> > mat
+>           species8 species4 species3 species6 species1 species2 species5
+> species10 species9 species7
+> species8        NA     TRUE     TRUE     TRUE     TRUE     TRUE
+> FALSE     FALSE    FALSE    FALSE
+> species4        NA       NA     TRUE     TRUE     TRUE     TRUE
+> TRUE      TRUE     TRUE     TRUE
+> species3        NA       NA       NA     TRUE     TRUE    FALSE
+> FALSE     FALSE    FALSE    FALSE
+> species6        NA       NA       NA       NA     TRUE     TRUE
+> FALSE     FALSE    FALSE    FALSE
+> species1        NA       NA       NA       NA       NA     TRUE
+> TRUE      TRUE     TRUE     TRUE
+> species2        NA       NA       NA       NA       NA       NA
+> TRUE      TRUE     TRUE     TRUE
+> species5        NA       NA       NA       NA       NA       NA
+> NA      TRUE     TRUE     TRUE
+> species10       NA       NA       NA       NA       NA       NA
+> NA        NA     TRUE    FALSE
+> species9        NA       NA       NA       NA       NA       NA
+> NA        NA       NA    FALSE
+> species7        NA       NA       NA       NA       NA       NA
+> NA        NA       NA       NA
+>
+> > apply(mat,1,sum,na.rm=TRUE)
+>  species8  species4  species3  species6  species1  species2  species5
+> species10  species9  species7
+>         5         8         2         2         5         4
+> 3         1         0         0
+>
+> On Tue, Jul 14, 2015 at 6:37 PM, Karla Shikev <karlashikev at gmail.com>
+> wrote:
+>
+>> Ok, here's another (a bit more challenging) question.
+>>
+>> Imagine that I have a S species and a S x 2 matrix of altitudinal limits
+>> (min and max elevation). How would you compute the number of co-occurring
+>> species for each of the S species?
+>>
+>> Thanks again for your assistance.
+>>
+>> Karla
+>>
+>> On Tue, Jul 14, 2015 at 5:14 AM, Stefano Leonardi <
+>> stefano.leonardi at unipr.it
+>> > wrote:
+>>
+>> >
+>> > The first think that came to my mind:
+>> >
+>> > overlap <- function(v1,v2) {
+>> > ov <-min(max(v1), max(v2)) - max(min(v1), min(v2))
+>> > ifelse(ov > 0, ov, 0)
+>> > }
+>> >
+>> > overlap(dat[1,], dat[2,])
+>> > [1] 0.5
+>> >
+>> >
+>> > Ciao
+>> > Stefano
+>> >
+>> > On 14/07/2015 01:03, Karla Shikev wrote:
+>> >
+>> >> Hi there,
+>> >>
+>> >> This is a newbie question, and I'm sure there are simple ways to do
+>> this,
+>> >> but I've spent my entire afternoon and I couldn't get it to work.
+>> >>
+>> >> Imagine that I got the altitudinal range of different species. For
+>> >> instance:
+>> >>
+>> >>  dat<-matrix(c(1,3,2.5,4), ncol=2, byrow=TRUE)
+>> >>> dat
+>> >>>
+>> >>       [,1] [,2]
+>> >> [1,]  1.0    3
+>> >> [2,]  2.5    4
+>> >>
+>> >>
+>> >> The first line indicates that this species is found between 1 and 3,
+>> >> whereas the second species was found between 2.5 and 4.
+>> >>
+>> >> I need a simple way to calculate the overlap of their extents (0.5 in
+>> this
+>> >> case). This way should provide 0 if there is no overlap, and it should
+>> >> also
+>> >> work in the case where one subject is found only within the extent of
+>> the
+>> >> second subject.
+>> >>
+>> >> Any help will be greatly appreciated.
+>> >>
+>> >> Karla--
+>> >>
+>> > ======================================================================
+>> >  Stefano Leonardi
+>> >  Dipartimento di Bioscienze
+>> >  Universita` di Parma
+>> >  Viale Usberti 11a                             Phone : +39-0521-905659
+>> >  43124 PARMA  (Italy)                          Fax   : +39-0521-905402
+>> >
+>> >  Il mio photoblog:                http://stefanoleonardi.wordpress.com
+>> > ======================================================================
+>> >
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+> --
+> Glen Sargeant, Ph.D.
+> Research Wildlife Biologist/Statistician
+> USGS Northern Prairie Wildlife Research Center
+> E-mail: gsargeant at usgs.gov
+> Phone: (701) 253-5528
+>
+
+
+
+-- 
+Glen Sargeant, Ph.D.
+Research Wildlife Biologist/Statistician
+USGS Northern Prairie Wildlife Research Center
+E-mail: gsargeant at usgs.gov
+Phone: (701) 253-5528
+
+	[[alternative HTML version deleted]]
+
+
+From laura.riggi at slu.se  Wed Jul 15 15:35:06 2015
+From: laura.riggi at slu.se (Laura Riggi)
+Date: Wed, 15 Jul 2015 13:35:06 +0000
+Subject: [R-sig-eco] error message in package "FD", function dbFD ()
+Message-ID: <5e91c7815e5f4675af3b3dd45fb55d5d@Exch2-3.slu.se>
+
+Dear R community,
+
+
+
+I  have some trouble with the dbFD function in the FD package.
+
+> str(a)
+
+'data.frame':    150 obs. of  48 variables:
+
+> str(x)
+
+'data.frame':    48 obs. of  9 variables:
+
+
+
+ex1 <- dbFD(x,a)
+
+Error in dbFD(x, a) :
+
+  Species labels in 'x' and 'a' need to be identical and ordered alphabetically (or simply in the same order).
+
+
+
+I have checked multiple time the data set but this message keeps on appearing. The names of the species are identical in both data.frames.
+
+
+
+I was wondering if you could help me by giving me an example of an excel trait and species matrix table to upload for this package. Below is a snapshop of my data. I have also checked that there are no NA's problems and that there is no species abundance = 0 or no community with 0 species.
+
+
+
+Thank you for any advice!
+
+Best
+
+Laura
+
+
+
+Species table (a)
+Agonum_assimile
+
+Agonum_dorsale
+
+Agonum_gracile
+
+Agonum_gracilipes
+
+2
+
+3
+
+0
+
+0
+
+0
+
+6
+
+0
+
+0
+
+1
+
+10
+
+0
+
+0
+
+1
+
+5
+
+0
+
+0
+
+0
+
+8
+
+0
+
+0
+
+2
+
+7
+
+0
+
+0
+
+1
+
+6
+
+0
+
+0
+
+
+
+
+
+
+Trait table(x)
+
+
+Species
+
+SizeCategoy
+
+Ecology
+
+Reproduction
+
+Diet
+
+Wing
+
+Agonum_assimile
+
+C
+
+nocturnal
+
+spring
+
+Carnivorous
+
+Brachypterous
+
+Agonum_dorsale
+
+B
+
+nocturnal
+
+spring
+
+Carnivorous
+
+Macropterous
+
+Agonum_gracile
+
+B
+
+diurnal
+
+spring
+
+Carnivorous
+
+Macropterous
+
+Agonum_gracilipes
+
+B
+
+both
+
+spring
+
+Carnivorous
+
+Macropterous
+
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Wed Jul 15 15:48:28 2015
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Wed, 15 Jul 2015 09:48:28 -0400
+Subject: [R-sig-eco] error message in package "FD", function dbFD ()
+In-Reply-To: <5e91c7815e5f4675af3b3dd45fb55d5d@Exch2-3.slu.se>
+References: <5e91c7815e5f4675af3b3dd45fb55d5d@Exch2-3.slu.se>
+Message-ID: <CAM_vjukShHBxKeVopEgQUqN5RuSchc3J4zascbWWq30ud_vM+g@mail.gmail.com>
+
+I *think* your problem is contained in the help for ?FD, where it says
+that for a, rows are sites and species are columns.
+
+But you posted in HTML, and didn't use dput() to provide data, so your
+example is hopelessly mangled.
+
+Without a reproducible example that includes some sample data (fake is
+fine), the code you used, and some clear idea of what output you
+expect, it's impossible to figure out exactly how to help you. Here
+are some suggestions for creating a good reproducible example:
+http://stackoverflow.com/questions/5963269/how-to-make-a-great-r-reproducible-example
+
+Sarah
+
+On Wed, Jul 15, 2015 at 9:35 AM, Laura Riggi <laura.riggi at slu.se> wrote:
+> Dear R community,
+>
+>
+>
+> I  have some trouble with the dbFD function in the FD package.
+>
+>> str(a)
+>
+> 'data.frame':    150 obs. of  48 variables:
+>
+>> str(x)
+>
+> 'data.frame':    48 obs. of  9 variables:
+>
+>
+>
+> ex1 <- dbFD(x,a)
+>
+> Error in dbFD(x, a) :
+>
+>   Species labels in 'x' and 'a' need to be identical and ordered alphabetically (or simply in the same order).
+>
+>
+>
+> I have checked multiple time the data set but this message keeps on appearing. The names of the species are identical in both data.frames.
+>
+>
+>
+> I was wondering if you could help me by giving me an example of an excel trait and species matrix table to upload for this package. Below is a snapshop of my data. I have also checked that there are no NA's problems and that there is no species abundance = 0 or no community with 0 species.
+>
+>
+>
+> Thank you for any advice!
+>
+> Best
+>
+> Laura
+>
+>
+>
+> Species table (a)
+> Agonum_assimile
+>
+> Agonum_dorsale
+>
+> Agonum_gracile
+>
+> Agonum_gracilipes
+>
+> 2
+>
+> 3
+>
+> 0
+>
+> 0
+>
+> 0
+>
+> 6
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 10
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 5
+>
+> 0
+>
+> 0
+>
+> 0
+>
+> 8
+>
+> 0
+>
+> 0
+>
+> 2
+>
+> 7
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 6
+>
+> 0
+>
+> 0
+>
+>
+>
+>
+>
+>
+> Trait table(x)
+>
+>
+> Species
+>
+> SizeCategoy
+>
+> Ecology
+>
+> Reproduction
+>
+> Diet
+>
+> Wing
+>
+> Agonum_assimile
+>
+> C
+>
+> nocturnal
+>
+> spring
+>
+> Carnivorous
+>
+> Brachypterous
+>
+> Agonum_dorsale
+>
+> B
+>
+> nocturnal
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+> Agonum_gracile
+>
+> B
+>
+> diurnal
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+> Agonum_gracilipes
+>
+> B
+>
+> both
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+>
+>
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From pnovack-gottshall at ben.edu  Wed Jul 15 16:12:27 2015
+From: pnovack-gottshall at ben.edu (Novack-Gottshall, Philip M.)
+Date: Wed, 15 Jul 2015 14:12:27 +0000
+Subject: [R-sig-eco] error message in package "FD", function dbFD ()
+References: <5e91c7815e5f4675af3b3dd45fb55d5d@Exch2-3.slu.se>
+Message-ID: <8CF6FE2C677EA94F94FA6285289BAE6831423954@BENMAIL02.ben.pri>
+
+Laura,
+
+Does one of your species names have a blank space at the end of it
+(that's invisible to your eye, but seen by R)?
+
+Without your actual data files, I can't diagnose the exact details. But
+if you "reveal" the dbFD() code [command line: > dbFD] and search for
+your error message, you'll find that somehow the row names for your
+transposed "a" file are not identical to the row names for your "x" file.
+
+Try the following to confirm:
+identical(row.names(x), row.names(t(a)))
+
+I'm guess this will yield "FALSE" (although they look identical in your
+output below).
+
+If FALSE, then you just need to confirm that the species names are
+actually identical (is there a space at the end of one?, or manually
+re-type to confirm, etc., etc.).
+
+Good luck,
+Phil
+
+On 7/15/2015 8:42 AM, Laura Riggi wrote:
+> Dear R community,
+>
+>
+>
+> I  have some trouble with the dbFD function in the FD package.
+>
+>> str(a)
+> 'data.frame':    150 obs. of  48 variables:
+>
+>> str(x)
+> 'data.frame':    48 obs. of  9 variables:
+>
+>
+>
+> ex1 <- dbFD(x,a)
+>
+> Error in dbFD(x, a) :
+>
+>   Species labels in 'x' and 'a' need to be identical and ordered alphabetically (or simply in the same order).
+>
+>
+>
+> I have checked multiple time the data set but this message keeps on appearing. The names of the species are identical in both data.frames.
+>
+>
+>
+> I was wondering if you could help me by giving me an example of an excel trait and species matrix table to upload for this package. Below is a snapshop of my data. I have also checked that there are no NA's problems and that there is no species abundance = 0 or no community with 0 species.
+>
+>
+>
+> Thank you for any advice!
+>
+> Best
+>
+> Laura
+>
+>
+>
+> Species table (a)
+> Agonum_assimile
+>
+> Agonum_dorsale
+>
+> Agonum_gracile
+>
+> Agonum_gracilipes
+>
+> 2
+>
+> 3
+>
+> 0
+>
+> 0
+>
+> 0
+>
+> 6
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 10
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 5
+>
+> 0
+>
+> 0
+>
+> 0
+>
+> 8
+>
+> 0
+>
+> 0
+>
+> 2
+>
+> 7
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 6
+>
+> 0
+>
+> 0
+>
+>
+>
+>
+>
+>
+> Trait table(x)
+>
+>
+> Species
+>
+> SizeCategoy
+>
+> Ecology
+>
+> Reproduction
+>
+> Diet
+>
+> Wing
+>
+> Agonum_assimile
+>
+> C
+>
+> nocturnal
+>
+> spring
+>
+> Carnivorous
+>
+> Brachypterous
+>
+> Agonum_dorsale
+>
+> B
+>
+> nocturnal
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+> Agonum_gracile
+>
+> B
+>
+> diurnal
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+> Agonum_gracilipes
+>
+> B
+>
+> both
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+>
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Phil Novack-Gottshall
+ Associate Professor
+ Department of Biological Sciences
+ Benedictine University
+ 5700 College Road 
+ Lisle, IL 60532
+
+ pnovack-gottshall at ben.edu
+ Phone: 630-829-6514
+ Fax: 630-829-6547
+ Office: 332 Birck Hall
+ Lab: 316 Birck Hall
+ http://www1.ben.edu/faculty/pnovack-gottshall
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+From krzysztof.sakrejda at gmail.com  Wed Jul 15 16:26:39 2015
+From: krzysztof.sakrejda at gmail.com (Krzysztof Sakrejda)
+Date: Wed, 15 Jul 2015 10:26:39 -0400
+Subject: [R-sig-eco] error message in package "FD", function dbFD ()
+In-Reply-To: <8CF6FE2C677EA94F94FA6285289BAE6831423954@BENMAIL02.ben.pri>
+References: <5e91c7815e5f4675af3b3dd45fb55d5d@Exch2-3.slu.se>
+	<8CF6FE2C677EA94F94FA6285289BAE6831423954@BENMAIL02.ben.pri>
+Message-ID: <CAJCSVaDOv=DNX64KWSBGFd_E3QHDBN5gq1E7qM7_yCaFCvem3A@mail.gmail.com>
+
+2015-07-15 10:12 GMT-04:00 Novack-Gottshall, Philip M. <
+pnovack-gottshall at ben.edu>:
+
+> [snip]
+
+Try the following to confirm:
+> identical(row.names(x), row.names(t(a)))
+>
+> I'm guess this will yield "FALSE" (although they look identical in your
+> output below).
+>
+> If FALSE, then you just need to confirm that the species names are
+> actually identical (is there a space at the end of one?, or manually
+> re-type to confirm, etc., etc.).
+>
+
+Or just find the culprit directly:
+
+row.names(x)[!(row.names(x) %in% row.names(t(a)))]
+row.names(t(a))[!(row.names(t(a)) %in% row.names(x))]
+
+
+
+>
+> Good luck,
+> Phil
+>
+> On 7/15/2015 8:42 AM, Laura Riggi wrote:
+> > Dear R community,
+> >
+> >
+> >
+> > I  have some trouble with the dbFD function in the FD package.
+> >
+> >> str(a)
+> > 'data.frame':    150 obs. of  48 variables:
+> >
+> >> str(x)
+> > 'data.frame':    48 obs. of  9 variables:
+> >
+> >
+> >
+> > ex1 <- dbFD(x,a)
+> >
+> > Error in dbFD(x, a) :
+> >
+> >   Species labels in 'x' and 'a' need to be identical and ordered
+> alphabetically (or simply in the same order).
+> >
+> >
+> >
+> > I have checked multiple time the data set but this message keeps on
+> appearing. The names of the species are identical in both data.frames.
+> >
+> >
+> >
+> > I was wondering if you could help me by giving me an example of an excel
+> trait and species matrix table to upload for this package. Below is a
+> snapshop of my data. I have also checked that there are no NA's problems
+> and that there is no species abundance = 0 or no community with 0 species.
+> >
+> >
+> >
+> > Thank you for any advice!
+> >
+> > Best
+> >
+> > Laura
+> >
+> >
+> >
+> > Species table (a)
+> > Agonum_assimile
+> >
+> > Agonum_dorsale
+> >
+> > Agonum_gracile
+> >
+> > Agonum_gracilipes
+> >
+> > 2
+> >
+> > 3
+> >
+> > 0
+> >
+> > 0
+> >
+> > 0
+> >
+> > 6
+> >
+> > 0
+> >
+> > 0
+> >
+> > 1
+> >
+> > 10
+> >
+> > 0
+> >
+> > 0
+> >
+> > 1
+> >
+> > 5
+> >
+> > 0
+> >
+> > 0
+> >
+> > 0
+> >
+> > 8
+> >
+> > 0
+> >
+> > 0
+> >
+> > 2
+> >
+> > 7
+> >
+> > 0
+> >
+> > 0
+> >
+> > 1
+> >
+> > 6
+> >
+> > 0
+> >
+> > 0
+> >
+> >
+> >
+> >
+> >
+> >
+> > Trait table(x)
+> >
+> >
+> > Species
+> >
+> > SizeCategoy
+> >
+> > Ecology
+> >
+> > Reproduction
+> >
+> > Diet
+> >
+> > Wing
+> >
+> > Agonum_assimile
+> >
+> > C
+> >
+> > nocturnal
+> >
+> > spring
+> >
+> > Carnivorous
+> >
+> > Brachypterous
+> >
+> > Agonum_dorsale
+> >
+> > B
+> >
+> > nocturnal
+> >
+> > spring
+> >
+> > Carnivorous
+> >
+> > Macropterous
+> >
+> > Agonum_gracile
+> >
+> > B
+> >
+> > diurnal
+> >
+> > spring
+> >
+> > Carnivorous
+> >
+> > Macropterous
+> >
+> > Agonum_gracilipes
+> >
+> > B
+> >
+> > both
+> >
+> > spring
+> >
+> > Carnivorous
+> >
+> > Macropterous
+> >
+> >
+> >
+> >
+> >       [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> >
+>
+> --
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>  Phil Novack-Gottshall
+>  Associate Professor
+>  Department of Biological Sciences
+>  Benedictine University
+>  5700 College Road
+>  Lisle, IL 60532
+>
+>  pnovack-gottshall at ben.edu
+>  Phone: 630-829-6514
+>  Fax: 630-829-6547
+>  Office: 332 Birck Hall
+>  Lab: 316 Birck Hall
+>  http://www1.ben.edu/faculty/pnovack-gottshall
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From laura.riggi at slu.se  Wed Jul 15 16:28:53 2015
+From: laura.riggi at slu.se (Laura Riggi)
+Date: Wed, 15 Jul 2015 14:28:53 +0000
+Subject: [R-sig-eco] Bugs in "FD" package, function dbFD ()
+Message-ID: <72deeb554cf849dcb50d438d40b468e9@Exch2-3.slu.se>
+
+Thanks for your help!
+It appears that I needed to leave the corner tab of each data frame empty and it worked.
+
+However now there seems to be a problem with the package it-self.
+
+> ex1 <- dbFD(x,a)
+Error in convhulln(tr.FRic, "FA") : Unable to write to current directory.
+ This is a known issue in the geometry package
+ See https://r-forge.r-project.org/tracker/index.php?func=detail&aid=5738&group_id=1149&atid=4552 
+
+The same error comes up when doing the example from the FD package.
+Any idea how to get around this?
+
+Thank you/Grazie
+Laura
+
+-----Original Message-----
+From: Novack-Gottshall, Philip M. [mailto:pnovack-gottshall at ben.edu] 
+Sent: den 15 juli 2015 16:12
+To: Laura Riggi; r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] error message in package "FD", function dbFD ()
+
+Laura,
+
+Does one of your species names have a blank space at the end of it (that's invisible to your eye, but seen by R)?
+
+Without your actual data files, I can't diagnose the exact details. But if you "reveal" the dbFD() code [command line: > dbFD] and search for your error message, you'll find that somehow the row names for your transposed "a" file are not identical to the row names for your "x" file.
+
+Try the following to confirm:
+identical(row.names(x), row.names(t(a)))
+
+I'm guess this will yield "FALSE" (although they look identical in your output below).
+
+If FALSE, then you just need to confirm that the species names are actually identical (is there a space at the end of one?, or manually re-type to confirm, etc., etc.).
+
+Good luck,
+Phil
+
+On 7/15/2015 8:42 AM, Laura Riggi wrote:
+> Dear R community,
+>
+>
+>
+> I  have some trouble with the dbFD function in the FD package.
+>
+>> str(a)
+> 'data.frame':    150 obs. of  48 variables:
+>
+>> str(x)
+> 'data.frame':    48 obs. of  9 variables:
+>
+>
+>
+> ex1 <- dbFD(x,a)
+>
+> Error in dbFD(x, a) :
+>
+>   Species labels in 'x' and 'a' need to be identical and ordered alphabetically (or simply in the same order).
+>
+>
+>
+> I have checked multiple time the data set but this message keeps on appearing. The names of the species are identical in both data.frames.
+>
+>
+>
+> I was wondering if you could help me by giving me an example of an excel trait and species matrix table to upload for this package. Below is a snapshop of my data. I have also checked that there are no NA's problems and that there is no species abundance = 0 or no community with 0 species.
+>
+>
+>
+> Thank you for any advice!
+>
+> Best
+>
+> Laura
+>
+>
+>
+> Species table (a)
+> Agonum_assimile
+>
+> Agonum_dorsale
+>
+> Agonum_gracile
+>
+> Agonum_gracilipes
+>
+> 2
+>
+> 3
+>
+> 0
+>
+> 0
+>
+> 0
+>
+> 6
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 10
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 5
+>
+> 0
+>
+> 0
+>
+> 0
+>
+> 8
+>
+> 0
+>
+> 0
+>
+> 2
+>
+> 7
+>
+> 0
+>
+> 0
+>
+> 1
+>
+> 6
+>
+> 0
+>
+> 0
+>
+>
+>
+>
+>
+>
+> Trait table(x)
+>
+>
+> Species
+>
+> SizeCategoy
+>
+> Ecology
+>
+> Reproduction
+>
+> Diet
+>
+> Wing
+>
+> Agonum_assimile
+>
+> C
+>
+> nocturnal
+>
+> spring
+>
+> Carnivorous
+>
+> Brachypterous
+>
+> Agonum_dorsale
+>
+> B
+>
+> nocturnal
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+> Agonum_gracile
+>
+> B
+>
+> diurnal
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+> Agonum_gracilipes
+>
+> B
+>
+> both
+>
+> spring
+>
+> Carnivorous
+>
+> Macropterous
+>
+>
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+--
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Phil Novack-Gottshall
+ Associate Professor
+ Department of Biological Sciences
+ Benedictine University
+ 5700 College Road
+ Lisle, IL 60532
+
+ pnovack-gottshall at ben.edu
+ Phone: 630-829-6514
+ Fax: 630-829-6547
+ Office: 332 Birck Hall
+ Lab: 316 Birck Hall
+ http://www1.ben.edu/faculty/pnovack-gottshall
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+From karlashikev at gmail.com  Wed Jul 15 16:31:54 2015
+From: karlashikev at gmail.com (Karla Shikev)
+Date: Wed, 15 Jul 2015 11:31:54 -0300
+Subject: [R-sig-eco] altitudinal overlap
+In-Reply-To: <CAATPAJZdwc_PsWDznvnNUHdBYnLMWrCsLm+PbtAze7t=iYhUNg@mail.gmail.com>
+References: <CAPU4_4pSwSnrYMiZ1rykp8wxKCiOHd+6OjmzeuPLW5SK2xutmA@mail.gmail.com>
+	<55A4C4FF.4000709@unipr.it>
+	<CAPU4_4rhXwqXZ_qyjaCnLV=EZCWss93nOP7+YSEnr7J2RSSrgw@mail.gmail.com>
+	<CAATPAJaZARZfOepPE9nFFSHos8u3FNbA1s9n579m-TLtap8yUA@mail.gmail.com>
+	<CAATPAJZdwc_PsWDznvnNUHdBYnLMWrCsLm+PbtAze7t=iYhUNg@mail.gmail.com>
+Message-ID: <CAPU4_4pixO3bAbWhDT1zzvZk2rEr=VjgGky0FtS0gqJYQQ7cqQ@mail.gmail.com>
+
+Worked like a charm.Thanks!
+
+On Tue, Jul 14, 2015 at 9:31 PM, Sargeant, Glen <gsargeant at usgs.gov> wrote:
+
+> Oops!  Tally the entire matrix, not just the upper triangular portion.
+> Adding the code in red (4th line from top) should rectify the error.
+>
+> for(i in 1:(nrow(x)-1)){
+>     for(j in (i+1):nrow(x)){
+>       mat[i,j] <- x$min[j] <= x$max[i]
+>       *mat[j,i] <- mat[i,j]*
+>     }
+> }
+>
+>
+>
+>
+>
+>
+> On Tue, Jul 14, 2015 at 7:02 PM, Sargeant, Glen <gsargeant at usgs.gov>
+> wrote:
+>
+>> Here you go.
+>>
+>> > #Data.  Each row gives altitudinal limits for a species
+>> >
+>> > x <- matrix(runif(20),10,2)
+>>
+>> > x <- t(apply(x,1,sort))
+>>
+>> > dimnames(x) <- list(NULL, c("min","max"))
+>>
+>> > species <- paste("species",1:10,sep="")
+>>
+>> > x <- data.frame(species,x)
+>>
+>> > x
+>>      species        min       max
+>> 1   species1 0.20903724 0.8232747
+>> 2   species2 0.25137925 0.7794901
+>> 3   species3 0.09128804 0.2311824
+>> 4   species4 0.07792821 0.8668317
+>> 5   species5 0.34627541 0.5385044
+>> 6   species6 0.14072631 0.3356345
+>> 7   species7 0.52154781 0.9216631
+>> 8   species8 0.03126684 0.3382409
+>> 9   species9 0.43925482 0.4398011
+>> 10 species10 0.41146614 0.4611622
+>>
+>> > #Order by min and then by max within min
+>> > x <- x[order(x$min,x$max),]
+>>
+>> > x
+>>      species        min       max
+>> 8   species8 0.03126684 0.3382409
+>> 4   species4 0.07792821 0.8668317
+>> 3   species3 0.09128804 0.2311824
+>> 6   species6 0.14072631 0.3356345
+>> 1   species1 0.20903724 0.8232747
+>> 2   species2 0.25137925 0.7794901
+>> 5   species5 0.34627541 0.5385044
+>> 10 species10 0.41146614 0.4611622
+>> 9   species9 0.43925482 0.4398011
+>> 7   species7 0.52154781 0.9216631
+>>
+>> > #Compare each minimum to preceding maxima.
+>>
+>> > #This is where the reordering comes in.
+>> > #The only way two species can overlap is if
+>> > #the minimum for the second one is less than
+>> > #or equal to the maximum for the first one.
+>> > mat <- matrix(NA,nrow(x),nrow(x))
+>>
+>> > dimnames(mat) <- list(x$species,x$species)
+>>
+>> > for(i in 1:(nrow(x)-1)){
+>> +   for(j in (i+1):nrow(x)){
+>> +     mat[i,j] <- x$min[j] <= x$max[i]
+>> +   }
+>> + }
+>>
+>> > mat
+>>           species8 species4 species3 species6 species1 species2 species5
+>> species10 species9 species7
+>> species8        NA     TRUE     TRUE     TRUE     TRUE     TRUE
+>> FALSE     FALSE    FALSE    FALSE
+>> species4        NA       NA     TRUE     TRUE     TRUE     TRUE
+>> TRUE      TRUE     TRUE     TRUE
+>> species3        NA       NA       NA     TRUE     TRUE    FALSE
+>> FALSE     FALSE    FALSE    FALSE
+>> species6        NA       NA       NA       NA     TRUE     TRUE
+>> FALSE     FALSE    FALSE    FALSE
+>> species1        NA       NA       NA       NA       NA     TRUE
+>> TRUE      TRUE     TRUE     TRUE
+>> species2        NA       NA       NA       NA       NA       NA
+>> TRUE      TRUE     TRUE     TRUE
+>> species5        NA       NA       NA       NA       NA       NA
+>> NA      TRUE     TRUE     TRUE
+>> species10       NA       NA       NA       NA       NA       NA
+>> NA        NA     TRUE    FALSE
+>> species9        NA       NA       NA       NA       NA       NA
+>> NA        NA       NA    FALSE
+>> species7        NA       NA       NA       NA       NA       NA
+>> NA        NA       NA       NA
+>>
+>> > apply(mat,1,sum,na.rm=TRUE)
+>>  species8  species4  species3  species6  species1  species2  species5
+>> species10  species9  species7
+>>         5         8         2         2         5         4
+>> 3         1         0         0
+>>
+>> On Tue, Jul 14, 2015 at 6:37 PM, Karla Shikev <karlashikev at gmail.com>
+>> wrote:
+>>
+>>> Ok, here's another (a bit more challenging) question.
+>>>
+>>> Imagine that I have a S species and a S x 2 matrix of altitudinal limits
+>>> (min and max elevation). How would you compute the number of co-occurring
+>>> species for each of the S species?
+>>>
+>>> Thanks again for your assistance.
+>>>
+>>> Karla
+>>>
+>>> On Tue, Jul 14, 2015 at 5:14 AM, Stefano Leonardi <
+>>> stefano.leonardi at unipr.it
+>>> > wrote:
+>>>
+>>> >
+>>> > The first think that came to my mind:
+>>> >
+>>> > overlap <- function(v1,v2) {
+>>> > ov <-min(max(v1), max(v2)) - max(min(v1), min(v2))
+>>> > ifelse(ov > 0, ov, 0)
+>>> > }
+>>> >
+>>> > overlap(dat[1,], dat[2,])
+>>> > [1] 0.5
+>>> >
+>>> >
+>>> > Ciao
+>>> > Stefano
+>>> >
+>>> > On 14/07/2015 01:03, Karla Shikev wrote:
+>>> >
+>>> >> Hi there,
+>>> >>
+>>> >> This is a newbie question, and I'm sure there are simple ways to do
+>>> this,
+>>> >> but I've spent my entire afternoon and I couldn't get it to work.
+>>> >>
+>>> >> Imagine that I got the altitudinal range of different species. For
+>>> >> instance:
+>>> >>
+>>> >>  dat<-matrix(c(1,3,2.5,4), ncol=2, byrow=TRUE)
+>>> >>> dat
+>>> >>>
+>>> >>       [,1] [,2]
+>>> >> [1,]  1.0    3
+>>> >> [2,]  2.5    4
+>>> >>
+>>> >>
+>>> >> The first line indicates that this species is found between 1 and 3,
+>>> >> whereas the second species was found between 2.5 and 4.
+>>> >>
+>>> >> I need a simple way to calculate the overlap of their extents (0.5 in
+>>> this
+>>> >> case). This way should provide 0 if there is no overlap, and it should
+>>> >> also
+>>> >> work in the case where one subject is found only within the extent of
+>>> the
+>>> >> second subject.
+>>> >>
+>>> >> Any help will be greatly appreciated.
+>>> >>
+>>> >> Karla--
+>>> >>
+>>> > ======================================================================
+>>> >  Stefano Leonardi
+>>> >  Dipartimento di Bioscienze
+>>> >  Universita` di Parma
+>>> >  Viale Usberti 11a                             Phone : +39-0521-905659
+>>> >  43124 PARMA  (Italy)                          Fax   : +39-0521-905402
+>>> >
+>>> >  Il mio photoblog:                http://stefanoleonardi.wordpress.com
+>>> > ======================================================================
+>>> >
+>>>
+>>>         [[alternative HTML version deleted]]
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>
+>>
+>>
+>> --
+>> Glen Sargeant, Ph.D.
+>> Research Wildlife Biologist/Statistician
+>> USGS Northern Prairie Wildlife Research Center
+>> E-mail: gsargeant at usgs.gov
+>> Phone: (701) 253-5528
+>>
+>
+>
+>
+> --
+> Glen Sargeant, Ph.D.
+> Research Wildlife Biologist/Statistician
+> USGS Northern Prairie Wildlife Research Center
+> E-mail: gsargeant at usgs.gov
+> Phone: (701) 253-5528
+>
+
+	[[alternative HTML version deleted]]
+
+
+From pnovack-gottshall at ben.edu  Wed Jul 15 16:41:02 2015
+From: pnovack-gottshall at ben.edu (Novack-Gottshall, Philip M.)
+Date: Wed, 15 Jul 2015 14:41:02 +0000
+Subject: [R-sig-eco] Bugs in "FD" package, function dbFD ()
+References: <72deeb554cf849dcb50d438d40b468e9@Exch2-3.slu.se>
+Message-ID: <8CF6FE2C677EA94F94FA6285289BAE68314239C5@BENMAIL02.ben.pri>
+
+This one's just as simple. The geometry package needs to create, save, and read a vertices txt file (vert.txt) for FD to calculate convex hull volume / FRic. I'm guessing (since it also occurs for you with the example code in dbFD) that it's trying to write to a location that you don't have read-write permission to access.
+
+Try setting the working directory directly, using setwd(), and you should be good to go.
+
+Phil
+
+
+On 7/15/2015 9:29 AM, Laura Riggi wrote:
+> Thanks for your help!
+> It appears that I needed to leave the corner tab of each data frame empty and it worked.
+>
+> However now there seems to be a problem with the package it-self.
+>
+>> ex1 <- dbFD(x,a)
+> Error in convhulln(tr.FRic, "FA") : Unable to write to current directory.
+>  This is a known issue in the geometry package
+>  See https://r-forge.r-project.org/tracker/index.php?func=detail&aid=5738&group_id=1149&atid=4552 
+>
+> The same error comes up when doing the example from the FD package.
+> Any idea how to get around this?
+>
+> Thank you/Grazie
+> Laura
+>
+> -----Original Message-----
+> From: Novack-Gottshall, Philip M. [mailto:pnovack-gottshall at ben.edu] 
+> Sent: den 15 juli 2015 16:12
+> To: Laura Riggi; r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] error message in package "FD", function dbFD ()
+>
+> Laura,
+>
+> Does one of your species names have a blank space at the end of it (that's invisible to your eye, but seen by R)?
+>
+> Without your actual data files, I can't diagnose the exact details. But if you "reveal" the dbFD() code [command line: > dbFD] and search for your error message, you'll find that somehow the row names for your transposed "a" file are not identical to the row names for your "x" file.
+>
+> Try the following to confirm:
+> identical(row.names(x), row.names(t(a)))
+>
+> I'm guess this will yield "FALSE" (although they look identical in your output below).
+>
+> If FALSE, then you just need to confirm that the species names are actually identical (is there a space at the end of one?, or manually re-type to confirm, etc., etc.).
+>
+> Good luck,
+> Phil
+>
+> On 7/15/2015 8:42 AM, Laura Riggi wrote:
+>> Dear R community,
+>>
+>>
+>>
+>> I  have some trouble with the dbFD function in the FD package.
+>>
+>>> str(a)
+>> 'data.frame':    150 obs. of  48 variables:
+>>
+>>> str(x)
+>> 'data.frame':    48 obs. of  9 variables:
+>>
+>>
+>>
+>> ex1 <- dbFD(x,a)
+>>
+>> Error in dbFD(x, a) :
+>>
+>>   Species labels in 'x' and 'a' need to be identical and ordered alphabetically (or simply in the same order).
+>>
+>>
+>>
+>> I have checked multiple time the data set but this message keeps on appearing. The names of the species are identical in both data.frames.
+>>
+>>
+>>
+>> I was wondering if you could help me by giving me an example of an excel trait and species matrix table to upload for this package. Below is a snapshop of my data. I have also checked that there are no NA's problems and that there is no species abundance = 0 or no community with 0 species.
+>>
+>>
+>>
+>> Thank you for any advice!
+>>
+>> Best
+>>
+>> Laura
+>>
+>>
+>>
+>> Species table (a)
+>> Agonum_assimile
+>>
+>> Agonum_dorsale
+>>
+>> Agonum_gracile
+>>
+>> Agonum_gracilipes
+>>
+>> 2
+>>
+>> 3
+>>
+>> 0
+>>
+>> 0
+>>
+>> 0
+>>
+>> 6
+>>
+>> 0
+>>
+>> 0
+>>
+>> 1
+>>
+>> 10
+>>
+>> 0
+>>
+>> 0
+>>
+>> 1
+>>
+>> 5
+>>
+>> 0
+>>
+>> 0
+>>
+>> 0
+>>
+>> 8
+>>
+>> 0
+>>
+>> 0
+>>
+>> 2
+>>
+>> 7
+>>
+>> 0
+>>
+>> 0
+>>
+>> 1
+>>
+>> 6
+>>
+>> 0
+>>
+>> 0
+>>
+>>
+>>
+>>
+>>
+>>
+>> Trait table(x)
+>>
+>>
+>> Species
+>>
+>> SizeCategoy
+>>
+>> Ecology
+>>
+>> Reproduction
+>>
+>> Diet
+>>
+>> Wing
+>>
+>> Agonum_assimile
+>>
+>> C
+>>
+>> nocturnal
+>>
+>> spring
+>>
+>> Carnivorous
+>>
+>> Brachypterous
+>>
+>> Agonum_dorsale
+>>
+>> B
+>>
+>> nocturnal
+>>
+>> spring
+>>
+>> Carnivorous
+>>
+>> Macropterous
+>>
+>> Agonum_gracile
+>>
+>> B
+>>
+>> diurnal
+>>
+>> spring
+>>
+>> Carnivorous
+>>
+>> Macropterous
+>>
+>> Agonum_gracilipes
+>>
+>> B
+>>
+>> both
+>>
+>> spring
+>>
+>> Carnivorous
+>>
+>> Macropterous
+>>
+>>
+>>
+>>
+>> 	[[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+> --
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>  Phil Novack-Gottshall
+>  Associate Professor
+>  Department of Biological Sciences
+>  Benedictine University
+>  5700 College Road
+>  Lisle, IL 60532
+>
+>  pnovack-gottshall at ben.edu
+>  Phone: 630-829-6514
+>  Fax: 630-829-6547
+>  Office: 332 Birck Hall
+>  Lab: 316 Birck Hall
+>  http://www1.ben.edu/faculty/pnovack-gottshall
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>
+>
+>
+>
+
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Phil Novack-Gottshall
+ Associate Professor
+ Department of Biological Sciences
+ Benedictine University
+ 5700 College Road 
+ Lisle, IL 60532
+
+ pnovack-gottshall at ben.edu
+ Phone: 630-829-6514
+ Fax: 630-829-6547
+ Office: 332 Birck Hall
+ Lab: 316 Birck Hall
+ http://www1.ben.edu/faculty/pnovack-gottshall
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+From davidbecas at gmail.com  Wed Jul 15 18:14:00 2015
+From: davidbecas at gmail.com (dmaa)
+Date: Wed, 15 Jul 2015 09:14:00 -0700 (MST)
+Subject: [R-sig-eco] problem with kernel UD estimation using adehabitatHR
+In-Reply-To: <DUB406-EAS1184CDD0225F9F6B66CCF88D99C0@phx.gbl>
+References: <1401829426442-7578930.post@n2.nabble.com>
+	<1410893106084-7579082.post@n2.nabble.com>
+	<1436788058580-7579498.post@n2.nabble.com>
+	<DUB406-EAS1184CDD0225F9F6B66CCF88D99C0@phx.gbl>
+Message-ID: <1436976840200-7579513.post@n2.nabble.com>
+
+Hi Andr?,
+
+Your suggestion on grid parameters helped. I played with grid and extent and
+found nice solutions. Thanks!
+
+After reading the package pdf I have found that
+"Note that the home-range sizes returned by this function are slightly
+different from the home-range size stored in the SpatialPolygonsDataFrame
+returned by the function getverticeshr . Indeed, while the former measures
+the area covered by the rasterized home range (area covered by the set of
+pixels of the grid included in the home range), the latter measures the area
+of the vector home range (with smoother contour). However, note that the
+difference between the two estimates decrease as the resolution of the grid
+becomes finer"
+
+Cheers,
+
+David
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/problem-with-kernel-UD-estimation-using-adehabitatHR-tp7578930p7579513.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From davidbecas at gmail.com  Wed Jul 15 18:19:45 2015
+From: davidbecas at gmail.com (dmaa)
+Date: Wed, 15 Jul 2015 09:19:45 -0700 (MST)
+Subject: [R-sig-eco] error in kernelUD {adehabitatHR}
+Message-ID: <1436977185208-7579514.post@n2.nabble.com>
+
+Hi all,
+
+I am trying to estimate kernel utilization distributions using the function
+kernelUD from the package adehabitatHR.
+
+I have a spatialpointsdataframe where the first column has the ids of the
+different animals. I have checked the number of relocations for each animal
+and all of them have more than 5 different locations points. However, I
+always get the error
+
+kudbic5<-kernelUD(detections [,1])
+Error in kernelUD(detections[, 1]) : 
+  At least 5 relocations are required to fit an home range
+
+Any ideas on how to overcome this?
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/error-in-kernelUD-adehabitatHR-tp7579514.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From kateboersma at gmail.com  Thu Jul 16 21:19:50 2015
+From: kateboersma at gmail.com (Kate Boersma)
+Date: Thu, 16 Jul 2015 12:19:50 -0700
+Subject: [R-sig-eco] distances in NMDS ordination space
+Message-ID: <55A803D6.70900@gmail.com>
+
+Hi all.
+
+I have a methodological question regarding non-metric multidimensional 
+scaling. This is not specific to R. Feel free to refer me to another 
+venue/resource if there is one more appropriate to my question.
+
+Correct me if I'm wrong: NMDS axes are non-metric, which is why NMDS 
+frequently makes sense for community data, but it also means that 
+distances in NMDS ordination space cannot be interpreted simplistically 
+as they can in eigenvalue-based methods like PCA. This is why it is 
+inadvisable (meaningless) to use NMDS axes as response variables in a 
+linear modeling framework (e.g., with environmental variables as 
+predictors).
+
+My question is this: Does that mean that it is also inadvisable to use 
+distances among points in ordination space as response variables?
+
+My (potentially flawed) understanding: While the coordinates may not 
+make sense in isolation, they should be meaningful relative to each 
+other. In a 2D ordination, if communities A & B are closer together in 
+ordination space than communities C & D, that means they have more 
+similar species compositions. Therefore, I should be able to predict the 
+distance between points in a linear modeling framework.
+
+Alternately, I could use the actual distances among communities from my 
+dissimilarity matrix with a method like db-RDA. But I used NMDS over RDA 
+or CCA for a reason. It seems more straightforward to use the distances 
+from my NMDS ordination instead of generating new coordinates from a 
+PCoA to fit an RDA framework (as in db-RDA)... but this logic only works 
+if NMDS distances are informative.
+
+Are these comparable analyses? If not, why not?
+
+I'd love your opinions.
+
+Thank you,
+Kate
+
+-- 
+Kate Boersma, PhD
+Department of Biology
+University of San Diego
+5998 Alcala Park
+San Diego CA 92110
+kateboersma at gmail.com
+http://www.oregonstate.edu/~boersmak/
+
+
+From dmck at u.washington.edu  Thu Jul 16 21:33:26 2015
+From: dmck at u.washington.edu (Don McKenzie)
+Date: Thu, 16 Jul 2015 12:33:26 -0700
+Subject: [R-sig-eco] distances in NMDS ordination space
+In-Reply-To: <55A803D6.70900@gmail.com>
+References: <55A803D6.70900@gmail.com>
+Message-ID: <E69DC860-988E-4B6C-82C9-563A3A531935@u.washington.edu>
+
+Kate ? others can give you more in-depth information, but I believe (i.e., my students and I and colleagues believe it) NMDS does indeed use pairwise distance measures, in place of  eigenvector calculations, in computing ordination scores.  Some of these distance-based measures, like the Sorensen?s distance, are not true ?metrics?, in that they do not obey the triangle inequality; hence ?non-metric? scaling, but still fully quantitative with the scores being continuous variables.  As such they can be used as response variables in OLS and other regression-type models.
+
+Others may correct me if I misspoke.  
+
+As you probably know, there has been considerable heat generated in the ecological community over the relative value of distance-based vs. eigenvector methods for ordination.  My sense from the debate is that when your community data are presence-absence the distance-based measures are more robust, but you will hear arguments against that too.
+
+> On Jul 16, 2015, at 12:19 PM, Kate Boersma <kateboersma at gmail.com> wrote:
+> 
+> Hi all.
+> 
+> I have a methodological question regarding non-metric multidimensional scaling. This is not specific to R. Feel free to refer me to another venue/resource if there is one more appropriate to my question.
+> 
+> Correct me if I'm wrong: NMDS axes are non-metric, which is why NMDS frequently makes sense for community data, but it also means that distances in NMDS ordination space cannot be interpreted simplistically as they can in eigenvalue-based methods like PCA. This is why it is inadvisable (meaningless) to use NMDS axes as response variables in a linear modeling framework (e.g., with environmental variables as predictors).
+> 
+> My question is this: Does that mean that it is also inadvisable to use distances among points in ordination space as response variables?
+> 
+> My (potentially flawed) understanding: While the coordinates may not make sense in isolation, they should be meaningful relative to each other. In a 2D ordination, if communities A & B are closer together in ordination space than communities C & D, that means they have more similar species compositions. Therefore, I should be able to predict the distance between points in a linear modeling framework.
+> 
+> Alternately, I could use the actual distances among communities from my dissimilarity matrix with a method like db-RDA. But I used NMDS over RDA or CCA for a reason. It seems more straightforward to use the distances from my NMDS ordination instead of generating new coordinates from a PCoA to fit an RDA framework (as in db-RDA)... but this logic only works if NMDS distances are informative.
+> 
+> Are these comparable analyses? If not, why not?
+> 
+> I'd love your opinions.
+> 
+> Thank you,
+> Kate
+> 
+> -- 
+> Kate Boersma, PhD
+> Department of Biology
+> University of San Diego
+> 5998 Alcala Park
+> San Diego CA 92110
+> kateboersma at gmail.com
+> http://www.oregonstate.edu/~boersmak/
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+From ucfagls at gmail.com  Thu Jul 16 22:12:32 2015
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Thu, 16 Jul 2015 14:12:32 -0600
+Subject: [R-sig-eco] distances in NMDS ordination space
+In-Reply-To: <55A803D6.70900@gmail.com>
+References: <55A803D6.70900@gmail.com>
+Message-ID: <CAAHES9xf0etFdi9h8oBZXtKTcLgfiv=MTHR0QFTnMMcPuXu_aA@mail.gmail.com>
+
+Hi Kate,
+
+The Euclidean distances between points in the NMDS ordination are an
+approximation to the rank ordering of the original distances. Hence I would
+consider whether the (approximate) rank ordering of the original distances
+is the correct metric for the thing you want to include in your model. You
+would also need to consider the stress of the solution, the error in the
+mapping.
+
+I'm not convinced that NMDS distances are better than embedding the
+original distances in a Euclidean space using PCoA. Each has difficulties
+(ranks vs imaginary eigenvalues).
+
+HTH
+
+Gavin
+
+On 16 July 2015 at 13:19, Kate Boersma <kateboersma at gmail.com> wrote:
+
+> Hi all.
+>
+> I have a methodological question regarding non-metric multidimensional
+> scaling. This is not specific to R. Feel free to refer me to another
+> venue/resource if there is one more appropriate to my question.
+>
+> Correct me if I'm wrong: NMDS axes are non-metric, which is why NMDS
+> frequently makes sense for community data, but it also means that distances
+> in NMDS ordination space cannot be interpreted simplistically as they can
+> in eigenvalue-based methods like PCA. This is why it is inadvisable
+> (meaningless) to use NMDS axes as response variables in a linear modeling
+> framework (e.g., with environmental variables as predictors).
+>
+> My question is this: Does that mean that it is also inadvisable to use
+> distances among points in ordination space as response variables?
+>
+> My (potentially flawed) understanding: While the coordinates may not make
+> sense in isolation, they should be meaningful relative to each other. In a
+> 2D ordination, if communities A & B are closer together in ordination space
+> than communities C & D, that means they have more similar species
+> compositions. Therefore, I should be able to predict the distance between
+> points in a linear modeling framework.
+>
+> Alternately, I could use the actual distances among communities from my
+> dissimilarity matrix with a method like db-RDA. But I used NMDS over RDA or
+> CCA for a reason. It seems more straightforward to use the distances from
+> my NMDS ordination instead of generating new coordinates from a PCoA to fit
+> an RDA framework (as in db-RDA)... but this logic only works if NMDS
+> distances are informative.
+>
+> Are these comparable analyses? If not, why not?
+>
+> I'd love your opinions.
+>
+> Thank you,
+> Kate
+>
+> --
+> Kate Boersma, PhD
+> Department of Biology
+> University of San Diego
+> 5998 Alcala Park
+> San Diego CA 92110
+> kateboersma at gmail.com
+> http://www.oregonstate.edu/~boersmak/
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Gavin Simpson, PhD
+
+	[[alternative HTML version deleted]]
+
+
+From jari.oksanen at oulu.fi  Fri Jul 17 07:55:37 2015
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 17 Jul 2015 05:55:37 +0000
+Subject: [R-sig-eco] distances in NMDS ordination space
+In-Reply-To: <55A803D6.70900@gmail.com>
+References: <55A803D6.70900@gmail.com>
+Message-ID: <358CCC04-A37E-4E91-AE5D-451C32129EE5@oulu.fi>
+
+Hi Kate,
+
+I think we should use the name Euclidean NMDS for the kind of NMDS we have in vegan, because its ordination space is strictly Euclidean. There is nothing non-metric in the ordination space. What is non-metric is the transformation of observed dissimilarities to optimize the fit to the Euclidean ordination space. The central term in the squared stress function is
+
+SUM (theta(d) - delta)^2
+
+where delta are the Euclidean distances among points in the ordination, d are the observed community dissimilarities among sampling units, and theta() is a non-metric monotone function to transform d. Sum of squared differences is -- by definition -- squared Euclidean distance, and hence our kind of NMDS is Euclidean. 
+
+The isolated axes are not meaningful *because* the space is Euclidean. Euclidean space is invariant under rotation: you can rotate axes and distances among points does not change, and you can rotate the axes and the configuration of points does not change. Any direction of axes is just as good.
+
+In vegan, the default is to rotate axes to principal components so that first dimension is longest. However, you can also rotate a dimension parallel to an environmental variable using function MDSrotate. These rotations do not change the stress, configuration or distances among points. Such a rotated dimension can be more meaningful and there is some justification in using that as a variable in some other analysis.
+
+To repeat: vegan NMDS is Euclidean NMDS and the NMDS ordination space is Euclidean. Because it is Euclidean, it is rotation-invariant and any rotation is equally good. Therefore axes do not have a natural orientation in Euclidean space. The only thing that is non-metric is the transformation of community dissimilarities. That non-metric transformation is made to optimize the goodness of fit to Euclidean ordination space.
+
+Cheers, Jari Oksanen
+
+On 16/07/2015, at 22:19 PM, Kate Boersma wrote:
+
+> Hi all.
+> 
+> I have a methodological question regarding non-metric multidimensional scaling. This is not specific to R. Feel free to refer me to another venue/resource if there is one more appropriate to my question.
+> 
+> Correct me if I'm wrong: NMDS axes are non-metric, which is why NMDS frequently makes sense for community data, but it also means that distances in NMDS ordination space cannot be interpreted simplistically as they can in eigenvalue-based methods like PCA. This is why it is inadvisable (meaningless) to use NMDS axes as response variables in a linear modeling framework (e.g., with environmental variables as predictors).
+> 
+> My question is this: Does that mean that it is also inadvisable to use distances among points in ordination space as response variables?
+> 
+> My (potentially flawed) understanding: While the coordinates may not make sense in isolation, they should be meaningful relative to each other. In a 2D ordination, if communities A & B are closer together in ordination space than communities C & D, that means they have more similar species compositions. Therefore, I should be able to predict the distance between points in a linear modeling framework.
+> 
+> Alternately, I could use the actual distances among communities from my dissimilarity matrix with a method like db-RDA. But I used NMDS over RDA or CCA for a reason. It seems more straightforward to use the distances from my NMDS ordination instead of generating new coordinates from a PCoA to fit an RDA framework (as in db-RDA)... but this logic only works if NMDS distances are informative.
+> 
+> Are these comparable analyses? If not, why not?
+> 
+> I'd love your opinions.
+> 
+> Thank you,
+> Kate
+> 
+> -- 
+> Kate Boersma, PhD
+> Department of Biology
+> University of San Diego
+> 5998 Alcala Park
+> San Diego CA 92110
+> kateboersma at gmail.com
+> http://www.oregonstate.edu/~boersmak/
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From trichter at uni-bremen.de  Mon Jul 20 18:32:52 2015
+From: trichter at uni-bremen.de (trichter at uni-bremen.de)
+Date: Mon, 20 Jul 2015 16:32:52 +0000
+Subject: [R-sig-eco] How to classify the scales of dbMEMs/PCNMs?
+Message-ID: <20150720163252.Horde.ru8ky8GlbjxxNrI9xzPxczB@webmail.uni-bremen.de>
+
+
+Dear list,
+
+I am working with dbMEMs/PCNMs as spatial covariates in RDA with  
+species composition data.
+I want to give my covariates some meaning, and as many research papers  
+suggest, the way to do it is to divide them into scales ("broad",  
+"medium","fine"). However, i cant remember reading about how this  
+classification is made, especially when one works in a comparably  
+regular grid. So, do you have any advise on this classification?
+
+Thanks a lot, Tim
+
+
+From andrezehnder at hotmail.com  Wed Jul 22 15:41:03 2015
+From: andrezehnder at hotmail.com (=?iso-8859-1?Q?Andr=E9_Zehnder?=)
+Date: Wed, 22 Jul 2015 15:41:03 +0200
+Subject: [R-sig-eco] Compute the distance between the trajectories of two
+	animals with varying sampling intervals
+Message-ID: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>
+
+Hi list,
+
+ 
+
+I want to compute the distances between two trajectories that consist of a
+sequence of point measurements. The trajectories do not have the same length
+or sampling interval. So, while for animal A, there is a data point at 15.00
+p.m. and another at 15.38 p.m, animal B might have data points at 14.56 p.m.
+
+and 17.02 p.m.
+
+ 
+
+A possible approach would be to connect these point series to trajectories
+and then calculate the distance between the two trajectories at the sampled
+positions of one trajectory (take the sampled position of the second
+trajectory that is temporally closest). Are there any packages in R (or
+tools outside of R) that allow me to do this? The support of other distances
+than the Euclidean one (e.g. Fr chet) would be an advantage.
+
+ 
+
+Best regards,
+
+Andre
+
+ 
+
+
+	[[alternative HTML version deleted]]
+
+
+From sarah.goslee at gmail.com  Wed Jul 22 16:02:12 2015
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Wed, 22 Jul 2015 10:02:12 -0400
+Subject: [R-sig-eco] Compute the distance between the trajectories of
+ two animals with varying sampling intervals
+In-Reply-To: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>
+References: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>
+Message-ID: <CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>
+
+Try the adehabitatLT package.
+
+On Wed, Jul 22, 2015 at 9:41 AM, Andr? Zehnder <andrezehnder at hotmail.com> wrote:
+> Hi list,
+>
+>
+>
+> I want to compute the distances between two trajectories that consist of a
+> sequence of point measurements. The trajectories do not have the same length
+> or sampling interval. So, while for animal A, there is a data point at 15.00
+> p.m. and another at 15.38 p.m, animal B might have data points at 14.56 p.m.
+>
+> and 17.02 p.m.
+>
+>
+>
+> A possible approach would be to connect these point series to trajectories
+> and then calculate the distance between the two trajectories at the sampled
+> positions of one trajectory (take the sampled position of the second
+> trajectory that is temporally closest). Are there any packages in R (or
+> tools outside of R) that allow me to do this? The support of other distances
+> than the Euclidean one (e.g. Fr chet) would be an advantage.
+>
+>
+>
+> Best regards,
+>
+> Andre
+>
+>
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From chaco001 at umn.edu  Wed Jul 22 16:09:23 2015
+From: chaco001 at umn.edu (Jeremy Chacon)
+Date: Wed, 22 Jul 2015 09:09:23 -0500
+Subject: [R-sig-eco] Compute the distance between the trajectories of
+ two animals with varying sampling intervals
+In-Reply-To: <CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>
+References: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>
+	<CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>
+Message-ID: <CAH65v70gS_5z6PT47d3s8pMkhhS0QgYfTXKCrWoCJ4NYLnsExg@mail.gmail.com>
+
+I bet Sarah's right and adehabitatLT has something, but I also know that
+the longitudinalData package can compute distances between two trajectories
+including the frechet distance.
+
+http://www.inside-r.org/packages/cran/longitudinalData/docs/pathFrechet
+
+However, it does not deal with the timing problem. You will have to roll
+your own method of aligning the trajectories in time.
+
+On Wed, Jul 22, 2015 at 9:02 AM, Sarah Goslee <sarah.goslee at gmail.com>
+wrote:
+
+> Try the adehabitatLT package.
+>
+> On Wed, Jul 22, 2015 at 9:41 AM, Andr? Zehnder <andrezehnder at hotmail.com>
+> wrote:
+> > Hi list,
+> >
+> >
+> >
+> > I want to compute the distances between two trajectories that consist of
+> a
+> > sequence of point measurements. The trajectories do not have the same
+> length
+> > or sampling interval. So, while for animal A, there is a data point at
+> 15.00
+> > p.m. and another at 15.38 p.m, animal B might have data points at 14.56
+> p.m.
+> >
+> > and 17.02 p.m.
+> >
+> >
+> >
+> > A possible approach would be to connect these point series to
+> trajectories
+> > and then calculate the distance between the two trajectories at the
+> sampled
+> > positions of one trajectory (take the sampled position of the second
+> > trajectory that is temporally closest). Are there any packages in R (or
+> > tools outside of R) that allow me to do this? The support of other
+> distances
+> > than the Euclidean one (e.g. Fr chet) would be an advantage.
+> >
+> >
+> >
+> > Best regards,
+> >
+> > Andre
+> >
+> >
+> --
+> Sarah Goslee
+> http://www.functionaldiversity.org
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+
+*___________________________________________________________________________Jeremy
+M. Chacon, Ph.D.*
+
+*Post-Doctoral Associate, Harcombe Lab*
+*University of Minnesota*
+*Ecology, Evolution and Behavior*
+
+	[[alternative HTML version deleted]]
+
+
+From Li.Wen at environment.nsw.gov.au  Wed Jul 22 16:13:44 2015
+From: Li.Wen at environment.nsw.gov.au (Li Wen)
+Date: Wed, 22 Jul 2015 14:13:44 +0000
+Subject: [R-sig-eco] Compute the distance between the trajectories of
+ two animals with varying sampling intervals
+In-Reply-To: <CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>
+References: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>,
+	<CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>
+Message-ID: <0B344862ED77D54F846E9A9386B547E7802698FE@LIDCOEX03.dec.int>
+
+You may have to make the two trajectories regular with the same interval.  Package adehabitatLT has functions to do this.
+
+Cheers
+Li
+________________________________________
+From: R-sig-ecology [r-sig-ecology-bounces at r-project.org] on behalf of Sarah Goslee [sarah.goslee at gmail.com]
+Sent: Thursday, 23 July 2015 12:02 AM
+To: Andr? Zehnder
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Compute the distance between the trajectories of two animals with varying sampling intervals
+
+Try the adehabitatLT package.
+
+On Wed, Jul 22, 2015 at 9:41 AM, Andr? Zehnder <andrezehnder at hotmail.com> wrote:
+> Hi list,
+>
+>
+>
+> I want to compute the distances between two trajectories that consist of a
+> sequence of point measurements. The trajectories do not have the same length
+> or sampling interval. So, while for animal A, there is a data point at 15.00
+> p.m. and another at 15.38 p.m, animal B might have data points at 14.56 p.m.
+>
+> and 17.02 p.m.
+>
+>
+>
+> A possible approach would be to connect these point series to trajectories
+> and then calculate the distance between the two trajectories at the sampled
+> positions of one trajectory (take the sampled position of the second
+> trajectory that is temporally closest). Are there any packages in R (or
+> tools outside of R) that allow me to do this? The support of other distances
+> than the Euclidean one (e.g. Fr chet) would be an advantage.
+>
+>
+>
+> Best regards,
+>
+> Andre
+>
+>
+--
+Sarah Goslee
+http://www.functionaldiversity.org
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+This email is intended for the addressee(s) named and may contain confidential and/or privileged information. 
+If you are not the intended recipient, please notify the sender and then delete it immediately.
+Any views expressed in this email are those of the individual sender except where the sender expressly and with authority states them to be the views of the NSW Office of Environment and Heritage.
+
+PLEASE CONSIDER THE ENVIRONMENT BEFORE PRINTING THIS EMAIL
+
+
+From basille.web at ase-research.org  Wed Jul 22 19:44:21 2015
+From: basille.web at ase-research.org (Mathieu Basille)
+Date: Wed, 22 Jul 2015 13:44:21 -0400
+Subject: [R-sig-eco] Compute the distance between the trajectories of
+ two animals with varying sampling intervals
+In-Reply-To: <CAH65v70gS_5z6PT47d3s8pMkhhS0QgYfTXKCrWoCJ4NYLnsExg@mail.gmail.com>
+References: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>	<CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>
+	<CAH65v70gS_5z6PT47d3s8pMkhhS0QgYfTXKCrWoCJ4NYLnsExg@mail.gmail.com>
+Message-ID: <55AFD675.7020107@ase-research.org>
+
+As far as I can tell, there is no such function in adehabitatLT. However, I 
+wrote a function 'closest' [1] in the package 'hab' [2], which specifically 
+does that: find the closest relocations from ltraj objects. It can work 
+with only one ltraj, in which case it will look in other bursts, or with 
+two different ltraj, in which case it will in the other ltraj. Most 
+importantly, you can define a temporal windows to restrict the search, 
+which may solve your problem of irregular time (the ltraj do not have to be 
+regular, or on the same time schedule). It's only Euclidean distance 
+though. Lastly, it works at the location level, i.e. it's not considering 
+lines (steps). If that's what you're looking for, I would probably suggest 
+using PostGIS...
+
+Hope this helps,
+Mathieu.
+
+
+[1] https://github.com/basille/hab/blob/master/R/closest.r
+
+[2] https://github.com/basille/hab
+
+
+Le 22/07/2015 10:09, Jeremy Chacon a ?crit :
+> I bet Sarah's right and adehabitatLT has something, but I also know that
+> the longitudinalData package can compute distances between two trajectories
+> including the frechet distance.
+>
+> http://www.inside-r.org/packages/cran/longitudinalData/docs/pathFrechet
+>
+> However, it does not deal with the timing problem. You will have to roll
+> your own method of aligning the trajectories in time.
+>
+> On Wed, Jul 22, 2015 at 9:02 AM, Sarah Goslee <sarah.goslee at gmail.com>
+> wrote:
+>
+>> Try the adehabitatLT package.
+>>
+>> On Wed, Jul 22, 2015 at 9:41 AM, Andr? Zehnder <andrezehnder at hotmail.com>
+>> wrote:
+>>> Hi list,
+>>>
+>>>
+>>>
+>>> I want to compute the distances between two trajectories that consist of
+>> a
+>>> sequence of point measurements. The trajectories do not have the same
+>> length
+>>> or sampling interval. So, while for animal A, there is a data point at
+>> 15.00
+>>> p.m. and another at 15.38 p.m, animal B might have data points at 14.56
+>> p.m.
+>>>
+>>> and 17.02 p.m.
+>>>
+>>>
+>>>
+>>> A possible approach would be to connect these point series to
+>> trajectories
+>>> and then calculate the distance between the two trajectories at the
+>> sampled
+>>> positions of one trajectory (take the sampled position of the second
+>>> trajectory that is temporally closest). Are there any packages in R (or
+>>> tools outside of R) that allow me to do this? The support of other
+>> distances
+>>> than the Euclidean one (e.g. Fr chet) would be an advantage.
+>>>
+>>>
+>>>
+>>> Best regards,
+>>>
+>>> Andre
+>>>
+>>>
+>> --
+>> Sarah Goslee
+>> http://www.functionaldiversity.org
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+
+-- 
+
+~$ whoami
+Mathieu Basille
+http://ase-research.org/basille
+
+~$ locate --details
+University of Florida \\
+Fort Lauderdale Research and Education Center
+(+1) 954-577-6314
+
+~$ fortune
+? Le tout est de tout dire, et je manque de mots
+Et je manque de temps, et je manque d'audace. ?
+  -- Paul ?luard
+
+
+From andrezehnder at hotmail.com  Wed Jul 22 21:31:38 2015
+From: andrezehnder at hotmail.com (=?UTF-8?Q?Andr=C3=A9_Zehnder?=)
+Date: Wed, 22 Jul 2015 21:31:38 +0200
+Subject: [R-sig-eco] Compute the distance between the trajectories of
+	two animals with varying sampling intervals
+In-Reply-To: <55AFD675.7020107@ase-research.org>
+References: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>	<CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>
+	<CAH65v70gS_5z6PT47d3s8pMkhhS0QgYfTXKCrWoCJ4NYLnsExg@mail.gmail.com>
+	<55AFD675.7020107@ase-research.org>
+Message-ID: <DUB406-EAS1516DCF2B1D48B107BB12B1D9830@phx.gbl>
+
+Thank you for all your answers!
+
+@ Krzysztof: Yes, I think an approximated method that uses only the nearest points to compute the distance will suffice. When I include a threshold that ensures that only temporal differences smaller than xy minutes are taken into consideration, reasonable results should be achievable.
+
+@ Sarah: I think you are referring to the simulation of a Brownian motion by the function simm.bb()  for an exact solution? I could not find a function that directly computes the distances. Or did I miss something?
+
+@ Jeremy: Thanks for the hint! A also stumbled upon the pathFrechet() / distFrechet() function of longitudinalData but rejected them because they seem not to include the temporal dimension. However, this seems to be only an erroneous information of inside-r. When I looked at the official reference manual I saw that distFrechet() considers the time as well.
+
+@ Mathieu: That is pretty much what I am intending to do for a first (and possibly also final) try, thanks! So I need to input the ltray-object of the first individual  as 'from' and the other one as 'to' in order to check the distances between their closest points, right? I also tried to program something like that but the result is shockingly time inefficient and might still contain some errors. So I will probably try out your function tomorrow :)
+
+Best regards
+Andre
+
+
+
+-----Urspr?ngliche Nachricht-----
+Von: Mathieu Basille [mailto:basille.web at ase-research.org] 
+Gesendet: Mittwoch, 22. Juli 2015 19:44
+An: Andr? Zehnder; R-sig-eco
+Cc: Jeremy Chacon; Sarah Goslee
+Betreff: Re: [R-sig-eco] Compute the distance between the trajectories of two animals with varying sampling intervals
+
+As far as I can tell, there is no such function in adehabitatLT. However, I wrote a function 'closest' [1] in the package 'hab' [2], which specifically does that: find the closest relocations from ltraj objects. It can work with only one ltraj, in which case it will look in other bursts, or with two different ltraj, in which case it will in the other ltraj. Most importantly, you can define a temporal windows to restrict the search, which may solve your problem of irregular time (the ltraj do not have to be regular, or on the same time schedule). It's only Euclidean distance though. Lastly, it works at the location level, i.e. it's not considering lines (steps). If that's what you're looking for, I would probably suggest using PostGIS...
+
+Hope this helps,
+Mathieu.
+
+
+[1] https://github.com/basille/hab/blob/master/R/closest.r
+
+[2] https://github.com/basille/hab
+
+
+Le 22/07/2015 10:09, Jeremy Chacon a ?crit :
+> I bet Sarah's right and adehabitatLT has something, but I also know 
+> that the longitudinalData package can compute distances between two 
+> trajectories including the frechet distance.
+>
+> http://www.inside-r.org/packages/cran/longitudinalData/docs/pathFreche
+> t
+>
+> However, it does not deal with the timing problem. You will have to 
+> roll your own method of aligning the trajectories in time.
+>
+> On Wed, Jul 22, 2015 at 9:02 AM, Sarah Goslee <sarah.goslee at gmail.com>
+> wrote:
+>
+>> Try the adehabitatLT package.
+>>
+>> On Wed, Jul 22, 2015 at 9:41 AM, Andr? Zehnder 
+>> <andrezehnder at hotmail.com>
+>> wrote:
+>>> Hi list,
+>>>
+>>>
+>>>
+>>> I want to compute the distances between two trajectories that 
+>>> consist of
+>> a
+>>> sequence of point measurements. The trajectories do not have the 
+>>> same
+>> length
+>>> or sampling interval. So, while for animal A, there is a data point 
+>>> at
+>> 15.00
+>>> p.m. and another at 15.38 p.m, animal B might have data points at 
+>>> 14.56
+>> p.m.
+>>>
+>>> and 17.02 p.m.
+>>>
+>>>
+>>>
+>>> A possible approach would be to connect these point series to
+>> trajectories
+>>> and then calculate the distance between the two trajectories at the
+>> sampled
+>>> positions of one trajectory (take the sampled position of the second 
+>>> trajectory that is temporally closest). Are there any packages in R 
+>>> (or tools outside of R) that allow me to do this? The support of 
+>>> other
+>> distances
+>>> than the Euclidean one (e.g. Fr chet) would be an advantage.
+>>>
+>>>
+>>>
+>>> Best regards,
+>>>
+>>> Andre
+>>>
+>>>
+>> --
+>> Sarah Goslee
+>> http://www.functionaldiversity.org
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+
+-- 
+
+~$ whoami
+Mathieu Basille
+http://ase-research.org/basille
+
+~$ locate --details
+University of Florida \\
+Fort Lauderdale Research and Education Center
+(+1) 954-577-6314
+
+~$ fortune
+? Le tout est de tout dire, et je manque de mots Et je manque de temps, et je manque d'audace. ?
+  -- Paul ?luard
+
+
+From basille.web at ase-research.org  Thu Jul 23 04:24:43 2015
+From: basille.web at ase-research.org (Mathieu Basille)
+Date: Wed, 22 Jul 2015 22:24:43 -0400
+Subject: [R-sig-eco] Compute the distance between the trajectories of
+ two animals with varying sampling intervals
+In-Reply-To: <DUB406-EAS1516DCF2B1D48B107BB12B1D9830@phx.gbl>
+References: <DUB406-EAS357F037809084AC83BAE362D9830@phx.gbl>	<CAM_vjukCvF5Xv_8n4FVg4xYrL2JYsz=-=XRGhq0CXZHDn8FEdQ@mail.gmail.com>	<CAH65v70gS_5z6PT47d3s8pMkhhS0QgYfTXKCrWoCJ4NYLnsExg@mail.gmail.com>	<55AFD675.7020107@ase-research.org>
+	<DUB406-EAS1516DCF2B1D48B107BB12B1D9830@phx.gbl>
+Message-ID: <55B0506B.8050706@ase-research.org>
+
+Hi Andr?,
+
+Yes, that's one way to do it. If you already have a single ltraj with all 
+individuals (one individual per burst), you can simply give it the ltraj 
+alone. With a single ltraj, the function looks for the closest point in 
+other bursts. Check the example of the function.
+
+Note that I do not guarantee that my function is efficient! This is R: 
+there is no use of spatial indexes or bounding boxes, so that for each 
+point, distances are computed to all other points in the temporal window. 
+Depending on your data, I guess it could be fairly slow...
+
+Again, if you're looking for performance and/or robustness, I would give a 
+try to PostGIS here.
+Mathieu.
+
+
+Le 22/07/2015 15:31, Andr? Zehnder a ?crit :
+> Thank you for all your answers!
+>
+> @ Krzysztof: Yes, I think an approximated method that uses only the nearest points to compute the distance will suffice. When I include a threshold that ensures that only temporal differences smaller than xy minutes are taken into consideration, reasonable results should be achievable.
+>
+> @ Sarah: I think you are referring to the simulation of a Brownian motion by the function simm.bb()  for an exact solution? I could not find a function that directly computes the distances. Or did I miss something?
+>
+> @ Jeremy: Thanks for the hint! A also stumbled upon the pathFrechet() / distFrechet() function of longitudinalData but rejected them because they seem not to include the temporal dimension. However, this seems to be only an erroneous information of inside-r. When I looked at the official reference manual I saw that distFrechet() considers the time as well.
+>
+> @ Mathieu: That is pretty much what I am intending to do for a first (and possibly also final) try, thanks! So I need to input the ltray-object of the first individual  as 'from' and the other one as 'to' in order to check the distances between their closest points, right? I also tried to program something like that but the result is shockingly time inefficient and might still contain some errors. So I will probably try out your function tomorrow :)
+>
+> Best regards
+> Andre
+>
+>
+>
+> -----Urspr?ngliche Nachricht-----
+> Von: Mathieu Basille [mailto:basille.web at ase-research.org]
+> Gesendet: Mittwoch, 22. Juli 2015 19:44
+> An: Andr? Zehnder; R-sig-eco
+> Cc: Jeremy Chacon; Sarah Goslee
+> Betreff: Re: [R-sig-eco] Compute the distance between the trajectories of two animals with varying sampling intervals
+>
+> As far as I can tell, there is no such function in adehabitatLT. However, I wrote a function 'closest' [1] in the package 'hab' [2], which specifically does that: find the closest relocations from ltraj objects. It can work with only one ltraj, in which case it will look in other bursts, or with two different ltraj, in which case it will in the other ltraj. Most importantly, you can define a temporal windows to restrict the search, which may solve your problem of irregular time (the ltraj do not have to be regular, or on the same time schedule). It's only Euclidean distance though. Lastly, it works at the location level, i.e. it's not considering lines (steps). If that's what you're looking for, I would probably suggest using PostGIS...
+>
+> Hope this helps,
+> Mathieu.
+>
+>
+> [1] https://github.com/basille/hab/blob/master/R/closest.r
+>
+> [2] https://github.com/basille/hab
+>
+>
+> Le 22/07/2015 10:09, Jeremy Chacon a ?crit :
+>> I bet Sarah's right and adehabitatLT has something, but I also know
+>> that the longitudinalData package can compute distances between two
+>> trajectories including the frechet distance.
+>>
+>> http://www.inside-r.org/packages/cran/longitudinalData/docs/pathFreche
+>> t
+>>
+>> However, it does not deal with the timing problem. You will have to
+>> roll your own method of aligning the trajectories in time.
+>>
+>> On Wed, Jul 22, 2015 at 9:02 AM, Sarah Goslee <sarah.goslee at gmail.com>
+>> wrote:
+>>
+>>> Try the adehabitatLT package.
+>>>
+>>> On Wed, Jul 22, 2015 at 9:41 AM, Andr? Zehnder
+>>> <andrezehnder at hotmail.com>
+>>> wrote:
+>>>> Hi list,
+>>>>
+>>>>
+>>>>
+>>>> I want to compute the distances between two trajectories that
+>>>> consist of
+>>> a
+>>>> sequence of point measurements. The trajectories do not have the
+>>>> same
+>>> length
+>>>> or sampling interval. So, while for animal A, there is a data point
+>>>> at
+>>> 15.00
+>>>> p.m. and another at 15.38 p.m, animal B might have data points at
+>>>> 14.56
+>>> p.m.
+>>>>
+>>>> and 17.02 p.m.
+>>>>
+>>>>
+>>>>
+>>>> A possible approach would be to connect these point series to
+>>> trajectories
+>>>> and then calculate the distance between the two trajectories at the
+>>> sampled
+>>>> positions of one trajectory (take the sampled position of the second
+>>>> trajectory that is temporally closest). Are there any packages in R
+>>>> (or tools outside of R) that allow me to do this? The support of
+>>>> other
+>>> distances
+>>>> than the Euclidean one (e.g. Fr chet) would be an advantage.
+>>>>
+>>>>
+>>>>
+>>>> Best regards,
+>>>>
+>>>> Andre
+>>>>
+>>>>
+>>> --
+>>> Sarah Goslee
+>>> http://www.functionaldiversity.org
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>
+>>
+>>
+>
+
+-- 
+
+~$ whoami
+Mathieu Basille
+http://ase-research.org/basille
+
+~$ locate --details
+University of Florida \\
+Fort Lauderdale Research and Education Center
+(+1) 954-577-6314
+
+~$ fortune
+? Le tout est de tout dire, et je manque de mots
+Et je manque de temps, et je manque d'audace. ?
+  -- Paul ?luard
+
+
+From highstat at highstat.com  Thu Jul 23 11:41:29 2015
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Thu, 23 Jul 2015 17:41:29 +0800
+Subject: [R-sig-eco] Stats courses in Queensland, Australia
+Message-ID: <55B0B6C9.5050103@highstat.com>
+
+Apologies for cross-posting
+
+
+There are various remaining seats on the following two statistics courses:
+
+Course 1:
+Introduction to Generalized Linear Models with R. -Bayesian and 
+frequentist approaches -
+Dates: 11 - 14 August, 2015
+Location: Hotel Grand Chancellor, Coral Coast Drive, Palm Cove. Australia
+
+
+Course 2:
+Introduction to Zero Inflated Models with R. - Frequentist and Bayesian 
+approaches -
+Dates: 17 - 21 August, 2015
+Location: Hotel Grand Chancellor, Coral Coast Drive, Palm Cove. Australia
+
+
+Course website:
+http://highstat.com/statscourse.htm
+
+Course flyers:
+http://highstat.com/Courses/Flyers/Flyer2015_08PalmCoveI.pdf
+http://highstat.com/Courses/Flyers/Flyer2015_08PalmCoveII.pdf
+
+Both courses are pre-required knowledge for our 'Introduction to GLMs 
+with spatial and temporal correlation'.
+
+
+Kind regards,
+
+Alain Zuur
+
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From abedimail at gmail.com  Thu Jul 23 23:03:16 2015
+From: abedimail at gmail.com (Mehdi Abedi)
+Date: Fri, 24 Jul 2015 01:33:16 +0430
+Subject: [R-sig-eco] T50 or ED50 for count data
+Message-ID: <CADGhaggAQ6is9OT1JBm2H5sJN07wFdiq2iptqT51L8mFu5xsoA@mail.gmail.com>
+
+Dear Colleagues,
+
+I am interested to calculate time to 50 percentage for count data.
+I am working on soil seed bank germination. I have recorded number of
+seedling emergence in 10 different times for species. The total number of
+seeds in soil is not known therefore it is not proportional data but we can
+argue that after this period all viable seeds already germinated(total
+seedling emergence).
+
+I am familiar with drc package for calculation T50 but only for
+proportional data like germination in petridishes which total number of
+seed in each pteridishes is known  T50 could be calculated.
+
+Could we calculate T50 for count data as well? because we have total
+seedling emergence in the end, therefore their distribution during time is
+important and having this index we can find when species germinate ...
+This indices could be useful for other count data specially survival
+studies.
+
+warm regards
+Mehdi
+
+
+*Mehdi Abedi Department of Range Management*
+
+*Faculty of Natural Resources & Marine Sciences *
+
+*Tarbiat Modares University (TMU) *
+
+*46417-76489, Noor*
+
+*Mazandaran, IRAN *
+
+*mehdi.abedi at modares.ac.ir <Mehdi.abedi at modares.ac.ir>*
+
+*Homepage
+<http://www.modares.ac.ir/en/Schools/nat/Academic_Staff/~mehdi.abedi>*
+
+*Tel: +98-122-6253101 *
+
+*Fax: +98-122-6253499*
+
+	[[alternative HTML version deleted]]
+
+
+From tom_philippi at nps.gov  Fri Jul 24 01:41:22 2015
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Thu, 23 Jul 2015 16:41:22 -0700
+Subject: [R-sig-eco] T50 or ED50 for count data
+In-Reply-To: <CADGhaggAQ6is9OT1JBm2H5sJN07wFdiq2iptqT51L8mFu5xsoA@mail.gmail.com>
+References: <CADGhaggAQ6is9OT1JBm2H5sJN07wFdiq2iptqT51L8mFu5xsoA@mail.gmail.com>
+Message-ID: <CAM9kYqi9n43wtqtkkb1=bZvZQMaz5ATQqm+YeyLRmW_N6C5yJw@mail.gmail.com>
+
+Mehdi--
+Based on the example datasets germination and chickweed, drc would work
+with you using the final count of emergence as the number of seeds at risk
+of germinating.  If you get a satisfactory fit from one of the 6 or so
+function forms it supports for dose-response, you may be fine.  [I have
+scientific qualms about treating time as a dose, but you may have a valid
+justification.]
+
+However, I don't know that drc handles replicate subjects (petri dishes)
+followed over time, where you need a random effect for subject.  [You don't
+say whether you have replicate soil samples followed over time.]  If you
+have replicate soil samples,  you could fit something like a generalized
+linear mixed model with lme4 or related, or generalized additive mixed
+model with mgcv or gamm4. family='binomial', and for each subject &
+species, the sum of the seeds that germinated as the total.
+Alternatively, there are a number of packages for survival or time to event
+analysis.  Your T50 is equivalent to the median survival time (or median
+time to germination).  Look at the survival analysis task view:
+*https://cran.r-project.org/web/views/Survival.html
+<https://cran.r-project.org/web/views/Survival.html>*
+You may be able to use the survival package, as median survival times are
+available in most packages.  Gordon Fox (currently at USF) wrote a book
+chapter on applying such methods to germination times (albeit using SAS not
+R at the time), and might be willing to send you a pdf.
+I hope that this helps you with your analyses.
+
+Tom 2
+
+
+On Thu, Jul 23, 2015 at 2:03 PM, Mehdi Abedi <abedimail at gmail.com> wrote:
+
+> Dear Colleagues,
+>
+> I am interested to calculate time to 50 percentage for count data.
+> I am working on soil seed bank germination. I have recorded number of
+> seedling emergence in 10 different times for species. The total number of
+> seeds in soil is not known therefore it is not proportional data but we can
+> argue that after this period all viable seeds already germinated(total
+> seedling emergence).
+>
+> I am familiar with drc package for calculation T50 but only for
+> proportional data like germination in petridishes which total number of
+> seed in each pteridishes is known  T50 could be calculated.
+>
+> Could we calculate T50 for count data as well? because we have total
+> seedling emergence in the end, therefore their distribution during time is
+> important and having this index we can find when species germinate ...
+> This indices could be useful for other count data specially survival
+> studies.
+>
+> warm regards
+> Mehdi
+>
+>
+> *Mehdi Abedi Department of Range Management*
+>
+> *Faculty of Natural Resources & Marine Sciences *
+>
+> *Tarbiat Modares University (TMU) *
+>
+> *46417-76489, Noor*
+>
+> *Mazandaran, IRAN *
+>
+> *mehdi.abedi at modares.ac.ir <Mehdi.abedi at modares.ac.ir>*
+>
+> *Homepage
+> <http://www.modares.ac.ir/en/Schools/nat/Academic_Staff/~mehdi.abedi>*
+>
+> *Tel: +98-122-6253101 *
+>
+> *Fax: +98-122-6253499*
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+"Data is not information. Information is not knowledge. And knowledge is
+certainly not wisdom."
+   -- Clifford Stoll
+
+"Science is what we understand well enough to explain to a computer. Art is
+everything else we do."
+   -- Donald Knuth
+
+"If you find that you're spending almost all your time on theory, start
+turning some attention to practical things; it will improve your theories.
+If you find that you're spending almost all your time on practice, start
+turning some attention to theoretical things; it will improve your
+practice."
+  -- Donald Knuth
+
+	[[alternative HTML version deleted]]
+
+
+From abedimail at gmail.com  Fri Jul 24 09:43:29 2015
+From: abedimail at gmail.com (Mehdi Abedi)
+Date: Fri, 24 Jul 2015 12:13:29 +0430
+Subject: [R-sig-eco] T50 or ED50 for count data
+In-Reply-To: <CAM9kYqi9n43wtqtkkb1=bZvZQMaz5ATQqm+YeyLRmW_N6C5yJw@mail.gmail.com>
+References: <CADGhaggAQ6is9OT1JBm2H5sJN07wFdiq2iptqT51L8mFu5xsoA@mail.gmail.com>
+	<CAM9kYqi9n43wtqtkkb1=bZvZQMaz5ATQqm+YeyLRmW_N6C5yJw@mail.gmail.com>
+Message-ID: <CADGhagjEMh+yXDq7_whBKGi05DfMrEmAbiVpzSUD71eCk92VoA@mail.gmail.com>
+
+Dear Tom,
+Thanks for your kind reply.
+Could we calculate T50 in gamm4 and lme4 as well?
+I searched in survival but no special information about median term in the
+package survival.
+
+Warm regards,
+Mehdi
+
+On Fri, Jul 24, 2015 at 4:11 AM, Philippi, Tom <tom_philippi at nps.gov> wrote:
+
+> Mehdi--
+> Based on the example datasets germination and chickweed, drc would work
+> with you using the final count of emergence as the number of seeds at risk
+> of germinating.  If you get a satisfactory fit from one of the 6 or so
+> function forms it supports for dose-response, you may be fine.  [I have
+> scientific qualms about treating time as a dose, but you may have a valid
+> justification.]
+>
+> However, I don't know that drc handles replicate subjects (petri dishes)
+> followed over time, where you need a random effect for subject.  [You don't
+> say whether you have replicate soil samples followed over time.]  If you
+> have replicate soil samples,  you could fit something like a generalized
+> linear mixed model with lme4 or related, or generalized additive mixed
+> model with mgcv or gamm4. family='binomial', and for each subject &
+> species, the sum of the seeds that germinated as the total.
+> Alternatively, there are a number of packages for survival or time to
+> event analysis.  Your T50 is equivalent to the median survival time (or
+> median time to germination).  Look at the survival analysis task view:
+> *https://cran.r-project.org/web/views/Survival.html
+> <https://cran.r-project.org/web/views/Survival.html>*
+> You may be able to use the survival package, as median survival times are
+> available in most packages.  Gordon Fox (currently at USF) wrote a book
+> chapter on applying such methods to germination times (albeit using SAS not
+> R at the time), and might be willing to send you a pdf.
+> I hope that this helps you with your analyses.
+>
+> Tom 2
+>
+>
+> On Thu, Jul 23, 2015 at 2:03 PM, Mehdi Abedi <abedimail at gmail.com> wrote:
+>
+>> Dear Colleagues,
+>>
+>> I am interested to calculate time to 50 percentage for count data.
+>> I am working on soil seed bank germination. I have recorded number of
+>> seedling emergence in 10 different times for species. The total number of
+>> seeds in soil is not known therefore it is not proportional data but we
+>> can
+>> argue that after this period all viable seeds already germinated(total
+>> seedling emergence).
+>>
+>> I am familiar with drc package for calculation T50 but only for
+>> proportional data like germination in petridishes which total number of
+>> seed in each pteridishes is known  T50 could be calculated.
+>>
+>> Could we calculate T50 for count data as well? because we have total
+>> seedling emergence in the end, therefore their distribution during time is
+>> important and having this index we can find when species germinate ...
+>> This indices could be useful for other count data specially survival
+>> studies.
+>>
+>> warm regards
+>> Mehdi
+>>
+>>
+>> *Mehdi Abedi Department of Range Management*
+>>
+>> *Faculty of Natural Resources & Marine Sciences *
+>>
+>> *Tarbiat Modares University (TMU) *
+>>
+>> *46417-76489, Noor*
+>>
+>> *Mazandaran, IRAN *
+>>
+>> *mehdi.abedi at modares.ac.ir <Mehdi.abedi at modares.ac.ir>*
+>>
+>> *Homepage
+>> <http://www.modares.ac.ir/en/Schools/nat/Academic_Staff/~mehdi.abedi>*
+>>
+>> *Tel: +98-122-6253101 *
+>>
+>> *Fax: +98-122-6253499*
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+> --
+> "Data is not information. Information is not knowledge. And knowledge is
+> certainly not wisdom."
+>    -- Clifford Stoll
+>
+> "Science is what we understand well enough to explain to a computer. Art
+> is everything else we do."
+>    -- Donald Knuth
+>
+> "If you find that you're spending almost all your time on theory, start
+> turning some attention to practical things; it will improve your theories.
+> If you find that you're spending almost all your time on practice, start
+> turning some attention to theoretical things; it will improve your
+> practice."
+>   -- Donald Knuth
+>
+>
+
+
+-- 
+
+
+*Mehdi Abedi Department of Range Management*
+
+*Faculty of Natural Resources & Marine Sciences *
+
+*Tarbiat Modares University (TMU) *
+
+*46417-76489, Noor*
+
+*Mazandaran, IRAN *
+
+*mehdi.abedi at modares.ac.ir <Mehdi.abedi at modares.ac.ir>*
+
+*Homepage
+<http://www.modares.ac.ir/en/Schools/nat/Academic_Staff/~mehdi.abedi>*
+
+*Tel: +98-122-6253101 *
+
+*Fax: +98-122-6253499*
+
+	[[alternative HTML version deleted]]
+
+
+From tom_philippi at nps.gov  Fri Jul 24 16:59:50 2015
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Fri, 24 Jul 2015 07:59:50 -0700
+Subject: [R-sig-eco] T50 or ED50 for count data
+In-Reply-To: <CADGhagjEMh+yXDq7_whBKGi05DfMrEmAbiVpzSUD71eCk92VoA@mail.gmail.com>
+References: <CADGhaggAQ6is9OT1JBm2H5sJN07wFdiq2iptqT51L8mFu5xsoA@mail.gmail.com>
+	<CAM9kYqi9n43wtqtkkb1=bZvZQMaz5ATQqm+YeyLRmW_N6C5yJw@mail.gmail.com>
+	<CADGhagjEMh+yXDq7_whBKGi05DfMrEmAbiVpzSUD71eCk92VoA@mail.gmail.com>
+Message-ID: <CAM9kYqjZxC+Jh8Vr_hhP8kRR2-c8fbyG0Nob95oBcaYT9VHAXA@mail.gmail.com>
+
+Mehdi--
+You _can_ calculate estimates of the parameters at median germination from
+the lme or gamm objects, but the confidence intervals are not easy.
+I recommend using the survival package, specifically survfit.formula and
+quantile.survfit, which gives a couple of examples
+
+fit <- survfit(Surv(time, status) ~ ph.ecog, data=lung)
+
+quantile(fit)
+
+Tom 2
+
+On Fri, Jul 24, 2015 at 12:43 AM, Mehdi Abedi <abedimail at gmail.com> wrote:
+
+> Dear Tom,
+> Thanks for your kind reply.
+> Could we calculate T50 in gamm4 and lme4 as well?
+> I searched in survival but no special information about median term in the
+> package survival.
+>
+> Warm regards,
+> Mehdi
+>
+> On Fri, Jul 24, 2015 at 4:11 AM, Philippi, Tom <tom_philippi at nps.gov>
+> wrote:
+>
+>> Mehdi--
+>> Based on the example datasets germination and chickweed, drc would work
+>> with you using the final count of emergence as the number of seeds at risk
+>> of germinating.  If you get a satisfactory fit from one of the 6 or so
+>> function forms it supports for dose-response, you may be fine.  [I have
+>> scientific qualms about treating time as a dose, but you may have a valid
+>> justification.]
+>>
+>> However, I don't know that drc handles replicate subjects (petri dishes)
+>> followed over time, where you need a random effect for subject.  [You don't
+>> say whether you have replicate soil samples followed over time.]  If you
+>> have replicate soil samples,  you could fit something like a generalized
+>> linear mixed model with lme4 or related, or generalized additive mixed
+>> model with mgcv or gamm4. family='binomial', and for each subject &
+>> species, the sum of the seeds that germinated as the total.
+>> Alternatively, there are a number of packages for survival or time to
+>> event analysis.  Your T50 is equivalent to the median survival time (or
+>> median time to germination).  Look at the survival analysis task view:
+>> *https://cran.r-project.org/web/views/Survival.html
+>> <https://cran.r-project.org/web/views/Survival.html>*
+>> You may be able to use the survival package, as median survival times are
+>> available in most packages.  Gordon Fox (currently at USF) wrote a book
+>> chapter on applying such methods to germination times (albeit using SAS not
+>> R at the time), and might be willing to send you a pdf.
+>> I hope that this helps you with your analyses.
+>>
+>> Tom 2
+>>
+>>
+>> On Thu, Jul 23, 2015 at 2:03 PM, Mehdi Abedi <abedimail at gmail.com> wrote:
+>>
+>>> Dear Colleagues,
+>>>
+>>> I am interested to calculate time to 50 percentage for count data.
+>>> I am working on soil seed bank germination. I have recorded number of
+>>> seedling emergence in 10 different times for species. The total number of
+>>> seeds in soil is not known therefore it is not proportional data but we
+>>> can
+>>> argue that after this period all viable seeds already germinated(total
+>>> seedling emergence).
+>>>
+>>> I am familiar with drc package for calculation T50 but only for
+>>> proportional data like germination in petridishes which total number of
+>>> seed in each pteridishes is known  T50 could be calculated.
+>>>
+>>> Could we calculate T50 for count data as well? because we have total
+>>> seedling emergence in the end, therefore their distribution during time
+>>> is
+>>> important and having this index we can find when species germinate ...
+>>> This indices could be useful for other count data specially survival
+>>> studies.
+>>>
+>>> warm regards
+>>> Mehdi
+>>>
+>>>
+>>> *Mehdi Abedi Department of Range Management*
+>>>
+>>> *Faculty of Natural Resources & Marine Sciences *
+>>>
+>>> *Tarbiat Modares University (TMU) *
+>>>
+>>> *46417-76489, Noor*
+>>>
+>>> *Mazandaran, IRAN *
+>>>
+>>> *mehdi.abedi at modares.ac.ir <Mehdi.abedi at modares.ac.ir>*
+>>>
+>>> *Homepage
+>>> <http://www.modares.ac.ir/en/Schools/nat/Academic_Staff/~mehdi.abedi>*
+>>>
+>>> *Tel: +98-122-6253101 *
+>>>
+>>> *Fax: +98-122-6253499*
+>>>
+>>>         [[alternative HTML version deleted]]
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>
+>>
+>>
+>> --
+>> "Data is not information. Information is not knowledge. And knowledge is
+>> certainly not wisdom."
+>>    -- Clifford Stoll
+>>
+>> "Science is what we understand well enough to explain to a computer. Art
+>> is everything else we do."
+>>    -- Donald Knuth
+>>
+>> "If you find that you're spending almost all your time on theory, start
+>> turning some attention to practical things; it will improve your theories.
+>> If you find that you're spending almost all your time on practice, start
+>> turning some attention to theoretical things; it will improve your
+>> practice."
+>>   -- Donald Knuth
+>>
+>>
+>
+>
+> --
+>
+>
+> *Mehdi Abedi Department of Range Management*
+>
+> *Faculty of Natural Resources & Marine Sciences *
+>
+> *Tarbiat Modares University (TMU) *
+>
+> *46417-76489, Noor*
+>
+> *Mazandaran, IRAN *
+>
+> *mehdi.abedi at modares.ac.ir <Mehdi.abedi at modares.ac.ir>*
+>
+> *Homepage
+> <http://www.modares.ac.ir/en/Schools/nat/Academic_Staff/~mehdi.abedi>*
+>
+> *Tel: +98-122-6253101 *
+>
+> *Fax: +98-122-6253499*
+>
+
+
+
+-- 
+"Data is not information. Information is not knowledge. And knowledge is
+certainly not wisdom."
+   -- Clifford Stoll
+
+"Science is what we understand well enough to explain to a computer. Art is
+everything else we do."
+   -- Donald Knuth
+
+"If you find that you're spending almost all your time on theory, start
+turning some attention to practical things; it will improve your theories.
+If you find that you're spending almost all your time on practice, start
+turning some attention to theoretical things; it will improve your
+practice."
+  -- Donald Knuth
+
+-------------------------------------------
+Tom Philippi, Ph.D.
+Quantitative Ecologist & Data Therapist
+Inventory and Monitoring Program
+National Park Service
+(619) 557-5450 x4576
+Tom_Philippi at nps.gov
+http://science.nature.nps.gov/im/monitor
+
+	[[alternative HTML version deleted]]
+
+
+From swamp at blarg.net  Wed Jul 29 18:36:12 2015
+From: swamp at blarg.net (Michael Marsh)
+Date: Wed, 29 Jul 2015 09:36:12 -0700
+Subject: [R-sig-eco] biplot question: "Error in 1L:n : argument of length 0"
+Message-ID: <55B900FC.1050608@blarg.net>
+
+I am trying to obtain biplots of NMDS results, ideally like the 
+rpart.pca() result with mvpart.
+Can someone easily tell me why I get this error:
+Error in 1L:n : argument of length 0
+from this script, and graphical output (below) lacking labels for either 
+sites or species?
+x and y matrices are shown below script.
+modifying "y" by removing NaN rows did not change output.
+Thanks!,
+Mike Marsh
+swamp at blarg.net
+
+----------------------
+Q.wd<-as.data.frame(read.table(file.choose(),header=T))
+ > #text dataset is Q.WD.foliar.revised.txt
+
+ > library(vegan)
+ > Q09shrub.min<-vegtab(Q09shrub,min=2)
+ > Q09shrub.std<-decostand(Q09shrub.min, method="max")
+ > Q09shrub.dist<- dist(Q09shrub.std)
+ > Q09shrub.ward<-hclust(Q09shrub.dist,method="ward",members=NULL)
+ >  NMDS.Q09shrub<-metaMDS(Q09shrub)
+
+Wisconsin double standardization
+Run 0 stress 0.08176961
+Run 1 stress 0.1011811
+Run 2 stress 0.07507627
+... New best solution
+... procrustes: rmse 0.04824229  max resid 0.1222105
+Run 3 stress 0.1011877
+Run 4 stress 0.07507602
+... New best solution
+... procrustes: rmse 0.0001471213  max resid 0.0002974951
+*** Solution reached
+
+ > x<-plot(NMDS.Q09shrub, "sites")
+ > y<-plot(NMDS.Q09shrub, "species")
+ > biplot(x,y)
+Error in 1L:n : argument of length 0
+ > ordicluster(NMDS.Q09shrub, Q09shrub.ward)
+ >
+ > x
+$sites
+              NMDS1       NMDS2
+9Q05-ST -0.7781618 -0.05087985
+9Q06-VS  0.6462465 -0.41377399
+9Q12-ST -0.3126179 -0.80107514
+9Q15ECS -0.8780461  0.20632944
+9Q15WST -0.7672079  0.88777750
+9Q16-VS  0.8652229  0.56684307
+9Q19-ST  0.1374252 -0.41322443
+9Q24-ST  0.3140148 -0.12115606
+9Q26-ST -1.0044059 -0.15339828
+9Q29-DS  0.9608797  0.35394121
+9Q33-VS  0.8166505 -0.06138349
+
+$species
+NULL
+
+attr(,"class")
+[1] "ordiplot"
+ > y
+$sites
+NULL
+
+$species
+              NMDS1       NMDS2
+ACMA3          NaN         NaN
+AMAL2  -0.05672919 -0.81171544
+ARRI2   0.84801299  0.24651319
+ARTR2  -0.93597835  0.02417604
+ARTR4  -1.01337771 -0.05343535
+GRSP           NaN         NaN
+CHVI8  -0.74187745 -0.02949452
+ERBL2          NaN         NaN
+ERNA10 -0.61157997  0.47464632
+NEST5   0.87499085 -0.04070596
+PREM   -0.90401815  1.25730322
+PRVI           NaN         NaN
+PUTR2   0.16079095 -0.36676073
+RICE   -0.35775047 -0.46386377
+ROWO           NaN         NaN
+SYAL2          NaN         NaN
+SYOR2  -0.36836460 -1.13451214
+
+attr(,"class")
+[1] "ordiplot"
+ >
+
+
+From ucfagls at gmail.com  Wed Jul 29 19:10:55 2015
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Wed, 29 Jul 2015 11:10:55 -0600
+Subject: [R-sig-eco] biplot question: "Error in 1L:n : argument of
+	length 0"
+In-Reply-To: <55B900FC.1050608@blarg.net>
+References: <55B900FC.1050608@blarg.net>
+Message-ID: <CAAHES9z9TNPr+Si52UPgn0cEnrOAQM9QdLLFtGAwHJN3E2ARFA@mail.gmail.com>
+
+Use the `plot()` method provided by vegan. You won't get biplots from an
+NMDS as the method throws away the species data to when convert the data to
+dissimilarities before generating the k-d mapping. vegan allows species
+scores to be added (as the weighted averages of the site scores) if the raw
+data was given to metaMDS(), but these and the site scores don't form a
+traditional biplot if you mean that term specifically.
+
+G
+
+On 29 July 2015 at 10:36, Michael Marsh <swamp at blarg.net> wrote:
+
+> I am trying to obtain biplots of NMDS results, ideally like the
+> rpart.pca() result with mvpart.
+> Can someone easily tell me why I get this error:
+> Error in 1L:n : argument of length 0
+> from this script, and graphical output (below) lacking labels for either
+> sites or species?
+> x and y matrices are shown below script.
+> modifying "y" by removing NaN rows did not change output.
+> Thanks!,
+> Mike Marsh
+> swamp at blarg.net
+>
+> ----------------------
+> Q.wd<-as.data.frame(read.table(file.choose(),header=T))
+> > #text dataset is Q.WD.foliar.revised.txt
+>
+> > library(vegan)
+> > Q09shrub.min<-vegtab(Q09shrub,min=2)
+> > Q09shrub.std<-decostand(Q09shrub.min, method="max")
+> > Q09shrub.dist<- dist(Q09shrub.std)
+> > Q09shrub.ward<-hclust(Q09shrub.dist,method="ward",members=NULL)
+> >  NMDS.Q09shrub<-metaMDS(Q09shrub)
+>
+> Wisconsin double standardization
+> Run 0 stress 0.08176961
+> Run 1 stress 0.1011811
+> Run 2 stress 0.07507627
+> ... New best solution
+> ... procrustes: rmse 0.04824229  max resid 0.1222105
+> Run 3 stress 0.1011877
+> Run 4 stress 0.07507602
+> ... New best solution
+> ... procrustes: rmse 0.0001471213  max resid 0.0002974951
+> *** Solution reached
+>
+> > x<-plot(NMDS.Q09shrub, "sites")
+> > y<-plot(NMDS.Q09shrub, "species")
+> > biplot(x,y)
+> Error in 1L:n : argument of length 0
+> > ordicluster(NMDS.Q09shrub, Q09shrub.ward)
+> >
+> > x
+> $sites
+>              NMDS1       NMDS2
+> 9Q05-ST -0.7781618 -0.05087985
+> 9Q06-VS  0.6462465 -0.41377399
+> 9Q12-ST -0.3126179 -0.80107514
+> 9Q15ECS -0.8780461  0.20632944
+> 9Q15WST -0.7672079  0.88777750
+> 9Q16-VS  0.8652229  0.56684307
+> 9Q19-ST  0.1374252 -0.41322443
+> 9Q24-ST  0.3140148 -0.12115606
+> 9Q26-ST -1.0044059 -0.15339828
+> 9Q29-DS  0.9608797  0.35394121
+> 9Q33-VS  0.8166505 -0.06138349
+>
+> $species
+> NULL
+>
+> attr(,"class")
+> [1] "ordiplot"
+> > y
+> $sites
+> NULL
+>
+> $species
+>              NMDS1       NMDS2
+> ACMA3          NaN         NaN
+> AMAL2  -0.05672919 -0.81171544
+> ARRI2   0.84801299  0.24651319
+> ARTR2  -0.93597835  0.02417604
+> ARTR4  -1.01337771 -0.05343535
+> GRSP           NaN         NaN
+> CHVI8  -0.74187745 -0.02949452
+> ERBL2          NaN         NaN
+> ERNA10 -0.61157997  0.47464632
+> NEST5   0.87499085 -0.04070596
+> PREM   -0.90401815  1.25730322
+> PRVI           NaN         NaN
+> PUTR2   0.16079095 -0.36676073
+> RICE   -0.35775047 -0.46386377
+> ROWO           NaN         NaN
+> SYAL2          NaN         NaN
+> SYOR2  -0.36836460 -1.13451214
+>
+> attr(,"class")
+> [1] "ordiplot"
+> >
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Gavin Simpson, PhD
+
+	[[alternative HTML version deleted]]
+
+
+From nat at posteo.de  Wed Jul 29 19:26:53 2015
+From: nat at posteo.de (Natalie)
+Date: Wed, 29 Jul 2015 19:26:53 +0200
+Subject: [R-sig-eco] calculate "dispersion index" (betadisper, vegan)
+Message-ID: <b372f8963884b8f5a4fdee8171aeb2ff@posteo.de>
+
+hi all
+
+I would like to  calculate a dispersion index or similar from the 
+results of the vegan function betadisper.
+i would like to know if there is a possibility to e.g. calculate the 
+volume of the community dispersion(area of the hull in the PCoA) from 
+the betadisper results.
+common is to show the distance to the centroid.but I have the impression 
+the dispersion within communities are not that clear,especially if you 
+have similar variance.
+The program primer v5 calculates a disperion index based on  the 
+similarity percentage.
+similarity percentage is not an option since it is mainly based on most 
+counted species.
+
+ideas and help are very much appreciated
+cheers natalie
+
+
+From szoecs at uni-landau.de  Wed Jul 29 20:24:48 2015
+From: szoecs at uni-landau.de (=?windows-1252?Q?Eduard_Sz=F6cs?=)
+Date: Wed, 29 Jul 2015 20:24:48 +0200
+Subject: [R-sig-eco] calculate "dispersion index" (betadisper, vegan)
+In-Reply-To: <b372f8963884b8f5a4fdee8171aeb2ff@posteo.de>
+References: <b372f8963884b8f5a4fdee8171aeb2ff@posteo.de>
+Message-ID: <55B91A70.4060601@uni-landau.de>
+
+Dear Natalie,
+
+it should be possible to use the betadisper-result to do this.
+However, a possibly faster way would be to calculate the area of the
+hull directly.
+
+Here's an example:
+
+require(vegan)
+data(dune)
+data(dune.env)
+MDS <- cmdscale(vegdist(dune, method = 'bray'))
+plot(MDS, type = 'n')
+points(MDS, col = dune.env$Management, pch = 16)
+
+
+# area only for hull of NM
+take <- MDS[dune.env$Management == 'NM', ]
+hull <- chull(take)
+lines(take[c(hull, hull[1]), ])
+require(splancs)
+areapl(take[c(hull, hull[1]), ])
+
+
+HTH,
+
+Eduard
+
+On 29/07/15 19:26, Natalie wrote:
+> hi all
+> 
+> I would like to  calculate a dispersion index or similar from the
+> results of the vegan function betadisper.
+> i would like to know if there is a possibility to e.g. calculate the
+> volume of the community dispersion(area of the hull in the PCoA) from
+> the betadisper results.
+> common is to show the distance to the centroid.but I have the impression
+> the dispersion within communities are not that clear,especially if you
+> have similar variance.
+> The program primer v5 calculates a disperion index based on  the
+> similarity percentage.
+> similarity percentage is not an option since it is mainly based on most
+> counted species.
+> 
+> ideas and help are very much appreciated
+> cheers natalie
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+Eduard Sz?cs
+Quantitative Landscape Ecology
+Institute for Environmental Sciences
+University Koblenz-Landau
+Tel. +49 6341 280 31552
+http://www.uni-koblenz-landau.de/en/campus-landau/faculty7/environmental-sciences/landscape-ecology/Staff/eduardszoecs
+
+
+From botta-dukat.zoltan at okologia.mta.hu  Thu Jul 30 07:52:19 2015
+From: botta-dukat.zoltan at okologia.mta.hu (Zoltan Botta-Dukat)
+Date: Thu, 30 Jul 2015 07:52:19 +0200
+Subject: [R-sig-eco] calculate "dispersion index" (betadisper, vegan)
+In-Reply-To: <b372f8963884b8f5a4fdee8171aeb2ff@posteo.de>
+References: <b372f8963884b8f5a4fdee8171aeb2ff@posteo.de>
+Message-ID: <55B9BB93.5040503@okologia.mta.hu>
+
+Hi Natalie,
+
+Be careful with convex hull volume, because it is zero if points lie on 
+a line (an near to zero, if the configuration is close to this), 
+independently from the amount of distances.
+
+Zoltan
+
+2015.07.29. 19:26 keltez?ssel, Natalie ?rta:
+> hi all
+>
+> I would like to  calculate a dispersion index or similar from the 
+> results of the vegan function betadisper.
+> i would like to know if there is a possibility to e.g. calculate the 
+> volume of the community dispersion(area of the hull in the PCoA) from 
+> the betadisper results.
+> common is to show the distance to the centroid.but I have the 
+> impression the dispersion within communities are not that 
+> clear,especially if you have similar variance.
+> The program primer v5 calculates a disperion index based on  the 
+> similarity percentage.
+> similarity percentage is not an option since it is mainly based on 
+> most counted species.
+>
+> ideas and help are very much appreciated
+> cheers natalie
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+Botta-Duk?t Zolt?n
+--------------------------------
+?kol?giai ?s Botanikai Int?zet
+Magyar Tudom?nyos Akad?mia
+?kol?giai Kutat?k?zpont
+--------------------------------
+2163. V?cr?t?t, Alkotm?ny u. 2-4.
+tel: +36 28 360122/157
+fax: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+Zolt?n BOTTA-Duk?t
+--------------------------------
+Institute of Ecology and Botany
+Hungarian Academy of Sciences
+Centre for Ecological Research
+--------------------------------
+H-2163 V?cr?t?t, Alkom?ny u. 2-4.
+HUNGARY
+Phone: +36 28 360122/157
+Fax..: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+From nat at posteo.de  Thu Jul 30 09:41:58 2015
+From: nat at posteo.de (Natalie)
+Date: Thu, 30 Jul 2015 09:41:58 +0200
+Subject: [R-sig-eco] calculate "dispersion index" (betadisper, vegan)
+In-Reply-To: <55B9BB93.5040503@okologia.mta.hu>
+References: <b372f8963884b8f5a4fdee8171aeb2ff@posteo.de>
+	<55B9BB93.5040503@okologia.mta.hu>
+Message-ID: <ef8d486028f0532bfe8e6a024f95b7dc@posteo.de>
+
+hi zoltan
+do you have another idea to calculate the dispersion?
+thanks
+
+Am 30.07.2015 07:52 schrieb Zoltan Botta-Dukat:
+> Hi Natalie,
+> 
+> Be careful with convex hull volume, because it is zero if points lie
+> on a line (an near to zero, if the configuration is close to this),
+> independently from the amount of distances.
+> 
+> Zoltan
+> 
+> 2015.07.29. 19:26 keltez?ssel, Natalie ?rta:
+>> hi all
+>> 
+>> I would like to  calculate a dispersion index or similar from the 
+>> results of the vegan function betadisper.
+>> i would like to know if there is a possibility to e.g. calculate the 
+>> volume of the community dispersion(area of the hull in the PCoA) from 
+>> the betadisper results.
+>> common is to show the distance to the centroid.but I have the 
+>> impression the dispersion within communities are not that 
+>> clear,especially if you have similar variance.
+>> The program primer v5 calculates a disperion index based on  the 
+>> similarity percentage.
+>> similarity percentage is not an option since it is mainly based on 
+>> most counted species.
+>> 
+>> ideas and help are very much appreciated
+>> cheers natalie
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> --
+> Botta-Duk?t Zolt?n
+> --------------------------------
+> ?kol?giai ?s Botanikai Int?zet
+> Magyar Tudom?nyos Akad?mia
+> ?kol?giai Kutat?k?zpont
+> --------------------------------
+> 2163. V?cr?t?t, Alkotm?ny u. 2-4.
+> tel: +36 28 360122/157
+> fax: +36 28 360110
+> botta-dukat.zoltan at okologia.mta.hu
+> www.okologia.mta.hu
+> 
+> 
+> Zolt?n BOTTA-Duk?t
+> --------------------------------
+> Institute of Ecology and Botany
+> Hungarian Academy of Sciences
+> Centre for Ecological Research
+> --------------------------------
+> H-2163 V?cr?t?t, Alkom?ny u. 2-4.
+> HUNGARY
+> Phone: +36 28 360122/157
+> Fax..: +36 28 360110
+> botta-dukat.zoltan at okologia.mta.hu
+> www.okologia.mta.hu
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From jari.oksanen at oulu.fi  Fri Jul 31 07:53:29 2015
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 31 Jul 2015 05:53:29 +0000
+Subject: [R-sig-eco] calculate "dispersion index" (betadisper, vegan)
+In-Reply-To: <55B9BB93.5040503@okologia.mta.hu>
+References: <b372f8963884b8f5a4fdee8171aeb2ff@posteo.de>
+	<55B9BB93.5040503@okologia.mta.hu>
+Message-ID: <E809A680-2DDC-47AB-85C6-48DEB4153A18@oulu.fi>
+
+Natalie & Zoltan,
+
+I'd be more worried about the effect of outliers on the area of convex hulls. Here an _ad hoc_ definition of outlier: outlier a single point that has a huge effect on the area of an enclosing convex hull.
+
+That said, two points are certainly on a line, and three points can be (almost) on a line. Four or more points can be on a line, but rarely they are.
+
+In vegan, we have function betadisper() that is suggested to be used to measure the dispersion. It may be interesting to compare this to convex hulls. In vegan, summary() of ordihull() result gives the areas of convex hulls (see ?ordihull), and function ordiaretest() runs a permutation test on the areas of convex hulls.
+
+Cheers, Jari Okanen 
+
+On 30/07/2015, at 08:52 AM, Zoltan Botta-Dukat wrote:
+
+> Hi Natalie,
+> 
+> Be careful with convex hull volume, because it is zero if points lie on a line (an near to zero, if the configuration is close to this), independently from the amount of distances.
+> 
+> Zoltan
+> 
+> 2015.07.29. 19:26 keltez?ssel, Natalie ?rta:
+>> hi all
+>> 
+>> I would like to  calculate a dispersion index or similar from the results of the vegan function betadisper.
+>> i would like to know if there is a possibility to e.g. calculate the volume of the community dispersion(area of the hull in the PCoA) from the betadisper results.
+>> common is to show the distance to the centroid.but I have the impression the dispersion within communities are not that clear,especially if you have similar variance.
+>> The program primer v5 calculates a disperion index based on  the similarity percentage.
+>> similarity percentage is not an option since it is mainly based on most counted species.
+>> 
+>> ideas and help are very much appreciated
+>> cheers natalie
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> -- 
+> Botta-Duk?t Zolt?n
+> --------------------------------
+> ?kol?giai ?s Botanikai Int?zet
+> Magyar Tudom?nyos Akad?mia
+> ?kol?giai Kutat?k?zpont
+> --------------------------------
+> 2163. V?cr?t?t, Alkotm?ny u. 2-4.
+> tel: +36 28 360122/157
+> fax: +36 28 360110
+> botta-dukat.zoltan at okologia.mta.hu
+> www.okologia.mta.hu
+> 
+> 
+> Zolt?n BOTTA-Duk?t
+> --------------------------------
+> Institute of Ecology and Botany
+> Hungarian Academy of Sciences
+> Centre for Ecological Research
+> --------------------------------
+> H-2163 V?cr?t?t, Alkom?ny u. 2-4.
+> HUNGARY
+> Phone: +36 28 360122/157
+> Fax..: +36 28 360110
+> botta-dukat.zoltan at okologia.mta.hu
+> www.okologia.mta.hu
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+

@@ -1,0 +1,1580 @@
+{
+  "list": "r-sig-ecology",
+  "description": "",
+  "month": "2013-11",
+  "messages": [
+    {
+      "id": "msg-919e3366a832",
+      "message_id": "<1383313983557-7578486.post@n2.nabble.com>",
+      "from_name": "Philipp01",
+      "from_email_hash": "f62febfa363fc68b7b785b438ed439d7541aa0c7c83ae9485b1af3d9fac2152e",
+      "date": "2013-11-01T06:53:03-07:00",
+      "subject": "[R-sig-eco] Cross validate model with calibrate",
+      "subject_clean": "Cross validate model with calibrate",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello all,\n\nI would like to cross validate my rda() derived model with the calibrate\nfunction (vegan package) and calculate the RMSE as value for performance\nmeasure. \nFor simplicity I use the example from the predict.cca {vegan} help.\n\nlibrary(ade4)\nlibrary(vegan)\n\ndata(dune)\ndata(dune.env)\n\nnbr <- as.numeric(rownames(dune))\n\nlibrary(caret)\ninTrain <- createDataPartition(y=nbr, p=3/4, list=F, times=1)\n\ntrain.dune <- dune[inTrain[,i],];\ntest.dune  <- dune[-inTrain[,i],];\n  \ntrain.dune.env <- dune.env[inTrain[,i],];\ntest.dune.env  <- dune.env[-inTrain[,i],];\n\n\nmod  <- rda(train.dune ~ A1, train.dune.env)\ncal <- calibrate(mod, newdata=test.dune)\n\nwith(test.dune.env, plot(A1, cal[,\"A1\"] - A1, ylab=\"Prediction Error\"))\nabline(h=0)\n\nerror <- cal - test.dune.env$A1\n(rmse <- sqrt(mean(error^2)))\n\nWhen I apply this code snippet to my very own data I get positive and\nnegative \"cal\" values, which would be unrealistic for parameters such as\ntree height (etc.). Therefore, I doubt that my approach is correct. How do\nyou compute the RMSE for the rda() derived model?\n\nRegards, Philipp \n\n\n\n\n--\nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/Cross-validate-model-with-calibrate-tp7578486.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hello all,\n\nI would like to cross validate my rda() derived model with the calibrate\nfunction (vegan package) and calculate the RMSE as value for performance\nmeasure. \nFor simplicity I use the example",
+      "thread_id": "thread-919e3366a832",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-01adc291532c",
+      "message_id": "<A9381958-39D2-4781-AB1C-AACDC655EBB1@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2013-11-02T06:40:48Z",
+      "subject": "[R-sig-eco] Cross validate model with calibrate",
+      "subject_clean": "Cross validate model with calibrate",
+      "in_reply_to": "<1383313983557-7578486.post@n2.nabble.com>",
+      "references": [
+        "<1383313983557-7578486.post@n2.nabble.com>"
+      ],
+      "body_plain": "Dear Philipp,\n\nI cannot see anything wrong in your approach. The only problem is that RDA may not do very well. It is very common that the calibrated values are outside the original range of the data and if the predictions are not very good, they can also be \"unrealistic\" values. RDA has no idea what is realistic for given data. \n\nYou get cross-validated values outside data range even in the Dune meadow data you used. Here an example that applies 4-fold cross validation (in line with 3/4 subsetting in your example):\n\nlibrary(vegan)\ndata(dune, dune.env)\nvec <- rep(1:4, length=nrow(dune))\npred <- rep(NA, length=nrow(dune))\nset.seed(4711)\ntake <- sample(vec)\nfor(i in 1:4) pred[take==i] <- calibrate(rda(dune ~ A1, dune.env, subset = take != i), newdata = subset(dune, take==i))\nrange(pred)  \n## [1]  0.9104486 12.3583826\nwith(dune.env, range(A1))\n## [1]  2.8 11.5\n\nThe predicted values extend nearly 2cm below and 1cm above the data values. In this case the predicted values were not negative, but that could happen, too. The tool (RDA) may not work very well in all cases, but RMSE will tell you how good RDA is for the job. If it is bad, do not use it. It seems RDA is very poor in this dune example: RMSE is larger than standard deviation of A1 (but you could almost guess this by looking at the low constrained eigenvalues of the model).\n\nThe code above uses the 'subset' argument of vegan::rda and the subset() function of R to make the code a bit easier to write.\n\nCheers, Jari Oksanen\n\n\nOn 01/11/2013, at 15:53 PM, Philipp01 wrote:\n\n> Hello all,\n> \n> I would like to cross validate my rda() derived model with the calibrate\n> function (vegan package) and calculate the RMSE as value for performance\n> measure. \n> For simplicity I use the example from the predict.cca {vegan} help.\n> \n> library(ade4)\n> library(vegan)\n> \n> data(dune)\n> data(dune.env)\n> \n> nbr <- as.numeric(rownames(dune))\n> \n> library(caret)\n> inTrain <- createDataPartition(y=nbr, p=3/4, list=F, times=1)\n> \n> train.dune <- dune[inTrain[,i],];\n> test.dune  <- dune[-inTrain[,i],];\n> \n> train.dune.env <- dune.env[inTrain[,i],];\n> test.dune.env  <- dune.env[-inTrain[,i],];\n> \n> \n> mod  <- rda(train.dune ~ A1, train.dune.env)\n> cal <- calibrate(mod, newdata=test.dune)\n> \n> with(test.dune.env, plot(A1, cal[,\"A1\"] - A1, ylab=\"Prediction Error\"))\n> abline(h=0)\n> \n> error <- cal - test.dune.env$A1\n> (rmse <- sqrt(mean(error^2)))\n> \n> When I apply this code snippet to my very own data I get positive and\n> negative \"cal\" values, which would be unrealistic for parameters such as\n> tree height (etc.). Therefore, I doubt that my approach is correct. How do\n> you compute the RMSE for the rda() derived model?\n> \n> Regards, Philipp \n> \n> \n> \n> \n> --\n> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Cross-validate-model-with-calibrate-tp7578486.html\n> Sent from the r-sig-ecology mailing list archive at Nabble.com.\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology",
+      "body_snippet": "Dear Philipp,\n\nI cannot see anything wrong in your approach. The only problem is that RDA may not do very well. It is very common that the calibrated values are outside the original range of the data ",
+      "thread_id": "thread-919e3366a832",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-d68115ff97f7",
+      "message_id": "<1383554655.12015.37.camel@zouzel.natur.cuni.cz>",
+      "from_name": "Martin Weiser",
+      "from_email_hash": "222c67c46344feed8fe25f2e5d573299f079e1d4b0bd4738f8bf19dae2f600e3",
+      "date": "2013-11-04T09:44:15+01:00",
+      "subject": "[R-sig-eco] (almost) complete population",
+      "subject_clean": "(almost) complete population",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear friends,\n\nI am in strange situation now:\nI analyze data about decline of bats on the island, and I have got data\nabout almost complete population (no substantial migration). However,\nthere are only 7 time replicates.\nI would like to link the decrease in number of bats with weather\nconditions in those 7 times (years), and improve my fit with the fact\nthat I have data about vast majority of the population (clearly not a\ntiny sample). Is there any way how to get the advantage form this fact,\ne.g. how to be able to use this information in order to use more than 1\nweather predictor reliably and avoid overfitting?\n\nAny advice?\n\nWith thanks in advance,\nbest,\nMartin Weiser",
+      "body_snippet": "Dear friends,\n\nI am in strange situation now:\nI analyze data about decline of bats on the island, and I have got data\nabout almost complete population (no substantial migration). However,\nthere are on",
+      "thread_id": "thread-d68115ff97f7",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-a2bd1593cccb",
+      "message_id": "<alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>",
+      "from_name": "Rich Shepard",
+      "from_email_hash": "fae16a7dbae64fd8dac1e2b7eb51dd8c7aa1e1ecad85248ae3b54421c4e0babc",
+      "date": "2013-11-04T07:59:32-08:00",
+      "subject": "[R-sig-eco] Multivariate Analyses of Ecological Communities",
+      "subject_clean": "Multivariate Analyses of Ecological Communities",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "I've read the docs for anosim, adonis, and mrpp and am currently reading\nthe vegan tutorial. Toward the end of the anosim and mprr docs the author\nwrites that each has potential shortcomings and recommends the adonis\npackage be used instead. This leads to my two questions:\n\n   1) Why are anosin and mrpp packages still maintained and included? That\nthey are suggests question\n\n   2) Under what circumstances are these two packages appropriately used?\n\nTIA,\n\nRich\n\n-- \nRichard B. Shepard, Ph.D.          |      Have knowledge, will travel.\nApplied Ecosystem Services, Inc.   |\n<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863",
+      "body_snippet": "I've read the docs for anosim, adonis, and mrpp and am currently reading\nthe vegan tutorial. Toward the end of the anosim and mprr docs the author\nwrites that each has potential shortcomings and recom",
+      "thread_id": "thread-a2bd1593cccb",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-4d5ac642de0c",
+      "message_id": "<7E5D8EC2-4ECF-4715-AC4F-ED3B480CD3CC@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2013-11-04T16:37:01Z",
+      "subject": "[R-sig-eco] Multivariate Analyses of Ecological Communities",
+      "subject_clean": "Multivariate Analyses of Ecological Communities",
+      "in_reply_to": "<alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>",
+      "references": [
+        "<alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>"
+      ],
+      "body_plain": "On 04/11/2013, at 17:59 PM, Rich Shepard wrote:\n\n>  I've read the docs for anosim, adonis, and mrpp and am currently reading\n> the vegan tutorial. Toward the end of the anosim and mprr docs the author\n> writes that each has potential shortcomings and recommends the adonis\n> package be used instead. This leads to my two questions:\n> \n>  1) Why are anosin and mrpp packages still maintained and included? That\n> they are suggests question\n\nTo serve the people?\n\n> \n>  2) Under what circumstances are these two packages appropriately used?\n> \nI don't know, but since they are available, it is possible to find out.\n\nI have suggested in the documentation that adonis() usually is better, but it also suffers from similar problems as these alternatives. My analysis suggests that adonis() is more robust and reliable. However, not everybody agrees, and alternatives are provided for these standard methods. Since the alternatives are provided, you can study the issue independently.\n\nThe existence of a method is not a sufficient reason to use that method.  \n\nCheers, Jari Oksanen",
+      "body_snippet": "On 04/11/2013, at 17:59 PM, Rich Shepard wrote:\n\n>  I've read the docs for anosim, adonis, and mrpp and am currently reading\n> the vegan tutorial. Toward the end of the anosim and mprr docs the author",
+      "thread_id": "thread-a2bd1593cccb",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-8a6b2c7daea1",
+      "message_id": "<alpine.LNX.2.00.1311040904030.24904@salmo.appl-ecosys.com>",
+      "from_name": "Rich Shepard",
+      "from_email_hash": "fae16a7dbae64fd8dac1e2b7eb51dd8c7aa1e1ecad85248ae3b54421c4e0babc",
+      "date": "2013-11-04T09:07:55-08:00",
+      "subject": "[R-sig-eco] Multivariate Analyses of Ecological Communities",
+      "subject_clean": "Multivariate Analyses of Ecological Communities",
+      "in_reply_to": "<7E5D8EC2-4ECF-4715-AC4F-ED3B480CD3CC@oulu.fi>",
+      "references": [
+        "<alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>",
+        "<7E5D8EC2-4ECF-4715-AC4F-ED3B480CD3CC@oulu.fi>"
+      ],
+      "body_plain": "On Mon, 4 Nov 2013, Jari Oksanen wrote:\n\n> To serve the people?\n\nJari,\n\n   Ah, altriism is not dead. :-)\n\n> I have suggested in the documentation that adonis() usually is better, but\n> it also suffers from similar problems as these alternatives. My analysis\n> suggests that adonis() is more robust and reliable. However, not everybody\n> agrees, and alternatives are provided for these standard methods. Since\n> the alternatives are provided, you can study the issue independently.\n\n   I'm more than happy to study the issue independently as I look for the\nmost appropriate method for my needs. I'll see if my reference library has\nsufficient documentation.\n\n> The existence of a method is not a sufficient reason to use that method.\n\n   Heh-heh-heh! It certainly is sufficient reason in the world of\nenvironmental regulation. :-) But, that's a contentious discussion best done\nin a micro-brew pub with some good ale.\n\nMany thanks,\n\nRich\n\n-- \nRichard B. Shepard, Ph.D.          |      Have knowledge, will travel.\nApplied Ecosystem Services, Inc.   |\n<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863",
+      "body_snippet": "On Mon, 4 Nov 2013, Jari Oksanen wrote:\n\n> To serve the people?\n\nJari,\n\n   Ah, altriism is not dead. :-)\n\n> I have suggested in the documentation that adonis() usually is better, but\n> it also suffers",
+      "thread_id": "thread-a2bd1593cccb",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-4ddf1715d8d9",
+      "message_id": "<BLU174-W3507DA32F14074803AEFE8F2F60@phx.gbl>",
+      "from_name": "Angel",
+      "from_email_hash": "1702027b2b3e224b7a26e384b38251d7e2fece5ec072a2435ac1c446d75658f5",
+      "date": "2013-11-04T14:42:57-08:00",
+      "subject": "[R-sig-eco] Multivariate Analyses of Ecological Communities",
+      "subject_clean": "Multivariate Analyses of Ecological Communities",
+      "in_reply_to": "<alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>",
+      "references": [
+        "<alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131104/ccefa235/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131104/ccefa235/attachment.pl>",
+      "thread_id": "thread-a2bd1593cccb",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-9d61c5408174",
+      "message_id": "<alpine.LNX.2.00.1311041449060.24904@salmo.appl-ecosys.com>",
+      "from_name": "Rich Shepard",
+      "from_email_hash": "fae16a7dbae64fd8dac1e2b7eb51dd8c7aa1e1ecad85248ae3b54421c4e0babc",
+      "date": "2013-11-04T14:55:22-08:00",
+      "subject": "[R-sig-eco] Multivariate Analyses of Ecological Communities",
+      "subject_clean": "Multivariate Analyses of Ecological Communities",
+      "in_reply_to": "<BLU174-W3507DA32F14074803AEFE8F2F60@phx.gbl>",
+      "references": [
+        "<alpine.LNX.2.00.1311040754260.24904@salmo.appl-ecosys.com>",
+        "<BLU174-W3507DA32F14074803AEFE8F2F60@phx.gbl>"
+      ],
+      "body_plain": "On Mon, 4 Nov 2013, Angel wrote:\n\n> Hello Rich, I may be able to provide some insight into this...\n\n> I would think they are included because of familiarity and different usage\n> scenario's.\n\nAngel,\n\n   I assumed this to be the case and appreciate your insights into what those\nare.\n\n> ANOSIM/MRPP would be used for simple experiments, where you would believe\n> there to be no interactions,\n\n   My work is with data collected for compliance with regulatory permits; for\nexample, NPDES water discharge permits. There's no experimental design, only\nwhat regulatory agencies required at different times or locations.\n\n   The current project involves functional feeding groups, not taxa, from\nseveral annual collections in a set of streams. I need to define the\nvariability in the proportions of each funcional feeding group (the\ndescriptors) for each collection time (the objects). Because the\ncharacteristics of the drainage basins and their stream networks are so\ndifferent, each basin/stream network needs to be analyzed by itself. Broad\ngeneralizations (e.g., west-draining vs. east-draining) might be done but\nthat's not critical.\n\nThanks,\n\nRich\n\n-- \nRichard B. Shepard, Ph.D.          |      Have knowledge, will travel.\nApplied Ecosystem Services, Inc.   |\n<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: 503-667-8863",
+      "body_snippet": "On Mon, 4 Nov 2013, Angel wrote:\n\n> Hello Rich, I may be able to provide some insight into this...\n\n> I would think they are included because of familiarity and different usage\n> scenario's.\n\nAngel,\n\n",
+      "thread_id": "thread-a2bd1593cccb",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-a95af66da1db",
+      "message_id": "<CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>",
+      "from_name": "Duarte Viana",
+      "from_email_hash": "e03d776b9ed834c6eb04b17204932c3f2f02d631e196c01feb2c4bec57ef836c",
+      "date": "2013-11-07T11:05:46+01:00",
+      "subject": "[R-sig-eco] NA in species scores using capscale in vegan",
+      "subject_clean": "NA in species scores using capscale in vegan",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/5652e7b0/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/5652e7b0/attachment.pl>",
+      "thread_id": "thread-a95af66da1db",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-d17e4121646f",
+      "message_id": "<5E84EA8B-077A-4B25-A86B-16AA00B801BA@oulu.fi>",
+      "from_name": "Jari Oksanen",
+      "from_email_hash": "09e172b476b93c81593eb33b6e85e7bab673167e3f09a8ba0597a15fe81c9f15",
+      "date": "2013-11-07T10:11:12Z",
+      "subject": "[R-sig-eco] NA in species scores using capscale in vegan",
+      "subject_clean": "NA in species scores using capscale in vegan",
+      "in_reply_to": "<CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>",
+      "references": [
+        "<CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>"
+      ],
+      "body_plain": "On 07/11/2013, at 12:05 PM, Duarte Viana wrote:\n\n> Hello all,\n> \n> I am doing a CAP (or dbRDA) in vegan, using the function \"capscale\", where\n> the response is a dissimilarity matrix (Sorensen's distance index) and the\n> explanatory matrix consists of 19 variables. The code runs apparently fine,\n> but the species scores appear as NA (site scores are properly given).\n> \n> Does anyone knows what might be the problem?\n> \nDuarte,\n\nDid you supply species data? Species scores cannot be estimated without information on species. If your response is a dissimilarity, there is no information about the original species. You can supply the original community data (which has the information on species) as argument 'comm' in capscale().\n\nCheers, Jari Oksanen",
+      "body_snippet": "On 07/11/2013, at 12:05 PM, Duarte Viana wrote:\n\n> Hello all,\n> \n> I am doing a CAP (or dbRDA) in vegan, using the function \"capscale\", where\n> the response is a dissimilarity matrix (Sorensen's dista",
+      "thread_id": "thread-a95af66da1db",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-f8ff935ed86e",
+      "message_id": "<CAAHYTEL28vKwct4ooLRdSJOihdm_XHfgk9+kWGUWSwdjiiFYMQ@mail.gmail.com>",
+      "from_name": "Duarte Viana",
+      "from_email_hash": "e03d776b9ed834c6eb04b17204932c3f2f02d631e196c01feb2c4bec57ef836c",
+      "date": "2013-11-07T11:36:02+01:00",
+      "subject": "[R-sig-eco] NA in species scores using capscale in vegan",
+      "subject_clean": "NA in species scores using capscale in vegan",
+      "in_reply_to": "<5E84EA8B-077A-4B25-A86B-16AA00B801BA@oulu.fi>",
+      "references": [
+        "<CAAHYTE+KiM_VyeEx734La0sSQ7Ok3ad+mgTpcUmhksa_4dCB4w@mail.gmail.com>",
+        "<5E84EA8B-077A-4B25-A86B-16AA00B801BA@oulu.fi>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/fb317d4d/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/fb317d4d/attachment.pl>",
+      "thread_id": "thread-a95af66da1db",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-eac4d7254e3c",
+      "message_id": "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+      "from_name": "Dylann Kersusan",
+      "from_email_hash": "e538b0ce6840c7b3c0372bdb3b355c39c4d65de4efd08c79865fc7e5355e3f8a",
+      "date": "2013-11-07T16:23:47+01:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/3c5e9371/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/3c5e9371/attachment.pl>",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-2abd30fecd40",
+      "message_id": "<CAHT1vpi0BiJ++BsvL7WUG6dn=gm+r1vkar8-3MfpV_A=H7yP5g@mail.gmail.com>",
+      "from_name": "Roman Luštrik",
+      "from_email_hash": "c0075bee7cf180735267468677bcb6c0b494c84c39ebc7ec1c97688bee0fa3df",
+      "date": "2013-11-07T16:28:42+01:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+      "references": [
+        "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/8a606f4c/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/8a606f4c/attachment.pl>",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-9f62a5f94827",
+      "message_id": "<CAM_vjumX+QnOkGgzx=LFArGVtXg6zZUu4t+0B3SS7X-iU3meEw@mail.gmail.com>",
+      "from_name": "Sarah Goslee",
+      "from_email_hash": "273eb6baae4ac25f2de5845f3f62dce55d161cfc7cf04eb5f3cc6d94b3d4aa24",
+      "date": "2013-11-07T10:30:54-05:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+      "references": [
+        "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Dylann,\n\nAll we can possibly tell you is that the index is out of range.\n\nThat's the kind of problem that really needs a reproducible example\nfor anyone to be able to give you useful advice.\n\nHere's some advice on doing so:\nhttp://stackoverflow.com/questions/5963269/how-to-make-a-great-r-reproducible-example\n\nSarah\n\nOn Thu, Nov 7, 2013 at 10:23 AM, Dylann Kersusan\n<kersusan.dylann at gmail.com> wrote:\n> Dear list,\n>\n> I am running a script on my computer to estimate kernelUDs for several\n> individuals and several years (from GPS relocations). I am using the\n> getverticeshr() function to extract home range contours, and for some\n> reasons I end up having this error message:\n>\n> Erreur dans re[[i]] : indice hors limites\n>\n> in french, the english translation would be:\n>\n> Error in re [[i]]: index out of range\n\n-- \nSarah Goslee\nhttp://www.functionaldiversity.org",
+      "body_snippet": "Hi Dylann,\n\nAll we can possibly tell you is that the index is out of range.\n\nThat's the kind of problem that really needs a reproducible example\nfor anyone to be able to give you useful advice.\n\nHere'",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-00f71037620f",
+      "message_id": "<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>",
+      "from_name": "Dylann Kersusan",
+      "from_email_hash": "e538b0ce6840c7b3c0372bdb3b355c39c4d65de4efd08c79865fc7e5355e3f8a",
+      "date": "2013-11-07T16:30:56+01:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+      "references": [
+        "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/cd2ea623/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/cd2ea623/attachment.pl>",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-843cc5a01598",
+      "message_id": "<CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>",
+      "from_name": "Dylann Kersusan",
+      "from_email_hash": "e538b0ce6840c7b3c0372bdb3b355c39c4d65de4efd08c79865fc7e5355e3f8a",
+      "date": "2013-11-07T16:32:57+01:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": "<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>",
+      "references": [
+        "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+        "<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/1fe11b68/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/1fe11b68/attachment.pl>",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-3e01f4ee6eff",
+      "message_id": "<CAHT1vpjRPE=5MWonVmCbWphHAqeaA9nUeT2fGL1yGGSP3c-YHw@mail.gmail.com>",
+      "from_name": "Roman Luštrik",
+      "from_email_hash": "c0075bee7cf180735267468677bcb6c0b494c84c39ebc7ec1c97688bee0fa3df",
+      "date": "2013-11-07T16:36:52+01:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": "<CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>",
+      "references": [
+        "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+        "<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>",
+        "<CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/524d53fa/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/524d53fa/attachment.pl>",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 3,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-05847d6da660",
+      "message_id": "<CAEcqiB9PRqjpp8ZaQO2dEZ_80GwH4c58fgNtTJ8eREMPdr+h-w@mail.gmail.com>",
+      "from_name": "Dylann Kersusan",
+      "from_email_hash": "e538b0ce6840c7b3c0372bdb3b355c39c4d65de4efd08c79865fc7e5355e3f8a",
+      "date": "2013-11-07T16:37:29+01:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": "<CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>",
+      "references": [
+        "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+        "<CAEcqiB-VbnvM0O7dSze6Ti-CrBzR=03DaYB+SE36Uq8+fRLhaQ@mail.gmail.com>",
+        "<CAEcqiB-_VRCD=1v2XDHd6kYpX8piCZh7j18NHBzg80JV+6Xfww@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/fb40909e/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131107/fb40909e/attachment.pl>",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 3,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-aca10ffa31fd",
+      "message_id": "<527BB61F.4070404@oncfs.gouv.fr>",
+      "from_name": "Clement Calenge",
+      "from_email_hash": "599c7bb21e58eb2d87faf33dae39c73009649e589b73716148359a67c1e08666",
+      "date": "2013-11-07T16:47:43+01:00",
+      "subject": "[R-sig-eco] Error message using getverticeshr() to extract home-range contours",
+      "subject_clean": "Error message using getverticeshr() to extract home-range contours",
+      "in_reply_to": "<CAM_vjumX+QnOkGgzx=LFArGVtXg6zZUu4t+0B3SS7X-iU3meEw@mail.gmail.com>",
+      "references": [
+        "<CAEcqiB-uK7NhRi3=wL4QrO8j+pAHNbh3gSmR--gN0rMFmJiURA@mail.gmail.com>",
+        "<CAM_vjumX+QnOkGgzx=LFArGVtXg6zZUu4t+0B3SS7X-iU3meEw@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Dylann,\n\nOn 11/07/2013 04:30 PM, Sarah Goslee wrote:\n> Hi Dylann,\n>\n> All we can possibly tell you is that the index is out of range.\n>\n> That's the kind of problem that really needs a reproducible example\n> for anyone to be able to give you useful advice.\n>\n> Here's some advice on doing so:\n> http://stackoverflow.com/questions/5963269/how-to-make-a-great-r-reproducible-example\n\nI agree. And I would add that a prior google search might not harm... \nThere are several discussions about this problem on the internet (which \noccurs when the parameter extent of the grid is too small in comparison \nto the smoothing parameter; try to increase it).\nFor example, have a look at:\nhttp://r-sig-geo.2731867.n2.nabble.com/error-subscript-out-of-bounds-using-getverticeshr-td7580358.html\nHTH,\n\nCl?ment.\n\n>\n> Sarah\n>\n> On Thu, Nov 7, 2013 at 10:23 AM, Dylann Kersusan\n> <kersusan.dylann at gmail.com> wrote:\n>> Dear list,\n>>\n>> I am running a script on my computer to estimate kernelUDs for several\n>> individuals and several years (from GPS relocations). I am using the\n>> getverticeshr() function to extract home range contours, and for some\n>> reasons I end up having this error message:\n>>\n>> Erreur dans re[[i]] : indice hors limites\n>>\n>> in french, the english translation would be:\n>>\n>> Error in re [[i]]: index out of range\n\n\n-- \nCl?ment CALENGE\nCellule d'appui ? l'analyse de donn?es\nDirection des Etudes et de la Recherche\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_snippet": "Hi Dylann,\n\nOn 11/07/2013 04:30 PM, Sarah Goslee wrote:\n> Hi Dylann,\n>\n> All we can possibly tell you is that the index is out of range.\n>\n> That's the kind of problem that really needs a reproducible",
+      "thread_id": "thread-eac4d7254e3c",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-adb02d97624b",
+      "message_id": "<alpine.LNX.2.00.1311071233010.16836@salmo.appl-ecosys.com>",
+      "from_name": "Rich Shepard",
+      "from_email_hash": "fae16a7dbae64fd8dac1e2b7eb51dd8c7aa1e1ecad85248ae3b54421c4e0babc",
+      "date": "2013-11-07T12:38:35-08:00",
+      "subject": "[R-sig-eco] Data Frame Structure for vegdist()",
+      "subject_clean": "Data Frame Structure for vegdist()",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "I have data frames on which I want to calculate the default Bray-Curtis\ndissimilarity matrix using vegdist() in the vegan package. The data are\nproportions of individuals in each of 5 categories with the first column as\nthe collection date. One such data frame is:\n\n     sampdate filter gather  graze predate  shred\n1 2004-06-17 0.0093 0.8881 0.0295  0.0685 0.0046\n2 2005-07-18 0.0149 0.8402 0.0951  0.0467 0.0030\n3 2006-06-29 0.0217 0.7538 0.1185  0.1006 0.0055\n4 2011-07-14 0.0241 0.8408 0.0645  0.0625 0.0081\n5 2012-07-10 0.0114 0.4877 0.0256  0.2936 0.1818\n\n   Am I correct in assuming that I need to remove the sampdate column?\n\nRich",
+      "body_snippet": "I have data frames on which I want to calculate the default Bray-Curtis\ndissimilarity matrix using vegdist() in the vegan package. The data are\nproportions of individuals in each of 5 categories with ",
+      "thread_id": "thread-adb02d97624b",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-4e56d870ec48",
+      "message_id": "<1383910861564-7578507.post@n2.nabble.com>",
+      "from_name": "Jasper",
+      "from_email_hash": "8c4198981cedc479ed124e4103eaf0c8455b5f860e28fc2149a6eba836c98867",
+      "date": "2013-11-08T03:41:01-08:00",
+      "subject": "[R-sig-eco] heteroscedasticity and d.f.",
+      "subject_clean": "heteroscedasticity and d.f.",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear all,\nI am analyzing an experiment where the treatments cause heteroscedasticty in\nthe residuals. Following Pinheiro & Bates (2000 Mixed effects models in S\nand S-plus) and Zuur et al (2009 Mixed effects models and extensions in\necology with R) I try to include seperate treatment variances using varIdent\nstructure. This improves thing according to my residual plots and a LR test.\nHowever, what I don't understand is that when I test for the effect of my\ntreatment, I don't seem to loose any degrees of freedom for modelling these\nseperate variances! Does anyone know why this is?\n\nBelow a simple example dataset with 4 observations in each of 5 treatments\n(the sample size is insufficient to show the differences in variance so the\nLR is not significant, but that's not my point). Comparing both models I see\na difference in d.f. among the models for the LR test of variance structures\n(6 vs. 10), but when I look at the tests of fixed effects for both models,\nboth still have 15 residual d.f. eventhough the second model needs to\nestimate 5 variances instead of one.\n\nI am curious about your thoughts!\n\nBest wishes,\nJasper Wubs\n\n> library(nlme)\n> m1 <- gls(SM~Treat,weights=NULL,data=data)\n> vf1 <- varIdent(form=~1|Treat) #estimate a variance per treatment\n> m1v <- gls(SM~Treat,weights=vf1,data=data)\n> anova(m1,m1v)\n\n    Model df       AIC       BIC   logLik   Test  L.Ratio p-value\nm1      1  6 -85.76002 -81.51172 48.88001                        \nm1v     2 10 -84.85906 -77.77855 52.42953 1 vs 2 7.099036  0.1307\n\n> anova(m1)\nDenom. DF: 15 \n            numDF   F-value p-value\n(Intercept)     1 10246.756  <.0001\nTreat           4     1.937  0.1564\n\n> anova(m1v)\nDenom. DF: 15 \n            numDF   F-value p-value\n(Intercept)     1 27538.274  <.0001\nTreat           4     7.733  0.0014\n\n\n\n--\nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/heteroscedasticity-and-d-f-tp7578507.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Dear all,\nI am analyzing an experiment where the treatments cause heteroscedasticty in\nthe residuals. Following Pinheiro & Bates (2000 Mixed effects models in S\nand S-plus) and Zuur et al (2009 Mixed ",
+      "thread_id": "thread-4e56d870ec48",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-113e72ac3391",
+      "message_id": "<CABkCotQPvV4hGr=1PGZE6JKBs3+_ZAfkP7OCLTp2Nct3oUj4NQ@mail.gmail.com>",
+      "from_name": "Manuel Spínola",
+      "from_email_hash": "c67b4a8f4e027cf75cc3544d4e04791324bee3c4417f2f5edf4561a1da2f995b",
+      "date": "2013-11-08T09:01:28-06:00",
+      "subject": "[R-sig-eco] Error when installing packages in R.3.0.2 (Windows 7)",
+      "subject_clean": "Error when installing packages in R.3.0.2 (Windows 7)",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131108/6fad6409/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131108/6fad6409/attachment.pl>",
+      "thread_id": "thread-113e72ac3391",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-79d9bc6538da",
+      "message_id": "<1384116972138-7578509.post@n2.nabble.com>",
+      "from_name": "eugenego",
+      "from_email_hash": "6e2cb81dc022dfbf0ff700a8314854e57930483296bca1cf2c797f87695cd1f3",
+      "date": "2013-11-10T12:56:12-08:00",
+      "subject": "[R-sig-eco] stressplot-low observed dissimilarities but 0 ordination distance",
+      "subject_clean": "stressplot-low observed dissimilarities but 0 ordination distance",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hi everybody,\n\nI am quite new to the whole ordination stuff and run an analysis with one of\nmy datasets in vegan using the monoMDS function.\n\nstressplot() showes me this picture: \n<http://r-sig-ecology.471788.n2.nabble.com/file/n7578509/stressplot.png> \n\nwhat might be the reason i have 0 ordination distance although there are\ndissimilarities between communities?\n\nthanks,\n\neugen\n\n\n\n\n--\nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/stressplot-low-observed-dissimilarities-but-0-ordination-distance-tp7578509.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hi everybody,\n\nI am quite new to the whole ordination stuff and run an analysis with one of\nmy datasets in vegan using the monoMDS function.\n\nstressplot() showes me this picture: \n<http://r-sig-ecolog",
+      "thread_id": "thread-79d9bc6538da",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-268bbef5a78d",
+      "message_id": "<1384164167.20076.89.camel@zouzel.natur.cuni.cz>",
+      "from_name": "Martin Weiser",
+      "from_email_hash": "222c67c46344feed8fe25f2e5d573299f079e1d4b0bd4738f8bf19dae2f600e3",
+      "date": "2013-11-11T11:02:47+01:00",
+      "subject": "[R-sig-eco] Data Frame Structure for vegdist()",
+      "subject_clean": "Data Frame Structure for vegdist()",
+      "in_reply_to": "<alpine.LNX.2.00.1311071233010.16836@salmo.appl-ecosys.com>",
+      "references": [
+        "<alpine.LNX.2.00.1311071233010.16836@salmo.appl-ecosys.com>"
+      ],
+      "body_plain": "Rich Shepard p??e v ?t 07. 11. 2013 v 12:38 -0800:\n>    I have data frames on which I want to calculate the default Bray-Curtis\n> dissimilarity matrix using vegdist() in the vegan package. The data are\n> proportions of individuals in each of 5 categories with the first column as\n> the collection date. One such data frame is:\n> \n>      sampdate filter gather  graze predate  shred\n> 1 2004-06-17 0.0093 0.8881 0.0295  0.0685 0.0046\n> 2 2005-07-18 0.0149 0.8402 0.0951  0.0467 0.0030\n> 3 2006-06-29 0.0217 0.7538 0.1185  0.1006 0.0055\n> 4 2011-07-14 0.0241 0.8408 0.0645  0.0625 0.0081\n> 5 2012-07-10 0.0114 0.4877 0.0256  0.2936 0.1818\n> \n>    Am I correct in assuming that I need to remove the sampdate column?\n> \n> Rich\n> \n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\nDear Rich,\n\nI guess you are asking because you wish to retain your sampling dates as\nlabels. \n(If not, throw them away. If they say something you wish to base your\ndistances on (e.g. some important phenological date, peak of some\norganism or characteristic), then retain them.)\n\nIf you just need labels:\n\nnewdata <- olddata[,2:length(olddata)]\nrownames(newdata) <- olddata[,1]\n\nHTH,\nMartin Weiser",
+      "body_snippet": "Rich Shepard p??e v ?t 07. 11. 2013 v 12:38 -0800:\n>    I have data frames on which I want to calculate the default Bray-Curtis\n> dissimilarity matrix using vegdist() in the vegan package. The data ar",
+      "thread_id": "thread-adb02d97624b",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-095eb315e789",
+      "message_id": "<1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>",
+      "from_name": "marieline gentes",
+      "from_email_hash": "9a7c55da407ca491830b4f904c74ef423a97e0f4ef724fc926f785718f93f0f9",
+      "date": "2013-11-11T17:29:33-08:00",
+      "subject": "[R-sig-eco] question about beta regressions",
+      "subject_clean": "question about beta regressions",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello,? \n\nI have a question regarding the function Betareg. I am a bit new to this package, and maybe I did not understand all the theory behind...\n?\nMy data are proportions (%) of a?contaminant (DecaBDE) in blood of birds (n=78) which?were GPS-tagged so that we could see what kind of habitat they visited.?We are investigating the effects of habitat use on the proportions of that contaminant. \n?\nThe full model is as follow: %contaminant = % time spent in agriculture + %\ntime in urban + % time in St-Lawrence River + having visited a landfill (yes/no). ?\n\nCoding: \nDeca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + AllLawren.outCol24 + LandfiWstwater.YesNo\n+ UrbanCov1.outCol24, data = mydata). \n\nBecause I am not yet completely?familiar with all the theory underlying beta regressions, I?followed?one of the examples in the package and?created a basic model?i.e., no second part?specified?to model the precision (as you can see from the coding).?\n?\nSomehow?all my models produced with betareg (including the intercept only) end up with a negative intercept - but I have no negative data. I was also expecting that the intercept of the null model would be the average of my dependant variable (as in a regular linear regression), but it is not.... \n\nAny suggesions ? Could this be?happening because I did not fit a two parts model ??Or did I simply misunderstand\nhow to interpret and use beta regressions?\n\nThank you for your time,\n\nMarie\nPhD candidate\nCanada???????",
+      "body_snippet": "Hello,? \n\nI have a question regarding the function Betareg. I am a bit new to this package, and maybe I did not understand all the theory behind...\n?\nMy data are proportions (%) of a?contaminant (Deca",
+      "thread_id": "thread-095eb315e789",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-9501aad6f1d8",
+      "message_id": "<CAL+ycW=qRP03Vj3gXUmxnuTzW+yvwHWiFgeyxdGe3wO1dPQBAg@mail.gmail.com>",
+      "from_name": "Frederico Faleiro",
+      "from_email_hash": "aed94e86c09afa9099f1ea1b6ddffc2f181b0acfe02d60489498d6bd7a36f5f5",
+      "date": "2013-11-11T23:47:45-02:00",
+      "subject": "[R-sig-eco] Get the cross-validation informations from gbm in dismo and others measures of fit",
+      "subject_clean": "Get the cross-validation informations from gbm in dismo and others measures of fit",
+      "in_reply_to": "<CAL+ycWm18NDkPLNw-QavvU1Dcz0LomexLr4b3i583=8cpfo74A@mail.gmail.com>",
+      "references": [
+        "<CAL+ycWm18NDkPLNw-QavvU1Dcz0LomexLr4b3i583=8cpfo74A@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131111/61e69d91/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131111/61e69d91/attachment.pl>",
+      "thread_id": "thread-9501aad6f1d8",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-0b7fa919a251",
+      "message_id": "<5281922F.80300@csiro.au>",
+      "from_name": "Scott Foster",
+      "from_email_hash": "3585d12d0ef4df4113781a66d44dc66942f2ca0ca997a0104f80c08301d596a9",
+      "date": "2013-11-12T13:27:59+11:00",
+      "subject": "[R-sig-eco] question about beta regressions",
+      "subject_clean": "question about beta regressions",
+      "in_reply_to": "<1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>",
+      "references": [
+        "<1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>"
+      ],
+      "body_plain": "Hi,\n\nThis seems like it is a problem with interpretation.  You are not modelling the mean of the distribution directly, rather it is a function of the mean \n(a link function) that is modelled.  This is all stated in ?betareg and it gives a number of different options for link function.  A negative value is \nperfectly OK as the inverse-link of a negative value is positive and within the range.\n\nIf you want to have a look at the expected values, on the original scale of the data (response scale), then you will have to call another function \n(formally a method) -- using predict( Deca.sumBDE, type=\"response\").  When calling predict() in this manner you will get a prediction for each \nobservation.  It is likely that these are not the values of the covariates that you want to predict at.  To do predictions at those pre-specified \ncovariates you will need to create a data.frame with all variables used in your model, with values that you want to predict at.  See ?predict.betareg.\n\nA good place to get more familiar with beta regression is to look at one of the numerous online tutorials about GLMs (generalised linear models).  In \nfact, it seems to be a special case of a GLM as a beta distribution is a member of the exponential family (so Wikipedia says).  In any case, the \ncompartmentalisation of the beta regression seems to mirror a GLM.\n\nI hope that this helps.\n\nScott\n\nPS Marie: I forgot to send this to the list the first time.\n\nOn 12/11/13 12:29, marieline gentes wrote:\n> Hello,\n>\n> I have a question regarding the function Betareg. I am a bit new to this package, and maybe I did not understand all the theory behind...\n>\n> My data are proportions (%) of a contaminant (DecaBDE) in blood of birds (n=78) which were GPS-tagged so that we could see what kind of habitat they visited. We are investigating the effects of habitat use on the proportions of that contaminant.\n>\n> The full model is as follow: %contaminant = % time spent in agriculture + %\n> time in urban + % time in St-Lawrence River + having visited a landfill (yes/no).\n>\n> Coding:\n> Deca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + AllLawren.outCol24 + LandfiWstwater.YesNo\n> + UrbanCov1.outCol24, data = mydata).\n>\n> Because I am not yet completely familiar with all the theory underlying beta regressions, I followed one of the examples in the package and created a basic model i.e., no second part specified to model the precision (as you can see from the coding).\n>\n> Somehow all my models produced with betareg (including the intercept only) end up with a negative intercept - but I have no negative data. I was also expecting that the intercept of the null model would be the average of my dependant variable (as in a regular linear regression), but it is not....\n>\n> Any suggesions ? Could this be happening because I did not fit a two parts model ? Or did I simply misunderstand\n> how to interpret and use beta regressions?\n>\n> Thank you for your time,\n>\n> Marie\n> PhD candidate\n> Canada\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n\n-- \nScott Foster\nComputational Informatics\nCSIRO\nE scott.foster at csiro.au T +61 3 6232 5178\nPostal address: CSIRO Computational Informatics, GPO Box 1538, Hobart TAS 7001\nStreet Address: CSIRO Computational Informatics, Castray Esplanade, Hobart Tas 7001, Australia\nwww.csiro.au",
+      "body_snippet": "Hi,\n\nThis seems like it is a problem with interpretation.  You are not modelling the mean of the distribution directly, rather it is a function of the mean \n(a link function) that is modelled.  This i",
+      "thread_id": "thread-095eb315e789",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-b10523287770",
+      "message_id": "<52819E14.90703@uq.edu.au>",
+      "from_name": "Simon Blomberg",
+      "from_email_hash": "6c7dda090419d9b6565b77a5e8c6e7e842cd8a8eeed9e19fcec3fce096932e07",
+      "date": "2013-11-12T14:18:44+11:00",
+      "subject": "[R-sig-eco] question about beta regressions",
+      "subject_clean": "question about beta regressions",
+      "in_reply_to": "<1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>",
+      "references": [
+        "<1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>"
+      ],
+      "body_plain": "Hi Marie,\n\nbetareg uses a logit link function, so the negative intercept just means \nthat the intercept proportion is less than one. To convert it back to a \nproportion, use plogis(InterceptValue).\n\nThe intercept is the logit(proportion) that you would get if all your \ncovariates were set to zero and the landfill treatment is set to its \nbaseline. You might get a more interpretable intercept if you centre \nyour explanatory variables (see ?scale). You could also look at changing \nthe default contrasts to \"contr.sum\" which will give comparisons to the \ngrand mean for your landfill variable. See ?contr.sum. To do this, just use:\n\noptions(contrasts=c(\"contr.sum\", \"contr.poly\"))\n\nHope this helps,\n\nSimon.\n\nOn 12/11/13 12:29, marieline gentes wrote:\n> Hello,\n>\n> I have a question regarding the function Betareg. I am a bit new to this package, and maybe I did not understand all the theory behind...\n>   \n> My data are proportions (%) of a contaminant (DecaBDE) in blood of birds (n=78) which were GPS-tagged so that we could see what kind of habitat they visited. We are investigating the effects of habitat use on the proportions of that contaminant.\n>   \n> The full model is as follow: %contaminant = % time spent in agriculture + %\n> time in urban + % time in St-Lawrence River + having visited a landfill (yes/no).\n>\n> Coding:\n> Deca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + AllLawren.outCol24 + LandfiWstwater.YesNo\n> + UrbanCov1.outCol24, data = mydata).\n>\n> Because I am not yet completely familiar with all the theory underlying beta regressions, I followed one of the examples in the package and created a basic model i.e., no second part specified to model the precision (as you can see from the coding).\n>   \n> Somehow all my models produced with betareg (including the intercept only) end up with a negative intercept - but I have no negative data. I was also expecting that the intercept of the null model would be the average of my dependant variable (as in a regular linear regression), but it is not....\n>\n> Any suggesions ? Could this be happening because I did not fit a two parts model ? Or did I simply misunderstand\n> how to interpret and use beta regressions?\n>\n> Thank you for your time,\n>\n> Marie\n> PhD candidate\n> Canada\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n-- \nSimon Blomberg, BSc (Hons), PhD, MAppStat, AStat.\nLecturer and Consultant Statistician\nSchool of Biological Sciences\nThe University of Queensland\nSt. Lucia Queensland 4072\nAustralia\nT: +61 7 3365 2506\nemail: S.Blomberg1_at_uq.edu.au\nhttp://www.evolutionarystatistics.org\n\nPolicies:\n1.  I will NOT analyse your data for you.\n2.  Your deadline is your problem.\n\nStatistics is the grammar of science - Karl Pearson.",
+      "body_snippet": "Hi Marie,\n\nbetareg uses a logit link function, so the negative intercept just means \nthat the intercept proportion is less than one. To convert it back to a \nproportion, use plogis(InterceptValue).\n\nT",
+      "thread_id": "thread-095eb315e789",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-773fa4589ab6",
+      "message_id": "<52819F65.3050907@uq.edu.au>",
+      "from_name": "Simon Blomberg",
+      "from_email_hash": "6c7dda090419d9b6565b77a5e8c6e7e842cd8a8eeed9e19fcec3fce096932e07",
+      "date": "2013-11-12T14:24:21+11:00",
+      "subject": "[R-sig-eco] question about beta regressions",
+      "subject_clean": "question about beta regressions",
+      "in_reply_to": "<52819E14.90703@uq.edu.au>",
+      "references": [
+        "<1384219773.20420.YahooMailNeo@web160806.mail.bf1.yahoo.com>",
+        "<52819E14.90703@uq.edu.au>"
+      ],
+      "body_plain": "On 12/11/13 14:18, Simon Blomberg wrote:\n> Hi Marie,\n>\n> betareg uses a logit link function, so the negative intercept just \n> means that the intercept proportion is less than one. \n\nMy bad. Negative intercept means p < 0.5).\n\n> To convert it back to a proportion, use plogis(InterceptValue).\n>\n> The intercept is the logit(proportion) that you would get if all your \n> covariates were set to zero and the landfill treatment is set to its \n> baseline. You might get a more interpretable intercept if you centre \n> your explanatory variables (see ?scale). You could also look at \n> changing the default contrasts to \"contr.sum\" which will give \n> comparisons to the grand mean for your landfill variable. See \n> ?contr.sum. To do this, just use:\n>\n> options(contrasts=c(\"contr.sum\", \"contr.poly\"))\n>\n> Hope this helps,\n>\n> Simon.\n>\n> On 12/11/13 12:29, marieline gentes wrote:\n>> Hello,\n>>\n>> I have a question regarding the function Betareg. I am a bit new to \n>> this package, and maybe I did not understand all the theory behind...\n>>   My data are proportions (%) of a contaminant (DecaBDE) in blood of \n>> birds (n=78) which were GPS-tagged so that we could see what kind of \n>> habitat they visited. We are investigating the effects of habitat use \n>> on the proportions of that contaminant.\n>>   The full model is as follow: %contaminant = % time spent in \n>> agriculture + %\n>> time in urban + % time in St-Lawrence River + having visited a \n>> landfill (yes/no).\n>>\n>> Coding:\n>> Deca.sumBDE <- betareg (DecaJb.sumBDEs ~ Agri.outCol24 + \n>> AllLawren.outCol24 + LandfiWstwater.YesNo\n>> + UrbanCov1.outCol24, data = mydata).\n>>\n>> Because I am not yet completely familiar with all the theory \n>> underlying beta regressions, I followed one of the examples in the \n>> package and created a basic model i.e., no second part specified to \n>> model the precision (as you can see from the coding).\n>>   Somehow all my models produced with betareg (including the \n>> intercept only) end up with a negative intercept - but I have no \n>> negative data. I was also expecting that the intercept of the null \n>> model would be the average of my dependant variable (as in a regular \n>> linear regression), but it is not....\n>>\n>> Any suggesions ? Could this be happening because I did not fit a two \n>> parts model ? Or did I simply misunderstand\n>> how to interpret and use beta regressions?\n>>\n>> Thank you for your time,\n>>\n>> Marie\n>> PhD candidate\n>> Canada\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n\n\n-- \nSimon Blomberg, BSc (Hons), PhD, MAppStat, AStat.\nLecturer and Consultant Statistician\nSchool of Biological Sciences\nThe University of Queensland\nSt. Lucia Queensland 4072\nAustralia\nT: +61 7 3365 2506\nemail: S.Blomberg1_at_uq.edu.au\nhttp://www.evolutionarystatistics.org\n\nPolicies:\n1.  I will NOT analyse your data for you.\n2.  Your deadline is your problem.\n\nStatistics is the grammar of science - Karl Pearson.",
+      "body_snippet": "On 12/11/13 14:18, Simon Blomberg wrote:\n> Hi Marie,\n>\n> betareg uses a logit link function, so the negative intercept just \n> means that the intercept proportion is less than one. \n\nMy bad. Negative ",
+      "thread_id": "thread-095eb315e789",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-c479e423011c",
+      "message_id": "<57C6FF2B-4277-442F-8633-8E8726EDFD3E@wsl.ch>",
+      "from_name": "Martin Obrist",
+      "from_email_hash": "b3aeec74101f5f61111728ca313e2f09ef2bff8a28bcc8fff2ae448a6841907f",
+      "date": "2013-11-12T16:23:20+01:00",
+      "subject": "[R-sig-eco] Count species in species lists with species aggregates/complexes",
+      "subject_clean": "Count species in species lists with species aggregates/complexes",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/2fdba1df/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/2fdba1df/attachment.pl>",
+      "thread_id": "thread-c479e423011c",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-3e35113cf40d",
+      "message_id": "<CAM9kYqhby-5GeRtY_kc15o4xM7OzoZ2=vbNC2m4weqRWrsuFJw@mail.gmail.com>",
+      "from_name": "Philippi, Tom",
+      "from_email_hash": "5e27be090610ad8100a0dce2646f676c682a262690e3337a946afb5d645254f6",
+      "date": "2013-11-12T12:20:57-08:00",
+      "subject": "[R-sig-eco] Count species in species lists with species aggregates/complexes",
+      "subject_clean": "Count species in species lists with species aggregates/complexes",
+      "in_reply_to": "<57C6FF2B-4277-442F-8633-8E8726EDFD3E@wsl.ch>",
+      "references": [
+        "<57C6FF2B-4277-442F-8633-8E8726EDFD3E@wsl.ch>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/ed36a594/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/ed36a594/attachment.pl>",
+      "thread_id": "thread-c479e423011c",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-387b920aa545",
+      "message_id": "<CAA6CCijnxwvfyea-Dez6Eaw6h0Rq8TTwELBg66mL9pA6n4LN4A@mail.gmail.com>",
+      "from_name": "Ricardo Solar",
+      "from_email_hash": "4810bcd1822d64b0179cb7c68e270a34d535468156d4ab4891a41cfd116b604d",
+      "date": "2013-11-12T18:28:40-02:00",
+      "subject": "[R-sig-eco] Collwel's extrapolation",
+      "subject_clean": "Collwel's extrapolation",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/92f23da5/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131112/92f23da5/attachment.pl>",
+      "thread_id": "thread-387b920aa545",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-ccd0711376e0",
+      "message_id": "<52835F21.1070507@gmail.com>",
+      "from_name": "Bruce Miller",
+      "from_email_hash": "b73ed585f34e5369fb9c193e1fc4c90b9b76b029a30526a9cb0f9feca665e386",
+      "date": "2013-11-13T06:14:41-05:00",
+      "subject": "[R-sig-eco] Count species in species lists with species, aggregates/complexes",
+      "subject_clean": "Count species in species lists with species, aggregates/complexes",
+      "in_reply_to": "<mailman.1.1384340402.32061.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1384340402.32061.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131113/c4afffcb/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131113/c4afffcb/attachment.pl>",
+      "thread_id": "thread-ccd0711376e0",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-0730411e5e55",
+      "message_id": "<1384373965690-7578520.post@n2.nabble.com>",
+      "from_name": "amommendes",
+      "from_email_hash": "d05a52b845f4a1e1c4e53e1c40f9d9a45f3a6bea1fe222eb092ccfc1ac492b2c",
+      "date": "2013-11-13T12:19:25-08:00",
+      "subject": "[R-sig-eco] Erro in ordiR2step",
+      "subject_clean": "Erro in ordiR2step",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear List,\n\nI'm trying select spatial variables with ordiR2step function {vegan}.\nBut I got the following error:\n\nError in terms.formula(formula, data = data) : \n  invalid model formula in ExtractVars\n\nCould someone help me with this error? Would be some wrong with structure of\nmy data?\n\nThanks in advance,\n\nBest,\n\nAmom\n\n\n\n\n\n--\nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/Erro-in-ordiR2step-tp7578520.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Dear List,\n\nI'm trying select spatial variables with ordiR2step function {vegan}.\nBut I got the following error:\n\nError in terms.formula(formula, data = data) : \n  invalid model formula in ExtractVars",
+      "thread_id": "thread-0730411e5e55",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-ae197bbbbaac",
+      "message_id": "<80A91D3B40F03347AEE3E69E21946C5E07365EA7@RPITSEXMS2.its.uncc.edu>",
+      "from_name": "Leamy, Larry",
+      "from_email_hash": "58a6da1b7d03586f70914cf29ddb7b4effae51b0584a8dd0b92045dae209b457",
+      "date": "2013-11-14T14:31:51Z",
+      "subject": "[R-sig-eco] Interactions in MRM",
+      "subject_clean": "Interactions in MRM",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131114/7f7c1d9e/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131114/7f7c1d9e/attachment.pl>",
+      "thread_id": "thread-ae197bbbbaac",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-8a33bf53457f",
+      "message_id": "<CAM_vjumKgiVWJshuS5cND3db_PEGnqeNARuRPxPboWAJ5U1WZg@mail.gmail.com>",
+      "from_name": "Sarah Goslee",
+      "from_email_hash": "273eb6baae4ac25f2de5845f3f62dce55d161cfc7cf04eb5f3cc6d94b3d4aa24",
+      "date": "2013-11-14T10:53:31-05:00",
+      "subject": "[R-sig-eco] Interactions in MRM",
+      "subject_clean": "Interactions in MRM",
+      "in_reply_to": "<80A91D3B40F03347AEE3E69E21946C5E07365EA7@RPITSEXMS2.its.uncc.edu>",
+      "references": [
+        "<80A91D3B40F03347AEE3E69E21946C5E07365EA7@RPITSEXMS2.its.uncc.edu>"
+      ],
+      "body_plain": "Hi Larry,\n\nOn Thu, Nov 14, 2013 at 9:31 AM, Leamy, Larry <ljleamy at uncc.edu> wrote:\n> Dear Dr. Goslee:\n>\n> I found some posts about potential interactions in MRM, and I wonder if it is acceptable to construct an interaction term as follows?\n> leaf1 = MRM(gendist ~ regiondist + envirdist +I(regiondist*envirdist) + moldist, mrank = TRUE, nperm=1000)\n>\n> (I am using mrank = TRUE, incidentally, because our gendist matrix has a number of 0 values)\n\nNothing has changed since those earlier discussions: MRM will not\nprocess interaction terms. You can use standard regression methods to\nget coefficients, but not measures of significance because os the\npermutation test needed for properly testing hypotheses based on\ndissimilarities.\n\n> If this is not acceptable, what if I simply multiply the elements in the two matrices to generate a separate (interaction) matrix?  This is the usual way I have formed interactions in multiple regression models in SAS.\n\nI don't know of any testing of the effectiveness of that method, and\ncannot recommend it. The extensive literature on partial Mantel tests\nshould give you some idea that dealing with anything involving\ndissimilarities is not statistically straightforward.\n\nThat said, if you find some research on the subject or develop your\nown rigorous testing I will add your findings into the ecodist\npackage. :)\n\n> Which (if either) is preferable, and is there any problem with significance testing with an interaction term in the model?\n>\n> Thanks much for your help.\n>\n> Best,\n>\n> Larry Leamy\n>\n>\n\n-- \nSarah Goslee\nhttp://www.functionaldiversity.org",
+      "body_snippet": "Hi Larry,\n\nOn Thu, Nov 14, 2013 at 9:31 AM, Leamy, Larry <ljleamy at uncc.edu> wrote:\n> Dear Dr. Goslee:\n>\n> I found some posts about potential interactions in MRM, and I wonder if it is acceptable to",
+      "thread_id": "thread-ae197bbbbaac",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-e864ecc5b8e2",
+      "message_id": "<CAAHES9yZcxTVVvFQhNDBHKVVjZoBYa5mU5O_4pTJV+WUeapkCg@mail.gmail.com>",
+      "from_name": "Gavin Simpson",
+      "from_email_hash": "58add0b466097570af4fc2db149715e659937a31492dc23dbcbc4da7c2628f70",
+      "date": "2013-11-14T13:49:07-06:00",
+      "subject": "[R-sig-eco] Erro in ordiR2step",
+      "subject_clean": "Erro in ordiR2step",
+      "in_reply_to": "<1384373965690-7578520.post@n2.nabble.com>",
+      "references": [
+        "<1384373965690-7578520.post@n2.nabble.com>"
+      ],
+      "body_plain": "The error says there is a problem with the formula used. Did you use a\nformula to fit the model? If so, care to show it to us?\n\nG\n\nOn 13 November 2013 14:19, amommendes <amommendes at hotmail.com> wrote:\n> Dear List,\n>\n> I'm trying select spatial variables with ordiR2step function {vegan}.\n> But I got the following error:\n>\n> Error in terms.formula(formula, data = data) :\n>   invalid model formula in ExtractVars\n>\n> Could someone help me with this error? Would be some wrong with structure of\n> my data?\n>\n> Thanks in advance,\n>\n> Best,\n>\n> Amom\n>\n>\n>\n>\n>\n> --\n> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Erro-in-ordiR2step-tp7578520.html\n> Sent from the r-sig-ecology mailing list archive at Nabble.com.\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n-- \nGavin Simpson, PhD",
+      "body_snippet": "The error says there is a problem with the formula used. Did you use a\nformula to fit the model? If so, care to show it to us?\n\nG\n\nOn 13 November 2013 14:19, amommendes <amommendes at hotmail.com> wro",
+      "thread_id": "thread-0730411e5e55",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-843255efb0f8",
+      "message_id": "<967249737.41685.1384469027811.JavaMail.www@wwinf1m25>",
+      "from_name": "Claire",
+      "from_email_hash": "53685aa72d91ea79db6b14807f5987f80022402ec1a6ab169b053f3f61c6bb5d",
+      "date": "2013-11-14T23:43:47+01:00",
+      "subject": "[R-sig-eco] fitting model with unbalanced design and heteroscedasticity",
+      "subject_clean": "fitting model with unbalanced design and heteroscedasticity",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131114/9514afba/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131114/9514afba/attachment.pl>",
+      "thread_id": "thread-843255efb0f8",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-f4536963e679",
+      "message_id": "<1384522104281-7578525.post@n2.nabble.com>",
+      "from_name": "nina",
+      "from_email_hash": "df5b03ee468c7a04244a299618cd5c88dce968bb80e77a7887f1b0b213e7213d",
+      "date": "2013-11-15T05:28:24-08:00",
+      "subject": "[R-sig-eco] help specifiyng cohort effects in package mra",
+      "subject_clean": "help specifiyng cohort effects in package mra",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Hello,\n\nI am using package mra to perform some mark recapture analysis on a 4\noccasions dataset. \n\nI want to fit a cormack-jolly-seber model with cohort and time varying\ncapture probability and constant survival probability. \n\nI decided to use 2d (number of animals*number of samples) matrices instead\nof vectors to specify the model. \n\nMy question is: how do I build the matrix for the cohort effect? How do I\ntell R to consider also the interactions between the factor \"time\" and\n\"cohort\"? \n\nI hope someone can help me with this, \n\nThank you in advance\n\nNina\n\n\n\n\n\n\n--\nView this message in context: http://r-sig-ecology.471788.n2.nabble.com/help-specifiyng-cohort-effects-in-package-mra-tp7578525.html\nSent from the r-sig-ecology mailing list archive at Nabble.com.",
+      "body_snippet": "Hello,\n\nI am using package mra to perform some mark recapture analysis on a 4\noccasions dataset. \n\nI want to fit a cormack-jolly-seber model with cohort and time varying\ncapture probability and consta",
+      "thread_id": "thread-f4536963e679",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-2e5037476671",
+      "message_id": "<1009481697.45085.1384818605513.JavaMail.www@wwinf1m26>",
+      "from_name": "Claire",
+      "from_email_hash": "53685aa72d91ea79db6b14807f5987f80022402ec1a6ab169b053f3f61c6bb5d",
+      "date": "2013-11-19T00:50:05+01:00",
+      "subject": "[R-sig-eco] Good writting of an unballanced lme model ?",
+      "subject_clean": "Good writting of an unballanced lme model ?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131119/93620dc7/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131119/93620dc7/attachment.pl>",
+      "thread_id": "thread-2e5037476671",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-e4b7001b1d47",
+      "message_id": "<DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>",
+      "from_name": "Nick van Doormaal",
+      "from_email_hash": "9e7b1020930b2a97d1e840c8e559f73b5c11c39079ef4c1332ee1febb6b36bda",
+      "date": "2013-11-20T13:21:09+01:00",
+      "subject": "[R-sig-eco] Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "subject_clean": "Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131120/7233ef41/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131120/7233ef41/attachment.pl>",
+      "thread_id": "thread-e4b7001b1d47",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-d3e9c2b118e9",
+      "message_id": "<528CC2B7.5020300@ase-research.org>",
+      "from_name": "basille.web at ase-research.org",
+      "from_email_hash": "6a3a78c03a8d1842500a9b1d0323e2abe4e081960bcf6ca8d36ae3976b8da97d",
+      "date": "2013-11-20T09:09:59-05:00",
+      "subject": "[R-sig-eco] Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "subject_clean": "Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "in_reply_to": "<DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>",
+      "references": [
+        "<DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>"
+      ],
+      "body_plain": "Hi Nick,\n\nYou can try:\n\nsum(duplicated(paste(da, march2012df$ID)))\n\nand from there, if the sum is > 0, identify the duplicates *per individual*.\n\nAs far as I can tell, the function as.ltraj works at the burst level, in \nyour cases individuals.\n\nMathieu.\n\n\nLe 11/20/2013 07:21 AM, Nick van Doormaal a ?crit :\n> Hello everyone,\n>\n> I'm trying to create a ltraj-class.\n> I start with importing an excel file containing all the relocations (in this case for the month March) into ArcMap and create a shapefile. Next I load the shapefile into R and transform the coordinates to UTM37S.\n>\n> My dataset looks as follows:\n>\n> head(march2012)\n>   coordinates                           ID                                       Date_old        Longitude   Latitude           Date\n> 0 (496297, 9688770)  Emusaya_Male  2012-03-20   38.96668   -2.815783  2012-03-20 00:04\n> 1 (496670, 9686680)  Emusaya_Male  2012-03-20   38.97003   -2.834650  2012-03-20 01:04\n> 2 (497136, 9685230)  Emusaya_Male  2012-03-20   38.97423   -2.847833  2012-03-20 02:04\n> 3 (497233, 9684700)  Emusaya_Male  2012-03-20   38.97510   -2.852633  2012-03-20 03:05\n> 4 (497105, 9684290)  Emusaya_Male  2012-03-20   38.97395   -2.856317  2012-03-20 04:04\n> 5 (497281, 9683830)  Emusaya_Male  2012-03-20   38.97553   -2.860467  2012-03-20 05:04\n>\n> I used the following script:\n> da <- as.character(march2012$Date)\n> da <- as.POSIXct(strptime(as.character(march2012$Date),\"%y-%m-%d  %H:%M\"))\n> march2012df <- as.data.frame(march2012)\n> xymarch2012 <- coordinates(march2012)\n> elemarch2012 <- as.ltraj(xy =xymarch2012, date = da, id = march2012df$ID)\n>\n> There error message I got was: \"Error in as.ltraj(xy = xymarch2012, date = da, id = march2012df$ID) :\n>    non unique dates for a given burst\".\n>\n> Before posting this message, I read about duplicates. My dataset includes 10 different elephants, so it could be that some dates are the same. However, I would like to keep these locations because they are different individuals.\n>\n> I hope I made my problem clear. If you need any more information, please let me know what kind of information and how to send it.\n>\n> Kind regards,\n>\n> Nick van Doormaal\n> MSc student Forest and Nature Conservation\n> Wageningen University, The Netherlands \t\t \t   \t\t\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n-- \n\n~$ whoami\nMathieu Basille, PhD\n\n~$ locate --details\nUniversity of Florida \\\\\nFort Lauderdale Research and Education Center\n(+1) 954-577-6314\nhttp://ase-research.org/basille\n\n~$ fortune\n? Le tout est de tout dire, et je manque de mots\nEt je manque de temps, et je manque d'audace. ?\n  -- Paul ?luard",
+      "body_snippet": "Hi Nick,\n\nYou can try:\n\nsum(duplicated(paste(da, march2012df$ID)))\n\nand from there, if the sum is > 0, identify the duplicates *per individual*.\n\nAs far as I can tell, the function as.ltraj works at t",
+      "thread_id": "thread-e4b7001b1d47",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-755db9e639c3",
+      "message_id": "<528DC5A3.80208@highstat.com>",
+      "from_name": "Highland Statistics Ltd",
+      "from_email_hash": "d43054e1bf20a3b5b133a436acf0fb618425fad892ef36118bc175ac01f3183d",
+      "date": "2013-11-21T08:34:43Z",
+      "subject": "[R-sig-eco] Course: Introduction to Linear mixed effects models, GLMM and MCMC with R",
+      "subject_clean": "Course: Introduction to Linear mixed effects models, GLMM and MCMC with R",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "We would like to announce the following statistics course;\n\nCourse: Introduction to Linear mixed effects models, GLMM and MCMC with R\nWhen: 10-14 February, 2014\nWhere: Pousada de juventude parque das nacoes. Rua de Moscavide, Lt 47 ? \n101, 1998- 011. Lisbon, Portugal\nInfo: http://www.highstat.com/statscourse.htm\nFlyer: http://www.highstat.com/Courses/Flyer2014_02SIM_LisbonV2.pdf\n\nKind regards,\n\nAlain\n\n\n-- \nDr. Alain F. Zuur\nFirst author of:\n\n1. Analysing Ecological Data (2007)\n2. Mixed effects models and extensions in ecology with R (2009)\n3. A Beginner's Guide to R (2009)\n4. Zero Inflated Models and GLMM with R (2012)\n5. A Beginner's Guide to GAM (2012)\n6. A Beginner's Guide to GLM and GLMM (2013)\n\nHighland Statistics Ltd.\n6 Laverock road\nUK - AB41 6FN Newburgh\nTel: 0044 1358 788177\nEmail: highstat at highstat.com\nURL: www.highstat.com\nURL: www.brodgar.com",
+      "body_snippet": "We would like to announce the following statistics course;\n\nCourse: Introduction to Linear mixed effects models, GLMM and MCMC with R\nWhen: 10-14 February, 2014\nWhere: Pousada de juventude parque das ",
+      "thread_id": "thread-755db9e639c3",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-e8626a13e184",
+      "message_id": "<DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>",
+      "from_name": "NickvanDoormaal",
+      "from_email_hash": "9e7b1020930b2a97d1e840c8e559f73b5c11c39079ef4c1332ee1febb6b36bda",
+      "date": "2013-11-21T02:58:56-08:00",
+      "subject": "[R-sig-eco] Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "subject_clean": "Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "in_reply_to": "<528CC2B7.5020300@ase-research.org>",
+      "references": [
+        "<DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>",
+        "<528CC2B7.5020300@ase-research.org>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131121/01cbe465/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131121/01cbe465/attachment.pl>",
+      "thread_id": "thread-e4b7001b1d47",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-bdfb9751b690",
+      "message_id": "<528E2960.3060008@ase-research.org>",
+      "from_name": "Mathieu Basille",
+      "from_email_hash": "6a3a78c03a8d1842500a9b1d0323e2abe4e081960bcf6ca8d36ae3976b8da97d",
+      "date": "2013-11-21T10:40:16-05:00",
+      "subject": "[R-sig-eco] Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "subject_clean": "Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "in_reply_to": "<DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>",
+      "references": [
+        "<DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>",
+        "<528CC2B7.5020300@ase-research.org>",
+        "<DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>"
+      ],
+      "body_plain": "Ah! I didn't spot that in the first place, but you gave a wrong format to \nthe strptime function! The one you gave implied a '12-03-20 00:04' format. \nAs a result, all of them returned NAs (well, almost all of them... Might be \nworth looking at the ten that went through it).\n\nYou need to use %Y instead of %y.\n\nMathieu.\n\n\nLe 11/21/2013 05:58 AM, NickvanDoormaal a ?crit :\n> Thank you so much for your quick reply Mathieu!\n>\n> I tried your suggestion:\n> sum(duplicated(paste(da, march2012df$ID)))\n> [1] 2587\n>\n> I was surprised by this large number, so I checked how many rows many dataset has:\n> nrow(march2012)\n> [1] 2597\n>\n> This almost exactly the same, only a difference of 10 (maybe because of the 10 individuals?).\n> It seems that all the dates are identified as duplicates...\n>\n>\n>\n> Date: Wed, 20 Nov 2013 06:11:26 -0800\n> From: ml-node+s471788n7578529h52 at n2.nabble.com\n> To: nickvandoormaal26 at hotmail.com\n> Subject: Re: Adehabitat Ltraj error message: \"non unique dates for a given burst\"\n>\n>\n>\n> \tHi Nick,\n>\n>\n> You can try:\n>\n>\n> sum(duplicated(paste(da, march2012df$ID)))\n>\n>\n> and from there, if the sum is > 0, identify the duplicates *per individual*.\n>\n>\n> As far as I can tell, the function as.ltraj works at the burst level, in\n>\n> your cases individuals.\n>\n>\n> Mathieu.\n>\n>\n>\n> Le 11/20/2013 07:21 AM, Nick van Doormaal a ?crit :\n>\n>> Hello everyone,\n>\n>>\n>\n>> I'm trying to create a ltraj-class.\n>\n>> I start with importing an excel file containing all the relocations (in this case for the month March) into ArcMap and create a shapefile. Next I load the shapefile into R and transform the coordinates to UTM37S.\n>\n>>\n>\n>> My dataset looks as follows:\n>\n>>\n>\n>> head(march2012)\n>\n>>    coordinates                           ID                                       Date_old        Longitude   Latitude           Date\n>\n>> 0 (496297, 9688770)  Emusaya_Male  2012-03-20   38.96668   -2.815783  2012-03-20 00:04\n>\n>> 1 (496670, 9686680)  Emusaya_Male  2012-03-20   38.97003   -2.834650  2012-03-20 01:04\n>\n>> 2 (497136, 9685230)  Emusaya_Male  2012-03-20   38.97423   -2.847833  2012-03-20 02:04\n>\n>> 3 (497233, 9684700)  Emusaya_Male  2012-03-20   38.97510   -2.852633  2012-03-20 03:05\n>\n>> 4 (497105, 9684290)  Emusaya_Male  2012-03-20   38.97395   -2.856317  2012-03-20 04:04\n>\n>> 5 (497281, 9683830)  Emusaya_Male  2012-03-20   38.97553   -2.860467  2012-03-20 05:04\n>\n>>\n>\n>> I used the following script:\n>\n>> da <- as.character(march2012$Date)\n>\n>> da <- as.POSIXct(strptime(as.character(march2012$Date),\"%y-%m-%d  %H:%M\"))\n>\n>> march2012df <- as.data.frame(march2012)\n>\n>> xymarch2012 <- coordinates(march2012)\n>\n>> elemarch2012 <- as.ltraj(xy =xymarch2012, date = da, id = march2012df$ID)\n>\n>>\n>\n>> There error message I got was: \"Error in as.ltraj(xy = xymarch2012, date = da, id = march2012df$ID) :\n>\n>>     non unique dates for a given burst\".\n>\n>>\n>\n>> Before posting this message, I read about duplicates. My dataset includes 10 different elephants, so it could be that some dates are the same. However, I would like to keep these locations because they are different individuals.\n>\n>>\n>\n>> I hope I made my problem clear. If you need any more information, please let me know what kind of information and how to send it.\n>\n>>\n>\n>> Kind regards,\n>\n>>\n>\n>> Nick van Doormaal\n>\n>> MSc student Forest and Nature Conservation\n>\n>> Wageningen University, The Netherlands \t\t \t   \t\t\n>\n>> \t[[alternative HTML version deleted]]\n>\n>>\n>\n>> _______________________________________________\n>\n>> R-sig-ecology mailing list\n>\n>> [hidden email]\n>\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>\n>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n-- \n\n~$ whoami\nMathieu Basille, PhD\n\n~$ locate --details\nUniversity of Florida \\\\\nFort Lauderdale Research and Education Center\n(+1) 954-577-6314\nhttp://ase-research.org/basille\n\n~$ fortune\n? Le tout est de tout dire, et je manque de mots\nEt je manque de temps, et je manque d'audace. ?\n  -- Paul ?luard",
+      "body_snippet": "Ah! I didn't spot that in the first place, but you gave a wrong format to \nthe strptime function! The one you gave implied a '12-03-20 00:04' format. \nAs a result, all of them returned NAs (well, almo",
+      "thread_id": "thread-e4b7001b1d47",
+      "thread_depth": 3,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-5a4d86c2b5be",
+      "message_id": "<CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>",
+      "from_name": "Mahnaz Rabbaniha",
+      "from_email_hash": "b1a78fc8cb127e0a7d4be54d3ceead63dfde652abefe0b91a0e0d3fa32473315",
+      "date": "2013-11-22T13:09:00+03:30",
+      "subject": "[R-sig-eco] pca in ade4",
+      "subject_clean": "pca in ade4",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/b73436b6/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/b73436b6/attachment.pl>",
+      "thread_id": "thread-5a4d86c2b5be",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-db396f628e7c",
+      "message_id": "<34B3D68F987EA547A68BCCF8E7FF5CDC22DD7CB3@Rifcon-HD-MSX1.rifcon-gmbh.intern>",
+      "from_name": "Finn Bastiansen",
+      "from_email_hash": "e8db9623de34823d11d601809415d0ac47aef3efc17eb6985d31707b4b949c74",
+      "date": "2013-11-22T09:53:31Z",
+      "subject": "[R-sig-eco] pca in ade4",
+      "subject_clean": "pca in ade4",
+      "in_reply_to": "<CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>",
+      "references": [
+        "<CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>"
+      ],
+      "body_plain": "Dear Mahnaz,\n\nI do not use that specific library, however, judging from the structure of the resulting object (\"str(deug.dudi)\") it only contains numerical data. However, a factorial variable is expected by the function you use (\"factor expected for fac \"). Thus you have to convert the respective variable to factors to make the function happy :-)\n\nHave a look in the R documentation on how to do that:\n\n?factor\n?as.factor\n\nHope that helps,\nFinn\n\nRIFCON GmbH\nGoldbeckstra?e 13\nD-69493 Hirschberg\nTel: +49-6201 84528-24\nEmail: finn.bastiansen at rifcon.de\n\nRIFCON GmbH - Zinkenbergweg 8 - D-69493 Hirschberg\nGoldbeckstra?e 13 - D-69493 Hirschberg\nAmtsgericht Mannheim - HRB 433053 - Ust.IdNr. DE 814188954 - www.rifcon.de\nGesch?ftsf?hrer: Dr. Michael Riffel\nProkura: J?rgen Riffel / Dr. Jan-Dieter Ludwigs\n\n\n-----Urspr?ngliche Nachricht-----\nVon: Mahnaz Rabbaniha [mailto:rab.mahnaz at gmail.com]\nGesendet: Freitag, 22. November 2013 10:39\nAn: r-sig-ecology\nBetreff: [R-sig-eco] pca in ade4\n\nDear all\n\nfor pca on my data i used this code\n\ndeug.dudi <- dudi.pca(c(1:62), center =c(63),scale = FALSE, scan = FALSE)\n\ns.class(deug.dudi$li, c(63), cpoint = 1)\n\nbut i take this message:\n\n*Error in s.class(deug.dudi$li, c(63), cpoint = 1) : *\n*  factor expected for fac*\n\nplease explain, what is meaning of this error\n\n\nthanks\n--\nMahnaz Rabbaniha\nmarine Ecologist, PhD\nIranian Fisheries Research Organization (IFRO)\nP.O.Box: 14155-6116\nTehran, IRAN\nPhone:   +98 21 44580953\nFax:       +98 21 44580583\n\n        [[alternative HTML version deleted]]\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\nDISCLAIMER: This e-mail transmission may contain confide...{{dropped:13}}",
+      "body_snippet": "Dear Mahnaz,\n\nI do not use that specific library, however, judging from the structure of the resulting object (\"str(deug.dudi)\") it only contains numerical data. However, a factorial variable is expec",
+      "thread_id": "thread-5a4d86c2b5be",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-f4895e4de74e",
+      "message_id": "<DUB119-W8D4D48E76A6354C46C4CAAAE00@phx.gbl>",
+      "from_name": "NickvanDoormaal",
+      "from_email_hash": "9e7b1020930b2a97d1e840c8e559f73b5c11c39079ef4c1332ee1febb6b36bda",
+      "date": "2013-11-22T01:56:13-08:00",
+      "subject": "[R-sig-eco] Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "subject_clean": "Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "in_reply_to": "<528E2960.3060008@ase-research.org>",
+      "references": [
+        "<DUB119-W282E6CF3F29A9B4181BDF7AAE60@phx.gbl>",
+        "<528CC2B7.5020300@ase-research.org>",
+        "<DUB119-W1FA480E66F6AC36888D85AAE10@phx.gbl>",
+        "<528E2960.3060008@ase-research.org>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/c94dfda0/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/c94dfda0/attachment.pl>",
+      "thread_id": "thread-e4b7001b1d47",
+      "thread_depth": 4,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-4b6d3900bdb3",
+      "message_id": "<34B3D68F987EA547A68BCCF8E7FF5CDC22DD7CF3@Rifcon-HD-MSX1.rifcon-gmbh.intern>",
+      "from_name": "Finn Bastiansen",
+      "from_email_hash": "e8db9623de34823d11d601809415d0ac47aef3efc17eb6985d31707b4b949c74",
+      "date": "2013-11-22T10:37:10Z",
+      "subject": "[R-sig-eco] pca in ade4",
+      "subject_clean": "pca in ade4",
+      "in_reply_to": "<CANLCanVowNJvQTv9nVBDUUt3cG-BzfJ-AF5Dvvo89PaZUGaw2A@mail.gmail.com>",
+      "references": [
+        "<CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>",
+        "<34B3D68F987EA547A68BCCF8E7FF5CDC22DD7CB3@Rifcon-HD-MSX1.rifcon-gmbh.intern>",
+        "<CANLCanVowNJvQTv9nVBDUUt3cG-BzfJ-AF5Dvvo89PaZUGaw2A@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/80b827e9/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131122/80b827e9/attachment.pl>",
+      "thread_id": "thread-4b6d3900bdb3",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-6a384b7a8c67",
+      "message_id": "<528FBCFA.2010200@univ-lyon1.fr>",
+      "from_name": "Stéphane Dray",
+      "from_email_hash": "a266ba20bb66807c11b885f8ccf22f75f319119c316f9bae2a8964d6918306f6",
+      "date": "2013-11-22T21:22:18+01:00",
+      "subject": "[R-sig-eco] pca in ade4",
+      "subject_clean": "pca in ade4",
+      "in_reply_to": "<CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>",
+      "references": [
+        "<CANLCanWOWjNRFvAx5U4k5uYvYNx+eSZXbyn=jpgxdu5LC8_GAQ@mail.gmail.com>"
+      ],
+      "body_plain": "Hi,\n\nI am not sure to understand what you really want to do. Here is an \nexample of pca:\n\nlibrary(ade4)\ndata(doubs)\npca1 <- dudi.pca(doubs$env, scan = F)\nscreeplot(pca1)\nsummary(pca1)\nscatter(pca1) ## or biplot(pca1)\ns.label(pca1$li) ## factorial maps for the row\ns.corcircle(pca1$co)\n\n## partition of the sites in 3 groups according to their position on the \nriver\nfac <- cut(1:30, 3,labels=c(\"upstream\", \"center\", \"downstream\"))\ns.class(pca1$li, fac, col = rainbow(3))\n\nCheers\n\n\nLe 22/11/2013 10:39, Mahnaz Rabbaniha a ?crit :\n> Dear all\n>\n> for pca on my data i used this code\n>\n> deug.dudi <- dudi.pca(c(1:62), center =c(63),scale = FALSE, scan = FALSE)\n>\n> s.class(deug.dudi$li, c(63), cpoint = 1)\n>\n> but i take this message:\n>\n> *Error in s.class(deug.dudi$li, c(63), cpoint = 1) : *\n> *  factor expected for fac*\n>\n> please explain, what is meaning of this error\n>\n>\n> thanks\n\n\n-- \nSt?phane DRAY (stephane.dray at univ-lyon1.fr)\nLaboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I\n43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France\nTel: 33 4 72 43 27 57       Fax: 33 4 72 43 13 88\nhttp://pbil.univ-lyon1.fr/members/dray/",
+      "body_snippet": "Hi,\n\nI am not sure to understand what you really want to do. Here is an \nexample of pca:\n\nlibrary(ade4)\ndata(doubs)\npca1 <- dudi.pca(doubs$env, scan = F)\nscreeplot(pca1)\nsummary(pca1)\nscatter(pca1) ##",
+      "thread_id": "thread-5a4d86c2b5be",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-2954c01be79c",
+      "message_id": "<CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>",
+      "from_name": "Enrico Caprio",
+      "from_email_hash": "24f5926db36a486b892785ff7478851247bc26b52841ec036a623655081b7d94",
+      "date": "2013-11-26T11:00:52+01:00",
+      "subject": "[R-sig-eco] Dealing with overdispersion in mixed model with count data",
+      "subject_clean": "Dealing with overdispersion in mixed model with count data",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/8dae6d7c/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/8dae6d7c/attachment.pl>",
+      "thread_id": "thread-2954c01be79c",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-a319e3afda08",
+      "message_id": "<CAG6hCpMMhPnUjKB9nm48sZ3PbA92pO=b6A+RS5C0_wEB38xJxQ@mail.gmail.com>",
+      "from_name": "Enrico Caprio",
+      "from_email_hash": "24f5926db36a486b892785ff7478851247bc26b52841ec036a623655081b7d94",
+      "date": "2013-11-26T12:36:40+01:00",
+      "subject": "[R-sig-eco] Dealing with overdispersion in mixed model with count data",
+      "subject_clean": "Dealing with overdispersion in mixed model with count data",
+      "in_reply_to": "<06443C27-B20E-4F34-8F7D-6AC8C5369BBA@gmail.com>",
+      "references": [
+        "<CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>",
+        "<06443C27-B20E-4F34-8F7D-6AC8C5369BBA@gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/a3dff9fa/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/a3dff9fa/attachment.pl>",
+      "thread_id": "thread-a319e3afda08",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-00e0c20dbc3f",
+      "message_id": "<5294CCFF.2070202@unifi.it>",
+      "from_name": "Vitali francesco",
+      "from_email_hash": "730323de58479c3a5a8e3cc1c0bff947180a7f5a984869ade3383b72b9f325ad",
+      "date": "2013-11-26T17:31:59+01:00",
+      "subject": "[R-sig-eco] ANOSIM interpretation",
+      "subject_clean": "ANOSIM interpretation",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Dear all,\n\nI am using ANOSIM to test differences in groups of microbial \ncommunities, analysed with T-RFLP. I would like to receive some \nindication on the correct interpretation of the output, especially the \ngraphical one.\n\n- Firs of all, what is the meaning of the y-scale in the boxplot? Does \nit represent dissimilarity values?\n- Consequently, is it correct to interpret the width and position of the \nboxes as a comparison of the variability of samples in different groups? \n(i.e. a group of samples that exhibit lower values and a narrower box \nhas lower variability than a group with higher values and broader box)\n\nHopefully I was clear enough\nThank for your time,\n\nFrancesco\nPhD student\n\n-- \nFrancesco Vitali\nUniversity of Florence - Department of Biology\nVia Madonna del Piano 6\n50019 Sesto Fiorentino (FI) - Italy\nTel. +39 055 4574731\nFax. +39 055 4574905",
+      "body_snippet": "Dear all,\n\nI am using ANOSIM to test differences in groups of microbial \ncommunities, analysed with T-RFLP. I would like to receive some \nindication on the correct interpretation of the output, especi",
+      "thread_id": "thread-00e0c20dbc3f",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-604975cff220",
+      "message_id": "<5294D7EB.2090807@highstat.com>",
+      "from_name": "Highland Statistics Ltd",
+      "from_email_hash": "d43054e1bf20a3b5b133a436acf0fb618425fad892ef36118bc175ac01f3183d",
+      "date": "2013-11-26T17:18:35Z",
+      "subject": "[R-sig-eco] R-sig-ecology Digest, Vol 68, Issue 17",
+      "subject_clean": "R-sig-ecology Digest, Vol 68, Issue 17",
+      "in_reply_to": "<mailman.1.1385463601.1684.r-sig-ecology@r-project.org>",
+      "references": [
+        "<mailman.1.1385463601.1684.r-sig-ecology@r-project.org>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/d752d2bb/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131126/d752d2bb/attachment.pl>",
+      "thread_id": "thread-604975cff220",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-c6f9756a660e",
+      "message_id": "<CAF37_Nd-s_n3VjvC6FopSX-0U-JM5OqNB2SDPS975dOzrWicWA@mail.gmail.com>",
+      "from_name": "Bradley Carlson",
+      "from_email_hash": "de17e96907fcd9085761a78ff22642b246ccf090d4ddbc778219f6aaf7bb0099",
+      "date": "2013-11-27T13:20:14-05:00",
+      "subject": "[R-sig-eco] Dealing with overdispersion in mixed model with count data",
+      "subject_clean": "Dealing with overdispersion in mixed model with count data",
+      "in_reply_to": "<CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>",
+      "references": [
+        "<CAG6hCpMSmx41XDf6iBMzd4DCT1vG7jyRO2S9qxPxQpznjMXv1Q@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/6202ae3d/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/6202ae3d/attachment.pl>",
+      "thread_id": "thread-2954c01be79c",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-bfcd31449f83",
+      "message_id": "<70BE37C808A96042AD67E77340C4D4634D3CAAD8@ITSDAG3D.its.iastate.edu>",
+      "from_name": "Dixon, Philip M [STAT]",
+      "from_email_hash": "c7ab0e39ed36f833aa9dbccaa8e2d706ae3dd58a49cc15e168113bb3aec43195",
+      "date": "2013-11-27T18:59:23Z",
+      "subject": "[R-sig-eco] Observation-level random effects to account for overdispersion",
+      "subject_clean": "Observation-level random effects to account for overdispersion",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "All,\n\nI am a real fan of using observation-level random effects to account for overdispersion with count data.  Using the default log link, an observation-level normally-distributed random effect models the data as a convolution of a Poisson and log-normal distribution.  The negative binomial is the convolution of a Poisson and gamma distribution.  For all practical purposes, the log-normal and gamma distribution are indistinguishable.  Computationally, the normal model is much easier especially if you have additional normally distributed random effects.  The sum of normals is easy to model; the sum of some normals and a log gamma is not.\n\nPhilip Dixon",
+      "body_snippet": "All,\n\nI am a real fan of using observation-level random effects to account for overdispersion with count data.  Using the default log link, an observation-level normally-distributed random effect mode",
+      "thread_id": "thread-bfcd31449f83",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-0b96004c8a8f",
+      "message_id": "<70BE37C808A96042AD67E77340C4D4634D3CAAF0@ITSDAG3D.its.iastate.edu>",
+      "from_name": "Dixon, Philip M [STAT]",
+      "from_email_hash": "c7ab0e39ed36f833aa9dbccaa8e2d706ae3dd58a49cc15e168113bb3aec43195",
+      "date": "2013-11-27T19:00:32Z",
+      "subject": "[R-sig-eco] Modeling overdispersed count data",
+      "subject_clean": "Modeling overdispersed count data",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "Bayesians commonly use the log normal to account for overdispersion.  I learnt the trick from Ben Bolker.  His book may be a citable source.\n\nPhilip Dixon",
+      "body_snippet": "Bayesians commonly use the log normal to account for overdispersion.  I learnt the trick from Ben Bolker.  His book may be a citable source.\n\nPhilip Dixon",
+      "thread_id": "thread-0b96004c8a8f",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-7b62c2e26af4",
+      "message_id": "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+      "from_name": "marieline gentes",
+      "from_email_hash": "9a7c55da407ca491830b4f904c74ef423a97e0f4ef724fc926f785718f93f0f9",
+      "date": "2013-11-27T13:29:57-08:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/fc5a73de/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/fc5a73de/attachment.pl>",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-9221540bbd0a",
+      "message_id": "<a8f03899b1409e6c00782028cab95833@mail.gmail.com>",
+      "from_name": "Chris Howden",
+      "from_email_hash": "bf0d499799bf682ad766b5f0eb9281d96f29beb8672c5fe4ecc682773847fcbb",
+      "date": "2013-11-28T09:29:07+11:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>"
+      ],
+      "body_plain": "Hi Marieline,\n\nI would consider using the raw data so it is binary, and use a random\nintercept to account for the different sampling intensities for each bird.\n\n\nIf U have summarised the data so it is 1 score for each bird which is a %\nI can?t see how U can account for repeated measures since U don?t have the\ncorrelation structure in your data.\n\nIt's also hard to tell if you will likely need to account for\npseudoreplication caused by serial correlation i.e. repeated measure since\nI can?t see any indication of the fix rate. However if you plot the\nresiduals this may help, that said residuals from logistic regressions can\nbe hard to interpret so some type of lagged correlation plot would likely\nbe better.\n\nChris Howden B.Sc. (Hons) GStat.\nFounding Partner\nEvidence Based Strategic Development, IP Commercialisation and Innovation,\nData Analysis, Modelling and Training\n(mobile) 0410 689 945\n(skype) chris.howden\nchris at trickysolutions.com.au\n\n\n\n\nDisclaimer: The information in this email and any attachments to it are\nconfidential and may contain legally privileged information.?If you are\nnot the named or intended recipient, please delete this communication and\ncontact us immediately.?Please note you are not authorised to copy, use or\ndisclose this communication or any attachments without our consent.\nAlthough this email has been checked by anti-virus software, there is a\nrisk that email messages may be corrupted or infected by viruses or other\ninterferences. No responsibility is accepted for such interference. Unless\nexpressly stated, the views of the writer are not those of the company.\nTricky Solutions always does our best to provide accurate forecasts and\nanalyses based on the data supplied, however it is possible that some\nimportant predictors were not included in the data sent to us. Information\nprovided by us should not be solely relied upon when making decisions and\nclients should use their own judgement.\n\n-----Original Message-----\nFrom: r-sig-ecology-bounces at r-project.org\n[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of marieline gentes\nSent: Thursday, 28 November 2013 8:30 AM\nTo: r-sig-ecology at r-project.org; moi\nSubject: [R-sig-eco] Logistic regression with repeated measures ?\n\nDear list,\n\nI am a bit new to logistic regressions. I am working with GPS data from\nGPS-tracked birds. My objective is to investigate whether various\ncovariates influence the probabilty of visiting specific habitats. Each\nbird has visited many habitats during the course of its GPS tracking.\n\nHere is a small sample of the data:\n\nBird.ID Year Sex body.index Recapt PrevWeek.Rain AgriYes AgriNo UrbanYes\nUrbanNo CAL 2010 M 21.99155 13-May-10 1.43 0 100 0 100 CAO 2011 F\n-19.91797 27-Apr-11 4.23 54 46 9 91 CFL 2010 F 25.61063 12-May-10 2.16 31\n69 2 98 CFP 2010 M -30.65814 13-May-10 1.43 60 40 0 100\n\nI understand that I have to use logistic regression, with a cbind code,\nbecause my response variable is not binary anymore (the response is a\nsummary of the success vs failures).\n\nBased on R tutorials, I am thinking about codes that would look like this:\n\nAgri.RainSex = glm(cbind(AgriYes, AgriNo) ~ PrevWeekRain + Sex + Year +\nYear*Sex,family=binomial (logit), data=mydata) However, contrary to the\nexamples I see online, my data are from individual birds, not from groups\nof birds. If I had been using the raw binary data, each bird would have\n100 hundred lines (I converted the percentages into success/failures)(all\nmy % are weighted the same - that is not a problem here). Am I supposed to\ntake into account some kind of repeated measure in my model ?\n\nNotes:\nFor people who are thinking about overdispersed data: my data does not\nseem to be overdispersed. But I will inspect that after I am confident\nthat my basic model is ok. So this question is about dealing with repeated\nmeasured, not about adding a random intercept for overdispersion.\n\nFor people who are working with habitat selection models: this is not the\ncase here. We are not working on resource selection. We want to fit a\nsimple logistic regression on this data as a part of data exploration.\nThis ultimate goal is to link contaminant burden with the proportion of\ntime spent in a given habitat.\n\nThank you for your advice,\n\nMarie\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Marieline,\n\nI would consider using the raw data so it is binary, and use a random\nintercept to account for the different sampling intensities for each bird.\n\n\nIf U have summarised the data so it is",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-7e90a641cd49",
+      "message_id": "<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>",
+      "from_name": "Peter Solymos",
+      "from_email_hash": "3e4e5c37645041a11f505cbd9ee9456181aeea94ae29ebbc2f9032bc9b3633e1",
+      "date": "2013-11-27T16:32:47-07:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/c99cb9bf/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/c99cb9bf/attachment.pl>",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 1,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-4980b23d785b",
+      "message_id": "<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>",
+      "from_name": "Chris Howden",
+      "from_email_hash": "bf0d499799bf682ad766b5f0eb9281d96f29beb8672c5fe4ecc682773847fcbb",
+      "date": "2013-11-28T10:50:15+11:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+        "<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>"
+      ],
+      "body_plain": "Hi Peter,\n\nDoes it have the ability to fit random effects? Or some other way to\naddress the pseudoreplication expected in RSF studies using GPS fix data\nwith little time between fixes ? (Just had a quick look at the rspf\npackage and I couldn't see any)\n\n\n\nChris Howden B.Sc. (Hons) GStat.\nFounding Partner\nEvidence Based Strategic Development, IP Commercialisation and Innovation,\nData Analysis, Modelling and Training\n(mobile) 0410 689 945\n(skype) chris.howden\nchris at trickysolutions.com.au\n\n\n\n\nDisclaimer: The information in this email and any attachments to it are\nconfidential and may contain legally privileged information.?If you are\nnot the named or intended recipient, please delete this communication and\ncontact us immediately.?Please note you are not authorised to copy, use or\ndisclose this communication or any attachments without our consent.\nAlthough this email has been checked by anti-virus software, there is a\nrisk that email messages may be corrupted or infected by viruses or other\ninterferences. No responsibility is accepted for such interference. Unless\nexpressly stated, the views of the writer are not those of the company.\nTricky Solutions always does our best to provide accurate forecasts and\nanalyses based on the data supplied, however it is possible that some\nimportant predictors were not included in the data sent to us. Information\nprovided by us should not be solely relied upon when making decisions and\nclients should use their own judgement.\n\n\n-----Original Message-----\nFrom: r-sig-ecology-bounces at r-project.org\n[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Peter Solymos\nSent: Thursday, 28 November 2013 10:33 AM\nTo: marieline gentes\nCc: r-sig-ecology at r-project.org\nSubject: Re: [R-sig-eco] Logistic regression with repeated measures ?\n\nMarie,\n\nYour problem and data seems to me a resource selection problem with\nmatched use-availability design. Estimating procedure for that design is\ndiscussed in Lele and Keim (2006, Ecology 87:3021--3028) and implemented\nin the ResourceSelection package: rspf function, see description of\nargument 'm'\nfor specifying matched points for individual birds. The output is a model\nfor probability of selection given the distribution of environmental\ncovariates available for these specific individuals.\n\nCheers,\n\nPeter\n\n--\nPC)ter SC3lymos, Dept Biol Sci, Univ Alberta, T6G 2E9, Canada AB\nsolymos at ualberta.ca, Ph 780.492.8534, http://psolymos.github.com Alberta\nBiodiversity Monitoring Institute, http://www.abmi.ca Boreal Avian\nModelling Project, http://www.borealbirds.ca\n\n\nOn Wed, Nov 27, 2013 at 2:29 PM, marieline gentes\n<mlgentes2 at yahoo.com>wrote:\n\n> Dear list,\n>\n> I am a bit new to logistic regressions. I am working with GPS data\n> from GPS-tracked birds. My objective is to investigate whether various\n> covariates influence the probabilty of visiting specific habitats.\n> Each bird has visited many habitats during the course of its GPS\ntracking.\n>\n> Here is a small sample of the data:\n>\n> Bird.ID Year Sex body.index Recapt PrevWeek.Rain AgriYes AgriNo\n> UrbanYes UrbanNo CAL 2010 M 21.99155 13-May-10 1.43 0 100 0 100 CAO\n> 2011 F -19.91797 27-Apr-11 4.23 54 46 9 91 CFL 2010 F 25.61063\n> 12-May-10 2.16 31 69 2 98 CFP 2010 M -30.65814 13-May-10 1.43 60 40 0\n> 100\n>\n> I understand that I have to use logistic regression, with a cbind\n> code, because my response variable is not binary anymore (the response\n> is a summary of the success vs failures).\n>\n> Based on R tutorials, I am thinking about codes that would look like\nthis:\n>\n> Agri.RainSex = glm(cbind(AgriYes, AgriNo) ~ PrevWeekRain + Sex + Year\n> + Year*Sex,family=binomial (logit), data=mydata) However, contrary to\n> the examples I see online, my data are from individual birds, not from\n> groups of birds. If I had been using the raw binary data, each bird\n> would have 100 hundred lines (I converted the percentages into\n> success/failures)(all my % are weighted the same - that is not a\n> problem here). Am I supposed to take into account some kind of\n> repeated measure in my model ?\n>\n> Notes:\n> For people who are thinking about overdispersed data: my data does not\n> seem to be overdispersed. But I will inspect that after I am confident\n> that my basic model is ok. So this question is about dealing with\n> repeated measured, not about adding a random intercept for\noverdispersion.\n>\n> For people who are working with habitat selection models: this is not\n> the case here. We are not working on resource selection. We want to\n> fit a simple logistic regression on this data as a part of data\n> exploration. This ultimate goal is to link contaminant burden with the\n> proportion of time spent in a given habitat.\n>\n> Thank you for your advice,\n>\n> Marie\n>         [[alternative HTML version deleted]]\n>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Peter,\n\nDoes it have the ability to fit random effects? Or some other way to\naddress the pseudoreplication expected in RSF studies using GPS fix data\nwith little time between fixes ? (Just had a qu",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-2bd984591d13",
+      "message_id": "<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>",
+      "from_name": "Peter Solymos",
+      "from_email_hash": "3e4e5c37645041a11f505cbd9ee9456181aeea94ae29ebbc2f9032bc9b3633e1",
+      "date": "2013-11-27T17:19:46-07:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+        "<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>",
+        "<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/305a9157/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/305a9157/attachment.pl>",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 3,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-e5818e19f1b8",
+      "message_id": "<1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>",
+      "from_name": "marieline gentes",
+      "from_email_hash": "9a7c55da407ca491830b4f904c74ef423a97e0f4ef724fc926f785718f93f0f9",
+      "date": "2013-11-27T17:08:18-08:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+        "<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>",
+        "<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>",
+        "<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/27121c7a/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/27121c7a/attachment.pl>",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 4,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-b06a49d79e00",
+      "message_id": "<CAH9coKaON8GH=Or9Ehq6sGDp174az-0++08uVFhLM3aaoVEmvg@mail.gmail.com>",
+      "from_name": "Peter Solymos",
+      "from_email_hash": "3e4e5c37645041a11f505cbd9ee9456181aeea94ae29ebbc2f9032bc9b3633e1",
+      "date": "2013-11-27T18:17:58-07:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+        "<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>",
+        "<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>",
+        "<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>",
+        "<1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/bff7cf77/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131127/bff7cf77/attachment.pl>",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 5,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-4276d2a0e2e1",
+      "message_id": "<7345C28F-FAF7-42B7-8E8A-EA36FDC7A2EF@ufl.edu>",
+      "from_name": "Mollie Brooks",
+      "from_email_hash": "6f9e37a9d38017f0cafabb49cc3463ca686f3bbcd981b63200adf6f8a681ecd0",
+      "date": "2013-11-28T10:20:33+09:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<a8f03899b1409e6c00782028cab95833@mail.gmail.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+        "<a8f03899b1409e6c00782028cab95833@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/55f3388f/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/55f3388f/attachment.pl>",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 2,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-f90869599016",
+      "message_id": "<058092DB-6038-4542-ABDA-978F5971A5D8@ufl.edu>",
+      "from_name": "Mollie Brooks",
+      "from_email_hash": "6f9e37a9d38017f0cafabb49cc3463ca686f3bbcd981b63200adf6f8a681ecd0",
+      "date": "2013-11-28T10:31:14+09:00",
+      "subject": "[R-sig-eco] Logistic regression with repeated measures ?",
+      "subject_clean": "Logistic regression with repeated measures ?",
+      "in_reply_to": "<CAH9coKaON8GH=Or9Ehq6sGDp174az-0++08uVFhLM3aaoVEmvg@mail.gmail.com>",
+      "references": [
+        "<1385587797.12612.YahooMailNeo@web160802.mail.bf1.yahoo.com>",
+        "<CAH9coKYArt+JL3=7e-ee3oTNxCr=56AjFrQH2S3TRJOjEkdHzg@mail.gmail.com>",
+        "<89ab3d7a729ced866822fee039bc7c57@mail.gmail.com>",
+        "<CAH9coKZ0QF6W1+C39afuHvzQuQWXMu8R_do_zMkGQpbgT2ZYkQ@mail.gmail.com>",
+        "<1385600898.38570.YahooMailNeo@web160804.mail.bf1.yahoo.com>",
+        "<CAH9coKaON8GH=Or9Ehq6sGDp174az-0++08uVFhLM3aaoVEmvg@mail.gmail.com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/21f3dbeb/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/21f3dbeb/attachment.pl>",
+      "thread_id": "thread-7b62c2e26af4",
+      "thread_depth": 6,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-98519e2e9835",
+      "message_id": "<000001ceec43$9ef47d30$dcdd7790$@com>",
+      "from_name": "kassahun Alemu",
+      "from_email_hash": "8669f0bfebc8d364285262e2c20dd8190ab47298fbb041b6d24a0691124bc405",
+      "date": "2013-11-28T17:09:01+03:00",
+      "subject": "[R-sig-eco] This chains contains uninitialized variables and the trap report says \" undefined real result\"",
+      "subject_clean": "This chains contains uninitialized variables and the trap report says \" undefined real result\"",
+      "in_reply_to": null,
+      "references": [],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/6e8b9b87/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/6e8b9b87/attachment.pl>",
+      "thread_id": "thread-98519e2e9835",
+      "thread_depth": 0,
+      "month": "2013-11"
+    },
+    {
+      "id": "msg-bfffe6506c9e",
+      "message_id": "<52975C46.5030206@senckenberg.de>",
+      "from_name": "Bob O'Hara",
+      "from_email_hash": "696fe2f40eef4ce877e669eb9e3cc5a4e75fd506bc93ede47f0007440d3a6beb",
+      "date": "2013-11-28T16:07:50+01:00",
+      "subject": "[R-sig-eco] This chains contains uninitialized variables and the trap report says \" undefined real result\"",
+      "subject_clean": "This chains contains uninitialized variables and the trap report says \" undefined real result\"",
+      "in_reply_to": "<000001ceec43$9ef47d30$dcdd7790$@com>",
+      "references": [
+        "<000001ceec43$9ef47d30$dcdd7790$@com>"
+      ],
+      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/105d5326/attachment.pl>",
+      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20131128/105d5326/attachment.pl>",
+      "thread_id": "thread-98519e2e9835",
+      "thread_depth": 1,
+      "month": "2013-11"
+    }
+  ],
+  "threads": [
+    {
+      "id": "thread-919e3366a832",
+      "subject": "Cross validate model with calibrate",
+      "message_count": 2,
+      "participants": [
+        "Jari Oksanen",
+        "Philipp01"
+      ],
+      "started": "2013-11-01T06:53:03-07:00",
+      "last_reply": "2013-11-02T06:40:48+00:00",
+      "root_message_id": "msg-919e3366a832"
+    },
+    {
+      "id": "thread-a2bd1593cccb",
+      "subject": "Multivariate Analyses of Ecological Communities",
+      "message_count": 5,
+      "participants": [
+        "Angel",
+        "Jari Oksanen",
+        "Rich Shepard"
+      ],
+      "started": "2013-11-04T07:59:32-08:00",
+      "last_reply": "2013-11-04T14:55:22-08:00",
+      "root_message_id": "msg-a2bd1593cccb"
+    },
+    {
+      "id": "thread-d68115ff97f7",
+      "subject": "(almost) complete population",
+      "message_count": 1,
+      "participants": [
+        "Martin Weiser"
+      ],
+      "started": "2013-11-04T09:44:15+01:00",
+      "last_reply": "2013-11-04T09:44:15+01:00",
+      "root_message_id": "msg-d68115ff97f7"
+    },
+    {
+      "id": "thread-a95af66da1db",
+      "subject": "NA in species scores using capscale in vegan",
+      "message_count": 3,
+      "participants": [
+        "Duarte Viana",
+        "Jari Oksanen"
+      ],
+      "started": "2013-11-07T11:05:46+01:00",
+      "last_reply": "2013-11-07T11:36:02+01:00",
+      "root_message_id": "msg-a95af66da1db"
+    },
+    {
+      "id": "thread-adb02d97624b",
+      "subject": "Data Frame Structure for vegdist()",
+      "message_count": 2,
+      "participants": [
+        "Martin Weiser",
+        "Rich Shepard"
+      ],
+      "started": "2013-11-07T12:38:35-08:00",
+      "last_reply": "2013-11-11T11:02:47+01:00",
+      "root_message_id": "msg-adb02d97624b"
+    },
+    {
+      "id": "thread-eac4d7254e3c",
+      "subject": "Error message using getverticeshr() to extract home-range contours",
+      "message_count": 8,
+      "participants": [
+        "Clement Calenge",
+        "Dylann Kersusan",
+        "Roman Luštrik",
+        "Sarah Goslee"
+      ],
+      "started": "2013-11-07T16:23:47+01:00",
+      "last_reply": "2013-11-07T16:47:43+01:00",
+      "root_message_id": "msg-eac4d7254e3c"
+    },
+    {
+      "id": "thread-4e56d870ec48",
+      "subject": "heteroscedasticity and d.f.",
+      "message_count": 1,
+      "participants": [
+        "Jasper"
+      ],
+      "started": "2013-11-08T03:41:01-08:00",
+      "last_reply": "2013-11-08T03:41:01-08:00",
+      "root_message_id": "msg-4e56d870ec48"
+    },
+    {
+      "id": "thread-113e72ac3391",
+      "subject": "Error when installing packages in R.3.0.2 (Windows 7)",
+      "message_count": 1,
+      "participants": [
+        "Manuel Spínola"
+      ],
+      "started": "2013-11-08T09:01:28-06:00",
+      "last_reply": "2013-11-08T09:01:28-06:00",
+      "root_message_id": "msg-113e72ac3391"
+    },
+    {
+      "id": "thread-79d9bc6538da",
+      "subject": "stressplot-low observed dissimilarities but 0 ordination distance",
+      "message_count": 1,
+      "participants": [
+        "eugenego"
+      ],
+      "started": "2013-11-10T12:56:12-08:00",
+      "last_reply": "2013-11-10T12:56:12-08:00",
+      "root_message_id": "msg-79d9bc6538da"
+    },
+    {
+      "id": "thread-095eb315e789",
+      "subject": "question about beta regressions",
+      "message_count": 4,
+      "participants": [
+        "Scott Foster",
+        "Simon Blomberg",
+        "marieline gentes"
+      ],
+      "started": "2013-11-11T17:29:33-08:00",
+      "last_reply": "2013-11-12T14:24:21+11:00",
+      "root_message_id": "msg-095eb315e789"
+    },
+    {
+      "id": "thread-9501aad6f1d8",
+      "subject": "Get the cross-validation informations from gbm in dismo and others measures of fit",
+      "message_count": 1,
+      "participants": [
+        "Frederico Faleiro"
+      ],
+      "started": "2013-11-11T23:47:45-02:00",
+      "last_reply": "2013-11-11T23:47:45-02:00",
+      "root_message_id": "msg-9501aad6f1d8"
+    },
+    {
+      "id": "thread-c479e423011c",
+      "subject": "Count species in species lists with species aggregates/complexes",
+      "message_count": 2,
+      "participants": [
+        "Martin Obrist",
+        "Philippi, Tom"
+      ],
+      "started": "2013-11-12T16:23:20+01:00",
+      "last_reply": "2013-11-12T12:20:57-08:00",
+      "root_message_id": "msg-c479e423011c"
+    },
+    {
+      "id": "thread-387b920aa545",
+      "subject": "Collwel's extrapolation",
+      "message_count": 1,
+      "participants": [
+        "Ricardo Solar"
+      ],
+      "started": "2013-11-12T18:28:40-02:00",
+      "last_reply": "2013-11-12T18:28:40-02:00",
+      "root_message_id": "msg-387b920aa545"
+    },
+    {
+      "id": "thread-ccd0711376e0",
+      "subject": "Count species in species lists with species, aggregates/complexes",
+      "message_count": 1,
+      "participants": [
+        "Bruce Miller"
+      ],
+      "started": "2013-11-13T06:14:41-05:00",
+      "last_reply": "2013-11-13T06:14:41-05:00",
+      "root_message_id": "msg-ccd0711376e0"
+    },
+    {
+      "id": "thread-0730411e5e55",
+      "subject": "Erro in ordiR2step",
+      "message_count": 2,
+      "participants": [
+        "Gavin Simpson",
+        "amommendes"
+      ],
+      "started": "2013-11-13T12:19:25-08:00",
+      "last_reply": "2013-11-14T13:49:07-06:00",
+      "root_message_id": "msg-0730411e5e55"
+    },
+    {
+      "id": "thread-ae197bbbbaac",
+      "subject": "Interactions in MRM",
+      "message_count": 2,
+      "participants": [
+        "Leamy, Larry",
+        "Sarah Goslee"
+      ],
+      "started": "2013-11-14T14:31:51+00:00",
+      "last_reply": "2013-11-14T10:53:31-05:00",
+      "root_message_id": "msg-ae197bbbbaac"
+    },
+    {
+      "id": "thread-843255efb0f8",
+      "subject": "fitting model with unbalanced design and heteroscedasticity",
+      "message_count": 1,
+      "participants": [
+        "Claire"
+      ],
+      "started": "2013-11-14T23:43:47+01:00",
+      "last_reply": "2013-11-14T23:43:47+01:00",
+      "root_message_id": "msg-843255efb0f8"
+    },
+    {
+      "id": "thread-f4536963e679",
+      "subject": "help specifiyng cohort effects in package mra",
+      "message_count": 1,
+      "participants": [
+        "nina"
+      ],
+      "started": "2013-11-15T05:28:24-08:00",
+      "last_reply": "2013-11-15T05:28:24-08:00",
+      "root_message_id": "msg-f4536963e679"
+    },
+    {
+      "id": "thread-2e5037476671",
+      "subject": "Good writting of an unballanced lme model ?",
+      "message_count": 1,
+      "participants": [
+        "Claire"
+      ],
+      "started": "2013-11-19T00:50:05+01:00",
+      "last_reply": "2013-11-19T00:50:05+01:00",
+      "root_message_id": "msg-2e5037476671"
+    },
+    {
+      "id": "thread-e4b7001b1d47",
+      "subject": "Adehabitat Ltraj error message: \"non unique dates for a given burst\"",
+      "message_count": 5,
+      "participants": [
+        "Mathieu Basille",
+        "Nick van Doormaal",
+        "NickvanDoormaal",
+        "basille.web at ase-research.org"
+      ],
+      "started": "2013-11-20T13:21:09+01:00",
+      "last_reply": "2013-11-22T01:56:13-08:00",
+      "root_message_id": "msg-e4b7001b1d47"
+    },
+    {
+      "id": "thread-755db9e639c3",
+      "subject": "Course: Introduction to Linear mixed effects models, GLMM and MCMC with R",
+      "message_count": 1,
+      "participants": [
+        "Highland Statistics Ltd"
+      ],
+      "started": "2013-11-21T08:34:43+00:00",
+      "last_reply": "2013-11-21T08:34:43+00:00",
+      "root_message_id": "msg-755db9e639c3"
+    },
+    {
+      "id": "thread-4b6d3900bdb3",
+      "subject": "pca in ade4",
+      "message_count": 1,
+      "participants": [
+        "Finn Bastiansen"
+      ],
+      "started": "2013-11-22T10:37:10+00:00",
+      "last_reply": "2013-11-22T10:37:10+00:00",
+      "root_message_id": "msg-4b6d3900bdb3"
+    },
+    {
+      "id": "thread-5a4d86c2b5be",
+      "subject": "pca in ade4",
+      "message_count": 3,
+      "participants": [
+        "Finn Bastiansen",
+        "Mahnaz Rabbaniha",
+        "Stéphane Dray"
+      ],
+      "started": "2013-11-22T13:09:00+03:30",
+      "last_reply": "2013-11-22T21:22:18+01:00",
+      "root_message_id": "msg-5a4d86c2b5be"
+    },
+    {
+      "id": "thread-2954c01be79c",
+      "subject": "Dealing with overdispersion in mixed model with count data",
+      "message_count": 2,
+      "participants": [
+        "Bradley Carlson",
+        "Enrico Caprio"
+      ],
+      "started": "2013-11-26T11:00:52+01:00",
+      "last_reply": "2013-11-27T13:20:14-05:00",
+      "root_message_id": "msg-2954c01be79c"
+    },
+    {
+      "id": "thread-a319e3afda08",
+      "subject": "Dealing with overdispersion in mixed model with count data",
+      "message_count": 1,
+      "participants": [
+        "Enrico Caprio"
+      ],
+      "started": "2013-11-26T12:36:40+01:00",
+      "last_reply": "2013-11-26T12:36:40+01:00",
+      "root_message_id": "msg-a319e3afda08"
+    },
+    {
+      "id": "thread-604975cff220",
+      "subject": "R-sig-ecology Digest, Vol 68, Issue 17",
+      "message_count": 1,
+      "participants": [
+        "Highland Statistics Ltd"
+      ],
+      "started": "2013-11-26T17:18:35+00:00",
+      "last_reply": "2013-11-26T17:18:35+00:00",
+      "root_message_id": "msg-604975cff220"
+    },
+    {
+      "id": "thread-00e0c20dbc3f",
+      "subject": "ANOSIM interpretation",
+      "message_count": 1,
+      "participants": [
+        "Vitali francesco"
+      ],
+      "started": "2013-11-26T17:31:59+01:00",
+      "last_reply": "2013-11-26T17:31:59+01:00",
+      "root_message_id": "msg-00e0c20dbc3f"
+    },
+    {
+      "id": "thread-7b62c2e26af4",
+      "subject": "Logistic regression with repeated measures ?",
+      "message_count": 9,
+      "participants": [
+        "Chris Howden",
+        "Mollie Brooks",
+        "Peter Solymos",
+        "marieline gentes"
+      ],
+      "started": "2013-11-27T13:29:57-08:00",
+      "last_reply": "2013-11-28T10:31:14+09:00",
+      "root_message_id": "msg-7b62c2e26af4"
+    },
+    {
+      "id": "thread-bfcd31449f83",
+      "subject": "Observation-level random effects to account for overdispersion",
+      "message_count": 1,
+      "participants": [
+        "Dixon, Philip M [STAT]"
+      ],
+      "started": "2013-11-27T18:59:23+00:00",
+      "last_reply": "2013-11-27T18:59:23+00:00",
+      "root_message_id": "msg-bfcd31449f83"
+    },
+    {
+      "id": "thread-0b96004c8a8f",
+      "subject": "Modeling overdispersed count data",
+      "message_count": 1,
+      "participants": [
+        "Dixon, Philip M [STAT]"
+      ],
+      "started": "2013-11-27T19:00:32+00:00",
+      "last_reply": "2013-11-27T19:00:32+00:00",
+      "root_message_id": "msg-0b96004c8a8f"
+    },
+    {
+      "id": "thread-98519e2e9835",
+      "subject": "This chains contains uninitialized variables and the trap report says \" undefined real result\"",
+      "message_count": 2,
+      "participants": [
+        "Bob O'Hara",
+        "kassahun Alemu"
+      ],
+      "started": "2013-11-28T17:09:01+03:00",
+      "last_reply": "2013-11-28T16:07:50+01:00",
+      "root_message_id": "msg-98519e2e9835"
+    }
+  ]
+}

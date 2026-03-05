@@ -1,0 +1,4394 @@
+From kari.lintulaakso at gmail.com  Thu Jun  2 03:09:43 2011
+From: kari.lintulaakso at gmail.com (Kari Lintulaakso)
+Date: Thu, 2 Jun 2011 11:09:43 +1000
+Subject: [R-sig-eco] Variability explanations for the PCO axes as in
+	Anderson and Willis 2003
+Message-ID: <BANLkTimHwqY_yu4sAnALT+timmC0KJ5CCw@mail.gmail.com>
+
+In Anderson and Willis 2003 (Canonical Analysis of Principal
+Coordinates: A Useful Method of Constrained Ordination for Ecology)
+they write:
+
+"For multivariate analysis, the data were transformed
+to y' = ln(y + 1) to remove large differences in scale
+among the original variables. Then Bray-Curtis dissimilarities
+were calculated between every pair of observations,
+and an unconstrained ordination was done using
+PCO (metric MDS) on the dissimilarity matrix. The
+first two PCO axes explained 20.72% and 12.37% of
+the variability in the original dissimilarity matrix."
+
+Does anyone know which method produces those 20.72% and 12.37% for the PCO's?
+
+I have tried something like this:
+
+library(ecodist)
+x<-bcdist(dune)				                # Bray-Curtis distance, no transformation
+
+x.pco <- cmdscale(x, k=2, eig = TRUE)	# PCO, PCoA
+x.pco$GOF
+
+> x.pco$GOF
+[1] 0.5714973 0.5961463
+
+I suppose these 0.57 and 0.59 are not comparable with the percentages
+in Anderson and Willis?
+
+So my question is how do I get similar kinds of variability
+explanations for the PCO axes as in A&W2003?
+And secondly how do I get those percentages for NMDS?
+
+I really am a newcomer in these kinds of analysis and any kind of
+guidance will help.
+
+-Kari
+
+-- 
+Kari Lintulaakso, M.Sc.(Biosciences)
+
+Doctoral student
+Paleontology and Paleoecology
+Department of Geosciences and Geography
+University of Helsinki
+* Web page: http://blogs.helsinki.fi/lintulaa/
+
+
+From gavin.simpson at ucl.ac.uk  Thu Jun  2 09:38:03 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Thu, 02 Jun 2011 08:38:03 +0100
+Subject: [R-sig-eco] Variability explanations for the PCO axes as in
+ Anderson and Willis 2003
+In-Reply-To: <BANLkTimHwqY_yu4sAnALT+timmC0KJ5CCw@mail.gmail.com>
+References: <BANLkTimHwqY_yu4sAnALT+timmC0KJ5CCw@mail.gmail.com>
+Message-ID: <1307000283.2357.27.camel@desktop.localdomain>
+
+On Thu, 2011-06-02 at 11:09 +1000, Kari Lintulaakso wrote:
+> In Anderson and Willis 2003 (Canonical Analysis of Principal
+> Coordinates: A Useful Method of Constrained Ordination for Ecology)
+> they write:
+> 
+> "For multivariate analysis, the data were transformed
+> to y' = ln(y + 1) to remove large differences in scale
+> among the original variables. Then Bray-Curtis dissimilarities
+> were calculated between every pair of observations,
+> and an unconstrained ordination was done using
+> PCO (metric MDS) on the dissimilarity matrix. The
+> first two PCO axes explained 20.72% and 12.37% of
+> the variability in the original dissimilarity matrix."
+> 
+> Does anyone know which method produces those 20.72% and 12.37% for the PCO's?
+> 
+> I have tried something like this:
+> 
+> library(ecodist)
+> x<-bcdist(dune)				                # Bray-Curtis distance, no transformation
+> 
+> x.pco <- cmdscale(x, k=2, eig = TRUE)	# PCO, PCoA
+> x.pco$GOF
+> 
+> > x.pco$GOF
+> [1] 0.5714973 0.5961463
+> 
+> I suppose these 0.57 and 0.59 are not comparable with the percentages
+> in Anderson and Willis?
+> 
+> So my question is how do I get similar kinds of variability
+> explanations for the PCO axes as in A&W2003?
+> And secondly how do I get those percentages for NMDS?
+
+I'm not familiar with ecodist so show an exmaple using vegan, but the
+concept is the same: PCO is an eigen decomposition of the (transformed)
+dissimilarity matrix. As such it returns eigenvalues. The sum of these
+eigenvalues is the total variance in the dissimilarity matrix and hence
+expressing individual eigenvalues as a proportion of the sum of
+eigenvalues gives you the proportion (or %) variance explained by each
+axis.
+
+R> require(vegan)
+Loading required package: vegan
+This is vegan 1.17-10
+R> data(dune)
+R> bcdune <- vegdist(dune, method = "bray")
+R> mod <- capscale(bcdune ~ 1)
+R> mod
+Call: capscale(formula = bcdune ~ 1)
+
+              Inertia Proportion Rank
+Total          4.2990                
+Real Total     4.5939     1.0000     
+Unconstrained  4.5939     1.0000   14
+Imaginary     -0.2949               5
+Inertia is squared Bray distance 
+
+Eigenvalues for unconstrained axes:
+    MDS1     MDS2     MDS3     MDS4     MDS5     MDS6     MDS7     MDS8 
+1.716266 1.022398 0.461464 0.382249 0.279135 0.236631 0.169120 0.096245 
+    MDS9    MDS10    MDS11    MDS12    MDS13    MDS14 
+0.074492 0.061712 0.054940 0.019174 0.016119 0.004001
+
+So we can extract the eigenvalues directly:
+
+R> eig <- mod$CA$eig
+
+or better in newer versions of vegan using the eigenvals() extractor
+function:
+
+R> eig <- eigenvals(mod)
+
+Then we can compute the proportion of variance explained on each axis:
+
+R> eig / sum(eig)
+        MDS1         MDS2         MDS3         MDS4         MDS5         MDS6 
+0.3735929532 0.2225533017 0.1004504626 0.0832071354 0.0607613786 0.0515092860 
+        MDS7         MDS8         MDS9        MDS10        MDS11        MDS12 
+0.0368137410 0.0209504326 0.0162151974 0.0134333287 0.0119593153 0.0041738163 
+       MDS13        MDS14 
+0.0035087418 0.0008709095 
+
+Or the cumulative sum of the proportion of variance explained:
+
+R> cumsum(eig / sum(eig))
+     MDS1      MDS2      MDS3      MDS4      MDS5      MDS6      MDS7      MDS8 
+0.3735930 0.5961463 0.6965967 0.7798039 0.8405652 0.8920745 0.9288883 0.9498387 
+     MDS9     MDS10     MDS11     MDS12     MDS13     MDS14 
+0.9660539 0.9794872 0.9914465 0.9956203 0.9991291 1.0000000
+
+Things can be a bit more complex with PCO as some dissimilarity
+coefficients are not metric and thus cannot be represented in an
+Euclidean space (what PCO is trying to do) so we get negative
+eigenvalues. The software can deal with this by adding a value to the
+dissimilarities to avoid the negative eigenvalues, but just be aware of
+this issue - the negative eigenvalues, if they occur, represent variance
+in imaginary dimensions (as we have imaginary numbers and normal numbers
+[I forget the correct term, rational numbers?] in mathematics) and
+possibly need to be considered.
+
+What vegan does in capscale() is just ignore the negative eigenvalues,
+or you can add a constant or sqrt the dissimilarities to try to avoid
+the problem. The eagle eyed amongst you will have noticed the Imaginary
+Inertia component in the summary at the start of my message.
+
+How would you do the analysis using cmdscale()? Here are the eigenvalues
+from cmdscale()
+
+R> cmdscale(bcdune, k=NROW(dune)-1, eig = TRUE)$eig
+ [1]  1.716266e+00  1.022398e+00  4.614641e-01  3.822492e-01  2.791345e-01
+ [6]  2.366309e-01  1.691204e-01  9.624517e-02  7.449176e-02  6.171200e-02
+[11]  5.494046e-02  1.917429e-02  1.611897e-02  4.000912e-03 -1.942890e-16
+[16] -2.642513e-02 -4.285699e-02 -5.473417e-02 -7.412306e-02 -9.678567e-02
+Warning message:
+In cmdscale(bcdune, k = NROW(dune) - 1, eig = TRUE) :
+  only 14 of the first 19 eigenvalues are > 0
+
+Notice that I ask for the full representation in n-1 dimensional
+Euclidean space. The eigenvalues returned are the same whatever value of
+`k` is supplied. Notice also how the eigenvalues have gone negative -
+this is because the bray curtis dissimilarity is not a metric
+coefficient. We can use argument `add` to solve this problem:
+
+R> mod2 <- cmdscale(bcdune, k=(NROW(dune)-1), eig = TRUE, add = TRUE)
+Warning message:
+In cmdscale(bcdune, k = (NROW(dune) - 1), eig = TRUE, add = TRUE) :
+  only 18 of the first 19 eigenvalues are > 0
+R> mod2$eig
+ [1]  2.600250e+00  1.604963e+00  8.154912e-01  6.868628e-01  5.690645e-01
+ [6]  4.729431e-01  3.716289e-01  2.558978e-01  2.317021e-01  2.088922e-01
+[11]  1.925223e-01  1.438914e-01  1.357564e-01  1.311664e-01  7.175410e-02
+[16]  5.164569e-02  3.686007e-02  9.213435e-03 -1.905371e-16 -5.325325e-16
+
+The last two eigenvalues are indistinguishable from zero (remember this
+is a computer doing binary arithmetic!). The eigenvals() extractor does
+the right thing and sets these almost-zero eigenvalues to zero:
+
+R> (eig2 <- eigenvals(mod2))
+ [1] 2.6002497 1.6049627 0.8154912 0.6868628 0.5690645 0.4729431 0.3716289
+ [8] 0.2558978 0.2317021 0.2088922 0.1925223 0.1438914 0.1357564 0.1311664
+[15] 0.0717541 0.0516457 0.0368601 0.0092134 0.0000000 0.0000000
+
+So now we can do as before and compute variance explained per axis or
+cumulative over k = 1, ..., n-1 axes.
+
+R> eig2 / sum(eig2)
+ [1] 0.30268881 0.18682984 0.09492937 0.07995605 0.06624343 0.05505417
+ [7] 0.04326043 0.02978845 0.02697189 0.02431664 0.02241105 0.01675005
+[13] 0.01580308 0.01526876 0.00835272 0.00601195 0.00429079 0.00107251
+[19] 0.00000000 0.00000000
+R> cumsum(eig2 / sum(eig2))
+ [1] 0.3026888 0.4895187 0.5844480 0.6644041 0.7306475 0.7857017 0.8289621
+ [8] 0.8587505 0.8857224 0.9100391 0.9324501 0.9492002 0.9650033 0.9802720
+[15] 0.9886247 0.9946367 0.9989275 1.0000000 1.0000000 1.0000000
+
+Notice that these numbers are slightly different to those from
+capscale() because capscale() only considered 14 PCO axes (those with
+positive eigenvalues), whereas the above uses all axes.
+
+As for nMDS, there are no axes and as such it is not possible or needed
+to provide a measure of variance explained per axis. We can provide a
+measure of the lack of fit between the k-dimensional mapping of the
+dissimilarities and the original dissimilarities, using the stress
+statistic and related metrics.
+
+HTH
+
+G
+
+> I really am a newcomer in these kinds of analysis and any kind of
+> guidance will help.
+> 
+> -Kari
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From momadou at yahoo.fr  Thu Jun  2 16:55:53 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Thu, 2 Jun 2011 15:55:53 +0100 (BST)
+Subject: [R-sig-eco] Problem with GAM
+Message-ID: <752145.9452.qm@web28606.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110602/9becdde4/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Thu Jun  2 18:16:15 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Thu, 02 Jun 2011 17:16:15 +0100
+Subject: [R-sig-eco] Problem with GAM
+In-Reply-To: <752145.9452.qm@web28606.mail.ukl.yahoo.com>
+References: <752145.9452.qm@web28606.mail.ukl.yahoo.com>
+Message-ID: <1307031375.28158.13.camel@prometheus.geog.ucl.ac.uk>
+
+On Thu, 2011-06-02 at 15:55 +0100, momadou sow wrote:
+> Hi, 
+> I used GAM function with this code: 
+> 
+> library(mgcv)
+> modgam=gam(Z~X+Y,data=table)
+> vis.gam(modgam,view=c("X","Y"),plot.type="contour",zlim=c(1,16))
+> 
+> My problem is on my figure, the predicted values begin by 0 until 16 with an
+> interval equal 2:
+> 1- I want that the predicted values (Z) begin by 1 until 16 with an interval
+> equal 1. I tried with zlim=c(1,16) but the result is not good. How do I do it?
+
+Read ?vis.gam more carefully and note what is said about the `...`
+argument for passing arguments on to, in this case, `contour()`. Take a
+look at `?contour` and 
+
+library(mgcv)
+set.seed(0)
+n<-200;sig2<-4
+x0 <- runif(n, 0, 1);x1 <- runif(n, 0, 1)
+x2 <- runif(n, 0, 1)
+y<-x0^2+x1*x2 +runif(n,-0.3,0.3)
+g<-gam(y~s(x0,x1,x2))
+
+## compare default with user-selected levels:
+layout(matrix(1:2, ncol = 2))
+vis.gam(g, view=c("x1","x2"), plot.type="contour")
+vis.gam(g, view=c("x1","x2"), plot.type="contour", levels = seq(0.35,
+1.15, by = 0.1))
+layout(1)
+
+(Ignore the warnings)
+
+> 2- On the figure, the red color corresponds with the weak values and light red
+> corresponds with the big values. How to invert the color to obtain red color
+> corresponding with the big values.
+
+I think there is something else going on here - if you are displaying
+the fitted model with +/- standard errors, which can't be done on a
+contour plot - vis.gam issues a warning and switches to plotting via
+`persp()`. If you meant change the colours on the `persp()` plot then I
+think you are out of luck as the hi and lo colours are hard coded in the
+function.
+
+>  
+> Note: I apologize
+> for my bad English
+> Thanks for your help.
+> Madou
+
+HTH
+
+G
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From rchandler at usgs.gov  Fri Jun  3 17:56:23 2011
+From: rchandler at usgs.gov (Richard Chandler)
+Date: Fri, 3 Jun 2011 11:56:23 -0400
+Subject: [R-sig-eco] job opportunity - R package development
+Message-ID: <OF0FD2804C.774C2D21-ON852578A4.0056E6B4-852578A4.00578F77@usgs.gov>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110603/687e21ee/attachment.pl>
+
+From luizernesto at gmail.com  Mon Jun  6 20:25:41 2011
+From: luizernesto at gmail.com (Luiz Ernesto Costa-Schmidt)
+Date: Mon, 6 Jun 2011 15:25:41 -0300
+Subject: [R-sig-eco] Logistic regression
+Message-ID: <BANLkTikCsbDQwVLxqETQCTxx-WNgCndrAQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110606/7230646e/attachment.pl>
+
+From amelie_qcan at hotmail.com  Mon Jun  6 21:43:28 2011
+From: amelie_qcan at hotmail.com (amelie_can)
+Date: Mon, 6 Jun 2011 12:43:28 -0700 (PDT)
+Subject: [R-sig-eco] PCA with vegan
+Message-ID: <1307389408035-6446676.post@n2.nabble.com>
+
+Hello all, 
+
+I am doing a pca using the vegan library with the function rda on two
+dataset: 
+1) species abundances (where I have my sites on the lines and the species
+names on the columns, they were previously transformed with Hellinger) 
+2) on a community mean weight analysis (where I have my sites on the lines
+and my traits in columns). That second matrix was calculated by multiplying
+two matrix (the first one was species abundances which were the relative
+contribution of each species to its community (pi) was calculated and the
+second one was quantitative traits associated to each species). 
+
+The first time I did the pca on each dataset, I wrote SCALE = FALSE, which
+means that my data are centered by column but not reduced. From what I
+understood, as we have the same kind of data within my matrix, we do not
+need to reduce it, otherwise it would be a "double standardization". My
+supervisor was not sure about that method as I got a result where my first
+axis explained 84% of the variation of my response variable. They thought it
+was too high to be right.  
+
+If I do a  SCALE = TRUE, it reduces my percent explained by my first axis. R
+says that it  "Scale species to unit variance (like correlations)".
+
+Can anybody advice me ? 
+
+Thank you, 
+
+Amelie
+
+
+
+>From what I understand, I should write SCALE = FALSE but I just want to make
+sure I am right. 
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/PCA-with-vegan-tp6446676p6446676.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From kari.lintulaakso at gmail.com  Tue Jun  7 05:48:39 2011
+From: kari.lintulaakso at gmail.com (Kari Lintulaakso)
+Date: Tue, 7 Jun 2011 13:48:39 +1000
+Subject: [R-sig-eco] Anderson and Willis 2003,
+	CAP squared canonical correlations of delta^2
+Message-ID: <BANLkTi=UeM8OnXbnWWDDc0uTe2vtCAO=fA@mail.gmail.com>
+
+Dear list,
+
+I'm trying to follow the CAP analysis described in Anderson and Willis
+2003: Canonical Analysis of Principal Coordinates: A Useful Method of
+Constrained Ordination for Ecology
+For this I'm using CAPdiscrim (instead of capscale) as it seems to
+follow the original description.
+I'm using a data set with n different biomes. Each biome has several
+sites and each site has species counts listed.
+
+I use the dune data set to describe my questions which are in the comments.
+
+require(BiodiversityR)
+require(vegan)
+data(dune)
+data(dune.env)
+# Transform variables
+dune.trs <- decostand(dune,"log")
+
+# Calculate dissimilarities between each pair of observations, Bray-Curtis
+dune.bray <- vegdist(dune.trs, method = "bray")
+
+# Canonical Analysis of Principal Coordinates (CAP):
+# This is done for Management which acts like class data
+dune.cap <- CAPdiscrim(dune.bray ~ Management, dune.env
+,dist="bray",axes=4,m=0,permutations=9)
+
+# In Anderson and Willis 2003, page 518:
+# "... The canonical analysis (CAP) yielded two canonical axes,
+# with squared canonical correlations of delta1^2 = 0.610 and delta1^2
+= 0.478..."
+#
+# It seems that those values come from Eigenvalues (Correlations) of
+0.78101 and 0.69142
+http://www.stat.auckland.ac.nz/~mja/prog/CAP_UserNotes.pdf
+# QUESTION 1: How do I get similar values using CAPdiscrim?
+# The only Eigenvalue related value I find is dune.cap$tot
+
+# And later in anderson and Willis 2003:
+# "The two canonical test statistics were highly significant (P =
+0.0001 for both tests, using 9999 permutations)"
+# QUESTION 2: I did only 9 permutations in my example, but do I get
+similar results by using  dune.cap$manova => Pr(>F) 0.002224 ?
+
+Instead of CAPdiscrim should I use capscale in some form to achieve
+similar results as they did in A&W 2003?
+I'm still out of my comfort area here, so any help will be valuable.
+Cheers,
+-Kari
+
+Kari Lintulaakso, M.Sc.(Biosciences)
+
+Doctoral student
+Paleontology and Paleoecology
+Department of Geosciences and Geography
+University of Helsinki
+
+
+From jari.oksanen at oulu.fi  Tue Jun  7 06:54:16 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 07 Jun 2011 07:54:16 +0300
+Subject: [R-sig-eco] Anderson and Willis 2003,
+ CAP squared canonical correlations of delta^2
+In-Reply-To: <BANLkTi=UeM8OnXbnWWDDc0uTe2vtCAO=fA@mail.gmail.com>
+Message-ID: <CA1389A8.17379%jari.oksanen@oulu.fi>
+
+On 7/06/11 06:48 AM, "Kari Lintulaakso" <kari.lintulaakso at gmail.com> wrote:
+
+> Dear list,
+> 
+> I'm trying to follow the CAP analysis described in Anderson and Willis
+> 2003: Canonical Analysis of Principal Coordinates: A Useful Method of
+> Constrained Ordination for Ecology
+> For this I'm using CAPdiscrim (instead of capscale) as it seems to
+> follow the original description.
+> I'm using a data set with n different biomes. Each biome has several
+> sites and each site has species counts listed.
+> 
+> I use the dune data set to describe my questions which are in the comments.
+> 
+> require(BiodiversityR)
+> require(vegan)
+> data(dune)
+> data(dune.env)
+> # Transform variables
+> dune.trs <- decostand(dune,"log")
+> 
+> # Calculate dissimilarities between each pair of observations, Bray-Curtis
+> dune.bray <- vegdist(dune.trs, method = "bray")
+> 
+> # Canonical Analysis of Principal Coordinates (CAP):
+> # This is done for Management which acts like class data
+> dune.cap <- CAPdiscrim(dune.bray ~ Management, dune.env
+> ,dist="bray",axes=4,m=0,permutations=9)
+> 
+> # In Anderson and Willis 2003, page 518:
+> # "... The canonical analysis (CAP) yielded two canonical axes,
+> # with squared canonical correlations of delta1^2 = 0.610 and delta1^2
+> = 0.478..."
+> #
+> # It seems that those values come from Eigenvalues (Correlations) of
+> 0.78101 and 0.69142
+> http://www.stat.auckland.ac.nz/~mja/prog/CAP_UserNotes.pdf
+> # QUESTION 1: How do I get similar values using CAPdiscrim?
+So how close do you need to get?
+
+> 0.78101^2
+[1] 0.6099766
+> 0.69142^2
+[1] 0.4780616
+
+Which are identical in three decimal places to those values that A&W
+reported (and they reported squared values).
+
+> # The only Eigenvalue related value I find is dune.cap$tot
+What about dune.cap$manova$Eigenvalues?
+
+Cheers, Jari Oksanen
+
+
+From kari.lintulaakso at gmail.com  Tue Jun  7 08:10:05 2011
+From: kari.lintulaakso at gmail.com (Kari Lintulaakso)
+Date: Tue, 7 Jun 2011 16:10:05 +1000
+Subject: [R-sig-eco] Anderson and Willis 2003,
+ CAP squared canonical correlations of delta^2
+In-Reply-To: <CA1389A8.17379%jari.oksanen@oulu.fi>
+References: <BANLkTi=UeM8OnXbnWWDDc0uTe2vtCAO=fA@mail.gmail.com>
+	<CA1389A8.17379%jari.oksanen@oulu.fi>
+Message-ID: <BANLkTi=ThyYqha3NORV8SwqBK3yTE7PbkA@mail.gmail.com>
+
+Thank you Jari for quick responce,
+
+> So how close do you need to get?
+>
+>> 0.78101^2
+> [1] 0.6099766
+>> 0.69142^2
+> [1] 0.4780616
+
+Yes, that one I understood from Anderson's CAP manual.
+
+>> # The only Eigenvalue related value I find is dune.cap$tot
+> What about dune.cap$manova$Eigenvalues?
+
+Thank you for pointing this out for me. I was referring to the R
+documentation where there was no mention about these objects
+(directly). A misunderstanding here.
+
+When using dune.cap$manova$Eigenvalues:
+               [,1]     [,2]      [,3]         [,4]          [,5]         [,6]
+y[, group] 8.543145 0.825438 0.6292823 1.334105e-16 -5.300794e-17 1.572394e-17
+
+These values are identical to the Eigenvalues in Anderson's CAP manual
+and by ^2 I get the delta^2 values like in A&W2003?
+
+Can you tell why
+   > sum(dune.cap$manova$Eigenvalues)
+  [1] 9.997866
+is not same as
+  > dune.cap$tot
+  [1] 3.850346 ?
+Are they measuring different axes? dune.cap2$tot for (sum of all
+eigenvalues of PCoA) and dune.cap2$manova$Eigenvalues for the CAP
+axes?
+
+Can I compute the proportion of variance explained on each axis by:
+> dune.cap$manova$Eigenvalues/sum(dune.cap$manova$Eigenvalues)
+                [,1]       [,2]       [,3]         [,4]          [,5] ...
+y[, group] 0.8544969 0.08256142 0.06294166  ...
+
+And finally, does the dune.cap$manova give me the similar p as in the A&W2003?
+
+Thank you for answering to my (for you trivial) questions.
+
+-Kari
+
+
+On Tue, Jun 7, 2011 at 2:54 PM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+> On 7/06/11 06:48 AM, "Kari Lintulaakso" <kari.lintulaakso at gmail.com> wrote:
+>
+>> Dear list,
+>>
+>> I'm trying to follow the CAP analysis described in Anderson and Willis
+>> 2003: Canonical Analysis of Principal Coordinates: A Useful Method of
+>> Constrained Ordination for Ecology
+>> For this I'm using CAPdiscrim (instead of capscale) as it seems to
+>> follow the original description.
+>> I'm using a data set with n different biomes. Each biome has several
+>> sites and each site has species counts listed.
+>>
+>> I use the dune data set to describe my questions which are in the comments.
+>>
+>> require(BiodiversityR)
+>> require(vegan)
+>> data(dune)
+>> data(dune.env)
+>> # Transform variables
+>> dune.trs <- decostand(dune,"log")
+>>
+>> # Calculate dissimilarities between each pair of observations, Bray-Curtis
+>> dune.bray <- vegdist(dune.trs, method = "bray")
+>>
+>> # Canonical Analysis of Principal Coordinates (CAP):
+>> # This is done for Management which acts like class data
+>> dune.cap <- CAPdiscrim(dune.bray ~ Management, dune.env
+>> ,dist="bray",axes=4,m=0,permutations=9)
+>>
+>> # In Anderson and Willis 2003, page 518:
+>> # "... The canonical analysis (CAP) yielded two canonical axes,
+>> # with squared canonical correlations of delta1^2 = 0.610 and delta1^2
+>> = 0.478..."
+>> #
+>> # It seems that those values come from Eigenvalues (Correlations) of
+>> 0.78101 and 0.69142
+>> http://www.stat.auckland.ac.nz/~mja/prog/CAP_UserNotes.pdf
+>> # QUESTION 1: How do I get similar values using CAPdiscrim?
+> So how close do you need to get?
+>
+>> 0.78101^2
+> [1] 0.6099766
+>> 0.69142^2
+> [1] 0.4780616
+>
+> Which are identical in three decimal places to those values that A&W
+> reported (and they reported squared values).
+>
+>> # The only Eigenvalue related value I find is dune.cap$tot
+> What about dune.cap$manova$Eigenvalues?
+>
+> Cheers, Jari Oksanen
+>
+>
+
+
+
+-- 
+Kari Lintulaakso, M.Sc.(Biosciences)
+
+Doctoral student
+Paleontology and Paleoecology
+Department of Geosciences and Geography
+University of Helsinki
+
+* Mobile: +358 50 40 33391
+* Office:? +358 9 191 50842
+* Email: kari.lintulaakso at helsinki.fi
+* Post: Department of Geology, Gustaf H?llstr?min katu 2a (P.O Box
+64), 00014 University of Helsinki
+* Web page: http://blogs.helsinki.fi/lintulaa/
+
+
+From jari.oksanen at oulu.fi  Tue Jun  7 09:54:59 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 07 Jun 2011 10:54:59 +0300
+Subject: [R-sig-eco] PCA with vegan
+In-Reply-To: <1307389408035-6446676.post@n2.nabble.com>
+Message-ID: <CA13B403.17387%jari.oksanen@oulu.fi>
+
+On 6/06/11 22:43 PM, "amelie_can" <amelie_qcan at hotmail.com> wrote:
+
+> Hello all, 
+> 
+> I am doing a pca using the vegan library with the function rda on two
+> dataset: 
+> 1) species abundances (where I have my sites on the lines and the species
+> names on the columns, they were previously transformed with Hellinger)
+> 2) on a community mean weight analysis (where I have my sites on the lines
+> and my traits in columns). That second matrix was calculated by multiplying
+> two matrix (the first one was species abundances which were the relative
+> contribution of each species to its community (pi) was calculated and the
+> second one was quantitative traits associated to each species).
+> 
+> The first time I did the pca on each dataset, I wrote SCALE = FALSE, which
+> means that my data are centered by column but not reduced. From what I
+> understood, as we have the same kind of data within my matrix, we do not
+> need to reduce it, otherwise it would be a "double standardization". My
+> supervisor was not sure about that method as I got a result where my first
+> axis explained 84% of the variation of my response variable. They thought it
+> was too high to be right.
+> 
+> If I do a  SCALE = TRUE, it reduces my percent explained by my first axis. R
+> says that it  "Scale species to unit variance (like correlations)".
+> 
+Amelie,
+
+84% is high for community data. Probably your data are not very
+multivariate, but there is a species or a few species that contribute most
+to the variance, and PCA is happy when it projects those extreme species.
+
+You can inspect the equality of variances of species in data frame or matrix
+'x' using
+
+sd(x)^2
+sort(sd(x)^2, dec=TRUE)
+
+If most of the variance comes from a couple of species, it is easy to find a
+one- or two-dimensional solution that explains just those species.
+
+Having scale = TRUE makes all species contribute the same amount (1) to the
+variance, and PCA has more trouble in projecting all these species. Indeed,
+having scale = TRUE on Hellinger transformed data is a bit weird. I assume
+you have some reasons for using Hellinger transformation, but it may not be
+the most effective one if you want to reduce the influence of most abundant
+species that usually contribute most to the total variance.
+
+Cheers, Jari Oksanen
+
+
+From gavin.simpson at ucl.ac.uk  Tue Jun  7 10:09:29 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 07 Jun 2011 09:09:29 +0100
+Subject: [R-sig-eco] Logistic regression
+In-Reply-To: <BANLkTikCsbDQwVLxqETQCTxx-WNgCndrAQ@mail.gmail.com>
+References: <BANLkTikCsbDQwVLxqETQCTxx-WNgCndrAQ@mail.gmail.com>
+Message-ID: <1307434169.2416.3.camel@desktop.localdomain>
+
+On Mon, 2011-06-06 at 15:25 -0300, Luiz Ernesto Costa-Schmidt wrote:
+> Dear fellows from R-sig-Ecology,
+> 
+> Given that I am not familiar with general linear models, I would like to
+> consult you for a specific situation that I am facing with my dataset. I am
+> trying to calculate the predation risk of an heterospecific interaction
+> based on the size differences of the individuals and two other categorical
+> variables. My dataset is composed by the following variables:
+
+>From your description, it sounds like you mean a generalised linear
+model (the general linear model is something quite different).
+
+Anyway, is there a reason why you don't want to use the standard R
+function glm() to fit your logistic regression?
+
+At the very least, you might get more informative warnings about
+problems with the fit/data than with a general purpose optimisation
+routine that can be used for far more things than just logistic
+regression.
+
+G
+
+> Predation: binary (0 or 1)
+> 
+> Size difference: continuous (mm)
+> 
+> Treatment: categorical (group A, group B)
+> 
+> Pairing: categorical (species a-b, species b-a)
+> 
+> I am using the mle2 function from the package bbmle, based on a binomial
+> distribution.
+> 
+> The models that I am testing are the following:
+> 
+> Model 1: null model:
+> 
+> > m1 <- mle2 (k ~ dbinom (prob = p, size = 1), start = list (p = .5), data =
+> list (N =1, k=predation))
+> 
+> Model 2: predation ~ size difference:
+> 
+> > modlogist = function (x, a, b) {
+> 
+> >             exp (a + b * (x))/(1 + exp (a + b * (x)))
+> 
+> >             }
+> 
+> > m2 <- mle2 (k ~ dbinom (prob = modlogist (size difference, a, b), size =
+> 1),
+> 
+> + start = list (a = 0, b =0), data = list (N = 1, k = predation))
+> 
+> Model 3: predation ~ size difference*treatment:
+> 
+> > start.3 = as.list (coef (m2))
+> 
+> > m3 <- mle2 (k ~ dbinom (prob = modlogist (size difference, a, b), size =
+> 1), start = start.3,
+> 
+> + data = list (N = 1, k = predation), parameters = list (a ~ treatment, b ~
+> treatment))
+> 
+> 
+> 
+> Model 4: predation ~ size difference*pairing
+> 
+> > start.4 = as.list (coef (m2))
+> 
+> > m4 <- mle2 (k ~ dbinom (prob = modlogist (size difference, a, b), size =
+> 1), start = start.4,
+> 
+> + data = list (N = 1, k = predation), parameters = list (a ~ pairing, b ~
+> pairing))
+> 
+> 
+> 
+> Model 5: predation ~ size difference*treatment:pairing
+> 
+> > start.5 = as.list (coef (m2))
+> 
+> > m5 <- mle2 (k ~ dbinom (prob = modlogist (size difference, a, b), size =
+> 1), start = start.5,
+> 
+>                 + data = list (N = 1, k = predation), parameters = list (a ~
+> treat:pair, b ~ treat:pair))
+> 
+> 
+> 
+> For one of the pairing groups (let say species a-b) not a single predation
+> event occurred. When I call the summary of the 4th model, the standard
+> errors of the estimates are absurdly high. Initially I thought that this
+> could be related to the optimization algorithm. However, even performing
+> some of the basic changes in the mle2 optimization parameters I could not
+> find a proper solution.
+> 
+> Can anyone suggest me where to find the necessary information in order to
+> solve this situation? Are there any other points that I am missing here?
+> 
+> Thanks in advance!
+> 
+> Ernesto
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From klara.dolos at uni-bayreuth.de  Tue Jun  7 11:45:11 2011
+From: klara.dolos at uni-bayreuth.de (Klara Dolos)
+Date: Tue, 7 Jun 2011 11:45:11 +0200
+Subject: [R-sig-eco] pDCA
+Message-ID: <81A1D2D40FA54AD28EA23D30698FBBB1@geo.unibayreuth.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110607/798e7156/attachment.pl>
+
+From sebastiankr at hotmail.com  Tue Jun  7 12:40:18 2011
+From: sebastiankr at hotmail.com (sebastiankr)
+Date: Tue, 7 Jun 2011 03:40:18 -0700 (PDT)
+Subject: [R-sig-eco] ANOSIM pairwise test
+Message-ID: <1307443218581-6448966.post@n2.nabble.com>
+
+Dear all
+
+I am doing a comparison of forest types based on species compostion. I have
+done a similarity matrix and then ran a ANOSIM, where I found significant
+differences. Is there an R function to do pairwise comparisons, in order to
+identify which of the groups are different?
+
+Many thanks,
+
+Sebastian Kepfer 
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ANOSIM-pairwise-test-tp6448966p6448966.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From jari.oksanen at oulu.fi  Tue Jun  7 12:50:56 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 07 Jun 2011 13:50:56 +0300
+Subject: [R-sig-eco] pDCA
+In-Reply-To: <81A1D2D40FA54AD28EA23D30698FBBB1@geo.unibayreuth.de>
+Message-ID: <CA13DD40.17399%jari.oksanen@oulu.fi>
+
+On 7/06/11 12:45 PM, "Klara Dolos" <klara.dolos at uni-bayreuth.de> wrote:
+
+> Hallo all,
+> 
+> I ?d like to calculate a partial detrended corresponcence analysis to get the
+> gradient length (and the axis coordinates) in sd for one paricular
+> environmental variable. I tried to use decorana(vegan), but the function
+> cannot perform partial analysis (?). Is there an R function that does this
+> analysis or is there a reason why it should not be done?
+> 
+> As an alternative I could employ an environmental fit (line enfit(vegan))
+> after calculating a dca and take the coordinates on the vector?
+> 
+> I would be happy if anybody could give me hints on literature or an R package
+> I could use.
+> 
+Kalra,
+
+As far as I know, vegan has the only DCA implementation in R similar to the
+original DECORANA. You cannot use that for partial or constrained detrended
+analysis. This would require changing the original Fortran code which in
+turn requires a good knowledge of the original design of the function and
+cannot be done casually. I have no plans to make the changes needed for
+partial or constrained DCA.
+
+I abstain from commenting the use of DCA in estimating gradient lengths (but
+don't recommend anybody to do so).
+
+Cheers, Jari Oksanen
+
+
+From bianno2 at uic.edu  Tue Jun  7 14:46:56 2011
+From: bianno2 at uic.edu (Iannone, Basil)
+Date: Tue, 7 Jun 2011 07:46:56 -0500
+Subject: [R-sig-eco] partial Mantel test
+Message-ID: <0bf190fedb950b373fedc1bbded7ab89.squirrel@webmail.uic.edu>
+
+Dear r users,
+
+I have a very quick and probably very easy question pertaining to the
+conducting of a partial Mantel test in the vegan package using the code
+below.
+
+mantel.partial(xdis, ydis, zdis, method = "pearson", permutations = 999,
+strata)
+
+So I want to test for a relationship between a species distance matrix A and
+an environmental distance matrix B while controlling for (considering the
+effects of) a third distance matrix C.
+
+So what I need to know is if I am correct in my understanding that using the
+above code I would enter A as "xdis," B as "ydis," and C (the extra matrix
+that I want to control for) as "zdis."
+
+Could someone please tell me if I am correct and if I am not please let me
+know how to specify the matrices correctly.
+
+Thanks for the help,
+
+
+
+-- 
+Basil Iannone
+University of Illinois at Chicago
+Department of Biological Sciences (MC 066)
+845 W. Taylor St.
+Chicago, IL  60607-7060
+Email: bianno2 at uic.edu
+Phone: 312-355-3231
+Fax: 312-413-2435
+http://www2.uic.edu/~bianno2
+
+
+From gavin.simpson at ucl.ac.uk  Tue Jun  7 15:05:53 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 07 Jun 2011 14:05:53 +0100
+Subject: [R-sig-eco] partial Mantel test
+In-Reply-To: <0bf190fedb950b373fedc1bbded7ab89.squirrel@webmail.uic.edu>
+References: <0bf190fedb950b373fedc1bbded7ab89.squirrel@webmail.uic.edu>
+Message-ID: <1307451953.14311.14.camel@prometheus.geog.ucl.ac.uk>
+
+On Tue, 2011-06-07 at 07:46 -0500, Iannone, Basil wrote:
+> Dear r users,
+> 
+> I have a very quick and probably very easy question pertaining to the
+> conducting of a partial Mantel test in the vegan package using the code
+> below.
+> 
+> mantel.partial(xdis, ydis, zdis, method = "pearson", permutations = 999,
+> strata)
+> 
+> So I want to test for a relationship between a species distance matrix A and
+> an environmental distance matrix B while controlling for (considering the
+> effects of) a third distance matrix C.
+> 
+> So what I need to know is if I am correct in my understanding that using the
+> above code I would enter A as "xdis," B as "ydis," and C (the extra matrix
+> that I want to control for) as "zdis."
+
+Yes, that is correct - at least to my reading of the help page and the
+code.
+
+HTH
+
+G
+
+> Could someone please tell me if I am correct and if I am not please let me
+> know how to specify the matrices correctly.
+> 
+> Thanks for the help,
+> 
+> 
+> 
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From luizernesto at gmail.com  Tue Jun  7 16:15:09 2011
+From: luizernesto at gmail.com (Luiz Ernesto Costa-Schmidt)
+Date: Tue, 7 Jun 2011 11:15:09 -0300
+Subject: [R-sig-eco] Logistic regression
+In-Reply-To: <1307434169.2416.3.camel@desktop.localdomain>
+References: <BANLkTikCsbDQwVLxqETQCTxx-WNgCndrAQ@mail.gmail.com>
+	<1307434169.2416.3.camel@desktop.localdomain>
+Message-ID: <BANLkTi=cFNiA6CxKBjf2vT0bG824uJoLOw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110607/ee66eb8e/attachment.pl>
+
+From amelie_qcan at hotmail.com  Tue Jun  7 18:34:31 2011
+From: amelie_qcan at hotmail.com (amelie_can)
+Date: Tue, 7 Jun 2011 09:34:31 -0700 (PDT)
+Subject: [R-sig-eco] PCA with vegan
+In-Reply-To: <CA13B403.17387%jari.oksanen@oulu.fi>
+References: <1307389408035-6446676.post@n2.nabble.com>
+	<CA13B403.17387%jari.oksanen@oulu.fi>
+Message-ID: <1307464471166-6450406.post@n2.nabble.com>
+
+Thank you Jari for your help! A few precision follows....
+
+My project evaluates temporal dynamics of vegetation in a restoration
+project. So, there is tons of double zero and indeed, a few species are
+highly dominant in the data. Actually, I should have precised that my matrix
+of species abundance have quite a "normal variation" of species distribution
+through space with values around 34 and 24% for the first two axis. So,
+Hellinger transformation seems to be appropriate here. 
+
+The 84 % is the result obtained with the matrix of community mean weight
+analysis, which give the weight of ecological characteristics of the plant
+present. That matrix was not Hellinger transformed but we calculated species
+abundances based on their relative contribution of each species to its
+community (pi) to ensure comparability of two different dataset. This is a
+kind of standardization. 
+
+My supervisor said a PCA analysis must be either standardized with either a
+correlation or a covariance technique before hand. A correlation seems more
+appropriate for my data, which is what scale = TRUE does, right? But I agree
+with you that species characteristics should not contribute the same amount
+to the variance as the main hypothesis I am trying to answer is to find
+which characteristics of the species explains their presence in the site
+studied. 
+
+I tried to rerun the analysis with Hellinger transformed data and obtained
+80% of my first axis, so it does not seems appropriate either.
+
+This is the code I used: pca.results= rda(x, scale=FALSE). This analysis
+seems right to me for the answer I am trying to get.  
+
+I inspected the variance as you proposed and it seems that the first 8
+variables are the most important. 
+variable 1: 0.0527226189 
+variable 2: 0.0452730816 
+variable 3: 0.0432572385 
+variable 4: 0.0347574432 
+variable 5: 0.0295173212 
+variable 6: 0.0257054085 
+variable 7: 0.0156271508 
+variable 8: 0.0105172472 
+variable 9: 0.0085778112 
+variable 10: 0.0047607918 
+variable 11: 0.0042802434 
+variable 12: 0.0016321132 
+variable 13: 0.0007667426 
+
+I guess like you said it means that my traits of the species present did not
+vary that much and were mainly explained by the first 8. If you see any
+mistake in this reasoning, please let me know! 
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/PCA-with-vegan-tp6446676p6450406.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From eric.j.pedersen at gmail.com  Tue Jun  7 21:57:15 2011
+From: eric.j.pedersen at gmail.com (Eric Pedersen)
+Date: Tue, 7 Jun 2011 15:57:15 -0400
+Subject: [R-sig-eco] Logistic regression
+In-Reply-To: <BANLkTi=y-1bs7jr9VtVEmKNLzkUC9vZLqA@mail.gmail.com>
+References: <BANLkTi=y-1bs7jr9VtVEmKNLzkUC9vZLqA@mail.gmail.com>
+Message-ID: <BANLkTinY2Jo_XNTX5SGvY=uNb7qX7qN0Jg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110607/cc756715/attachment.pl>
+
+From pdixon at iastate.edu  Wed Jun  8 14:24:02 2011
+From: pdixon at iastate.edu (Philip Dixon)
+Date: Wed, 08 Jun 2011 07:24:02 -0500
+Subject: [R-sig-eco] Logistic Regression
+In-Reply-To: <mailman.1.1307527201.2788.r-sig-ecology@r-project.org>
+References: <mailman.1.1307527201.2788.r-sig-ecology@r-project.org>
+Message-ID: <4DEF69E2.9090601@mail.iastate.edu>
+
+Luiz,
+
+Gavin gave a nice explanation.  Another way to think about the issue is 
+to remember that Xb models the logit of the probability of predation.  
+When P[pred] = 0, the logit is -inf.  Hence, the b coefficient for that 
+group is estimated at -inf (or usually something between -12 and -18, 
+because the software gives up and P[pred | Xb = -18] is numerically 
+indistinguishable from 0.  This is still useful, because the b's for 
+other covariates still have meaning, even for that group with P[pred = 
+0].  If you look at predicted Xb's for obs in the group with P[pred = 
+0], you will see they are not exactly the same (on the Xb scale).  
+That's the effect of the other covariates.  Those effects are estimated 
+from the observed covariate effect in other groups.   When you 
+backtransform from Xb to P[pred], the predicted P[pred] are all 
+essentially 0, which is fine.  So, use all the groups!
+
+If you really want estimates of the coefficients, you should consider 
+regularizing, as suggested by Eric.  There are Bayesian approaches and 
+penalized likelihoods, e.g., Firth's penalized likelihood.  The Bayesian 
+approach is probably the easier to compute.
+
+However, your e-mail suggested you fit this model to use in a model 
+comparison.  All you need for model comparison is the lnL or something 
+derived from that (AIC, BIC, ...).  The lnL is computed correctly even 
+if the estimate is -12 or -18 or -inf.   If all you need is a model 
+comparison, no need to regularize.
+
+Best wishes,
+Philip Dixon
+
+
+From r.m.krug at gmail.com  Thu Jun  9 12:36:10 2011
+From: r.m.krug at gmail.com (Rainer M Krug)
+Date: Thu, 9 Jun 2011 12:36:10 +0200
+Subject: [R-sig-eco] Packaging simecol object into package
+Message-ID: <BANLkTimFzYP18FmuL9vjn220kV2jLi1QOuzQHyfB81UdFZEkLg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110609/235abfdc/attachment.pl>
+
+From Thomas.Petzoldt at tu-dresden.de  Thu Jun  9 14:24:33 2011
+From: Thomas.Petzoldt at tu-dresden.de (Thomas Petzoldt)
+Date: Thu, 09 Jun 2011 14:24:33 +0200
+Subject: [R-sig-eco] Packaging simecol object into package
+In-Reply-To: <BANLkTimFzYP18FmuL9vjn220kV2jLi1QOuzQHyfB81UdFZEkLg@mail.gmail.com>
+References: <BANLkTimFzYP18FmuL9vjn220kV2jLi1QOuzQHyfB81UdFZEkLg@mail.gmail.com>
+Message-ID: <4DF0BB81.1000006@tu-dresden.de>
+
+Dear Rainer,
+
+there are several methods to do this and they are, in principle, 
+described in Section 1.3 of the simecol vignette "Dierent ways to store 
+simObjects".
+
+
+1) In package simecol, all example objects are simply stored as .Rdata 
+in the /data  directory. Just create your objects, then run 
+package.skeleton() and move the data objects to your package.
+
+However, method (1) had some drawbacks, therefore:
+
+2) in package simecolModels, I use a "generator" function (see example 
+below), similarly to your makeASM() idea.
+
+
+The package simecolModels, that is available from
+
+R-Forge http://r-forge.r-project.org/projects/simecol/
+
+(or http://www.simecol.de).
+
+may serve as a template.
+
+Hope it helps
+
+Thomas
+
+
+
+
+
+genLV <- function() {
+   new("odeModel", main = function(time, x, p) {
+     dx1 <- p["k1"] * x[1] - p["k2"] * x[1] * x[2]
+     dx2 <- -p["k3"] * x[2] + p["k2"] * x[1] * x[2]
+     list(c(dx1, dx2))
+  },
+  parms = c(k1 = 0.2, k2 = 0.2, k3 = 0.2), times = c(from = 0,
+  to = 100, by = 0.5), init = c(prey = 0.5, predator = 1),
+  solver = "lsoda")
+}
+
+Now, the function contains the instruction, how R can create a new 
+instance of such a model.
+
+The simecol object is not created yet, but a call to the creator 
+function can bring it to live:
+
+lv1 <- genLV()
+plot(sim(lv1))
+
+
+
+-- 
+Dr. Thomas Petzoldt
+(limnology and ecological modelling)
+
+Technische Universitaet Dresden
+Faculty of Forest, Geo and Hydro Sciences
+Institute of Hydrobiology
+01062 Dresden, Germany
+
+E-Mail: thomas.petzoldt at tu-dresden.de
+http://tu-dresden.de/Members/thomas.petzoldt
+
+
+From benmayala2 at gmail.com  Thu Jun  9 18:08:04 2011
+From: benmayala2 at gmail.com (Ben Mayala)
+Date: Thu, 9 Jun 2011 19:08:04 +0300
+Subject: [R-sig-eco] GARP Model LPT values
+Message-ID: <BANLkTikvAn3Zmvnx44wg5UpzBYw_fM6peQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110609/f7d4dea9/attachment.pl>
+
+From scttchamberlain4 at gmail.com  Thu Jun  9 23:12:35 2011
+From: scttchamberlain4 at gmail.com (Scott Chamberlain)
+Date: Thu, 9 Jun 2011 16:12:35 -0500
+Subject: [R-sig-eco] vegan Mantel test
+Message-ID: <0BCA9D48D53D4B898F66F9957CCF9F2B@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110609/f64a1bf1/attachment.pl>
+
+From jari.oksanen at oulu.fi  Fri Jun 10 00:06:43 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 10 Jun 2011 01:06:43 +0300
+Subject: [R-sig-eco] vegan Mantel test
+In-Reply-To: <0BCA9D48D53D4B898F66F9957CCF9F2B@gmail.com>
+Message-ID: <CA171EA3.17493%jari.oksanen@oulu.fi>
+
+On 10/06/11 00:12 AM, "Scott Chamberlain" <scttchamberlain4 at gmail.com>
+wrote:
+
+> How is it possible that the upper confidence limit of mantel's r is below that
+> of the estimate r value itself?
+> 
+> For example, using the example in the vegan documentation:
+> require(vegan)
+> data(varespec) data(varechem) veg.dist <- vegdist(varespec) # Bray-Curtis
+> env.dist <- vegdist(scale(varechem), "euclid") mantel(veg.dist, env.dist)
+> Mantel statistic based on Pearson's product-moment correlation Call:
+> mantel(xdis = veg.dist, ydis = env.dist) Mantel statistic r: 0.3047
+> Significance: 0.001 Empirical upper confidence limits of r: 90% 95% 97.5% 99%
+> 0.110 0.145 0.173 0.196 Based on 999 permutations
+> 
+> 
+> The 95% confidence limit is below that of the 0.3047 estimate. I must be
+> reading this wrong. Is the 95% limit supposed to be the amount +/- of the
+> estimate of r? 
+> 
+Perhaps your observed value is "significant" in which case it is outside 95%
+of the permuted values?
+
+Cheers, Jari Oksanen
+
+
+From scttchamberlain4 at gmail.com  Fri Jun 10 00:08:59 2011
+From: scttchamberlain4 at gmail.com (Scott Chamberlain)
+Date: Thu, 9 Jun 2011 17:08:59 -0500
+Subject: [R-sig-eco] vegan Mantel test
+In-Reply-To: <CA171EA3.17493%jari.oksanen@oulu.fi>
+References: <CA171EA3.17493%jari.oksanen@oulu.fi>
+Message-ID: <219E5F5C780D4D37854A70423A73B9A0@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110609/e3c61bc5/attachment.pl>
+
+From hmorzarialuna at gmail.com  Fri Jun 10 21:12:47 2011
+From: hmorzarialuna at gmail.com (Hem Nalini Morzaria Luna)
+Date: Fri, 10 Jun 2011 12:12:47 -0700
+Subject: [R-sig-eco] question on using ghlt (multcomp) for mixed models with
+	lme (nlme)
+Message-ID: <BANLkTin9ya_pbOX3LORJbJAA40T_n_3_vQ@mail.gmail.com>
+
+Hi:
+
+I am comparing biomass response in a an experiment with  three factors
+(N-two levels, W-three levels, and S-two levels) using lme. Unit is
+just specified as a block effect. (Data example below)
+
+This is my model
+
+> w.lme <- lme(fixed=log(Ry.above) ~ W * S * N, data= Mono, random=~1 | Unit/W/N)
+
+I'd like to do multiple comparisons.
+In this case, interaction terms of W:Species is slightly significant
+(p 0.07) so if I want to only test for W within each Species.
+
+I tried the following code to get a contrast matrix for those factors
+
+> library(contrast)
+> contrast(w.lme, list(W=c('High','Medium','Low'), Species = 'Tc'), list(W=c('High','Medium','Low'), Group = 'Sv'), type='average')
+
+But I get
+
+>Error in gendata.default(fit = list(modelStruct = list(reStruct = list( :
+  not enough factors
+
+I was also trying to understand what the correct way to specify
+multiple comparions for the whole model is:
+
+One factor is straightforward
+> comp.Species <- glht(w.lme, linfct=mcp(Species="Tukey"))
+
+To specify all comparisons I know mcp will not take interactions but
+the linfct argument can use a matrix of comparisons but I am unclear
+what is the correct approach to set up that matrix.
+
+I tried:
+
+1) matrix from fixed effects
+
+> K <- diag(length(fixef(w.lme)))
+> glht(w.lme, linfct=K)
+
+2) matrix using contrasts
+
+> matrix.con = contrasts(Mono$S:Mono$N:Mono$W)
+#matrix dimension is [11,12]
+#so I added one more column, results in this matrix being equal to K(above)
+> missing.column = matrix(0,12,1)
+> missing.column[1,1] = 1
+con.matrix = cbind(missing.column,matrix.con)
+>glht(w.lmer, linfct = con.matrix)
+
+1 & 2 give the same result from glht. Is it correct to assume the rows
+in K are the same as in the contrast matrix?
+
+3) Model matrix using model.matrix
+> lme.matrix <- model.matrix(w.lme, data=Mono)
+glht(w.lmer, linfct = lme.matrix)
+
+In 3) lme.matrix dimension is [36,12] and the results of glht repeat
+three times each. I am having a hard time understanding why this is
+and what the rows and columns in the matrix represent. Colnames are an
+incomplete set of contrasts.
+
+What is the correct approach to specify all comparisons?
+
+
+Any help is appreciated. Thank you!
+
+Hem Nalini Morzaria Luna
+
+Data (Mono)
+      N      W Unit Species  Ry.above
+1  High   High    1      Sv 0.6156346
+2  High   High    2      Sv 0.6235052
+3  High   High    3      Sv 0.6985453
+4   Low   High    4      Sv 1.7452381
+5   Low   High    5      Sv 0.8424228
+6   Low   High    6      Sv 0.6643357
+7  High Medium    7      Sv 0.8251745
+8  High Medium    8      Sv 0.7424867
+9  High Medium    9      Sv 0.9362663
+10  Low Medium   10      Sv 1.0038536
+11  Low Medium   11      Sv 0.7767575
+12  Low Medium   12      Sv 1.5007492
+13 High    Low   13      Sv 0.9536121
+14 High    Low   14      Sv 0.9799515
+15 High    Low   15      Sv 0.5596921
+16  Low    Low   16      Sv 0.8706301
+17  Low    Low   17      Sv 1.0032415
+18  Low    Low   18      Sv 1.3620130
+19 High   High    1      Tc 0.6514929
+20 High   High    2      Tc 0.4309266
+21 High   High    3      Tc 0.2800695
+22  Low   High    4      Tc 0.7883481
+23  Low   High    5      Tc 0.4541833
+24  Low   High    6      Tc 0.6007958
+25 High Medium    7      Tc 0.6987778
+26 High Medium    8      Tc 0.2240063
+27 High Medium    9      Tc 0.1477910
+28  Low Medium   10      Tc 0.2017751
+29  Low Medium   11      Tc 0.3621421
+30  Low Medium   12      Tc 0.2590503
+31 High    Low   13      Tc 0.4265925
+32 High    Low   14      Tc 0.5525204
+33 High    Low   15      Tc 0.4196785
+34  Low    Low   16      Tc 0.4507284
+35  Low    Low   17      Tc 1.1027065
+36  Low    Low   18      Tc 0.3676259
+
+
+From xurde.sanchez at gmail.com  Tue Jun 14 13:30:09 2011
+From: xurde.sanchez at gmail.com (Xurde Sanchez)
+Date: Tue, 14 Jun 2011 13:30:09 +0200
+Subject: [R-sig-eco] Kriging interpolation and plot
+Message-ID: <BANLkTik+sJ8YDw_hEBjPNY8Not1y1znRVw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110614/d33f31cd/attachment.pl>
+
+From rroa at azti.es  Wed Jun 15 09:43:42 2011
+From: rroa at azti.es (=?iso-8859-1?Q?Rub=E9n_Roa?=)
+Date: Wed, 15 Jun 2011 09:43:42 +0200
+Subject: [R-sig-eco] Kriging interpolation and plot
+In-Reply-To: <BANLkTik+sJ8YDw_hEBjPNY8Not1y1znRVw@mail.gmail.com>
+References: <BANLkTik+sJ8YDw_hEBjPNY8Not1y1znRVw@mail.gmail.com>
+Message-ID: <5CD78996B8F8844D963C875D3159B94A025C62E1@DSRCORREO.azti.local>
+
+I think you want something like Fig. 4 in this paper of mine:
+
+Roa-Ureta, R., and Niklitschek, E. 2007. Biomass estimation from surveys with likelihood-based geostatistics.  -  ICES Journal of Marine
+Science, 64: 1723-1734.
+
+There I put side by side a plot of the data from a scallop bed, with sizes and color of points proportional to scallop density, and the predicted density field (i.e. kriging). I used geoR.
+
+Regarding your errors with geoR, I suggest you create a proper geodata object instead of passing the coordinates and the density as separate vectors.
+See
+
+?as.geodata
+
+The error message you are receiving is not from krige.conv() but from rep() because your coords do not have the right number of rows. This is all caused by you passing the data erroneously. Thus my suggestion to create a proper geodata object, that will solve your problem and will help you understand your spatial prediction.
+
+If you are bent on using geoR (i.e. you want to do spatial modeling using pure-likelihood or Bayesian inference) I can send you a well-commented script with my approach to spatial modeling as shown in the paper and applications above. The script includes how to make my Fig. 4 which is what apparently you want to do with your data.
+
+HTH
+
+Rub?n
+
+____________________________________________________________________________________ 
+
+Dr. Rub?n Roa-Ureta
+AZTI - Tecnalia / Marine Research Unit
+Txatxarramendi Ugartea z/g
+48395 Sukarrieta (Bizkaia)
+SPAIN
+
+
+
+> -----Mensaje original-----
+> De: r-sig-ecology-bounces at r-project.org 
+> [mailto:r-sig-ecology-bounces at r-project.org] En nombre de 
+> Xurde Sanchez
+> Enviado el: martes, 14 de junio de 2011 13:30
+> Para: r-sig-ecology at r-project.org
+> Asunto: [R-sig-eco] Kriging interpolation and plot
+> 
+> Dear all,
+> 
+>  I would like to perform a plot with kriging interpolation. 
+> My datas are very simple. I have two distances (x,y) measured 
+> in meters, which are distance to a river mouth and depth and 
+> in those points we measured many parameter as Temperature, 
+> Conductivity, ...
+> 
+> So our data are something like this:
+> 
+> x          y          Temp
+> 
+> 0          1          20.5
+> 
+> 0          2          20.5
+> 
+> 0          3          20.2
+> 
+> 0          4          19.5
+> 
+> 1          1          20.5
+> 
+> 1          2          20.5
+> 
+> 1          3          20.2
+> 
+> 1          4          19.5
+> 
+> 
+> 
+> We want to perform a plot with those data and with a kriging 
+> interpolation, but we are not able to finish it properly. We 
+> have tried *gstat* and *geoR*packages without success. In the 
+> last case, geoR, we almost got it.
+> 
+> We used those scripts:
+> 
+> 
+> 
+> library(geoR)
+> 
+> 
+> 
+> data02<-read.table("Coord&Temp.txt",header=TRUE, sep="\t", 
+> na.strings="NA", dec=".", strip.white=TRUE, row.names=1)
+> 
+> attach(data02)
+> 
+> names(data02)
+> 
+> summary(data02)
+> 
+> 
+> 
+> datacoord<-read.table("coords.txt", header=TRUE, sep="\t", 
+> na.strings="NA", dec=".", strip.white=TRUE)
+> 
+> attach(datacoord)
+> 
+> names(datacoord)
+> 
+> summary(datacoord)
+> 
+> datacoord
+> 
+> datacoord<-c(datacoord)
+> 
+> datacoord
+> 
+> 
+> 
+> vdata<-c(Temp)
+> 
+> vdata
+> 
+> 
+> 
+> 
+> 
+> plot(xcoord,ycoord, xlab="X-Coordinate", ylab="Y-Coordinate")
+> 
+> 
+> 
+> j<-expand.grid (seq (0.00,35.50,1), seq(-16.000,0.000,1))
+> 
+> 
+> 
+> j
+> 
+> j[1:612,]
+> 
+> names(j)<-c("xcoord","ycoord")
+> 
+> j[1:612,]
+> 
+> 
+> 
+> 
+> 
+> plot(xcoord,ycoord, xlab="X-Coordinate", ylab="Y-Coordiante")
+> 
+> 
+> 
+> addgridtoplot(j) #it doesn't work
+> 
+> 
+> 
+> predgrid<-k
+> 
+> 
+> 
+> k<-krige.control(type.krige="ok", cov.model= "spherical",
+> 
+>             cov.pars=c(12920.1376,79505.96), nugget=704.3657)
+> 
+> k
+> 
+> 
+> 
+> k2<-krige.conv(vdata, locations=predgrid, borders=NULL, krige=k)
+> 
+> 
+> 
+> I must be doing something wrong , because  when I execute the 
+> last command R provides me an error:
+> 
+> 
+> 
+> k2<-krige.conv(vdata, locations=predgrid, borders=NULL, krige=k)
+> 
+> krige.conv: model with constant mean
+> 
+> Error en rep(1, nrow(geodata$coords)) : argumento 'times' inv?lido
+> 
+> Adem?s: Mensajes de aviso perdidos
+> 
+> In krige.conv(datacoord, vdata, locations = predgrid, krige = j) :
+> 
+>   krige.conv: coordinates provided as a vector, assuming one 
+> spatial dimension
+> 
+> 
+> 
+> Which are my mistakes? I think it is relate with my data but 
+> in geoR instructions we can read that if you don't have 
+> geodata then  coords and data must be provided instead.??????
+> 
+> 
+> 
+> Many thanks in advance for your help and for your answers!
+> 
+> 
+> 
+> Best regards,
+> 
+> 
+> 
+> 
+> 
+> Jorge R. Sanchez
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> 
+
+
+From a-gregmc at microsoft.com  Thu Jun 16 14:46:12 2011
+From: a-gregmc at microsoft.com (Greg McInerny (Brook Street))
+Date: Thu, 16 Jun 2011 12:46:12 +0000
+Subject: [R-sig-eco] Invitation to Partcipate: Species Distribution
+ Modelling Survey (niches, climate envelopes, habitat suitability etc...)
+Message-ID: <F40E2C430CC2DD4D9C0873A2FAC976B41CB51B12@DB3EX14MBXC304.europe.corp.microsoft.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110616/aa43a556/attachment.pl>
+
+From momadou at yahoo.fr  Fri Jun 17 08:48:37 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Fri, 17 Jun 2011 07:48:37 +0100 (BST)
+Subject: [R-sig-eco] Draw a nomogram
+Message-ID: <802393.21245.qm@web28606.mail.ukl.yahoo.com>
+
+Hi,
+I want to
+do a nomogram wich express Ignition probability =(Z) determined by FMC: Fuel
+Moisture Content= (X) and Fuel load = (Y). Please see an example in attached
+file
+Is GAM a
+good way to do nomogram using vis.gam function?
+Thanks for
+your help. 
+Mamadou 
+
+From Kay.Cichini at uibk.ac.at  Fri Jun 17 13:24:13 2011
+From: Kay.Cichini at uibk.ac.at (Kay Cecil Cichini)
+Date: Fri, 17 Jun 2011 13:24:13 +0200
+Subject: [R-sig-eco] adonis and contrasts
+Message-ID: <20110617132413.20070ope8zjowlms@web-mail.uibk.ac.at>
+
+hello all,
+
+in https://stat.ethz.ch/pipermail/r-sig-ecology/2010-April/001221.html  
+jari oksanen describes how to use custom contrasts with adonis.
+
+i'm curious whether there's also a way to yield the according  
+significance tests - else i don't see much purpose in customizing your  
+contrasts..
+
+yours,
+kay
+
+
+From ana.nuno08 at imperial.ac.uk  Mon Jun 20 18:23:31 2011
+From: ana.nuno08 at imperial.ac.uk (Ana Nuno)
+Date: Mon, 20 Jun 2011 17:23:31 +0100
+Subject: [R-sig-eco] spatially autocorrelated wildlife counts
+In-Reply-To: <BANLkTimkPpZ4POiZOA3AOeZZ32z9nd+qSg@mail.gmail.com>
+References: <BANLkTimkPpZ4POiZOA3AOeZZ32z9nd+qSg@mail.gmail.com>
+Message-ID: <BANLkTik9ASTowtRKPJpqOYn29zvZ-COpug@mail.gmail.com>
+
+Dear list,
+
+I have a few beginners' questions and I would greatly appreciate your
+comments and suggestions.
+
+I am trying to simulate the distribution of a ungulate species across
+a landscape, where animals of this species are spatially aggregated
+(exact aggregation level is unknown so I'll have a range of values). I
+know the "true" size of this population because it results from my
+previously built biological model. After spreading these, let's say 10
+000, animals across the landscape, I'll simulate counts using fixed
+transects.
+
+My response variable is number of animals per cell. I am assuming a
+zero-inflated negative binomial distribution and, to simulate spatial
+autocorrelation, I'm planning to use spatial lag models (number of
+animals in each cell should be affected by number of animals in
+neighbour cells). Because my landscape matrix has 250 000 cells, I'm
+using the function powerWeights and not invIrW (spdep package).
+
+My questions are:
+- approximately 70% of cells should have no animals (hence the
+zero-inflated distribution) but after applying the spatial weights,
+these cells are populated. How could I control this (i.e., "forbid"
+70% of cells to have animals allocated)?
+
+- the total population is known so, after incorporating spatial
+autocorrelation, I need to have exactly 10 000 animals across the
+landscape. Any advice on how to do this? Also, is there a way to have
+sum(uncorrelated variable)=sum(correlated variable)?
+
+Finally, I'd also appreciate any comments on my approach to this
+simulation. Please, do let me know about alternative approaches!
+
+Thanks in advance!
+
+
+--
+Ana Nuno
+
+
+From momadou at yahoo.fr  Wed Jun 22 14:04:49 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Wed, 22 Jun 2011 13:04:49 +0100 (BST)
+Subject: [R-sig-eco] Problem with mfrow function
+Message-ID: <277385.58183.qm@web28612.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110622/4ff01284/attachment.pl>
+
+From rroa at azti.es  Wed Jun 22 14:11:25 2011
+From: rroa at azti.es (=?iso-8859-1?Q?Rub=E9n_Roa?=)
+Date: Wed, 22 Jun 2011 14:11:25 +0200
+Subject: [R-sig-eco] Problem with mfrow function
+In-Reply-To: <277385.58183.qm@web28612.mail.ukl.yahoo.com>
+References: <277385.58183.qm@web28612.mail.ukl.yahoo.com>
+Message-ID: <5CD78996B8F8844D963C875D3159B94A026266CD@DSRCORREO.azti.local>
+
+mfrow is not a function, it is an argument of function par.
+Use arguments mar and oma of function par to change space between plots.
+Check
+
+?par
+
+HTH
+
+Rub?n
+
+____________________________________________________________________________________ 
+
+Dr. Rub?n Roa-Ureta
+AZTI - Tecnalia / Marine Research Unit
+Txatxarramendi Ugartea z/g
+48395 Sukarrieta (Bizkaia)
+SPAIN
+
+
+
+> -----Mensaje original-----
+> De: r-sig-ecology-bounces at r-project.org 
+> [mailto:r-sig-ecology-bounces at r-project.org] En nombre de momadou sow
+> Enviado el: mi?rcoles, 22 de junio de 2011 14:05
+> Para: R-sig-ecology at r-project.org
+> Asunto: [R-sig-eco] Problem with mfrow function
+> 
+> Hi,
+> I did 5 boxplots using mfrow function. The figure do not 
+> appear very good (please see attached file).There is wide 
+> spaces between boxplots. 
+> How can I do to reduce spaces between boxplots then 
+> increasing my 5 boxplots? 
+> Thanks for your help
+> Mamadou
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+From momadou at yahoo.fr  Wed Jun 22 16:13:50 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Wed, 22 Jun 2011 15:13:50 +0100 (BST)
+Subject: [R-sig-eco] Re :  Problem with mfrow function
+In-Reply-To: <5CD78996B8F8844D963C875D3159B94A026266CD@DSRCORREO.azti.local>
+References: <277385.58183.qm@web28612.mail.ukl.yahoo.com>
+	<5CD78996B8F8844D963C875D3159B94A026266CD@DSRCORREO.azti.local>
+Message-ID: <350595.95594.qm@web28611.mail.ukl.yahoo.com>
+
+Hi, 
+Thank
+you Rub?n for your answer. 
+I
+use arguments mar and oma in my following code:
+par(mfrow = c(5,1))
+mar=c(2,2,2,2)
+oma=c(2,2,2,2)
+boxplot(Fire$FMC~Fire$Site,ylab="(%)",ylim=c(5,135))
+mar=c(2,2,2,2)
+oma=c(2,2,2,2) 
+boxplot(Fire$Densite~Fire$Site,ylim=c(40,100),ylab="(%)")
+mar=c(2,2,2,2)
+oma=c(2,2,2,2)
+boxplot(Fire$Charge~Fire$Site,ylim=c(50,610),ylab="g/m2)") 
+mar=c(2,2,2,2)
+oma=c(2,2,2,2)?? 
+boxplot(Fire$Vitessvent~Fire$Site,ylim=c(0,5),ylab="(m/s)")? ??
+mar=c(2,2,2,2)
+oma=c(2,2,2,2)
+boxplot(Fire$ROS~Fire$Site,ylim=c(0,16),xlab="Sites",ylab="(m/min)")
+?# But the result is not good (please see attached file). I want
+to reduce spaces between the 5 boxplots. 
+Thanks for your help
+
+
+De?: Rub?n Roa <rroa at azti.es>
+??: momadou sow <momadou at yahoo.fr>; R-sig-ecology at r-project.org
+Envoy? le : Jeudi 23 Juin 2011 0h11
+Objet?: RE: [R-sig-eco] Problem with mfrow function
+
+mfrow is not a function, it is an argument of function par.
+Use arguments mar and oma of function par to change space between plots.
+Check
+
+?par
+
+HTH
+
+Rub?n
+
+____________________________________________________________________________________ 
+
+Dr. Rub?n Roa-Ureta
+AZTI - Tecnalia / Marine Research Unit
+Txatxarramendi Ugartea z/g
+48395 Sukarrieta (Bizkaia)
+SPAIN
+
+
+
+> -----Mensaje original-----
+> De: r-sig-ecology-bounces at r-project.org 
+> [mailto:r-sig-ecology-bounces at r-project.org] En nombre de momadou sow
+> Enviado el: mi?rcoles, 22 de junio de 2011 14:05
+> Para: R-sig-ecology at r-project.org
+> Asunto: [R-sig-eco] Problem with mfrow function
+> 
+> Hi,
+> I did 5 boxplots using mfrow function. The figure do not 
+> appear very good (please see attached file).There is wide 
+> spaces between boxplots. 
+> How can I do to reduce spaces between boxplots then 
+> increasing my 5 boxplots? 
+> Thanks for your help
+> Mamadou
+> ??? [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+From lawes at ifm.liu.se  Wed Jun 22 16:33:54 2011
+From: lawes at ifm.liu.se (Lars Westerberg)
+Date: Wed, 22 Jun 2011 16:33:54 +0200
+Subject: [R-sig-eco] Re :  Problem with mfrow function
+In-Reply-To: <350595.95594.qm@web28611.mail.ukl.yahoo.com>
+References: <277385.58183.qm@web28612.mail.ukl.yahoo.com>	<5CD78996B8F8844D963C875D3159B94A026266CD@DSRCORREO.azti.local>
+	<350595.95594.qm@web28611.mail.ukl.yahoo.com>
+Message-ID: <4E01FD52.4040504@ifm.liu.se>
+
+mar and oma are also arguments of par. Try:
+par(mfrow = c(5,1),
+	mar=c(2,2,2,2),
+	oma=c(2,2,2,2))
+boxplot(Fire$FMC~Fire$Site,ylab="(%)",ylim=c(5,135))
+boxplot(Fire$Densite~Fire$Site,ylim=c(40,100),ylab="(%)")
+boxplot(Fire$Charge~Fire$Site,ylim=c(50,610),ylab="g/m2)")
+boxplot(Fire$Vitessvent~Fire$Site,ylim=c(0,5),ylab="(m/s)")
+
+On 2011-06-22 16:13, momadou sow wrote:
+> Hi,
+> Thank
+> you Rub?n for your answer.
+> I
+> use arguments mar and oma in my following code:
+> par(mfrow = c(5,1))
+> mar=c(2,2,2,2)
+> oma=c(2,2,2,2)
+> boxplot(Fire$FMC~Fire$Site,ylab="(%)",ylim=c(5,135))
+> mar=c(2,2,2,2)
+> oma=c(2,2,2,2)
+> boxplot(Fire$Densite~Fire$Site,ylim=c(40,100),ylab="(%)")
+> mar=c(2,2,2,2)
+> oma=c(2,2,2,2)
+> boxplot(Fire$Charge~Fire$Site,ylim=c(50,610),ylab="g/m2)")
+> mar=c(2,2,2,2)
+> oma=c(2,2,2,2)
+> boxplot(Fire$Vitessvent~Fire$Site,ylim=c(0,5),ylab="(m/s)")
+> mar=c(2,2,2,2)
+> oma=c(2,2,2,2)
+> boxplot(Fire$ROS~Fire$Site,ylim=c(0,16),xlab="Sites",ylab="(m/min)")
+>   # But the result is not good (please see attached file). I want
+> to reduce spaces between the 5 boxplots.
+> Thanks for your help
+>
+>
+> De : Rub?n Roa<rroa at azti.es>
+> ? : momadou sow<momadou at yahoo.fr>; R-sig-ecology at r-project.org
+> Envoy? le : Jeudi 23 Juin 2011 0h11
+> Objet : RE: [R-sig-eco] Problem with mfrow function
+>
+> mfrow is not a function, it is an argument of function par.
+> Use arguments mar and oma of function par to change space between plots.
+> Check
+>
+> ?par
+>
+> HTH
+>
+> Rub?n
+>
+> ____________________________________________________________________________________
+>
+> Dr. Rub?n Roa-Ureta
+> AZTI - Tecnalia / Marine Research Unit
+> Txatxarramendi Ugartea z/g
+> 48395 Sukarrieta (Bizkaia)
+> SPAIN
+>
+>
+>
+>> -----Mensaje original-----
+>> De: r-sig-ecology-bounces at r-project.org
+>> [mailto:r-sig-ecology-bounces at r-project.org] En nombre de momadou sow
+>> Enviado el: mi?rcoles, 22 de junio de 2011 14:05
+>> Para: R-sig-ecology at r-project.org
+>> Asunto: [R-sig-eco] Problem with mfrow function
+>>
+>> Hi,
+>> I did 5 boxplots using mfrow function. The figure do not
+>> appear very good (please see attached file).There is wide
+>> spaces between boxplots.
+>> How can I do to reduce spaces between boxplots then
+>> increasing my 5 boxplots?
+>> Thanks for your help
+>> Mamadou
+>>      [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+From momadou at yahoo.fr  Wed Jun 22 17:42:32 2011
+From: momadou at yahoo.fr (momadou sow)
+Date: Wed, 22 Jun 2011 16:42:32 +0100 (BST)
+Subject: [R-sig-eco] Re :  Re :  Problem with mfrow function
+In-Reply-To: <4E01FD52.4040504@ifm.liu.se>
+References: <277385.58183.qm@web28612.mail.ukl.yahoo.com>
+	<5CD78996B8F8844D963C875D3159B94A026266CD@DSRCORREO.azti.local>
+	<350595.95594.qm@web28611.mail.ukl.yahoo.com>
+	<4E01FD52.4040504@ifm.liu.se>
+Message-ID: <846267.60250.qm@web28615.mail.ukl.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110622/acab15db/attachment.pl>
+
+From cliffbeall at gmail.com  Wed Jun 22 18:18:11 2011
+From: cliffbeall at gmail.com (Cliff Beall)
+Date: Wed, 22 Jun 2011 12:18:11 -0400
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+In-Reply-To: <46F6C7DE-100C-4C9E-BAF7-78F62516080B@gmail.com>
+References: <784A1384-99CE-49B7-A551-F3B89E99D004@gmail.com>
+	<46F6C7DE-100C-4C9E-BAF7-78F62516080B@gmail.com>
+Message-ID: <C47AFE5D-316C-4508-8A13-C78F3855BD1B@gmail.com>
+
+Dear group-
+
+I was wondering if someone could point me towards the correct statistical test and R-function for my situation. 
+
+I am looking at oral bacteria and have three groups of samples, one from control subjects, and two that are derived from different sites in patients with periodontitis. So I have one totally independent group, and two that have samples that are paired.
+
+I would like to do a test just to say that there are differences between the three groups, something like an ANOVA, but that deals with the lack of independence of the two groups.
+
+By the way, for what I am measuring it looks like normality is a reasonable assumption but equal variances are probably not.
+
+Thanks,
+
+Cliff Beall
+Research Assistant Professor
+Division of Oral Biology
+College of Dentistry
+The Ohio State University
+beall.3 at osu.edu
+
+
+From rroa at azti.es  Wed Jun 22 22:48:09 2011
+From: rroa at azti.es (=?iso-8859-1?Q?Rub=E9n_Roa?=)
+Date: Wed, 22 Jun 2011 22:48:09 +0200
+Subject: [R-sig-eco] Re :  Problem with mfrow function
+References: <277385.58183.qm@web28612.mail.ukl.yahoo.com>
+	<5CD78996B8F8844D963C875D3159B94A026266CD@DSRCORREO.azti.local>
+	<350595.95594.qm@web28611.mail.ukl.yahoo.com>
+Message-ID: <5CD78996B8F8844D963C875D3159B94A01112134@DSRCORREO.azti.local>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110622/7d059c51/attachment.pl>
+
+From mdu at ceh.ac.uk  Thu Jun 23 14:59:01 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Thu, 23 Jun 2011 13:59:01 +0100
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+In-Reply-To: <C47AFE5D-316C-4508-8A13-C78F3855BD1B@gmail.com>
+References: <784A1384-99CE-49B7-A551-F3B89E99D004@gmail.com>
+	<46F6C7DE-100C-4C9E-BAF7-78F62516080B@gmail.com>
+	<C47AFE5D-316C-4508-8A13-C78F3855BD1B@gmail.com>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE821BD69@nerckwmb1.ad.nerc.ac.uk>
+
+Dear Cliff
+
+Using a mixed-effects model (also variously termed multilevel or hierarchical model) could well be what you are looking for. These are implemented in several R packages.
+
+In your study, in mixed model parlance, patient identifier would be a random effect (you don't say how many patients), with some patients having one measurement and some two, and treatment (control or periodontitis) would be a fixed effect. How or whether you code the sites (which would be another fixed effect) depends on whether they are of interest.
+
+These approaches are very powerful, but I wouldn't advise just dipping into them - it can be hard to get things set up correctly if you just want "a test", they repay careful study. On the bonus side, once you're familiar with them you start seeing the everything in a hierarchical mindset!
+
+You can model unequal variances by group, although you need to be careful in model specification. 
+
+Regards
+Mike
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Cliff Beall
+Sent: 22 June 2011 17:18
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+
+Dear group-
+
+I was wondering if someone could point me towards the correct statistical test and R-function for my situation. 
+
+I am looking at oral bacteria and have three groups of samples, one from control subjects, and two that are derived from different sites in patients with periodontitis. So I have one totally independent group, and two that have samples that are paired.
+
+I would like to do a test just to say that there are differences between the three groups, something like an ANOVA, but that deals with the lack of independence of the two groups.
+
+By the way, for what I am measuring it looks like normality is a reasonable assumption but equal variances are probably not.
+
+Thanks,
+
+Cliff Beall
+Research Assistant Professor
+Division of Oral Biology
+College of Dentistry
+The Ohio State University
+beall.3 at osu.edu
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+This message (and any attachments) is for the recipient only. NERC
+is subject to the Freedom of Information Act 2000 and the contents
+of this email and any reply you make may be disclosed by NERC unless
+it is exempt from release under the Act. Any material supplied to
+NERC may be stored in an electronic records management system.
+
+From mspinola10 at gmail.com  Fri Jun 24 14:18:54 2011
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Fri, 24 Jun 2011 06:18:54 -0600
+Subject: [R-sig-eco] Change the text in the strips of a Lattice plot
+Message-ID: <BANLkTi=GWspvYbVz0o=MzFx0z69HpY8m-Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110624/08578f05/attachment.pl>
+
+From j.m.signer at gmail.com  Fri Jun 24 14:31:07 2011
+From: j.m.signer at gmail.com (Johannes Signer)
+Date: Fri, 24 Jun 2011 08:31:07 -0400
+Subject: [R-sig-eco] Change the text in the strips of a Lattice plot
+In-Reply-To: <BANLkTi=GWspvYbVz0o=MzFx0z69HpY8m-Q@mail.gmail.com>
+References: <BANLkTi=GWspvYbVz0o=MzFx0z69HpY8m-Q@mail.gmail.com>
+Message-ID: <BANLkTimAmgWSXxuXZWRKqeOmmc-n3w2U7g@mail.gmail.com>
+
+Does that help you?
+
+library(lattice)
+library(datasets)
+data(CO2)
+
+levels(CO2$Type) <- c("A", "B")
+levels(CO2$Treatment) <- c("no enfriado", "enfriado")
+
+xyplot(uptake ~ conc | Type * Treatment,
+ groups = Plant, type = "b", lty = rep(1:3, 4), strip = strip.custom(
+var.name = c("Type",
+ "Treatment "), strip.names = c(T,T), style = 3), data = CO2)
+
+
+Johannes
+
+On Fri, Jun 24, 2011 at 8:18 AM, Manuel Sp?nola <mspinola10 at gmail.com> wrote:
+> Dear list members,
+>
+> I am trying the following plot in Lattice:
+>
+> library(lattice)
+> library(datasets)
+> data(CO2)
+>
+> xyplot(uptake ~ conc | Type * Treatment,
+> ?groups = Plant, type = "b", lty = rep(1:3, 4), strip = strip.custom(
+> var.name = c("Type",
+> ?"Treatment "), strip.names = c(T,T), style = 3), data = CO2)
+>
+> How can I change the names of the levels of the 2 conditioning variables in
+> the strip?
+>
+> I want to use: "Enfriado" and "No enfriado" instead of "chilled" and
+> "nonchilled" for Treatmente, and "A" and "B" instead of "Quebec" and
+> "Mississippi" for Type.
+>
+>
+> Thank you very much in advance.
+>
+> Manuel
+>
+>
+> --
+> *Manuel Sp?nola, Ph.D.*
+> Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+> Universidad Nacional
+> Apartado 1350-3000
+> Heredia
+> COSTA RICA
+> mspinola at una.ac.cr
+> mspinola10 at gmail.com
+> Tel?fono: (506) 2277-3598
+> Fax: (506) 2237-7036
+> Personal website: Lobito de r?o <https://sites.google.com/site/lobitoderio/>
+> Institutional website: ICOMVIS <http://www.icomvis.una.ac.cr/>
+>
+> ? ? ? ?[[alternative HTML version deleted]]
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From mspinola10 at gmail.com  Fri Jun 24 15:24:01 2011
+From: mspinola10 at gmail.com (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Fri, 24 Jun 2011 07:24:01 -0600
+Subject: [R-sig-eco] Change the text in the strips of a Lattice plot
+In-Reply-To: <BANLkTimAmgWSXxuXZWRKqeOmmc-n3w2U7g@mail.gmail.com>
+References: <BANLkTi=GWspvYbVz0o=MzFx0z69HpY8m-Q@mail.gmail.com>
+	<BANLkTimAmgWSXxuXZWRKqeOmmc-n3w2U7g@mail.gmail.com>
+Message-ID: <BANLkTim_5HzG3PahcaE4NizeuxBQEGU4fQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110624/544fa1f1/attachment.pl>
+
+From Kay.Cichini at uibk.ac.at  Fri Jun 24 15:30:51 2011
+From: Kay.Cichini at uibk.ac.at (Kay Cecil Cichini)
+Date: Fri, 24 Jun 2011 15:30:51 +0200
+Subject: [R-sig-eco] adonis question
+Message-ID: <20110624153051.15144779zb7zp18g@web-mail.uibk.ac.at>
+
+hi all,
+
+i played around with adonis and came across a result that i can't  
+explain - more precisely i get a sign interaction-effect where i  
+suppose there should be none:
+
+library(vegan)
+
+# species matrix/df
+spdf <- matrix(NA, 60, 4, dimnames = list(1:60, c("sp1", "sp2", "sp3",  
+"sp4")))
+spdf <- as.data.frame(spdf)
+
+# 1st factor = treatment:
+treat <- gl(3, 20, labels = paste(1:3, "t", sep=""))
+
+# 2nd factor = impact:
+imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+
+# simulating effect -
+# simulation will add similar effect
+# across level combinations, no interactions:
+eff <- sort(rep(1:6, 10))
+
+# add random noise:
+spdf$sp1 = eff + rnorm(60, 0, 0.25)
+spdf$sp2 = eff + rnorm(60, 0, 0.25)
+spdf$sp3 = eff + rnorm(60, 0, 0.25)
+spdf$sp4 = eff + rnorm(60, 0, 0.25)
+
+# difference imp:yes vs imp:no is the same across all levels of treatment
+aggregate(sp1 ~ imp * treat, data = spdf, FUN = mean)
+
+# univariate ANOVAs with no interactions, as expected:
+for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+
+# PERMANOVA - strangly gives sign. interaction (??)
+adonis(spdf ~ treat * imp, dist = "euclidean")
+
+thanks in advance,
+kay
+
+
+From wade.wall at gmail.com  Fri Jun 24 20:55:15 2011
+From: wade.wall at gmail.com (Wade Wall)
+Date: Fri, 24 Jun 2011 14:55:15 -0400
+Subject: [R-sig-eco] code for LTRE analysis
+Message-ID: <BANLkTimT+S1STmGCs+xyQRsjYtvVcFw_jA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110624/84551add/attachment.pl>
+
+From etiennelaliberte at gmail.com  Sat Jun 25 01:45:01 2011
+From: etiennelaliberte at gmail.com (=?us-ascii?Q?Etienne_Laliberte?=)
+Date: Sat, 25 Jun 2011 07:45:01 +0800
+Subject: [R-sig-eco] adonis question
+In-Reply-To: <20110624153051.15144779zb7zp18g@web-mail.uibk.ac.at>
+References: <20110624153051.15144779zb7zp18g@web-mail.uibk.ac.at>
+Message-ID: <000301cc32c8$bfb722c0$3f256840$@com>
+
+Dear Kay,
+
+I ran your code and found no significant interactions. You just got
+"unlucky" with rnorm(), as can happen. Try it again.
+
+Cheers,
+
+Etienne
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Kay Cecil Cichini
+Sent: Friday, 24 June 2011 9:31 PM
+To: r-sig-ecology
+Subject: [R-sig-eco] adonis question
+
+hi all,
+
+i played around with adonis and came across a result that i can't  
+explain - more precisely i get a sign interaction-effect where i  
+suppose there should be none:
+
+library(vegan)
+
+# species matrix/df
+spdf <- matrix(NA, 60, 4, dimnames = list(1:60, c("sp1", "sp2", "sp3",  
+"sp4")))
+spdf <- as.data.frame(spdf)
+
+# 1st factor = treatment:
+treat <- gl(3, 20, labels = paste(1:3, "t", sep=""))
+
+# 2nd factor = impact:
+imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+
+# simulating effect -
+# simulation will add similar effect
+# across level combinations, no interactions:
+eff <- sort(rep(1:6, 10))
+
+# add random noise:
+spdf$sp1 = eff + rnorm(60, 0, 0.25)
+spdf$sp2 = eff + rnorm(60, 0, 0.25)
+spdf$sp3 = eff + rnorm(60, 0, 0.25)
+spdf$sp4 = eff + rnorm(60, 0, 0.25)
+
+# difference imp:yes vs imp:no is the same across all levels of treatment
+aggregate(sp1 ~ imp * treat, data = spdf, FUN = mean)
+
+# univariate ANOVAs with no interactions, as expected:
+for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+
+# PERMANOVA - strangly gives sign. interaction (??)
+adonis(spdf ~ treat * imp, dist = "euclidean")
+
+thanks in advance,
+kay
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From wade.wall at gmail.com  Sat Jun 25 02:18:43 2011
+From: wade.wall at gmail.com (Wade Wall)
+Date: Fri, 24 Jun 2011 20:18:43 -0400
+Subject: [R-sig-eco] code for LTRE analysis
+In-Reply-To: <BANLkTimT+S1STmGCs+xyQRsjYtvVcFw_jA@mail.gmail.com>
+References: <BANLkTimT+S1STmGCs+xyQRsjYtvVcFw_jA@mail.gmail.com>
+Message-ID: <BANLkTinysW=HcUcYT-8AA3ZSByLirDocpg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110624/23667b85/attachment.pl>
+
+From Kay.Cichini at uibk.ac.at  Sat Jun 25 12:20:44 2011
+From: Kay.Cichini at uibk.ac.at (Kay Cecil Cichini)
+Date: Sat, 25 Jun 2011 12:20:44 +0200
+Subject: [R-sig-eco] adonis question
+In-Reply-To: <000301cc32c8$bfb722c0$3f256840$@com>
+References: <20110624153051.15144779zb7zp18g@web-mail.uibk.ac.at>
+	<000301cc32c8$bfb722c0$3f256840$@com>
+Message-ID: <20110625122044.68992dwaacyxu6ps@web-mail.uibk.ac.at>
+
+hello etienne,
+
+i tried many times and it's alway significant.
+
+i also added:
+
+par(mfrow = c(2, 2))
+for (i in 1:4) {print(interaction.plot(treat, imp, spdf[, i]))}
+
+...that did not show an interaction for any set of random numbers i tried.
+
+yours,
+kay
+
+Zitat von Etienne Laliberte <etiennelaliberte at gmail.com>:
+
+> Dear Kay,
+>
+> I ran your code and found no significant interactions. You just got
+> "unlucky" with rnorm(), as can happen. Try it again.
+>
+> Cheers,
+>
+> Etienne
+>
+> -----Original Message-----
+> From: r-sig-ecology-bounces at r-project.org
+> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Kay Cecil Cichini
+> Sent: Friday, 24 June 2011 9:31 PM
+> To: r-sig-ecology
+> Subject: [R-sig-eco] adonis question
+>
+> hi all,
+>
+> i played around with adonis and came across a result that i can't
+> explain - more precisely i get a sign interaction-effect where i
+> suppose there should be none:
+>
+> library(vegan)
+>
+> # species matrix/df
+> spdf <- matrix(NA, 60, 4, dimnames = list(1:60, c("sp1", "sp2", "sp3",
+> "sp4")))
+> spdf <- as.data.frame(spdf)
+>
+> # 1st factor = treatment:
+> treat <- gl(3, 20, labels = paste(1:3, "t", sep=""))
+>
+> # 2nd factor = impact:
+> imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+>
+> # simulating effect -
+> # simulation will add similar effect
+> # across level combinations, no interactions:
+> eff <- sort(rep(1:6, 10))
+>
+> # add random noise:
+> spdf$sp1 = eff + rnorm(60, 0, 0.25)
+> spdf$sp2 = eff + rnorm(60, 0, 0.25)
+> spdf$sp3 = eff + rnorm(60, 0, 0.25)
+> spdf$sp4 = eff + rnorm(60, 0, 0.25)
+>
+> # difference imp:yes vs imp:no is the same across all levels of treatment
+> aggregate(sp1 ~ imp * treat, data = spdf, FUN = mean)
+>
+> # univariate ANOVAs with no interactions, as expected:
+> for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+>
+> # PERMANOVA - strangly gives sign. interaction (??)
+> adonis(spdf ~ treat * imp, dist = "euclidean")
+>
+> thanks in advance,
+> kay
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From kari.lintulaakso at gmail.com  Mon Jun 27 02:32:11 2011
+From: kari.lintulaakso at gmail.com (Kari Lintulaakso)
+Date: Mon, 27 Jun 2011 10:32:11 +1000
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 39, Issue 16
+In-Reply-To: <mailman.1.1309082401.17302.r-sig-ecology@r-project.org>
+References: <mailman.1.1309082401.17302.r-sig-ecology@r-project.org>
+Message-ID: <BANLkTin7PXT92-M=nu_r4q3HSz2VS36CpQ@mail.gmail.com>
+
+Hi Kay,
+
+I also get significant values (both from adonis and anova) when
+running your code. I'm currently running my own adonis analysis which
+most have significant results (this has been worrying me for some
+time).
+I do recall some R discussion about general R setting/value which
+might set all the values analysed to be logarithmic. If there is this
+kind of setting, does anyone know what it is and how to set it off?
+I'm using Revolution R Enterprise 4.3.0 (14.4.2011) Academic version,
+R version 2.12.2 (2011-02-25)
+-Kari
+
+My results:
+for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+            Df  Sum Sq Mean Sq   F value Pr(>F)
+treat        2 166.017  83.008 1316.5029 <2e-16 ***
+imp          1  15.978  15.978  253.4022 <2e-16 ***
+treat:imp    2   0.021   0.011    0.1666  0.847
+Residuals   54   3.405   0.063
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+            Df  Sum Sq Mean Sq   F value Pr(>F)
+treat        2 155.836  77.918 1323.0303 <2e-16 ***
+imp          1  13.185  13.185  223.8864 <2e-16 ***
+treat:imp    2   0.237   0.119    2.0159 0.1431
+Residuals   54   3.180   0.059
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+            Df  Sum Sq Mean Sq   F value  Pr(>F)
+treat        2 158.672  79.336 1091.8367 < 2e-16 ***
+imp          1  16.069  16.069  221.1473 < 2e-16 ***
+treat:imp    2   0.363   0.182    2.4987 0.09165 .
+Residuals   54   3.924   0.073
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+            Df  Sum Sq Mean Sq F value Pr(>F)
+treat        2 159.194  79.597 943.528 <2e-16 ***
+imp          1  14.289  14.289 169.383 <2e-16 ***
+treat:imp    2   0.093   0.047   0.554 0.5779
+Residuals   54   4.555   0.084
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>
+> RevoMods:::revoFix(x)adonis(spdf ~ treat * imp, dist = "euclidean")
+
+Call:
+adonis(formula = spdf ~ treat * imp, dist = "euclidean")
+
+          Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+treat      2    3.4133 1.70666  640.19 0.80850  0.001 ***
+imp        1    0.3150 0.31504  118.18 0.07462  0.001 ***
+treat:imp  2    0.3495 0.17473   65.54 0.08278  0.001 ***
+Residuals 54    0.1440 0.00267         0.03410
+Total     59    4.2218                 1.00000
+
+
+On Sun, Jun 26, 2011 at 8:00 PM,  <r-sig-ecology-request at r-project.org> wrote:
+> Send R-sig-ecology mailing list submissions to
+> ? ? ? ?r-sig-ecology at r-project.org
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+> ? ? ? ?https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+> ? ? ? ?r-sig-ecology-request at r-project.org
+>
+> You can reach the person managing the list at
+> ? ? ? ?r-sig-ecology-owner at r-project.org
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+>
+>
+> Today's Topics:
+>
+> ? 1. Re: adonis question (Kay Cecil Cichini)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Sat, 25 Jun 2011 12:20:44 +0200
+> From: Kay Cecil Cichini <Kay.Cichini at uibk.ac.at>
+> To: Etienne Laliberte <etiennelaliberte at gmail.com>
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] adonis question
+> Message-ID: <20110625122044.68992dwaacyxu6ps at web-mail.uibk.ac.at>
+> Content-Type: text/plain; charset=ISO-8859-1; DelSp="Yes";
+> ? ? ? ?format="flowed"
+>
+> hello etienne,
+>
+> i tried many times and it's alway significant.
+>
+> i also added:
+>
+> par(mfrow = c(2, 2))
+> for (i in 1:4) {print(interaction.plot(treat, imp, spdf[, i]))}
+>
+> ...that did not show an interaction for any set of random numbers i tried.
+>
+> yours,
+> kay
+>
+> Zitat von Etienne Laliberte <etiennelaliberte at gmail.com>:
+>
+>> Dear Kay,
+>>
+>> I ran your code and found no significant interactions. You just got
+>> "unlucky" with rnorm(), as can happen. Try it again.
+>>
+>> Cheers,
+>>
+>> Etienne
+>>
+>> -----Original Message-----
+>> From: r-sig-ecology-bounces at r-project.org
+>> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Kay Cecil Cichini
+>> Sent: Friday, 24 June 2011 9:31 PM
+>> To: r-sig-ecology
+>> Subject: [R-sig-eco] adonis question
+>>
+>> hi all,
+>>
+>> i played around with adonis and came across a result that i can't
+>> explain - more precisely i get a sign interaction-effect where i
+>> suppose there should be none:
+>>
+>> library(vegan)
+>>
+>> # species matrix/df
+>> spdf <- matrix(NA, 60, 4, dimnames = list(1:60, c("sp1", "sp2", "sp3",
+>> "sp4")))
+>> spdf <- as.data.frame(spdf)
+>>
+>> # 1st factor = treatment:
+>> treat <- gl(3, 20, labels = paste(1:3, "t", sep=""))
+>>
+>> # 2nd factor = impact:
+>> imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+>>
+>> # simulating effect -
+>> # simulation will add similar effect
+>> # across level combinations, no interactions:
+>> eff <- sort(rep(1:6, 10))
+>>
+>> # add random noise:
+>> spdf$sp1 = eff + rnorm(60, 0, 0.25)
+>> spdf$sp2 = eff + rnorm(60, 0, 0.25)
+>> spdf$sp3 = eff + rnorm(60, 0, 0.25)
+>> spdf$sp4 = eff + rnorm(60, 0, 0.25)
+>>
+>> # difference imp:yes vs imp:no is the same across all levels of treatment
+>> aggregate(sp1 ~ imp * treat, data = spdf, FUN = mean)
+>>
+>> # univariate ANOVAs with no interactions, as expected:
+>> for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+>>
+>> # PERMANOVA - strangly gives sign. interaction (??)
+>> adonis(spdf ~ treat * imp, dist = "euclidean")
+>>
+>> thanks in advance,
+>> kay
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>
+>
+>
+> ------------------------------
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> End of R-sig-ecology Digest, Vol 39, Issue 16
+> *********************************************
+>
+
+
+
+-- 
+Kari Lintulaakso, M.Sc.(Biosciences)
+
+Doctoral student
+Paleontology and Paleoecology
+Department of Geosciences and Geography
+University of Helsinki
+
+* Mobile: +358 50 40 33391
+* Office:? +358 9 191 50842
+* Email: kari.lintulaakso at helsinki.fi
+* Post: Department of Geology, Gustaf H?llstr?min katu 2a (P.O Box
+64), 00014 University of Helsinki
+* Web page: http://blogs.helsinki.fi/lintulaa/
+
+
+From chris at trickysolutions.com.au  Mon Jun 27 07:01:06 2011
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Mon, 27 Jun 2011 15:01:06 +1000
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+In-Reply-To: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE821BD69@nerckwmb1.ad.nerc.ac.uk>
+References: <784A1384-99CE-49B7-A551-F3B89E99D004@gmail.com>
+	<46F6C7DE-100C-4C9E-BAF7-78F62516080B@gmail.com>	<C47AFE5D-316C-4508-8A13-C78F3855BD1B@gmail.com>
+	<9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE821BD69@nerckwmb1.ad.nerc.ac.uk>
+Message-ID: <21ab3808912b43272fd9462dc259489b@mail.gmail.com>
+
+Hi Mike,
+
+I'm rather new to mixed models, but am on a few lists at the moment to try
+and get my head around them. Your comments on using GLMM's on data with
+unequal variances gave me a very pleasant surprise! And after thinking
+about it I realised it was a fairly obvious use of GLMM's.
+
+Can I just confirm your comments though?
+
+If I was testing some factor that I knew each group had unequal variances
+could I test it using something like the following?
+
+lmer(response~factor + (1|factor), data=data)?
+
+Chris Howden
+Founding Partner
+Tricky Solutions
+Tricky Solutions 4 Tricky Problems
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(fax / office)
+chris at trickysolutions.com.au
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Dunbar, Michael
+J.
+Sent: Thursday, 23 June 2011 10:59 PM
+To: Cliff Beall; r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Partially non-independent ANOVA?
+
+Dear Cliff
+
+Using a mixed-effects model (also variously termed multilevel or
+hierarchical model) could well be what you are looking for. These are
+implemented in several R packages.
+
+In your study, in mixed model parlance, patient identifier would be a
+random effect (you don't say how many patients), with some patients having
+one measurement and some two, and treatment (control or periodontitis)
+would be a fixed effect. How or whether you code the sites (which would be
+another fixed effect) depends on whether they are of interest.
+
+These approaches are very powerful, but I wouldn't advise just dipping
+into them - it can be hard to get things set up correctly if you just want
+"a test", they repay careful study. On the bonus side, once you're
+familiar with them you start seeing the everything in a hierarchical
+mindset!
+
+You can model unequal variances by group, although you need to be careful
+in model specification.
+
+Regards
+Mike
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Cliff Beall
+Sent: 22 June 2011 17:18
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+
+Dear group-
+
+I was wondering if someone could point me towards the correct statistical
+test and R-function for my situation.
+
+I am looking at oral bacteria and have three groups of samples, one from
+control subjects, and two that are derived from different sites in
+patients with periodontitis. So I have one totally independent group, and
+two that have samples that are paired.
+
+I would like to do a test just to say that there are differences between
+the three groups, something like an ANOVA, but that deals with the lack of
+independence of the two groups.
+
+By the way, for what I am measuring it looks like normality is a
+reasonable assumption but equal variances are probably not.
+
+Thanks,
+
+Cliff Beall
+Research Assistant Professor
+Division of Oral Biology
+College of Dentistry
+The Ohio State University
+beall.3 at osu.edu
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+--
+This message (and any attachments) is for the recipient ...{{dropped:10}}
+
+
+From mdu at ceh.ac.uk  Mon Jun 27 11:14:35 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Mon, 27 Jun 2011 10:14:35 +0100
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+In-Reply-To: <21ab3808912b43272fd9462dc259489b@mail.gmail.com>
+References: <784A1384-99CE-49B7-A551-F3B89E99D004@gmail.com>
+	<46F6C7DE-100C-4C9E-BAF7-78F62516080B@gmail.com>
+	<C47AFE5D-316C-4508-8A13-C78F3855BD1B@gmail.com>
+	<9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE821BD69@nerckwmb1.ad.nerc.ac.uk>
+	<21ab3808912b43272fd9462dc259489b@mail.gmail.com>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE8293DEF@nerckwmb1.ad.nerc.ac.uk>
+
+Hi Chris
+
+lme (LMMs only) can handle unequal variances of residuals at the lowest level in your hierarchy using variance functions: this isn't really what you describe below. This is described in Pinhero and Bates, but for beginners, best to look at Zuur "Mixed Effects Models and Extensions in Ecology with R" which gives a good overview.
+
+lmer can of course do LMMs and GLMMs, but so far as I know it cannot do unequal residual variances by groups.
+
+Both can do unequal random effect (i.e. the hierarchical levels above the lowest level residuals) variances by group, but with anything more than two groups this does get a bit complicated. You put the factor to the left of the | in the random part as if it were a random slope: for interpretation it can be easier to reformulate your factor as indicator variables of 1's and 0's in separate columns. 
+
+Regards
+Mike
+
+
+-----Original Message-----
+From: Chris Howden [mailto:chris at trickysolutions.com.au] 
+Sent: 27 June 2011 06:01
+To: Dunbar, Michael J.; Cliff Beall; r-sig-ecology at r-project.org
+Subject: RE: [R-sig-eco] Partially non-independent ANOVA?
+
+Hi Mike,
+
+I'm rather new to mixed models, but am on a few lists at the moment to try
+and get my head around them. Your comments on using GLMM's on data with
+unequal variances gave me a very pleasant surprise! And after thinking
+about it I realised it was a fairly obvious use of GLMM's.
+
+Can I just confirm your comments though?
+
+If I was testing some factor that I knew each group had unequal variances
+could I test it using something like the following?
+
+lmer(response~factor + (1|factor), data=data)?
+
+Chris Howden
+Founding Partner
+Tricky Solutions
+Tricky Solutions 4 Tricky Problems
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(fax / office)
+chris at trickysolutions.com.au
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Dunbar, Michael
+J.
+Sent: Thursday, 23 June 2011 10:59 PM
+To: Cliff Beall; r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Partially non-independent ANOVA?
+
+Dear Cliff
+
+Using a mixed-effects model (also variously termed multilevel or
+hierarchical model) could well be what you are looking for. These are
+implemented in several R packages.
+
+In your study, in mixed model parlance, patient identifier would be a
+random effect (you don't say how many patients), with some patients having
+one measurement and some two, and treatment (control or periodontitis)
+would be a fixed effect. How or whether you code the sites (which would be
+another fixed effect) depends on whether they are of interest.
+
+These approaches are very powerful, but I wouldn't advise just dipping
+into them - it can be hard to get things set up correctly if you just want
+"a test", they repay careful study. On the bonus side, once you're
+familiar with them you start seeing the everything in a hierarchical
+mindset!
+
+You can model unequal variances by group, although you need to be careful
+in model specification.
+
+Regards
+Mike
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Cliff Beall
+Sent: 22 June 2011 17:18
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+
+Dear group-
+
+I was wondering if someone could point me towards the correct statistical
+test and R-function for my situation.
+
+I am looking at oral bacteria and have three groups of samples, one from
+control subjects, and two that are derived from different sites in
+patients with periodontitis. So I have one totally independent group, and
+two that have samples that are paired.
+
+I would like to do a test just to say that there are differences between
+the three groups, something like an ANOVA, but that deals with the lack of
+independence of the two groups.
+
+By the way, for what I am measuring it looks like normality is a
+reasonable assumption but equal variances are probably not.
+
+Thanks,
+
+Cliff Beall
+Research Assistant Professor
+Division of Oral Biology
+College of Dentistry
+The Ohio State University
+beall.3 at osu.edu
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+--
+This message (and any attachments) is for the recipient ...{{dropped:10}}
+
+
+From Kay.Cichini at uibk.ac.at  Mon Jun 27 12:36:07 2011
+From: Kay.Cichini at uibk.ac.at (Kay Cecil Cichini)
+Date: Mon, 27 Jun 2011 12:36:07 +0200
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 39, Issue 16
+In-Reply-To: <BANLkTin7PXT92-M=nu_r4q3HSz2VS36CpQ@mail.gmail.com>
+References: <mailman.1.1309082401.17302.r-sig-ecology@r-project.org>
+	<BANLkTin7PXT92-M=nu_r4q3HSz2VS36CpQ@mail.gmail.com>
+Message-ID: <20110627123607.20301tbza9i89q9w@web-mail.uibk.ac.at>
+
+hi,
+
+sorry - i'm afraid this was only due to a trivial syntax error:  
+"...,dist = "euclidean",..." should say "...,method = "euclidean",..."  
+with the wrong argument adonis defaults to "bray" - and with  
+bray-curtis dissim. the difference between 1 and 2 is really not the  
+same as the one between 2 and 3 or 4 and 5, isn't it?
+
+so the message to you, regarding your suspicious p-values, might be to  
+check for the dissimilarity-index you use, what its characteristics  
+are and if it's appropriate for the questions you ask..
+
+yours,
+kay
+
+following up my example:
+
+# distance matrix with bray-curtis dissimilarity:
+# dissimilarities *are the same*
+
+dm <- as.matrix(vegdist(spdf, method = "bray"))
+
+# assign names
+dimnames(dm) <- list(paste(treat, imp), paste(treat, imp))
+
+# see average off-diagonal dissimilarities (within treatments, between  
+impact levels)
+mean(dm[11:20,1:10])
+mean(dm[31:40,21:30])
+mean(dm[51:60,41:50])
+
+# distance matrix with euclidean dissimilarity:
+dm <- as.matrix(vegdist(spdf, method = "euclidean"))
+
+# assign names
+dimnames(dm) <- list(paste(treat, imp), paste(treat, imp))
+
+# see average off-diagonal dissimilarities (within treatments, between  
+impact levels)
+# dissimilarities *are not the same*
+mean(dm[11:20,1:10])
+mean(dm[31:40,21:30])
+mean(dm[51:60,41:50])
+
+
+
+
+Zitat von Kari Lintulaakso <kari.lintulaakso at gmail.com>:
+
+> Hi Kay,
+>
+> I also get significant values (both from adonis and anova) when
+> running your code. I'm currently running my own adonis analysis which
+> most have significant results (this has been worrying me for some
+> time).
+> I do recall some R discussion about general R setting/value which
+> might set all the values analysed to be logarithmic. If there is this
+> kind of setting, does anyone know what it is and how to set it off?
+> I'm using Revolution R Enterprise 4.3.0 (14.4.2011) Academic version,
+> R version 2.12.2 (2011-02-25)
+> -Kari
+>
+> My results:
+> for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+>             Df  Sum Sq Mean Sq   F value Pr(>F)
+> treat        2 166.017  83.008 1316.5029 <2e-16 ***
+> imp          1  15.978  15.978  253.4022 <2e-16 ***
+> treat:imp    2   0.021   0.011    0.1666  0.847
+> Residuals   54   3.405   0.063
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>             Df  Sum Sq Mean Sq   F value Pr(>F)
+> treat        2 155.836  77.918 1323.0303 <2e-16 ***
+> imp          1  13.185  13.185  223.8864 <2e-16 ***
+> treat:imp    2   0.237   0.119    2.0159 0.1431
+> Residuals   54   3.180   0.059
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>             Df  Sum Sq Mean Sq   F value  Pr(>F)
+> treat        2 158.672  79.336 1091.8367 < 2e-16 ***
+> imp          1  16.069  16.069  221.1473 < 2e-16 ***
+> treat:imp    2   0.363   0.182    2.4987 0.09165 .
+> Residuals   54   3.924   0.073
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>             Df  Sum Sq Mean Sq F value Pr(>F)
+> treat        2 159.194  79.597 943.528 <2e-16 ***
+> imp          1  14.289  14.289 169.383 <2e-16 ***
+> treat:imp    2   0.093   0.047   0.554 0.5779
+> Residuals   54   4.555   0.084
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>>
+>> RevoMods:::revoFix(x)adonis(spdf ~ treat * imp, dist = "euclidean")
+>
+> Call:
+> adonis(formula = spdf ~ treat * imp, dist = "euclidean")
+>
+>           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+> treat      2    3.4133 1.70666  640.19 0.80850  0.001 ***
+> imp        1    0.3150 0.31504  118.18 0.07462  0.001 ***
+> treat:imp  2    0.3495 0.17473   65.54 0.08278  0.001 ***
+> Residuals 54    0.1440 0.00267         0.03410
+> Total     59    4.2218                 1.00000
+>
+>
+> On Sun, Jun 26, 2011 at 8:00 PM,   
+> <r-sig-ecology-request at r-project.org> wrote:
+>> Send R-sig-ecology mailing list submissions to
+>> ? ? ? ?r-sig-ecology at r-project.org
+>>
+>> To subscribe or unsubscribe via the World Wide Web, visit
+>> ? ? ? ?https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> or, via email, send a message with subject or body 'help' to
+>> ? ? ? ?r-sig-ecology-request at r-project.org
+>>
+>> You can reach the person managing the list at
+>> ? ? ? ?r-sig-ecology-owner at r-project.org
+>>
+>> When replying, please edit your Subject line so it is more specific
+>> than "Re: Contents of R-sig-ecology digest..."
+>>
+>>
+>> Today's Topics:
+>>
+>> ? 1. Re: adonis question (Kay Cecil Cichini)
+>>
+>>
+>> ----------------------------------------------------------------------
+>>
+>> Message: 1
+>> Date: Sat, 25 Jun 2011 12:20:44 +0200
+>> From: Kay Cecil Cichini <Kay.Cichini at uibk.ac.at>
+>> To: Etienne Laliberte <etiennelaliberte at gmail.com>
+>> Cc: r-sig-ecology at r-project.org
+>> Subject: Re: [R-sig-eco] adonis question
+>> Message-ID: <20110625122044.68992dwaacyxu6ps at web-mail.uibk.ac.at>
+>> Content-Type: text/plain; charset=ISO-8859-1; DelSp="Yes";
+>> ? ? ? ?format="flowed"
+>>
+>> hello etienne,
+>>
+>> i tried many times and it's alway significant.
+>>
+>> i also added:
+>>
+>> par(mfrow = c(2, 2))
+>> for (i in 1:4) {print(interaction.plot(treat, imp, spdf[, i]))}
+>>
+>> ...that did not show an interaction for any set of random numbers i tried.
+>>
+>> yours,
+>> kay
+>>
+>> Zitat von Etienne Laliberte <etiennelaliberte at gmail.com>:
+>>
+>>> Dear Kay,
+>>>
+>>> I ran your code and found no significant interactions. You just got
+>>> "unlucky" with rnorm(), as can happen. Try it again.
+>>>
+>>> Cheers,
+>>>
+>>> Etienne
+>>>
+>>> -----Original Message-----
+>>> From: r-sig-ecology-bounces at r-project.org
+>>> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Kay Cecil Cichini
+>>> Sent: Friday, 24 June 2011 9:31 PM
+>>> To: r-sig-ecology
+>>> Subject: [R-sig-eco] adonis question
+>>>
+>>> hi all,
+>>>
+>>> i played around with adonis and came across a result that i can't
+>>> explain - more precisely i get a sign interaction-effect where i
+>>> suppose there should be none:
+>>>
+>>> library(vegan)
+>>>
+>>> # species matrix/df
+>>> spdf <- matrix(NA, 60, 4, dimnames = list(1:60, c("sp1", "sp2", "sp3",
+>>> "sp4")))
+>>> spdf <- as.data.frame(spdf)
+>>>
+>>> # 1st factor = treatment:
+>>> treat <- gl(3, 20, labels = paste(1:3, "t", sep=""))
+>>>
+>>> # 2nd factor = impact:
+>>> imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+>>>
+>>> # simulating effect -
+>>> # simulation will add similar effect
+>>> # across level combinations, no interactions:
+>>> eff <- sort(rep(1:6, 10))
+>>>
+>>> # add random noise:
+>>> spdf$sp1 = eff + rnorm(60, 0, 0.25)
+>>> spdf$sp2 = eff + rnorm(60, 0, 0.25)
+>>> spdf$sp3 = eff + rnorm(60, 0, 0.25)
+>>> spdf$sp4 = eff + rnorm(60, 0, 0.25)
+>>>
+>>> # difference imp:yes vs imp:no is the same across all levels of treatment
+>>> aggregate(sp1 ~ imp * treat, data = spdf, FUN = mean)
+>>>
+>>> # univariate ANOVAs with no interactions, as expected:
+>>> for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+>>>
+>>> # PERMANOVA - strangly gives sign. interaction (??)
+>>> adonis(spdf ~ treat * imp, dist = "euclidean")
+>>>
+>>> thanks in advance,
+>>> kay
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>>
+>>
+>>
+>>
+>> ------------------------------
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>> End of R-sig-ecology Digest, Vol 39, Issue 16
+>> *********************************************
+>>
+>
+>
+>
+> --
+> Kari Lintulaakso, M.Sc.(Biosciences)
+>
+> Doctoral student
+> Paleontology and Paleoecology
+> Department of Geosciences and Geography
+> University of Helsinki
+>
+> * Mobile: +358 50 40 33391
+> * Office:? +358 9 191 50842
+> * Email: kari.lintulaakso at helsinki.fi
+> * Post: Department of Geology, Gustaf H?llstr?min katu 2a (P.O Box
+> 64), 00014 University of Helsinki
+> * Web page: http://blogs.helsinki.fi/lintulaa/
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From a-gregmc at microsoft.com  Mon Jun 27 13:09:16 2011
+From: a-gregmc at microsoft.com (Greg McInerny (Brook Street))
+Date: Mon, 27 Jun 2011 11:09:16 +0000
+Subject: [R-sig-eco] LAST CHANCE TO HAVE YOUR SAY... Species Distribution
+ Modelling Survey (niches, climate envelopes, habitat suitability etc...)
+Message-ID: <F40E2C430CC2DD4D9C0873A2FAC976B41CB5F4E4@DB3EX14MBXC306.europe.corp.microsoft.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110627/60648f1b/attachment.pl>
+
+From Kay.Cichini at uibk.ac.at  Mon Jun 27 16:14:26 2011
+From: Kay.Cichini at uibk.ac.at (Kay Cecil Cichini)
+Date: Mon, 27 Jun 2011 16:14:26 +0200
+Subject: [R-sig-eco] adonis question
+In-Reply-To: <BANLkTin7PXT92-M=nu_r4q3HSz2VS36CpQ@mail.gmail.com>
+References: <mailman.1.1309082401.17302.r-sig-ecology@r-project.org>
+	<BANLkTin7PXT92-M=nu_r4q3HSz2VS36CpQ@mail.gmail.com>
+Message-ID: <20110627161426.13732cnlwsnmz0pw@web-mail.uibk.ac.at>
+
+
+sorry for double posting: in my first mail i forgot to change the subject
+which wrongly said "Re: [R-sig-eco] R-sig-ecology Digest, Vol 39, Issue 16"
+----------------------------------------------
+
+hi,
+
+sorry - i'm afraid this was only due to a trivial syntax error:  
+"...,dist = "euclidean",..." should say "...,method = "euclidean",..." 
+with the wrong argument adonis defaults to "bray" - and with  
+bray-curtis dissim. the difference between 1 and 2 is really not the  
+same as the one between 2 and 3 or 4 and 5, isn't it?
+
+so the message to you, regarding your suspicious p-values, might be to  
+check for the dissimilarity-index you use, what its characteristics  
+are and if it's appropriate for the questions you ask..
+
+yours,
+kay
+
+following up my example:
+
+# distance matrix with bray-curtis dissimilarity:
+# dissimilarities *are the same*
+
+dm <- as.matrix(vegdist(spdf, method = "bray"))
+
+# assign names
+dimnames(dm) <- list(paste(treat, imp), paste(treat, imp))
+
+# see average off-diagonal dissimilarities (within treatments, between  
+impact levels)
+mean(dm[11:20,1:10])
+mean(dm[31:40,21:30])
+mean(dm[51:60,41:50])
+
+# distance matrix with euclidean dissimilarity:
+dm <- as.matrix(vegdist(spdf, method = "euclidean"))
+
+# assign names
+dimnames(dm) <- list(paste(treat, imp), paste(treat, imp))
+
+# see average off-diagonal dissimilarities (within treatments, between  
+impact levels)
+# dissimilarities *are not the same*
+mean(dm[11:20,1:10])
+mean(dm[31:40,21:30])
+mean(dm[51:60,41:50])
+
+
+
+
+Zitat von Kari Lintulaakso <kari.lintulaakso at gmail.com>:
+
+> Hi Kay,
+>
+> I also get significant values (both from adonis and anova) when
+> running your code. I'm currently running my own adonis analysis which
+> most have significant results (this has been worrying me for some
+> time).
+> I do recall some R discussion about general R setting/value which
+> might set all the values analysed to be logarithmic. If there is this
+> kind of setting, does anyone know what it is and how to set it off?
+> I'm using Revolution R Enterprise 4.3.0 (14.4.2011) Academic version,
+> R version 2.12.2 (2011-02-25)
+> -Kari
+>
+> My results:
+> for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+>           Df  Sum Sq Mean Sq   F value Pr(>F)
+> treat        2 166.017  83.008 1316.5029 <2e-16 ***
+> imp          1  15.978  15.978  253.4022 <2e-16 ***
+> treat:imp    2   0.021   0.011    0.1666  0.847
+> Residuals   54   3.405   0.063
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>           Df  Sum Sq Mean Sq   F value Pr(>F)
+> treat        2 155.836  77.918 1323.0303 <2e-16 ***
+> imp          1  13.185  13.185  223.8864 <2e-16 ***
+> treat:imp    2   0.237   0.119    2.0159 0.1431
+> Residuals   54   3.180   0.059
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>           Df  Sum Sq Mean Sq   F value  Pr(>F)
+> treat        2 158.672  79.336 1091.8367 < 2e-16 ***
+> imp          1  16.069  16.069  221.1473 < 2e-16 ***
+> treat:imp    2   0.363   0.182    2.4987 0.09165 .
+> Residuals   54   3.924   0.073
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>           Df  Sum Sq Mean Sq F value Pr(>F)
+> treat        2 159.194  79.597 943.528 <2e-16 ***
+> imp          1  14.289  14.289 169.383 <2e-16 ***
+> treat:imp    2   0.093   0.047   0.554 0.5779
+> Residuals   54   4.555   0.084
+> ---
+> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+>>
+>> RevoMods:::revoFix(x)adonis(spdf ~ treat * imp, dist = "euclidean")
+>
+> Call:
+> adonis(formula = spdf ~ treat * imp, dist = "euclidean")
+>
+>         Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+> treat      2    3.4133 1.70666  640.19 0.80850  0.001 ***
+> imp        1    0.3150 0.31504  118.18 0.07462  0.001 ***
+> treat:imp  2    0.3495 0.17473   65.54 0.08278  0.001 ***
+> Residuals 54    0.1440 0.00267         0.03410
+> Total     59    4.2218                 1.00000
+>
+>
+> On Sun, Jun 26, 2011 at 8:00 PM,   
+> <r-sig-ecology-request at r-project.org> wrote:
+>> Send R-sig-ecology mailing list submissions to
+>> ? ? ? ?r-sig-ecology at r-project.org
+>>
+>> To subscribe or unsubscribe via the World Wide Web, visit
+>> ? ? ? ?https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> or, via email, send a message with subject or body 'help' to
+>> ? ? ? ?r-sig-ecology-request at r-project.org
+>>
+>> You can reach the person managing the list at
+>> ? ? ? ?r-sig-ecology-owner at r-project.org
+>>
+>> When replying, please edit your Subject line so it is more specific
+>> than "Re: Contents of R-sig-ecology digest..."
+>>
+>>
+>> Today's Topics:
+>>
+>> ? 1. Re: adonis question (Kay Cecil Cichini)
+>>
+>>
+>> ----------------------------------------------------------------------
+>>
+>> Message: 1
+>> Date: Sat, 25 Jun 2011 12:20:44 +0200
+>> From: Kay Cecil Cichini <Kay.Cichini at uibk.ac.at>
+>> To: Etienne Laliberte <etiennelaliberte at gmail.com>
+>> Cc: r-sig-ecology at r-project.org
+>> Subject: Re: [R-sig-eco] adonis question
+>> Message-ID: <20110625122044.68992dwaacyxu6ps at web-mail.uibk.ac.at>
+>> Content-Type: text/plain; charset=ISO-8859-1; DelSp="Yes";
+>> ? ? ? ?format="flowed"
+>>
+>> hello etienne,
+>>
+>> i tried many times and it's alway significant.
+>>
+>> i also added:
+>>
+>> par(mfrow = c(2, 2))
+>> for (i in 1:4) {print(interaction.plot(treat, imp, spdf[, i]))}
+>>
+>> ...that did not show an interaction for any set of random numbers i tried.
+>>
+>> yours,
+>> kay
+>>
+>> Zitat von Etienne Laliberte <etiennelaliberte at gmail.com>:
+>>
+>>> Dear Kay,
+>>>
+>>> I ran your code and found no significant interactions. You just got
+>>> "unlucky" with rnorm(), as can happen. Try it again.
+>>>
+>>> Cheers,
+>>>
+>>> Etienne
+>>>
+>>> -----Original Message-----
+>>> From: r-sig-ecology-bounces at r-project.org
+>>> [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Kay Cecil Cichini
+>>> Sent: Friday, 24 June 2011 9:31 PM
+>>> To: r-sig-ecology
+>>> Subject: [R-sig-eco] adonis question
+>>>
+>>> hi all,
+>>>
+>>> i played around with adonis and came across a result that i can't
+>>> explain - more precisely i get a sign interaction-effect where i
+>>> suppose there should be none:
+>>>
+>>> library(vegan)
+>>>
+>>> # species matrix/df
+>>> spdf <- matrix(NA, 60, 4, dimnames = list(1:60, c("sp1", "sp2", "sp3",
+>>> "sp4")))
+>>> spdf <- as.data.frame(spdf)
+>>>
+>>> # 1st factor = treatment:
+>>> treat <- gl(3, 20, labels = paste(1:3, "t", sep=""))
+>>>
+>>> # 2nd factor = impact:
+>>> imp <- rep(gl(2, 10, labels = c("yes", "no")), 3)
+>>>
+>>> # simulating effect -
+>>> # simulation will add similar effect
+>>> # across level combinations, no interactions:
+>>> eff <- sort(rep(1:6, 10))
+>>>
+>>> # add random noise:
+>>> spdf$sp1 = eff + rnorm(60, 0, 0.25)
+>>> spdf$sp2 = eff + rnorm(60, 0, 0.25)
+>>> spdf$sp3 = eff + rnorm(60, 0, 0.25)
+>>> spdf$sp4 = eff + rnorm(60, 0, 0.25)
+>>>
+>>> # difference imp:yes vs imp:no is the same across all levels of treatment
+>>> aggregate(sp1 ~ imp * treat, data = spdf, FUN = mean)
+>>>
+>>> # univariate ANOVAs with no interactions, as expected:
+>>> for (i in 1:4) {print(summary(aov(spdf[, i] ~ treat * imp)))}
+>>>
+>>> # PERMANOVA - strangly gives sign. interaction (??)
+>>> adonis(spdf ~ treat * imp, dist = "euclidean")
+>>>
+>>> thanks in advance,
+>>> kay
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>>
+>>
+>>
+>>
+>> ------------------------------
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>> End of R-sig-ecology Digest, Vol 39, Issue 16
+>> *********************************************
+>>
+>
+>
+>
+> --
+> Kari Lintulaakso, M.Sc.(Biosciences)
+>
+> Doctoral student
+> Paleontology and Paleoecology
+> Department of Geosciences and Geography
+> University of Helsinki
+>
+> * Mobile: +358 50 40 33391
+> * Office:? +358 9 191 50842
+> * Email: kari.lintulaakso at helsinki.fi
+> * Post: Department of Geology, Gustaf H?llstr?min katu 2a (P.O Box
+> 64), 00014 University of Helsinki
+> * Web page: http://blogs.helsinki.fi/lintulaa/
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From s.leonard at latrobe.edu.au  Tue Jun 28 01:39:02 2011
+From: s.leonard at latrobe.edu.au (Steve Leonard)
+Date: Mon, 27 Jun 2011 16:39:02 -0700 (PDT)
+Subject: [R-sig-eco] envfit and adonis restricted permutations
+Message-ID: <1309217942005-6522883.post@n2.nabble.com>
+
+Hi all, 
+I am using envfit and adonis to examine patterns in floristic composition
+amongst sites that vary with repect to fire history and fire severity
+(factors) and a number of environmental variables (mostly continuous).
+Within each site vegetation has been sampled in two environments (slope and
+gully, one sample in each). I have used the 'strata' argument to restrict
+permutations to within sites, as I believe this accounts for the lack of
+independence of samples within sites (like including site as a random factor
+in a mixed model). 
+
+Results of envfit indicate that the variables 'easting' and 'northing' are
+not significantly correlated with the ordination of sites, despite having
+relatively high R2 values (see 'fit1' below). When I apply envfit with
+unrestricted permutations, results are significant for easting and northing
+(see 'fit2'). Similarly, easting and northing are significant when I analyse
+the same data using adonis (see 'mod1'). 
+
+Can anyone explain this apparent discrepancy? Is there a problem with the
+way I am using 'strata'? Any advice gratefully received. 
+
+Thanks 
+
+Steve 
+
+
+PS Data files attached if anyone cares to delve into them 
+
+
+
+> flora<-read.csv("C://r//flora_ord_cd_no_UBG.csv", header=T) 
+> sv<-read.csv("C://r//flora_sv_no_UBG.csv", header=T) 
+> attach(sv) 
+> library(vegan) 
+This is vegan 1.18-33 
+Warning message: 
+package 'vegan' was built under R version 2.13.0 
+
+> mds1<-metaMDS(flora, distance="bray", k=3, trace=F, autotransform =F) 
+
+> fit1<-envfit(mds1~environment+history+severity+asp_class+easting+northing+ann_rain+Num_fire+TSF+tpi+sr_100_mean+slope,
+> choices=c(1:3), strata=site) 
+> fit1 
+
+***VECTORS 
+
+                NMDS1     NMDS2     NMDS3     r2 Pr(>r)   
+easting     -0.068611 -0.144025 -0.987193 0.2912  0.517   
+northing    -0.015771  0.995731 -0.090943 0.2657  0.366   
+ann_rain    -0.104761 -0.776971 -0.620758 0.3133  0.013 * 
+Num_fire     0.578255  0.802894  0.144850 0.0213  0.820   
+TSF         -0.450387 -0.325620 -0.831338 0.0476  0.936   
+tpi         -0.889913  0.139690  0.434213 0.0666  0.014 * 
+sr_100_mean -0.193648  0.585345 -0.787319 0.0390  0.698   
+slope       -0.664790  0.506331 -0.549257 0.0809  0.004 ** 
+--- 
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+P values based on 999 permutations, stratified within strata. 
+
+***FACTORS: 
+
+Centroids: 
+               NMDS1   NMDS2   NMDS3 
+environmentg -0.3182  0.0604  0.0177 
+environments  0.3113 -0.0591 -0.0173 
+historyNR    -0.0686 -0.0104 -0.0526 
+historyR      0.0702  0.0106  0.0538 
+severityCB    0.0141 -0.0273  0.3109 
+severityCS   -0.0257 -0.0702  0.2188 
+severityGB   -0.0086 -0.0421 -0.0386 
+severityRF    0.0199 -0.0132 -0.2918 
+severityUB    0.0058  0.0891 -0.0738 
+asp_classE   -0.0753  0.0850  0.0162 
+asp_classN   -0.0177 -0.1153 -0.0120 
+asp_classNE  -0.1051 -0.1974 -0.0086 
+asp_classNW   0.1137  0.0589 -0.0183 
+asp_classS    0.0738  0.0454  0.0618 
+asp_classSE   0.0262  0.0909 -0.0408 
+asp_classSW  -0.0778  0.1801  0.0694 
+asp_classW    0.0502  0.0374 -0.0369 
+
+Goodness of fit: 
+                r2 Pr(>r)     
+environment 0.2354  0.001 *** 
+history     0.0177  0.001 *** 
+severity    0.0810  0.001 *** 
+asp_class   0.0444  0.689     
+--- 
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+P values based on 999 permutations, stratified within strata. 
+
+
+> fit2<-envfit(mds1~environment+history+severity+asp_class+easting+northing+ann_rain+Num_fire+TSF+tpi+sr_100_mean+slope,
+> choices=c(1:3)) 
+> fit2 
+
+***VECTORS 
+
+                NMDS1     NMDS2     NMDS3     r2 Pr(>r)     
+easting     -0.068611 -0.144025 -0.987193 0.2912  0.001 *** 
+northing    -0.015771  0.995731 -0.090943 0.2657  0.001 *** 
+ann_rain    -0.104761 -0.776971 -0.620758 0.3133  0.001 *** 
+Num_fire     0.578255  0.802894  0.144850 0.0213  0.267     
+TSF         -0.450387 -0.325620 -0.831338 0.0476  0.041 *   
+tpi         -0.889913  0.139690  0.434213 0.0666  0.010 ** 
+sr_100_mean -0.193648  0.585345 -0.787319 0.0390  0.070 .   
+slope       -0.664790  0.506331 -0.549257 0.0809  0.003 ** 
+--- 
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+P values based on 999 permutations. 
+
+***FACTORS: 
+
+Centroids: 
+               NMDS1   NMDS2   NMDS3 
+environmentg -0.3182  0.0604  0.0177 
+environments  0.3113 -0.0591 -0.0173 
+historyNR    -0.0686 -0.0104 -0.0526 
+historyR      0.0702  0.0106  0.0538 
+severityCB    0.0141 -0.0273  0.3109 
+severityCS   -0.0257 -0.0702  0.2188 
+severityGB   -0.0086 -0.0421 -0.0386 
+severityRF    0.0199 -0.0132 -0.2918 
+severityUB    0.0058  0.0891 -0.0738 
+asp_classE   -0.0753  0.0850  0.0162 
+asp_classN   -0.0177 -0.1153 -0.0120 
+asp_classNE  -0.1051 -0.1974 -0.0086 
+asp_classNW   0.1137  0.0589 -0.0183 
+asp_classS    0.0738  0.0454  0.0618 
+asp_classSE   0.0262  0.0909 -0.0408 
+asp_classSW  -0.0778  0.1801  0.0694 
+asp_classW    0.0502  0.0374 -0.0369 
+
+Goodness of fit: 
+                r2 Pr(>r)     
+environment 0.2354  0.001 *** 
+history     0.0177  0.029 *   
+severity    0.0810  0.001 *** 
+asp_class   0.0444  0.291     
+--- 
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+P values based on 999 permutations. 
+
+
+
+
+> mod1<-adonis(flora~environment+history+severity+asp_class+easting+northing+ann_rain+Num_fire+TSF+tpi+sr_100_mean+slope,
+> method="bray", strata=site) 
+> mod1 
+
+Call: 
+adonis(formula = flora ~ environment + history + severity + asp_class +
+easting + northing + ann_rain + Num_fire + TSF + tpi + sr_100_mean + slope,
+method = "bray", strata = site) 
+
+             Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)     
+environment   1     4.316  4.3155 19.3742 0.08508  0.001 *** 
+history       1     0.569  0.5687  2.5530 0.01121  0.001 *** 
+severity      4     2.801  0.7003  3.1440 0.05523  0.001 *** 
+asp_class     7     2.143  0.3061  1.3744 0.04225  0.295     
+easting       1     1.115  1.1151  5.0060 0.02198  0.001 *** 
+northing      1     1.860  1.8598  8.3493 0.03667  0.001 *** 
+ann_rain      1     0.797  0.7966  3.5762 0.01570  0.007 ** 
+Num_fire      1     0.290  0.2896  1.2999 0.00571  0.158     
+TSF           1     0.159  0.1591  0.7144 0.00314  0.270     
+tpi           1     0.454  0.4541  2.0388 0.00895  0.486     
+sr_100_mean   1     0.369  0.3692  1.6576 0.00728  0.323     
+slope         1     0.211  0.2111  0.9476 0.00416  0.491     
+Residuals   160    35.639  0.2227         0.70264           
+Total       181    50.722                 1.00000           
+--- 
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+
+http://r-sig-ecology.471788.n2.nabble.com/file/n6522883/flora_ord_cd_no_UBG.csv
+flora_ord_cd_no_UBG.csv 
+http://r-sig-ecology.471788.n2.nabble.com/file/n6522883/flora_sv_no_UBG.csv
+flora_sv_no_UBG.csv 
+
+-----
+Dr Steve Leonard
+Research Fellow
+Department of Zoology| La Trobe University | Bundoora, 3086 Australia
+T: +61 3 9479 2773 | M: +61 429 418 388 | F: +61 3 9479 1551 | W: www.latrobe.edu.au/zoology/
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/envfit-and-adonis-restricted-permutations-tp6522883p6522883.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From drmaryanto at gmail.com  Tue Jun 28 09:45:06 2011
+From: drmaryanto at gmail.com (mary anto)
+Date: Tue, 28 Jun 2011 13:15:06 +0530
+Subject: [R-sig-eco] New to R
+Message-ID: <BANLkTinrX=26cq9_e1YygmOYLqKKWHAj6g@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110628/b68d69ee/attachment.pl>
+
+From szoe8822 at uni-landau.de  Tue Jun 28 09:54:14 2011
+From: szoe8822 at uni-landau.de (=?ISO-8859-1?Q?Eduard_Sz=F6cs?=)
+Date: Tue, 28 Jun 2011 09:54:14 +0200
+Subject: [R-sig-eco] New to R
+In-Reply-To: <BANLkTinrX=26cq9_e1YygmOYLqKKWHAj6g@mail.gmail.com>
+References: <BANLkTinrX=26cq9_e1YygmOYLqKKWHAj6g@mail.gmail.com>
+Message-ID: <4E0988A6.7030101@uni-landau.de>
+
+Hai Mary,
+
+afaik there is no "Indval" package.
+
+Have a look at indval() in the labdsv package and the indicspecies package.
+
+Edi
+
+
+Am 28.06.2011 09:45, schrieb mary anto:
+> Dear Group,
+>
+>
+>
+> I am new to R and I was wondering if someone could  suggest the appropriate
+>    R package  for my analysis.
+>
+> I  have sampled 166  butterfly species present/sighted  along       line
+> transects  distributed across  5 habitat types in 3 locations during  August
+> 2008 to May 2011 (area located in the Western Ghats biodiversity hotspot),.
+>
+>   I would like to find out species indicative of  particular habitats. I plan
+> to use the  Indval  package. Any other suggestions or comments?
+>
+> Thanks,
+>
+> Mary Anto
+>
+>
+> Project Scientist
+>
+> Forest Entomology
+>
+> Division of Forest Health
+>
+> Kerala Forest Research Institute
+>
+> Peechi, Thrisur, Kerala
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From gavin.simpson at ucl.ac.uk  Tue Jun 28 13:08:04 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 28 Jun 2011 12:08:04 +0100
+Subject: [R-sig-eco] envfit and adonis restricted permutations
+In-Reply-To: <1309217942005-6522883.post@n2.nabble.com>
+References: <1309217942005-6522883.post@n2.nabble.com>
+Message-ID: <1309259284.20533.77.camel@prometheus.geog.ucl.ac.uk>
+
+On Mon, 2011-06-27 at 16:39 -0700, Steve Leonard wrote:
+> Hi all, 
+> I am using envfit and adonis to examine patterns in floristic composition
+> amongst sites that vary with repect to fire history and fire severity
+> (factors) and a number of environmental variables (mostly continuous).
+> Within each site vegetation has been sampled in two environments (slope and
+> gully, one sample in each). I have used the 'strata' argument to restrict
+> permutations to within sites, as I believe this accounts for the lack of
+> independence of samples within sites (like including site as a random factor
+> in a mixed model). 
+> 
+> Results of envfit indicate that the variables 'easting' and 'northing' are
+> not significantly correlated with the ordination of sites, despite having
+> relatively high R2 values (see 'fit1' below). When I apply envfit with
+> unrestricted permutations, results are significant for easting and northing
+> (see 'fit2'). Similarly, easting and northing are significant when I analyse
+> the same data using adonis (see 'mod1'). 
+> 
+> Can anyone explain this apparent discrepancy? Is there a problem with the
+> way I am using 'strata'? Any advice gratefully received. 
+
+Yep; Notice that the r2 values don't change whether you use `strata =
+site` in the `envfit()` examples. What changes is the null distribution
+of r2 values against which the observed r2 is compared. Random
+permutation appears to produce results with far lower r2, in general
+than the observed, whilst permuting within `site` results in many r2
+values larger than the observed (~51 and ~27% more respectively for
+easting and northing). The run without strata is not appropriate as the
+samples are not freely exchangeable /between/ sites under the null
+hypothesis if you have clustering at the site level. Using `strata` is
+the more appropriate null hypothesis as samples are only freely
+exchangeable **within** site. Depending on whether you have sufficient
+sites, 999 permutations might be too many (there are only two
+permutations within each level of `site`, so what is 2 * number of sites
+in your data set?), but as yet we don't have a facility for iterating
+over the full set of permutations. The general facility is available in
+the `permute` package on r-forge but won't get fully integrated into
+vegan until later in the summer.
+
+As for `adonis()`, AFAIUI, it is decomposing the **entire**
+dissimilarity matrix into "variance" explained by each covariate. In
+nMDS, you have reduced the entire dissimilarity matrix to three
+dimensions and then look for correlations in those three dimensions with
+covariates. The "discrepancy" is due to the two techniques working with
+different "data" and assessing different versions of "explanatory
+power". These results, at first blush, would suggests to me that easting
+and northing effects are in the parts of the dissimilarity matrix not
+represented well by the 3-d nMDS solution.
+
+Does this help?
+
+G
+
+> Thanks 
+> 
+> Steve 
+> 
+> 
+> PS Data files attached if anyone cares to delve into them 
+> 
+> 
+> 
+> > flora<-read.csv("C://r//flora_ord_cd_no_UBG.csv", header=T) 
+> > sv<-read.csv("C://r//flora_sv_no_UBG.csv", header=T) 
+> > attach(sv) 
+> > library(vegan) 
+> This is vegan 1.18-33 
+> Warning message: 
+> package 'vegan' was built under R version 2.13.0 
+> 
+> > mds1<-metaMDS(flora, distance="bray", k=3, trace=F, autotransform =F) 
+> 
+> > fit1<-envfit(mds1~environment+history+severity+asp_class+easting+northing+ann_rain+Num_fire+TSF+tpi+sr_100_mean+slope,
+> > choices=c(1:3), strata=site) 
+> > fit1 
+> 
+> ***VECTORS 
+> 
+>                 NMDS1     NMDS2     NMDS3     r2 Pr(>r)   
+> easting     -0.068611 -0.144025 -0.987193 0.2912  0.517   
+> northing    -0.015771  0.995731 -0.090943 0.2657  0.366   
+> ann_rain    -0.104761 -0.776971 -0.620758 0.3133  0.013 * 
+> Num_fire     0.578255  0.802894  0.144850 0.0213  0.820   
+> TSF         -0.450387 -0.325620 -0.831338 0.0476  0.936   
+> tpi         -0.889913  0.139690  0.434213 0.0666  0.014 * 
+> sr_100_mean -0.193648  0.585345 -0.787319 0.0390  0.698   
+> slope       -0.664790  0.506331 -0.549257 0.0809  0.004 ** 
+> --- 
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+> P values based on 999 permutations, stratified within strata. 
+> 
+> ***FACTORS: 
+> 
+> Centroids: 
+>                NMDS1   NMDS2   NMDS3 
+> environmentg -0.3182  0.0604  0.0177 
+> environments  0.3113 -0.0591 -0.0173 
+> historyNR    -0.0686 -0.0104 -0.0526 
+> historyR      0.0702  0.0106  0.0538 
+> severityCB    0.0141 -0.0273  0.3109 
+> severityCS   -0.0257 -0.0702  0.2188 
+> severityGB   -0.0086 -0.0421 -0.0386 
+> severityRF    0.0199 -0.0132 -0.2918 
+> severityUB    0.0058  0.0891 -0.0738 
+> asp_classE   -0.0753  0.0850  0.0162 
+> asp_classN   -0.0177 -0.1153 -0.0120 
+> asp_classNE  -0.1051 -0.1974 -0.0086 
+> asp_classNW   0.1137  0.0589 -0.0183 
+> asp_classS    0.0738  0.0454  0.0618 
+> asp_classSE   0.0262  0.0909 -0.0408 
+> asp_classSW  -0.0778  0.1801  0.0694 
+> asp_classW    0.0502  0.0374 -0.0369 
+> 
+> Goodness of fit: 
+>                 r2 Pr(>r)     
+> environment 0.2354  0.001 *** 
+> history     0.0177  0.001 *** 
+> severity    0.0810  0.001 *** 
+> asp_class   0.0444  0.689     
+> --- 
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+> P values based on 999 permutations, stratified within strata. 
+> 
+> 
+> > fit2<-envfit(mds1~environment+history+severity+asp_class+easting+northing+ann_rain+Num_fire+TSF+tpi+sr_100_mean+slope,
+> > choices=c(1:3)) 
+> > fit2 
+> 
+> ***VECTORS 
+> 
+>                 NMDS1     NMDS2     NMDS3     r2 Pr(>r)     
+> easting     -0.068611 -0.144025 -0.987193 0.2912  0.001 *** 
+> northing    -0.015771  0.995731 -0.090943 0.2657  0.001 *** 
+> ann_rain    -0.104761 -0.776971 -0.620758 0.3133  0.001 *** 
+> Num_fire     0.578255  0.802894  0.144850 0.0213  0.267     
+> TSF         -0.450387 -0.325620 -0.831338 0.0476  0.041 *   
+> tpi         -0.889913  0.139690  0.434213 0.0666  0.010 ** 
+> sr_100_mean -0.193648  0.585345 -0.787319 0.0390  0.070 .   
+> slope       -0.664790  0.506331 -0.549257 0.0809  0.003 ** 
+> --- 
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+> P values based on 999 permutations. 
+> 
+> ***FACTORS: 
+> 
+> Centroids: 
+>                NMDS1   NMDS2   NMDS3 
+> environmentg -0.3182  0.0604  0.0177 
+> environments  0.3113 -0.0591 -0.0173 
+> historyNR    -0.0686 -0.0104 -0.0526 
+> historyR      0.0702  0.0106  0.0538 
+> severityCB    0.0141 -0.0273  0.3109 
+> severityCS   -0.0257 -0.0702  0.2188 
+> severityGB   -0.0086 -0.0421 -0.0386 
+> severityRF    0.0199 -0.0132 -0.2918 
+> severityUB    0.0058  0.0891 -0.0738 
+> asp_classE   -0.0753  0.0850  0.0162 
+> asp_classN   -0.0177 -0.1153 -0.0120 
+> asp_classNE  -0.1051 -0.1974 -0.0086 
+> asp_classNW   0.1137  0.0589 -0.0183 
+> asp_classS    0.0738  0.0454  0.0618 
+> asp_classSE   0.0262  0.0909 -0.0408 
+> asp_classSW  -0.0778  0.1801  0.0694 
+> asp_classW    0.0502  0.0374 -0.0369 
+> 
+> Goodness of fit: 
+>                 r2 Pr(>r)     
+> environment 0.2354  0.001 *** 
+> history     0.0177  0.029 *   
+> severity    0.0810  0.001 *** 
+> asp_class   0.0444  0.291     
+> --- 
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+> P values based on 999 permutations. 
+> 
+> 
+> 
+> 
+> > mod1<-adonis(flora~environment+history+severity+asp_class+easting+northing+ann_rain+Num_fire+TSF+tpi+sr_100_mean+slope,
+> > method="bray", strata=site) 
+> > mod1 
+> 
+> Call: 
+> adonis(formula = flora ~ environment + history + severity + asp_class +
+> easting + northing + ann_rain + Num_fire + TSF + tpi + sr_100_mean + slope,
+> method = "bray", strata = site) 
+> 
+>              Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)     
+> environment   1     4.316  4.3155 19.3742 0.08508  0.001 *** 
+> history       1     0.569  0.5687  2.5530 0.01121  0.001 *** 
+> severity      4     2.801  0.7003  3.1440 0.05523  0.001 *** 
+> asp_class     7     2.143  0.3061  1.3744 0.04225  0.295     
+> easting       1     1.115  1.1151  5.0060 0.02198  0.001 *** 
+> northing      1     1.860  1.8598  8.3493 0.03667  0.001 *** 
+> ann_rain      1     0.797  0.7966  3.5762 0.01570  0.007 ** 
+> Num_fire      1     0.290  0.2896  1.2999 0.00571  0.158     
+> TSF           1     0.159  0.1591  0.7144 0.00314  0.270     
+> tpi           1     0.454  0.4541  2.0388 0.00895  0.486     
+> sr_100_mean   1     0.369  0.3692  1.6576 0.00728  0.323     
+> slope         1     0.211  0.2111  0.9476 0.00416  0.491     
+> Residuals   160    35.639  0.2227         0.70264           
+> Total       181    50.722                 1.00000           
+> --- 
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1 
+> 
+> http://r-sig-ecology.471788.n2.nabble.com/file/n6522883/flora_ord_cd_no_UBG.csv
+> flora_ord_cd_no_UBG.csv 
+> http://r-sig-ecology.471788.n2.nabble.com/file/n6522883/flora_sv_no_UBG.csv
+> flora_sv_no_UBG.csv 
+> 
+> -----
+> Dr Steve Leonard
+> Research Fellow
+> Department of Zoology| La Trobe University | Bundoora, 3086 Australia
+> T: +61 3 9479 2773 | M: +61 429 418 388 | F: +61 3 9479 1551 | W: www.latrobe.edu.au/zoology/
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/envfit-and-adonis-restricted-permutations-tp6522883p6522883.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From s.leonard at latrobe.edu.au  Wed Jun 29 01:27:21 2011
+From: s.leonard at latrobe.edu.au (Steve Leonard)
+Date: Tue, 28 Jun 2011 16:27:21 -0700 (PDT)
+Subject: [R-sig-eco] envfit and adonis restricted permutations
+In-Reply-To: <1309259284.20533.77.camel@prometheus.geog.ucl.ac.uk>
+References: <1309217942005-6522883.post@n2.nabble.com>
+	<1309259284.20533.77.camel@prometheus.geog.ucl.ac.uk>
+Message-ID: <1309303641142-6527047.post@n2.nabble.com>
+
+Thanks Gavin, that is really helpful.
+
+I'm still a bit uncertain re your parting words:
+
+"These results, at first blush, would suggests to me that easting
+and northing effects are in the parts of the dissimilarity matrix not
+represented well by the 3-d nMDS solution."
+
+If this was the case, wouldn't easting and northing have low r2 values in
+envfit results?
+
+
+Steve
+
+
+
+
+
+-----
+Dr Steve Leonard
+Research Fellow
+Department of Zoology| La Trobe University | Bundoora, 3086 Australia
+T: +61 3 9479 2773 | M: +61 429 418 388 | F: +61 3 9479 1551 | W: www.latrobe.edu.au/zoology/
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/envfit-and-adonis-restricted-permutations-tp6522883p6527047.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From gavin.simpson at ucl.ac.uk  Wed Jun 29 08:07:03 2011
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 29 Jun 2011 07:07:03 +0100
+Subject: [R-sig-eco] envfit and adonis restricted permutations
+In-Reply-To: <1309303641142-6527047.post@n2.nabble.com>
+References: <1309217942005-6522883.post@n2.nabble.com>
+	<1309259284.20533.77.camel@prometheus.geog.ucl.ac.uk>
+	<1309303641142-6527047.post@n2.nabble.com>
+Message-ID: <1309327623.2727.6.camel@chrysothemis.geog.ucl.ac.uk>
+
+On Tue, 2011-06-28 at 16:27 -0700, Steve Leonard wrote:
+> Thanks Gavin, that is really helpful.
+> 
+> I'm still a bit uncertain re your parting words:
+> 
+> "These results, at first blush, would suggests to me that easting
+> and northing effects are in the parts of the dissimilarity matrix not
+> represented well by the 3-d nMDS solution."
+> 
+> If this was the case, wouldn't easting and northing have low r2 values in
+> envfit results?
+
+The restricted permutation test is telling you that there is nothing
+special about the r2 values for those covariates in the envfit case.
+
+That was speculation; as I said, the two techniques are testing very
+different things so it is difficult to make definitive statements.
+Remember in nMDS all you are doing is getting a low dimensional mapping
+that best fits the *rank* ordering of the dissimilarities between you
+samples. adonis is able to work with the actual dissimilarities. In
+terms of the rank ordering mapping, easting and northing do not appear
+to be important, yet they are able to "explain" significant amounts of
+the "variance" in the actual dissimilarities.
+
+G
+
+> 
+> Steve
+> 
+> 
+> 
+> 
+> 
+> -----
+> Dr Steve Leonard
+> Research Fellow
+> Department of Zoology| La Trobe University | Bundoora, 3086 Australia
+> T: +61 3 9479 2773 | M: +61 429 418 388 | F: +61 3 9479 1551 | W: www.latrobe.edu.au/zoology/
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/envfit-and-adonis-restricted-permutations-tp6522883p6527047.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From jari.oksanen at oulu.fi  Wed Jun 29 15:59:00 2011
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 29 Jun 2011 16:59:00 +0300
+Subject: [R-sig-eco] envfit and adonis restricted permutations
+In-Reply-To: <1309327623.2727.6.camel@chrysothemis.geog.ucl.ac.uk>
+Message-ID: <CA310A54.17816%jari.oksanen@oulu.fi>
+
+On 29/06/11 09:07 AM, "Gavin Simpson" <gavin.simpson at ucl.ac.uk> wrote:
+
+> On Tue, 2011-06-28 at 16:27 -0700, Steve Leonard wrote:
+>> Thanks Gavin, that is really helpful.
+>> 
+>> I'm still a bit uncertain re your parting words:
+>> 
+>> "These results, at first blush, would suggests to me that easting
+>> and northing effects are in the parts of the dissimilarity matrix not
+>> represented well by the 3-d nMDS solution."
+>> 
+>> If this was the case, wouldn't easting and northing have low r2 values in
+>> envfit results?
+> 
+> The restricted permutation test is telling you that there is nothing
+> special about the r2 values for those covariates in the envfit case.
+> 
+> That was speculation; as I said, the two techniques are testing very
+> different things so it is difficult to make definitive statements.
+> Remember in nMDS all you are doing is getting a low dimensional mapping
+> that best fits the *rank* ordering of the dissimilarities between you
+> samples. adonis is able to work with the actual dissimilarities. In
+> terms of the rank ordering mapping, easting and northing do not appear
+> to be important, yet they are able to "explain" significant amounts of
+> the "variance" in the actual dissimilarities.
+> 
+Yep, and you should also note that when you use 'strata', the significance
+of easting and northing are evaluated *within* strata, whereas R2 of envfit
+is evaluated over all data disregarding strata (the value of R2 does not
+change when you use 'strata'). If easting and northing differ between
+strata, but are fairly constant within strata, you can get high R2, but no
+significant results. You know your data best (and you have access to your
+data), so check yourself.
+
+Cheers, Jari Oksanen
+
+
+From jeffrey.stratford at wilkes.edu  Thu Jun 30 01:17:41 2011
+From: jeffrey.stratford at wilkes.edu (Stratford, Jeffrey)
+Date: Wed, 29 Jun 2011 19:17:41 -0400
+Subject: [R-sig-eco] testing for synchrony
+In-Reply-To: <4E0988A6.7030101@uni-landau.de>
+References: <BANLkTinrX=26cq9_e1YygmOYLqKKWHAj6g@mail.gmail.com>
+	<4E0988A6.7030101@uni-landau.de>
+Message-ID: <72B2B2BDFE51E64DAC6381495614980007986449@STAFFEXCHVS3.wilkesu.wilkes.edu>
+
+Hi everyone,
+
+I've been asked a few times about how to test for synchrony of
+ecological events.  In one case, a researcher has more than a decade of
+acorn mast data for several species of oaks and wants to know if
+different oaks have synchronous mast years when sympatric.  The other
+case, a researcher wants to know if frog calling intensity is
+synchronous across a number of ponds. I thought I would first take a
+stab at looking at synchrony broadly then I would dig deeper and look at
+synchrony and spatial effects.
+
+Any suggestions how to get started?  
+
+Many thanks,
+
+Jeff
+*****************************************
+Jeffrey A. Stratford, Ph.D.
+Department of Health and Biological Sciences
+84 W. South St.
+Wilkes Univertsity, PA 18766
+570-332-2942
+http://web.wilkes.edu/jeffrey.stratford/
+
+
+From chris at trickysolutions.com.au  Thu Jun 30 06:32:32 2011
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Thu, 30 Jun 2011 14:32:32 +1000
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+In-Reply-To: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE8293DEF@nerckwmb1.ad.nerc.ac.uk>
+References: <784A1384-99CE-49B7-A551-F3B89E99D004@gmail.com>
+	<46F6C7DE-100C-4C9E-BAF7-78F62516080B@gmail.com>	<C47AFE5D-316C-4508-8A13-C78F3855BD1B@gmail.com>
+	<9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE821BD69@nerckwmb1.ad.nerc.ac.uk>
+	<21ab3808912b43272fd9462dc259489b@mail.gmail.com>
+	<9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE8293DEF@nerckwmb1.ad.nerc.ac.uk>
+Message-ID: <9165344706cf6ee1214d390e02e7cc4a@mail.gmail.com>
+
+Thanks for the explanation  Michael,
+
+And there I was thinking I'd found a silver bullet, should have know if
+it's too good to be true it likely isn't. I've been meaning to buy Pinhero
+and Bates, and I think this is just the incentive I needed.
+
+Chris Howden
+Founding Partner
+Tricky Solutions
+Tricky Solutions 4 Tricky Problems
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(fax / office)
+chris at trickysolutions.com.au
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+
+-----Original Message-----
+From: Dunbar, Michael J. [mailto:mdu at ceh.ac.uk]
+Sent: Monday, 27 June 2011 7:15 PM
+To: Chris Howden; r-sig-ecology at r-project.org
+Subject: RE: [R-sig-eco] Partially non-independent ANOVA?
+
+Hi Chris
+
+lme (LMMs only) can handle unequal variances of residuals at the lowest
+level in your hierarchy using variance functions: this isn't really what
+you describe below. This is described in Pinhero and Bates, but for
+beginners, best to look at Zuur "Mixed Effects Models and Extensions in
+Ecology with R" which gives a good overview.
+
+lmer can of course do LMMs and GLMMs, but so far as I know it cannot do
+unequal residual variances by groups.
+
+Both can do unequal random effect (i.e. the hierarchical levels above the
+lowest level residuals) variances by group, but with anything more than
+two groups this does get a bit complicated. You put the factor to the left
+of the | in the random part as if it were a random slope: for
+interpretation it can be easier to reformulate your factor as indicator
+variables of 1's and 0's in separate columns.
+
+Regards
+Mike
+
+
+-----Original Message-----
+From: Chris Howden [mailto:chris at trickysolutions.com.au]
+Sent: 27 June 2011 06:01
+To: Dunbar, Michael J.; Cliff Beall; r-sig-ecology at r-project.org
+Subject: RE: [R-sig-eco] Partially non-independent ANOVA?
+
+Hi Mike,
+
+I'm rather new to mixed models, but am on a few lists at the moment to try
+and get my head around them. Your comments on using GLMM's on data with
+unequal variances gave me a very pleasant surprise! And after thinking
+about it I realised it was a fairly obvious use of GLMM's.
+
+Can I just confirm your comments though?
+
+If I was testing some factor that I knew each group had unequal variances
+could I test it using something like the following?
+
+lmer(response~factor + (1|factor), data=data)?
+
+Chris Howden
+Founding Partner
+Tricky Solutions
+Tricky Solutions 4 Tricky Problems
+Evidence Based Strategic Development, IP Commercialisation and Innovation,
+Data Analysis, Modelling and Training
+(mobile) 0410 689 945
+(fax / office)
+chris at trickysolutions.com.au
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information.?If you are
+not the named or intended recipient, please delete this communication and
+contact us immediately.?Please note you are not authorised to copy, use or
+disclose this communication or any attachments without our consent.
+Although this email has been checked by anti-virus software, there is a
+risk that email messages may be corrupted or infected by viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the company.
+Tricky Solutions always does our best to provide accurate forecasts and
+analyses based on the data supplied, however it is possible that some
+important predictors were not included in the data sent to us. Information
+provided by us should not be solely relied upon when making decisions and
+clients should use their own judgement.
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Dunbar, Michael
+J.
+Sent: Thursday, 23 June 2011 10:59 PM
+To: Cliff Beall; r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Partially non-independent ANOVA?
+
+Dear Cliff
+
+Using a mixed-effects model (also variously termed multilevel or
+hierarchical model) could well be what you are looking for. These are
+implemented in several R packages.
+
+In your study, in mixed model parlance, patient identifier would be a
+random effect (you don't say how many patients), with some patients having
+one measurement and some two, and treatment (control or periodontitis)
+would be a fixed effect. How or whether you code the sites (which would be
+another fixed effect) depends on whether they are of interest.
+
+These approaches are very powerful, but I wouldn't advise just dipping
+into them - it can be hard to get things set up correctly if you just want
+"a test", they repay careful study. On the bonus side, once you're
+familiar with them you start seeing the everything in a hierarchical
+mindset!
+
+You can model unequal variances by group, although you need to be careful
+in model specification.
+
+Regards
+Mike
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org
+[mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Cliff Beall
+Sent: 22 June 2011 17:18
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Partially non-independent ANOVA?
+
+Dear group-
+
+I was wondering if someone could point me towards the correct statistical
+test and R-function for my situation.
+
+I am looking at oral bacteria and have three groups of samples, one from
+control subjects, and two that are derived from different sites in
+patients with periodontitis. So I have one totally independent group, and
+two that have samples that are paired.
+
+I would like to do a test just to say that there are differences between
+the three groups, something like an ANOVA, but that deals with the lack of
+independence of the two groups.
+
+By the way, for what I am measuring it looks like normality is a
+reasonable assumption but equal variances are probably not.
+
+Thanks,
+
+Cliff Beall
+Research Assistant Professor
+Division of Oral Biology
+College of Dentistry
+The Ohio State University
+beall.3 at osu.edu
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+--
+This message (and any attachments) is for the recipient ...{{dropped:10}}
+
+
+From mdu at ceh.ac.uk  Thu Jun 30 11:33:25 2011
+From: mdu at ceh.ac.uk (Dunbar, Michael J.)
+Date: Thu, 30 Jun 2011 10:33:25 +0100
+Subject: [R-sig-eco] testing for synchrony
+In-Reply-To: <72B2B2BDFE51E64DAC6381495614980007986449@STAFFEXCHVS3.wilkesu.wilkes.edu>
+References: <BANLkTinrX=26cq9_e1YygmOYLqKKWHAj6g@mail.gmail.com>
+	<4E0988A6.7030101@uni-landau.de>
+	<72B2B2BDFE51E64DAC6381495614980007986449@STAFFEXCHVS3.wilkesu.wilkes.edu>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD1CE834ADA2@nerckwmb1.ad.nerc.ac.uk>
+
+Hi Jeff
+
+I don't know about any specific test for synchrony as there are many ways of looking at the problem. But there's plenty of literature looking at modelling of synchrony in the aquatic environment which would hopefully help you get started.
+
+e.g. for starters try:
+
+Rusak J.A., Yan N.D. & Somers K.M. (2008) Regional climatic drivers of synchronous zooplankton dynamics in north-temperate lakes. Canadian Journal of Fisheries and Aquatic Sciences 65, 878-889.
+
+Rusak J.A., Yan N.D., Somers K.M. & McQueen D.J. (1999) The Temporal Coherence of Zooplankton Population Abundances in Neighboring North-Temperate Lakes. American Naturalist 153, 46-58.
+
+Zuur A.F. & Pierce G.J. (2004) Common trends in northeast Atlantic squid time series. Journal of Sea Research 52, 57-72.
+
+Regards
+Mike
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Stratford, Jeffrey
+Sent: 30 June 2011 00:18
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] testing for synchrony
+
+Hi everyone,
+
+I've been asked a few times about how to test for synchrony of
+ecological events.  In one case, a researcher has more than a decade of
+acorn mast data for several species of oaks and wants to know if
+different oaks have synchronous mast years when sympatric.  The other
+case, a researcher wants to know if frog calling intensity is
+synchronous across a number of ponds. I thought I would first take a
+stab at looking at synchrony broadly then I would dig deeper and look at
+synchrony and spatial effects.
+
+Any suggestions how to get started?  
+
+Many thanks,
+
+Jeff
+*****************************************
+Jeffrey A. Stratford, Ph.D.
+Department of Health and Biological Sciences
+84 W. South St.
+Wilkes Univertsity, PA 18766
+570-332-2942
+http://web.wilkes.edu/jeffrey.stratford/
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+This message (and any attachments) is for the recipient only. NERC
+is subject to the Freedom of Information Act 2000 and the contents
+of this email and any reply you make may be disclosed by NERC unless
+it is exempt from release under the Act. Any material supplied to
+NERC may be stored in an electronic records management system.
+

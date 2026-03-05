@@ -1,0 +1,3769 @@
+From ctekellogg at gmail.com  Sat Jun  1 01:10:36 2013
+From: ctekellogg at gmail.com (ckellogg)
+Date: Fri, 31 May 2013 16:10:36 -0700 (PDT)
+Subject: [R-sig-eco] anova.cca question / missing data in constraining matrix
+Message-ID: <1370041836292-7578175.post@n2.nabble.com>
+
+Hello,
+I am using the cca function in Vegan to examine the relationship between
+microbial community structure and a (large) suite of environmental
+variables.  My constraining/environmental data matrix as a lot of holes in
+it so I have been exploring using the na.action argument. 
+This is the command I am currently using:
+toolik250.cca<-cca(toolikotus250.ra~julianday+logwindspd_max_1dayprior+lograin_3dayprior+sqrtwindspd_1dayprior+windspd_3dayprior+days_since_thaw+days_since_iceout+days_btw_iceoutandthaw+toolikepitemp_24h+logtemp+conductivity+pH,
+toolikenv.s, na.action=na.omit)
+
+The CCA seems to run just fine, but when I attempt to do the posthoc tests
+such as anova.cca (anova(toolik250.cca,by='terms',perm=999), I get an error
+message: "Error in anova.ccabyterm(object, step = step, ...) : number of
+rows has changed: remove missing values?"  What exactly is occurring here to
+cause this error - I suspect it must be related to the fact that the
+environmental data matrix has a lot of missing data.  I don't quite
+understand why it states that the number of rows has changed...changed from
+what?  Is there any way to get around having missing data when running the
+anovas as you can when running the CCA itself?
+
+One other question I have is when I try and run the CCA on all the data in
+my environmental data matrix (toolikenv.s), not just a subset of variables
+as I do above, using this command:
+toolik250.cca <-cca(toolikotus250.ra~., toolikenv.s, na.action=na.omit)
+I get the following error message.  "Error in svd(Xbar, nu = 0, nv = 0) : a
+dimension is zero" What might be causing this error message to be thrown?
+
+Thank you so much for your help.  Maybe I will just have to filter out the
+samples with missing environmental data (or filter out some of the variables
+themselves if they have too much missing data), but I was just hoping to
+avoid having to do this.
+
+Colleen
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/anova-cca-question-missing-data-in-constraining-matrix-tp7578175.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From luysgarcia at gmail.com  Sat Jun  1 01:51:35 2013
+From: luysgarcia at gmail.com (=?ISO-8859-1?Q?Luis_Fernando_Garc=EDa_Hern=E1ndez?=)
+Date: Fri, 31 May 2013 20:51:35 -0300
+Subject: [R-sig-eco] Question on GLMM
+Message-ID: <CANxP2S65=t5-xyw5b=P2D5F4AMyiREO0-b7iYckiggGC=q3piQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130531/deb905ed/attachment.pl>
+
+From jari.oksanen at oulu.fi  Sat Jun  1 04:20:50 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Sat, 1 Jun 2013 02:20:50 +0000
+Subject: [R-sig-eco] anova.cca question / missing data in constraining
+ matrix
+In-Reply-To: <1370041836292-7578175.post@n2.nabble.com>
+References: <1370041836292-7578175.post@n2.nabble.com>
+Message-ID: <7A9AB4AD-BFA3-48E8-B647-DB81A48F2A87@oulu.fi>
+
+Hello, 
+On 01/06/2013, at 02:10 AM, ckellogg wrote:
+
+> Hello,
+> I am using the cca function in Vegan to examine the relationship between
+> microbial community structure and a (large) suite of environmental
+> variables.  My constraining/environmental data matrix as a lot of holes in
+> it so I have been exploring using the na.action argument. 
+> This is the command I am currently using:
+> toolik250.cca<-cca(toolikotus250.ra~julianday+logwindspd_max_1dayprior+lograin_3dayprior+sqrtwindspd_1dayprior+windspd_3dayprior+days_since_thaw+days_since_iceout+days_btw_iceoutandthaw+toolikepitemp_24h+logtemp+conductivity+pH,
+> toolikenv.s, na.action=na.omit)
+> 
+> The CCA seems to run just fine, but when I attempt to do the posthoc tests
+> such as anova.cca (anova(toolik250.cca,by='terms',perm=999), I get an error
+> message: "Error in anova.ccabyterm(object, step = step, ...) : number of
+> rows has changed: remove missing values?"  What exactly is occurring here to
+> cause this error - I suspect it must be related to the fact that the
+> environmental data matrix has a lot of missing data.  I don't quite
+> understand why it states that the number of rows has changed...changed from
+> what?  
+
+The number of rows has changed from term to term. That is, you have different numbers of missing values in each term (= explanatory variable), and when rows with missing values are removed for the current model, the accepted observations change from term to term. I admit the error message is not the most obvious one. I must see where it comes from, and how to make it more informative. However, it does give a hint to "remove missing values", doesn't it?
+
+If you want to have a term-wise test with missing values in terms, you must refit your model for complete.cases.  Use argument 'subset' to select a subset with no missing values. Currently I don't know any nice short cut to do this with the current mode, but the following may work (untested), although it is not nice:
+
+keep <- rep(TRUE, nrow(tooliken.s)
+keep[toolik250.cca$na.action] <- FALSE
+m2 <- update(toolik250.cca, subset = keep)
+anova(m2, by="terms", perm=999)
+
+> Is there any way to get around having missing data when running the
+> anovas as you can when running the CCA itself?
+> 
+> One other question I have is when I try and run the CCA on all the data in
+> my environmental data matrix (toolikenv.s), not just a subset of variables
+> as I do above, using this command:
+> toolik250.cca <-cca(toolikotus250.ra~., toolikenv.s, na.action=na.omit)
+> I get the following error message.  "Error in svd(Xbar, nu = 0, nv = 0) : a
+> dimension is zero" What might be causing this error message to be thrown?
+> 
+What does sum(complete.cases(toolikenv.s)) give as a result? Does it give 0?
+
+I suspect you have so many holes that nothing is left when you remove rows with any missing values. The message is about an attempt to analyse zero-dimensional matrix.
+
+> Thank you so much for your help.  Maybe I will just have to filter out the
+> samples with missing environmental data (or filter out some of the variables
+> themselves if they have too much missing data), but I was just hoping to
+> avoid having to do this.
+
+
+The functions can handle missing values, but they handle them by removing the observation. Do you want to lose a huge number of rows? We won't invent values to replace missing data in cca(). Some people have suggested ways to do that, and that is not difficult: just search for imputation in R (for instance, package mice). However, the real problem is how to compare and summarize the multivariate results after imputation. Further, if you have a lot of missing values, nothing may be very reliable. It could be possible to collect together and combine permutation test results after multiple imputation, but better consult a statistician before trying to do this.
+
+Cheers, Jari Oksanen
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+
+
+From jari.oksanen at oulu.fi  Sat Jun  1 07:18:50 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Sat, 1 Jun 2013 05:18:50 +0000
+Subject: [R-sig-eco] anova.cca question / missing data in constraining
+ matrix
+In-Reply-To: <7A9AB4AD-BFA3-48E8-B647-DB81A48F2A87@oulu.fi>
+References: <1370041836292-7578175.post@n2.nabble.com>
+	<7A9AB4AD-BFA3-48E8-B647-DB81A48F2A87@oulu.fi>
+Message-ID: <BB85C552-4EF1-4105-BEFC-687EEB115A9A@oulu.fi>
+
+
+On 01/06/2013, at 05:20 AM, Jari Oksanen wrote:
+>> 
+>> The CCA seems to run just fine, but when I attempt to do the posthoc tests
+>> such as anova.cca (anova(toolik250.cca,by='terms',perm=999), I get an error
+>> message: "Error in anova.ccabyterm(object, step = step, ...) : number of
+>> rows has changed: remove missing values?"  What exactly is occurring here to
+>> cause this error - I suspect it must be related to the fact that the
+>> environmental data matrix has a lot of missing data.  I don't quite
+>> understand why it states that the number of rows has changed...changed from
+>> what?  
+> 
+> The number of rows has changed from term to term. That is, you have different numbers of missing values in each term (= explanatory variable), and when rows with missing values are removed for the current model, the accepted observations change from term to term. I admit the error message is not the most obvious one. I must see where it comes from, and how to make it more informative. However, it does give a hint to "remove missing values", doesn't it?
+> 
+> If you want to have a term-wise test with missing values in terms, you must refit your model for complete.cases.  Use argument 'subset' to select a subset with no missing values. Currently I don't know any nice short cut to do this with the current mode, but the following may work (untested), although it is not nice:
+> 
+> keep <- rep(TRUE, nrow(tooliken.s)
+> keep[toolik250.cca$na.action] <- FALSE
+> m2 <- update(toolik250.cca, subset = keep)
+> anova(m2, by="terms", perm=999)
+
+Actually, there is a bit easier way of doing this, because 'subset' can also be a vector of indices, and negative indices acn be used to remove observations. If 'toolik250.cca' is a result object with missing observations, then
+
+m2 <- update(toolik250.cca, subset = -toolik250.cca$na.action)
+
+will remove items listed as removed in 'na.action' (NB. the minus sign in 'subset'). The update()d model will be equal to the original model, but missing data removed.
+
+Cheers, Jari Oksanen 
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+From ctekellogg at gmail.com  Mon Jun  3 21:32:46 2013
+From: ctekellogg at gmail.com (ckellogg)
+Date: Mon, 3 Jun 2013 12:32:46 -0700 (PDT)
+Subject: [R-sig-eco] anova.cca question / missing data in constraining
+	matrix
+In-Reply-To: <1370041836292-7578175.post@n2.nabble.com>
+References: <1370041836292-7578175.post@n2.nabble.com>
+Message-ID: <1370287966910-7578179.post@n2.nabble.com>
+
+Hello Jari,
+Thank you for your help with this.  The solution you suggested in your
+second post worked quite well.  However, i think another subset of my data
+is too 'holey', because when I run CCA on this set of environmental
+variables (or the a CCA with the previous environmental variables and the
+additional ones), I get an error: 
+
+> toolik250.cca2
+> <-cca(toolikotus250.ra~logtemp+conductivity+pH+logBacProd+DIC+logDCO2+sqrtDCH4+logDOC+sqrtPhosphate+sqrtNitrate+sqrtTDN+sqrtTDP+logPC+logPN+Ca+Mg+logNa+logK+SO4+logChloride+Silica,toolikenv.s,
+> na.action=na.exclude)
+Error in predict.cca(x, newdata = excluded, type = "wa", model = "CA") : 
+  model ?CA? has rank 0
+
+The CCA runs if I use na.action=na.omit, but then when I run the anovas,
+there is apparently no residual component.  For example,
+No residual component
+
+Model: cca(formula = toolikotus250.ra ~ logtemp + conductivity + pH +
+logBacProd + DIC + logDCO2 + sqrtDCH4 + logDOC + sqrtPhosphate + sqrtNitrate
++ sqrtTDN + sqrtTDP + logPC + logPN + Ca + Mg + logNa + logK + SO4 +
+logChloride + Silica, data = toolikenv.s, na.action = na.omit, subset =
+-toolik250.cca2$na.action)
+         Df  Chisq F N.Perm Pr(>F)
+Model    12 5.3003        0       
+Residual  0 0.0000   
+
+So, I am thinking that examining the relationship between the microbial
+community and this subset of environmental variables might not be possible
+without my first manually curating which samples and variables should be
+included, correct?
+
+Thank you,
+Colleen
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/anova-cca-question-missing-data-in-constraining-matrix-tp7578175p7578179.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From luysgarcia at gmail.com  Tue Jun  4 08:46:07 2013
+From: luysgarcia at gmail.com (=?ISO-8859-1?Q?Luis_Fernando_Garc=EDa_Hern=E1ndez?=)
+Date: Tue, 4 Jun 2013 03:46:07 -0300
+Subject: [R-sig-eco] bootstrap and Levin index basics
+Message-ID: <CANxP2S7ZNLff25zuurLxhjnMFS+0rhFZqcGBwrY0HMSo_F=bWA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130604/daa26561/attachment.pl>
+
+From mariangeles354 at hotmail.com  Tue Jun  4 09:07:55 2013
+From: mariangeles354 at hotmail.com (marian lacava)
+Date: Tue, 4 Jun 2013 04:07:55 -0300
+Subject: [R-sig-eco] Basic Question about GLMM
+Message-ID: <BAY173-W4645F03030B74AA069048E9D9E0@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130604/2fe08cb5/attachment.pl>
+
+From luysgarcia at gmail.com  Tue Jun  4 09:11:22 2013
+From: luysgarcia at gmail.com (=?ISO-8859-1?Q?Luis_Fernando_Garc=EDa_Hern=E1ndez?=)
+Date: Tue, 4 Jun 2013 04:11:22 -0300
+Subject: [R-sig-eco] Question on GLMM
+In-Reply-To: <CANxP2S65=t5-xyw5b=P2D5F4AMyiREO0-b7iYckiggGC=q3piQ@mail.gmail.com>
+References: <CANxP2S65=t5-xyw5b=P2D5F4AMyiREO0-b7iYckiggGC=q3piQ@mail.gmail.com>
+Message-ID: <CANxP2S4JQseZCqA4L8AScpa=GhvhZB73TFekB2h7Gv7KW7zOOQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130604/621175d6/attachment.pl>
+
+From jinlongzhang01 at gmail.com  Tue Jun  4 09:17:47 2013
+From: jinlongzhang01 at gmail.com (Jinlong Zhang)
+Date: Tue, 4 Jun 2013 15:17:47 +0800
+Subject: [R-sig-eco] bootstrap and Levin index basics
+In-Reply-To: <CANxP2S7ZNLff25zuurLxhjnMFS+0rhFZqcGBwrY0HMSo_F=bWA@mail.gmail.com>
+References: <CANxP2S7ZNLff25zuurLxhjnMFS+0rhFZqcGBwrY0HMSo_F=bWA@mail.gmail.com>
+Message-ID: <CAPi6crGq6_xgFs5KTVzRwVTkZoN=BzBYD2qo6L1s6V1C1A1fOg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130604/644bf865/attachment.pl>
+
+From jari.oksanen at oulu.fi  Tue Jun  4 10:58:24 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 4 Jun 2013 08:58:24 +0000
+Subject: [R-sig-eco] anova.cca question / missing data in
+	constraining	matrix
+In-Reply-To: <1370287966910-7578179.post@n2.nabble.com>
+References: <1370041836292-7578175.post@n2.nabble.com>
+	<1370287966910-7578179.post@n2.nabble.com>
+Message-ID: <76C45306-C574-4F20-95EF-00BC23ADBECA@oulu.fi>
+
+Dear Colleen, 
+On 03/06/2013, at 22:32 PM, ckellogg wrote:
+
+> Hello Jari,
+> Thank you for your help with this.  The solution you suggested in your
+> second post worked quite well.  However, i think another subset of my data
+> is too 'holey', because when I run CCA on this set of environmental
+> variables (or the a CCA with the previous environmental variables and the
+> additional ones), I get an error: 
+> 
+>> toolik250.cca2
+>> <-cca(toolikotus250.ra~logtemp+conductivity+pH+logBacProd+DIC+logDCO2+sqrtDCH4+logDOC+sqrtPhosphate+sqrtNitrate+sqrtTDN+sqrtTDP+logPC+logPN+Ca+Mg+logNa+logK+SO4+logChloride+Silica,toolikenv.s,
+>> na.action=na.exclude)
+> Error in predict.cca(x, newdata = excluded, type = "wa", model = "CA") : 
+>  model ?CA? has rank 0
+> 
+> The CCA runs if I use na.action=na.omit, but then when I run the anovas,
+> there is apparently no residual component.  For example,
+> No residual component
+> 
+> Model: cca(formula = toolikotus250.ra ~ logtemp + conductivity + pH +
+> logBacProd + DIC + logDCO2 + sqrtDCH4 + logDOC + sqrtPhosphate + sqrtNitrate
+> + sqrtTDN + sqrtTDP + logPC + logPN + Ca + Mg + logNa + logK + SO4 +
+> logChloride + Silica, data = toolikenv.s, na.action = na.omit, subset =
+> -toolik250.cca2$na.action)
+>         Df  Chisq F N.Perm Pr(>F)
+> Model    12 5.3003        0       
+> Residual  0 0.0000   
+> 
+Yes, probably too many holes. You have no residual variation which indicates that the number
+of predictor variables (constraints) is higher than the number of remaining observations. 
+
+Cheers, Jari Oksanen
+
+> So, I am thinking that examining the relationship between the microbial
+> community and this subset of environmental variables might not be possible
+> without my first manually curating which samples and variables should be
+> included, correct?
+> 
+> Thank you,
+> Colleen
+> 
+> 
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/anova-cca-question-missing-data-in-constraining-matrix-tp7578175p7578179.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+jari.oksanen at oulu.fi, Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+
+
+From tulugaq17 at hotmail.com  Tue Jun  4 13:37:07 2013
+From: tulugaq17 at hotmail.com (shylock holmes)
+Date: Tue, 4 Jun 2013 08:37:07 -0300
+Subject: [R-sig-eco] seeking help with categorical data
+Message-ID: <BLU165-W388BD52B17E823EA0265F7A69E0@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130604/e87af0f5/attachment.pl>
+
+From ctekellogg at gmail.com  Tue Jun  4 17:23:41 2013
+From: ctekellogg at gmail.com (ckellogg)
+Date: Tue, 4 Jun 2013 08:23:41 -0700 (PDT)
+Subject: [R-sig-eco] anova.cca question / missing data in constraining
+	matrix
+Message-ID: <CAAN5UgzpVXOkUehJ46_Z0_fHe94_83ov=cz0TYw6-tzY3mpUcw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130604/c6fc283e/attachment.pl>
+
+From Simon.deLestang at fish.wa.gov.au  Wed Jun  5 02:25:46 2013
+From: Simon.deLestang at fish.wa.gov.au (Simon de Lestang)
+Date: Wed, 5 Jun 2013 00:25:46 +0000
+Subject: [R-sig-eco] Pariwise tests in ANOSIM (and/or ADONIS)
+Message-ID: <56314813D84A0146B1563737B8F027BCC66A0EB6@F01-MAIL01.fish.wa.gov.au>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130605/d992e041/attachment.pl>
+
+From jari.oksanen at oulu.fi  Wed Jun  5 07:00:36 2013
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Wed, 5 Jun 2013 05:00:36 +0000
+Subject: [R-sig-eco] Pariwise tests in ANOSIM (and/or ADONIS)
+In-Reply-To: <56314813D84A0146B1563737B8F027BCC66A0EB6@F01-MAIL01.fish.wa.gov.au>
+References: <56314813D84A0146B1563737B8F027BCC66A0EB6@F01-MAIL01.fish.wa.gov.au>
+Message-ID: <D788A224-7AFF-4C38-80A5-C3E4995A7578@oulu.fi>
+
+
+On 05/06/2013, at 03:25 AM, Simon de Lestang wrote:
+
+> I have what I am sure is a very simple question relating to the package vegan, although I have not been able to solve it via Google.
+> Using the function anosim I am only able to produce a global result in the output.
+> Is it possible to produce all pairwise comparisons (corrected) in a single output or are these to be conducted individually? (individual pairwise tests).
+> I guess my question would also relate to the function adonis.
+
+
+Dear Simon,
+
+Pairwise tests are not possible in vegan. My understanding is that the non-R software with such tests makes separate pairwise tests using subsets of data with only two levels of a factor in one tests. We don't provide that in vegan and have no plans to provide this in the future. 
+
+Cheers, Jari Oksanen
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+
+
+From pierre.d.thiriet at gmail.com  Wed Jun  5 08:38:41 2013
+From: pierre.d.thiriet at gmail.com (Pierre THIRIET)
+Date: Wed, 05 Jun 2013 08:38:41 +0200
+Subject: [R-sig-eco] Pariwise tests in ANOSIM (and/or ADONIS)
+In-Reply-To: <D788A224-7AFF-4C38-80A5-C3E4995A7578@oulu.fi>
+References: <56314813D84A0146B1563737B8F027BCC66A0EB6@F01-MAIL01.fish.wa.gov.au>
+	<D788A224-7AFF-4C38-80A5-C3E4995A7578@oulu.fi>
+Message-ID: <51AEDCF1.3040900@gmail.com>
+
+Dear Jari,
+
+from this perspective, is it correct to run multiple pairwise tests (1 
+factor 2 levels) using adonis, and then adjust p-values. If yes, which 
+adjustement method would you suggest, Bonferroni correction ?
+Thanks in advance,
+All the best,
+Pierre
+
+Le 05/06/2013 07:00, Jari Oksanen a ?crit :
+> On 05/06/2013, at 03:25 AM, Simon de Lestang wrote:
+>
+>> I have what I am sure is a very simple question relating to the package vegan, although I have not been able to solve it via Google.
+>> Using the function anosim I am only able to produce a global result in the output.
+>> Is it possible to produce all pairwise comparisons (corrected) in a single output or are these to be conducted individually? (individual pairwise tests).
+>> I guess my question would also relate to the function adonis.
+>
+> Dear Simon,
+>
+> Pairwise tests are not possible in vegan. My understanding is that the non-R software with such tests makes separate pairwise tests using subsets of data with only two levels of a factor in one tests. We don't provide that in vegan and have no plans to provide this in the future.
+>
+> Cheers, Jari Oksanen
+
+
+From Simon.deLestang at fish.wa.gov.au  Wed Jun  5 08:39:08 2013
+From: Simon.deLestang at fish.wa.gov.au (Simon de Lestang)
+Date: Wed, 5 Jun 2013 06:39:08 +0000
+Subject: [R-sig-eco] Pariwise tests in ANOSIM (and/or ADONIS)
+In-Reply-To: <D788A224-7AFF-4C38-80A5-C3E4995A7578@oulu.fi>
+References: <56314813D84A0146B1563737B8F027BCC66A0EB6@F01-MAIL01.fish.wa.gov.au>
+	<D788A224-7AFF-4C38-80A5-C3E4995A7578@oulu.fi>
+Message-ID: <56314813D84A0146B1563737B8F027BCC66A0FCB@F01-MAIL01.fish.wa.gov.au>
+
+Jari, thank you for your response.  I think you are correct about the non-R software. 
+
+Simon
+
+-----Original Message-----
+From: Jari Oksanen [mailto:jari.oksanen at oulu.fi] 
+Sent: Wednesday, 5 June 2013 1:01 PM
+To: Simon de Lestang
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Pariwise tests in ANOSIM (and/or ADONIS)
+
+
+On 05/06/2013, at 03:25 AM, Simon de Lestang wrote:
+
+> I have what I am sure is a very simple question relating to the package vegan, although I have not been able to solve it via Google.
+> Using the function anosim I am only able to produce a global result in the output.
+> Is it possible to produce all pairwise comparisons (corrected) in a single output or are these to be conducted individually? (individual pairwise tests).
+> I guess my question would also relate to the function adonis.
+
+
+Dear Simon,
+
+Pairwise tests are not possible in vegan. My understanding is that the non-R software with such tests makes separate pairwise tests using subsets of data with only two levels of a factor in one tests. We don't provide that in vegan and have no plans to provide this in the future. 
+
+Cheers, Jari Oksanen
+-- 
+Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+
+
+From gavin.simpson at ucl.ac.uk  Wed Jun  5 19:06:03 2013
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 5 Jun 2013 11:06:03 -0600
+Subject: [R-sig-eco] Random Forest classification on species counts
+In-Reply-To: <47D503F532A1924CA9AB84FB4E3EE7E9033149@MYRS-EXCMBX-02.ci.charlotte.nc.us>
+References: <47D503F532A1924CA9AB84FB4E3EE7E9033149@MYRS-EXCMBX-02.ci.charlotte.nc.us>
+Message-ID: <1370451963.3634.36.camel@haul.biol.uregina.ca>
+
+On Thu, 2013-05-30 at 20:36 +0000, Hall, Kyle wrote:
+> First time poster, please forgive me for errors.
+> 
+> I have a data set of 23 sites with 145 different species counts for
+> macroinvertebrate communities for a given year. each species is
+> represented at least once per site and there are a lot of 0's for some
+> species. I have been applying a variety of vegan functions to the data
+> set to get a better understanding of the structure and I would like to
+> classify sites based on species using randomForest. My thought is that
+> this will give me a more understandable classification based on
+> species that I can use to cluster my sites and also see which species
+> are of more importance in classification.
+> 
+> Question 1. Am I barking up the wrong...tree (pun intended) with
+> randomForest for this purpose?
+
+Yes - I doubt unsupervised RF would give you anything more than you
+could get from a suitably-chosen dissimilarity matrix or even ordination
+to check if you actually have clusters.
+
+For supervised RF, even if you had a classification, you have far to few
+sites/samples to warrant a machine learning tool.
+
+> With PCA two sites are typically separated from the rest but the other
+> 21 sites show no discernible structure; spread like white noise over
+> both axes.
+> When I perform NMDS I tend to get a shot gun look and there are not
+> tight groupings on these reduced axes. However with Wards clustering
+> (in hclust) I do see some clusters plotting heavily to one side of an
+> axis or another (albeit spread wide on the orthogonal axis).
+
+Ward's clustering, as with any clustering, will find clusters - it
+[Ward's method] tends to find compact, spherical ones IIRC and hence
+often looks convincing. Your job is to demonstrate that the clustering
+into k cluster explains more of the variance in the model than no
+clustering. Simply eye-balling the dendrogram is not a solution to this.
+
+> Question 2. Is it possible that my data set just doesn't have enough
+> structure to neatly classify Sites by species count or am I simply a
+> newbie that is applying randomForest incorrectly?
+
+With so few data I wouldn't both with machine learning tools - they are
+designed to work with hundreds and thousands or more samples.
+
+HTH
+
+G
+
+> Example of data structure:
+> Site ABLA.MAL   ABLA.PAR   ACEN.SPP   ACRO.MEL
+> MC14A 1    1    2    0
+> MC17 4    2    0    0
+> MC22A 8    0    0    0
+> MC25 13   3    0    0
+> MC27 0    0    0    0
+> MC29A1     1    0    0    0
+> MC30A 1    0    0    0
+> MC31A 4    1    0    0
+> MC31B 4    0    0    0
+> MC33 8    0    0    0
+> MC38 7    0    0    0
+> MC40A 12   3    0    0
+> MC42 0    0    0    0
+> MC45 9    0    0    0
+> MC47A 0    0    0    0
+> MC49A 5    0    0    0
+> MC50 2    0    0    1
+> MC51 13   0    0    0
+> MC66 4    0    0    0
+> MY11B 13   1    0    0
+> MY13 0    0    0    0
+> MY7B 1    0    0    0
+> MY8  3    2    0    1
+> 
+> 
+> This is my call to randomForest:
+> 
+> FY09BUGS.rF <- randomForest(Site~ .,data=FY09Bugs, ntree=500, mtry=sqrt(ncol(FY09Bugs)), replace=TRUE,importance=TRUE, proximity=TRUE, norm.votes=TRUE, keep.forest=TRUE, do.trace=100)
+> 
+> I am following the iris data example with my formula but the print data on FY09BUGS.rf returns 100% OOB error rate and the summary returns:
+> 
+> summary(FY09BUGS.rF)
+>                 Length Class  Mode
+> call               11  -none- call
+> type                1  -none- character
+> predicted          23  factor numeric
+> err.rate        12000  -none- numeric
+> confusion         552  -none- numeric
+> votes             529  matrix numeric
+> oob.times          23  -none- numeric
+> classes            23  -none- character
+> importance       3625  -none- numeric
+> importanceSD     3480  -none- numeric
+> localImportance     0  -none- NULL
+> proximity         529  -none- numeric
+> ntree               1  -none- numeric
+> mtry                1  -none- numeric
+> forest             14  -none- list
+> y                  23  factor numeric
+> test                0  -none- NULL
+> inbag               0  -none- NULL
+> terms               3  terms  call
+> 
+> One concern I have is that the iris example does not appear to give a training data set and so I don't believe I have done that either. I feel like there is potential here but I can't seem to find the solution searching online so I put the questions to you! Thanks in advance for any assistance or constructive criticism.
+> 
+> Kyle
+> 
+> 
+> Kyle Hall                             .
+> City of Charlotte Storm Water Services
+> Water Quality Modeler
+> 600 East Fourth Street
+> Charlotte, NC 28202
+> 704.336.4110
+> Fax: 704.353.0473
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+Gavin Simpson, PhD                          [t] +1 306 337 8863
+Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+523 Research and Innovation Centre          [tw] @ucfagls
+University of Regina
+Regina, SK S4S 0A2, Canada
+
+
+From gavin.simpson at ucl.ac.uk  Wed Jun  5 19:11:24 2013
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 5 Jun 2013 11:11:24 -0600
+Subject: [R-sig-eco] anova.cca question / missing data in constraining
+ matrix
+In-Reply-To: <CAAN5UgzpVXOkUehJ46_Z0_fHe94_83ov=cz0TYw6-tzY3mpUcw@mail.gmail.com>
+References: <CAAN5UgzpVXOkUehJ46_Z0_fHe94_83ov=cz0TYw6-tzY3mpUcw@mail.gmail.com>
+Message-ID: <1370452284.3634.39.camel@haul.biol.uregina.ca>
+
+On Tue, 2013-06-04 at 08:23 -0700, ckellogg wrote:
+> Hi Jari,
+> I have a final (hopefully) question.  I have narrowed down the number of
+> environmental variables and removed some of the community (and associated
+> env. data) rows if they are missing too many environmental variables.
+> Then, when I run the anova.cca by terms I get the following error message.
+> anova(m2,by='terms',perm=999)
+> Error in La.svd(x, nu, nv) : error code 1 from Lapack routine 'dgesdd'
+
+This pops up from time to time and IIRC relates to numerical issues for
+the particular matrix - for example you are fitting too complex a model
+for the data to support. It usually indicates something slightly on the
+border of being ill-conditioned.
+
+You can try reordering the data to see if that helps. Scaling the data
+in some way may also help. Also try debugging the function call to see
+in which of the terms the function is failing.
+
+HTH
+
+G
+
+> any thoughts about why this is happening or how I can avoid it so that I
+> can run the anova by terms.
+> 
+> Thank you so much for all of your help with this!
+> 
+> colleen
+> 
+> 
+> 
+> On Tue, Jun 4, 2013 at 1:59 AM, Jari Oksanen [via r-sig-ecology] <
+> ml-node+s471788n7578184h50 at n2.nabble.com> wrote:
+> 
+> > Dear Colleen,
+> > On 03/06/2013, at 22:32 PM, ckellogg wrote:
+> >
+> > > Hello Jari,
+> > > Thank you for your help with this.  The solution you suggested in your
+> > > second post worked quite well.  However, i think another subset of my
+> > data
+> > > is too 'holey', because when I run CCA on this set of environmental
+> > > variables (or the a CCA with the previous environmental variables and
+> > the
+> > > additional ones), I get an error:
+> > >
+> > >> toolik250.cca2
+> > >>
+> > <-cca(toolikotus250.ra~logtemp+conductivity+pH+logBacProd+DIC+logDCO2+sqrtDCH4+logDOC+sqrtPhosphate+sqrtNitrate+sqrtTDN+sqrtTDP+logPC+logPN+Ca+Mg+logNa+logK+SO4+logChloride+Silica,toolikenv.s,
+> >
+> > >> na.action=na.exclude)
+> > > Error in predict.cca(x, newdata = excluded, type = "wa", model = "CA") :
+> > >  model ?CA? has rank 0
+> > >
+> > > The CCA runs if I use na.action=na.omit, but then when I run the anovas,
+> > > there is apparently no residual component.  For example,
+> > > No residual component
+> > >
+> > > Model: cca(formula = toolikotus250.ra ~ logtemp + conductivity + pH +
+> > > logBacProd + DIC + logDCO2 + sqrtDCH4 + logDOC + sqrtPhosphate +
+> > sqrtNitrate
+> > > + sqrtTDN + sqrtTDP + logPC + logPN + Ca + Mg + logNa + logK + SO4 +
+> > > logChloride + Silica, data = toolikenv.s, na.action = na.omit, subset =
+> > > -toolik250.cca2$na.action)
+> > >         Df  Chisq F N.Perm Pr(>F)
+> > > Model    12 5.3003        0
+> > > Residual  0 0.0000
+> > >
+> > Yes, probably too many holes. You have no residual variation which
+> > indicates that the number
+> > of predictor variables (constraints) is higher than the number of
+> > remaining observations.
+> >
+> > Cheers, Jari Oksanen
+> >
+> > > So, I am thinking that examining the relationship between the microbial
+> > > community and this subset of environmental variables might not be
+> > possible
+> > > without my first manually curating which samples and variables should be
+> > > included, correct?
+> > >
+> > > Thank you,
+> > > Colleen
+> > >
+> > >
+> > >
+> > > --
+> > > View this message in context:
+> > http://r-sig-ecology.471788.n2.nabble.com/anova-cca-question-missing-data-in-constraining-matrix-tp7578175p7578179.html
+> > > Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> > >
+> > > _______________________________________________
+> > > R-sig-ecology mailing list
+> > > [hidden email] <http://user/SendEmail.jtp?type=node&node=7578184&i=0>
+> > > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> > --
+> > Jari Oksanen, Dept Biology, Univ Oulu, 90014 Finland
+> > [hidden email] <http://user/SendEmail.jtp?type=node&node=7578184&i=1>,
+> > Ph. +358 400 408593, http://cc.oulu.fi/~jarioksa
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > [hidden email] <http://user/SendEmail.jtp?type=node&node=7578184&i=2>
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> >
+> > ------------------------------
+> >  If you reply to this email, your message will be added to the discussion
+> > below:
+> >
+> > http://r-sig-ecology.471788.n2.nabble.com/anova-cca-question-missing-data-in-constraining-matrix-tp7578175p7578184.html
+> >  To unsubscribe from anova.cca question / missing data in constraining
+> > matrix, click here<http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=unsubscribe_by_code&node=7578175&code=Y3Rla2VsbG9nZ0BnbWFpbC5jb218NzU3ODE3NXw2MzE3Nzc4OTg=>
+> > .
+> > NAML<http://r-sig-ecology.471788.n2.nabble.com/template/NamlServlet.jtp?macro=macro_viewer&id=instant_html%21nabble%3Aemail.naml&base=nabble.naml.namespaces.BasicNamespace-nabble.view.web.template.NabbleNamespace-nabble.view.web.template.NodeNamespace&breadcrumbs=notify_subscribers%21nabble%3Aemail.naml-instant_emails%21nabble%3Aemail.naml-send_instant_email%21nabble%3Aemail.naml>
+> >
+> 
+> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Gavin Simpson, PhD                          [t] +1 306 337 8863
+Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+523 Research and Innovation Centre          [tw] @ucfagls
+University of Regina
+Regina, SK S4S 0A2, Canada
+
+
+From zkzlzx at 126.com  Fri Jun  7 10:05:48 2013
+From: zkzlzx at 126.com (zkzlzx)
+Date: Fri, 7 Jun 2013 01:05:48 -0700 (PDT)
+Subject: [R-sig-eco] Basic Question about GLMM
+In-Reply-To: <BAY173-W4645F03030B74AA069048E9D9E0@phx.gbl>
+References: <BAY173-W4645F03030B74AA069048E9D9E0@phx.gbl>
+Message-ID: <1370592348734-7578193.post@n2.nabble.com>
+
+The intercept means no treatment, here it refers to the effect of placebo
+(control), being significant says the placebo has an effect on the bacteria.
+In general, we donot care about the intercept, in this case, what we want to
+know is whether the treatments work.
+
+the | sign is used for the random effect, here several results corresponds
+to each ID, thus ID should be taken as random effect, "week" before the |
+means random-slope, which refers to difference among the weeks may be
+greater in some IDs than others. 
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/Basic-Question-about-GLMM-tp7578181p7578193.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From highstat at highstat.com  Fri Jun  7 10:28:51 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Fri, 07 Jun 2013 09:28:51 +0100
+Subject: [R-sig-eco] 5 remaining places on stats course in Edmonton
+Message-ID: <51B199C3.3010706@highstat.com>
+
+There are 5 remaining places on the following course:
+
+
+Data exploration, regression, GLM & GAM. With introduction to R
+
+When: 26 - 30 August 2013.
+Where: Edmonton, Canada
+
+For details, see: http://www.highstat.com/statscourse.htm
+Course flyer: http://www.highstat.com/Courses/Flyer2013_09Canada.pdf
+
+
+
+Kind regards,
+
+Alain Zuur
+
+
+
+-- 
+
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007).
+Zuur, AF, Ieno, EN and Smith, GM. Springer. 680 p.
+URL: www.springer.com/0-387-45967-7
+
+
+2. Mixed effects models and extensions in ecology with R. (2009).
+Zuur, AF, Ieno, EN, Walker, N, Saveliev, AA, and Smith, GM. Springer.
+http://www.springer.com/life+sci/ecology/book/978-0-387-87457-9
+
+
+3. A Beginner's Guide to R (2009).
+Zuur, AF, Ieno, EN, Meesters, EHWG. Springer
+http://www.springer.com/statistics/computational/book/978-0-387-93836-3
+
+
+4. Zero Inflated Models and Generalized Linear Mixed Models with R. (2012) Zuur, Saveliev, Ieno.
+http://www.highstat.com/book4.htm
+
+Other books: http://www.highstat.com/books.htm
+
+
+Statistical consultancy, courses, data analysis and software
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From darunabas at gmail.com  Sun Jun  9 21:36:51 2013
+From: darunabas at gmail.com (Barnabas Daru)
+Date: Sun, 9 Jun 2013 21:36:51 +0200
+Subject: [R-sig-eco] help: Cluster analysis: obtaining average distances per
+	cluster
+Message-ID: <DAA64A2F-C5C4-4448-BB62-4423A023473F@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130609/1ff2c7e4/attachment.pl>
+
+From simone.ruzza12 at gmail.com  Mon Jun 10 10:19:05 2013
+From: simone.ruzza12 at gmail.com (Simone Ruzza)
+Date: Mon, 10 Jun 2013 09:19:05 +0100
+Subject: [R-sig-eco] simple question about nmds
+Message-ID: <CADZVqob2YhZH2Bv_eZ5wcTg+X7JhKZ+9qpGmD_p-OtWH_8B+AA@mail.gmail.com>
+
+Dear list,
+
+apologies for the total beginner's question. I was wondering whether
+one can use the site scores of an NMDS ordination to do do further
+analyses as typically done for other ordination methods, e.g. use the
+axis scores as predictors in a multiple regression settings. I think
+it should not be possible, because the aim of NMDS is not to summarize
+the major patterns of variations withing a multivariate dataset. Do
+you confirm?
+
+thanks in advance,
+
+Simone
+
+
+From simone.ruzza12 at gmail.com  Mon Jun 10 10:26:43 2013
+From: simone.ruzza12 at gmail.com (Simone Ruzza)
+Date: Mon, 10 Jun 2013 09:26:43 +0100
+Subject: [R-sig-eco] simple question about nmds
+In-Reply-To: <CADZVqob2YhZH2Bv_eZ5wcTg+X7JhKZ+9qpGmD_p-OtWH_8B+AA@mail.gmail.com>
+References: <CADZVqob2YhZH2Bv_eZ5wcTg+X7JhKZ+9qpGmD_p-OtWH_8B+AA@mail.gmail.com>
+Message-ID: <CADZVqobAEWcwXKT0ZNhhtN-8E8RjGnrGbrMa5FaSpRTRugfM5Q@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130610/2a5083a1/attachment.pl>
+
+From paolo.piras at uniroma3.it  Mon Jun 10 10:37:53 2013
+From: paolo.piras at uniroma3.it (Paolo Piras)
+Date: Mon, 10 Jun 2013 08:37:53 +0000
+Subject: [R-sig-eco] simple question about nmds
+In-Reply-To: <CADZVqobAEWcwXKT0ZNhhtN-8E8RjGnrGbrMa5FaSpRTRugfM5Q@mail.gmail.com>
+References: <CADZVqob2YhZH2Bv_eZ5wcTg+X7JhKZ+9qpGmD_p-OtWH_8B+AA@mail.gmail.com>,
+	<CADZVqobAEWcwXKT0ZNhhtN-8E8RjGnrGbrMa5FaSpRTRugfM5Q@mail.gmail.com>
+Message-ID: <A7557249237BD449977E3AEE33C62AD340D9F8D4@DBXPRD0410MB394.eurprd04.prod.outlook.com>
+
+Hi,
+actually I think you CAN use them (as predictors or response either) because, albeit in its unique way, NMDS **IS** a method to summarize a highly multidimensional phenomenon.
+best
+paolo
+________________________________________
+Da: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] per conto di Simone Ruzza [simone.ruzza12 at gmail.com]
+Inviato: luned? 10 giugno 2013 10.26
+A: r-sig-ecology at r-project.org
+Oggetto: Re: [R-sig-eco] simple question about nmds
+
+Apolologies, I re-phrase what I have said before: I would be interested
+using the site scores within a multiple regression settings, but the the
+scores a response rather than predictors.
+
+Best wishes,
+
+Simone
+
+
+On Mon, Jun 10, 2013 at 9:19 AM, Simone Ruzza <simone.ruzza12 at gmail.com>wrote:
+
+> Dear list,
+>
+> apologies for the total beginner's question. I was wondering whether
+> one can use the site scores of an NMDS ordination to do do further
+> analyses as typically done for other ordination methods, e.g. use the
+> axis scores as predictors in a multiple regression settings. I think
+> it should not be possible, because the aim of NMDS is not to summarize
+> the major patterns of variations withing a multivariate dataset. Do
+> you confirm?
+>
+> thanks in advance,
+>
+> Simone
+>
+
+        [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+From marcelino.delacruz at upm.es  Mon Jun 10 12:04:51 2013
+From: marcelino.delacruz at upm.es (Marcelino de la Cruz)
+Date: Mon, 10 Jun 2013 12:04:51 +0200
+Subject: [R-sig-eco] help: Cluster analysis: obtaining average distances
+ per cluster
+In-Reply-To: <DAA64A2F-C5C4-4448-BB62-4423A023473F@gmail.com>
+References: <DAA64A2F-C5C4-4448-BB62-4423A023473F@gmail.com>
+Message-ID: <51B5A4C3.5020805@upm.es>
+
+Hi,
+
+try this:
+
+
+mydata2 <- mydata
+for (i in 1:9) mydata2[groups.9==i, groups.9==i] <- 
+mean(as.dist(mydata[groups.9==i,groups.9==i]))
+
+diag(mydata2) <-0
+
+plot( hclust(as.dist(mydata2)))
+
+
+
+and please, send messages only to r-sig-ecology at r-project.org
+
+HTH,
+
+Marcelino
+
+
+El 09/06/2013 21:36, Barnabas Daru escribi?:
+> Dear all,
+> I am using R to generate clusters for a pairwise distance matrix of a large dataset (over 3000 grid cells) and to group the cells based on similarity into 9 or fewer clusters.
+>
+> I have successfully used the "cutree" function in the R CLUSTER package to get 9 clusters; but I got stuck on how to create a new matrix based on means of all pairwise grid cell values for the new clusters defined by my cutree function as follows:
+>
+> mydata <- read.csv("my_distance_matrix.csv", header=T, row.names=1, sep=",")
+>
+> mydata_dist <- as.dist(mydata)
+> UPGMA <- hclust(mydata_dist)
+> plot(UPGMA) # Gives a large dendrogram with tip.labels difficult to read!
+> # I only want a summary dendrogram
+> groups.9 <- cutree(UPGMA, 9)
+>
+> groups.9.mean <- aggregate(UPGMA,list(groups.9),median)
+> # I got the following error:
+> Error in as.data.frame.default(x):
+> 	cannot coerce class '"hclust"' into a data.frame
+>
+> What I am interested in is to obtain the following:
+> (a). A dendrogram showing only the summary branches i.e. the dendrogram with only nine branches and the tip labels as the mean pairwise distance connecting each group for each clusters.
+> (b) to be able to use the "summary dendrogram" converted as a new distance matrix as described in (a) for further analysis e.g. NMDS etc.
+>
+> Any help especially in the form of R code will be highly appreciated.
+> Thanks and kind regards
+> Barnabas
+>
+>   \-/
+>     /\
+>    /--|
+>   /---/ Barnabas Daru
+>   |--/   PhD Candidate,
+>   \-/    African Centre for DNA Barcoding,
+>   /\      University of Johannesburg,
+> /--\   PO Box 524, Auckland Park, 2006,
+> |---\  Johannesburg, South Africa.
+>   \---\ Lab: +27 11 559 3477
+>    \--|  Mobile: +277 3818 9583
+>     \-/  My homepage
+>     /\
+>    /--\
+>
+> #?if you can think it, you can do it.
+>
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From darunabas at gmail.com  Mon Jun 10 13:54:10 2013
+From: darunabas at gmail.com (Barnabas Daru)
+Date: Mon, 10 Jun 2013 13:54:10 +0200
+Subject: [R-sig-eco] help: Cluster analysis: obtaining average distances
+	per cluster
+In-Reply-To: <51B5A4C3.5020805@upm.es>
+References: <DAA64A2F-C5C4-4448-BB62-4423A023473F@gmail.com>
+	<51B5A4C3.5020805@upm.es>
+Message-ID: <B1E5ED0C-6DDB-4DE0-9E11-1450A3855525@gmail.com>
+
+Hi Marcelino,
+Many thanks for your suggestion and the code.
+
+I tried running the code especially the line that reads "diag(mydata2) <- 0", I got an error that reads:
+
+Error in '[<-.data.frame'('*tmp*', cbind(i, i), value = 0) :
+	only logical matrix subscripts are allowed in replacement
+
+Also, when I used the plot code you suggested, I still got a large dendrogram with so many tips rather than a summarized one with just the 9 tips I desired.
+Attached is a screenshot of the type of plot I hope to get.
+Thanks and kind regards
+Barnabas
+
+ \-/
+   /\
+  /--|    
+ /---/ Barnabas Daru
+ |--/   PhD Candidate,
+ \-/    African Centre for DNA Barcoding,
+ /\      University of Johannesburg,
+/--\   PO Box 524, Auckland Park, 2006,
+|---\  Johannesburg, South Africa.
+ \---\ Lab: +27 11 559 3477        
+  \--|  Mobile: +277 3818 9583
+   \-/  My homepage
+   /\        
+  /--\ 
+ 
+#?if you can think it, you can do it.
+ 
+
+On 10 Jun 2013, at 12:04 PM, Marcelino de la Cruz wrote:
+
+> Hi,
+> 
+> try this:
+> 
+> 
+> mydata2 <- mydata
+> for (i in 1:9) mydata2[groups.9==i, groups.9==i] <- mean(as.dist(mydata[groups.9==i,groups.9==i]))
+> 
+> diag(mydata2) <-0
+> 
+> plot( hclust(as.dist(mydata2)))
+> 
+> 
+> 
+> and please, send messages only to r-sig-ecology at r-project.org
+> 
+> HTH,
+> 
+> Marcelino
+> 
+> 
+> El 09/06/2013 21:36, Barnabas Daru escribi?:
+>> Dear all,
+>> I am using R to generate clusters for a pairwise distance matrix of a large dataset (over 3000 grid cells) and to group the cells based on similarity into 9 or fewer clusters.
+>> 
+>> I have successfully used the "cutree" function in the R CLUSTER package to get 9 clusters; but I got stuck on how to create a new matrix based on means of all pairwise grid cell values for the new clusters defined by my cutree function as follows:
+>> 
+>> mydata <- read.csv("my_distance_matrix.csv", header=T, row.names=1, sep=",")
+>> 
+>> mydata_dist <- as.dist(mydata)
+>> UPGMA <- hclust(mydata_dist)
+>> plot(UPGMA) # Gives a large dendrogram with tip.labels difficult to read!
+>> # I only want a summary dendrogram
+>> groups.9 <- cutree(UPGMA, 9)
+>> 
+>> groups.9.mean <- aggregate(UPGMA,list(groups.9),median)
+>> # I got the following error:
+>> Error in as.data.frame.default(x):
+>> 	cannot coerce class '"hclust"' into a data.frame
+>> 
+>> What I am interested in is to obtain the following:
+>> (a). A dendrogram showing only the summary branches i.e. the dendrogram with only nine branches and the tip labels as the mean pairwise distance connecting each group for each clusters.
+>> (b) to be able to use the "summary dendrogram" converted as a new distance matrix as described in (a) for further analysis e.g. NMDS etc.
+>> 
+>> Any help especially in the form of R code will be highly appreciated.
+>> Thanks and kind regards
+>> Barnabas
+>> 
+>>  \-/
+>>    /\
+>>   /--|
+>>  /---/ Barnabas Daru
+>>  |--/   PhD Candidate,
+>>  \-/    African Centre for DNA Barcoding,
+>>  /\      University of Johannesburg,
+>> /--\   PO Box 524, Auckland Park, 2006,
+>> |---\  Johannesburg, South Africa.
+>>  \---\ Lab: +27 11 559 3477
+>>   \--|  Mobile: +277 3818 9583
+>>    \-/  My homepage
+>>    /\
+>>   /--\
+>> 
+>> #?if you can think it, you can do it.
+>> 
+>> 
+>> 
+>> 	[[alternative HTML version deleted]]
+>> 
+>> 
+>> 
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> 
+> 
+
+
+From marcelino.delacruz at upm.es  Mon Jun 10 17:26:22 2013
+From: marcelino.delacruz at upm.es (Marcelino de la Cruz)
+Date: Mon, 10 Jun 2013 17:26:22 +0200
+Subject: [R-sig-eco] help: Cluster analysis: obtaining average distances
+ per cluster
+In-Reply-To: <B1E5ED0C-6DDB-4DE0-9E11-1450A3855525@gmail.com>
+References: <DAA64A2F-C5C4-4448-BB62-4423A023473F@gmail.com>
+	<51B5A4C3.5020805@upm.es>
+	<B1E5ED0C-6DDB-4DE0-9E11-1450A3855525@gmail.com>
+Message-ID: <51B5F01E.7070407@upm.es>
+
+Hi Barnabas,
+
+maybe now?
+
+
+mydata2 <- as.matrix(mydata)
+
+average.dist <- NULL
+for (i in 1:9) {
+	mydata2[groups.9==i, groups.9==i] <- 
+mean(as.dist(mydata[groups.9==i,groups.9==i]))
+         average.dist <- 
+c(average.dist,mean(as.dist(mydata[groups.9==i,groups.9==i])))
+	}
+diag(mydata2) <-0
+
+plot( hclust(as.dist(mydata2)))
+
+mydata3 <- mydata2[match(1:9,groups.9),match(1:9,groups.9)]
+
+plot( hclust(as.dist(mydata3)), labels=round(average.dist,2))
+
+
+
+
+El 10/06/2013 13:54, Barnabas Daru escribi?:
+> Hi Marcelino,
+> Many thanks for your suggestion and the code.
+>
+> I tried running the code especially the line that reads "diag(mydata2)
+> <- 0", I got an error that reads:
+>
+> *Error in '[<-.data.frame'('*tmp*', cbind(i, i), value = 0) :*
+> *only logical matrix subscripts are allowed in replacement*
+>
+> Also, when I used the plot code you suggested, I still got a large
+> dendrogram with so many tips rather than a summarized one with just the
+> 9 tips I desired.
+> Attached is a screenshot of the type of plot I hope to get.
+> Thanks and kind regards
+> Barnabas
+>
+>   \-/
+>     /\
+>    /--|
+>   /---/ Barnabas Daru
+>   |--/   PhD Candidate,
+>   \-/    African Centre for DNA Barcoding,
+>   /\      University of Johannesburg,
+> /--\   PO Box 524, Auckland Park, 2006,
+> |---\  Johannesburg, South Africa.
+>   \---\ Lab: +27 11 559 3477
+>    \--|  Mobile: +277 3818 9583
+>     \-/ My homepage <http://barnabasdaru.wordpress.com>
+>     /\
+>    /--\
+>
+> #?if you can think it, you can do it.
+>
+> On 10 Jun 2013, at 12:04 PM, Marcelino de la Cruz wrote:
+>
+>> Hi,
+>>
+>> try this:
+>>
+>>
+>> mydata2 <- mydata
+>> for (i in 1:9) mydata2[groups.9==i, groups.9==i] <-
+>> mean(as.dist(mydata[groups.9==i,groups.9==i]))
+>>
+>> diag(mydata2) <-0
+>>
+>> plot( hclust(as.dist(mydata2)))
+>>
+>>
+>>
+>> and please, send messages only to r-sig-ecology at r-project.org
+>> <mailto:r-sig-ecology at r-project.org>
+>>
+>> HTH,
+>>
+>> Marcelino
+>>
+>>
+>> El 09/06/2013 21:36, Barnabas Daru escribi?:
+>>> Dear all,
+>>> I am using R to generate clusters for a pairwise distance matrix of a
+>>> large dataset (over 3000 grid cells) and to group the cells based on
+>>> similarity into 9 or fewer clusters.
+>>>
+>>> I have successfully used the "cutree" function in the R CLUSTER
+>>> package to get 9 clusters; but I got stuck on how to create a new
+>>> matrix based on means of all pairwise grid cell values for the new
+>>> clusters defined by my cutree function as follows:
+>>>
+>>> mydata <- read.csv("my_distance_matrix.csv", header=T, row.names=1,
+>>> sep=",")
+>>>
+>>> mydata_dist <- as.dist(mydata)
+>>> UPGMA <- hclust(mydata_dist)
+>>> plot(UPGMA) # Gives a large dendrogram with tip.labels difficult to read!
+>>> # I only want a summary dendrogram
+>>> groups.9 <- cutree(UPGMA, 9)
+>>>
+>>> groups.9.mean <- aggregate(UPGMA,list(groups.9),median)
+>>> # I got the following error:
+>>> Error in as.data.frame.default(x):
+>>> cannot coerce class '"hclust"' into a data.frame
+>>>
+>>> What I am interested in is to obtain the following:
+>>> (a). A dendrogram showing only the summary branches i.e. the
+>>> dendrogram with only nine branches and the tip labels as the mean
+>>> pairwise distance connecting each group for each clusters.
+>>> (b) to be able to use the "summary dendrogram" converted as a new
+>>> distance matrix as described in (a) for further analysis e.g. NMDS etc.
+>>>
+>>> Any help especially in the form of R code will be highly appreciated.
+>>> Thanks and kind regards
+>>> Barnabas
+>>>
+>>>  \-/
+>>>    /\
+>>>   /--|
+>>>  /---/ Barnabas Daru
+>>>  |--/   PhD Candidate,
+>>>  \-/    African Centre for DNA Barcoding,
+>>>  /\      University of Johannesburg,
+>>> /--\   PO Box 524, Auckland Park, 2006,
+>>> |---\  Johannesburg, South Africa.
+>>>  \---\ Lab: +27 11 559 3477
+>>>   \--|  Mobile: +277 3818 9583
+>>>    \-/  My homepage
+>>>    /\
+>>>   /--\
+>>>
+>>> #?if you can think it, you can do it.
+>>>
+>>>
+>>>
+>>> [[alternative HTML version deleted]]
+>>>
+>>>
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>
+>
+
+
+From gavin.simpson at ucl.ac.uk  Mon Jun 10 18:09:07 2013
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Mon, 10 Jun 2013 10:09:07 -0600
+Subject: [R-sig-eco] simple question about nmds
+In-Reply-To: <A7557249237BD449977E3AEE33C62AD340D9F8D4@DBXPRD0410MB394.eurprd04.prod.outlook.com>
+References: <CADZVqob2YhZH2Bv_eZ5wcTg+X7JhKZ+9qpGmD_p-OtWH_8B+AA@mail.gmail.com>
+	, <CADZVqobAEWcwXKT0ZNhhtN-8E8RjGnrGbrMa5FaSpRTRugfM5Q@mail.gmail.com>
+	<A7557249237BD449977E3AEE33C62AD340D9F8D4@DBXPRD0410MB394.eurprd04.prod.outlook.com>
+Message-ID: <1370880547.23179.25.camel@haul.biol.uregina.ca>
+
+You can use them, but you shouldn't use them individually. Directions in
+NMDS aren't like the independent (orthogonal) components of PCA or CA.
+You need the distances in *both* (assuming k = 2, *all* for k > 2) NMDS
+dimensions to recover the solution. Also directions across and up/down
+the NMDS diagram are arbitrary - we can rotate the solution and the
+solution remains the same.
+
+What vegan does here is to use the coordinates in NMDS dimensions 1 and
+2 (or 1,...,k) as predictors for a single response variable. This is a
+bit silly - the models then says that the locations in the ordination
+space *influence* the response variable! But if there is such a
+relationship, it suggests the converse, that the response varies over
+the gradients in the ordination.
+
+G
+
+On Mon, 2013-06-10 at 08:37 +0000, Paolo Piras wrote:
+> Hi,
+> actually I think you CAN use them (as predictors or response either)
+> because, albeit in its unique way, NMDS **IS** a method to summarize a
+> highly multidimensional phenomenon.
+> best
+> paolo
+> ________________________________________
+> Da: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] per conto di Simone Ruzza [simone.ruzza12 at gmail.com]
+> Inviato: luned? 10 giugno 2013 10.26
+> A: r-sig-ecology at r-project.org
+> Oggetto: Re: [R-sig-eco] simple question about nmds
+> 
+> Apolologies, I re-phrase what I have said before: I would be interested
+> using the site scores within a multiple regression settings, but the the
+> scores a response rather than predictors.
+> 
+> Best wishes,
+> 
+> Simone
+> 
+> 
+> On Mon, Jun 10, 2013 at 9:19 AM, Simone Ruzza <simone.ruzza12 at gmail.com>wrote:
+> 
+> > Dear list,
+> >
+> > apologies for the total beginner's question. I was wondering whether
+> > one can use the site scores of an NMDS ordination to do do further
+> > analyses as typically done for other ordination methods, e.g. use the
+> > axis scores as predictors in a multiple regression settings. I think
+> > it should not be possible, because the aim of NMDS is not to summarize
+> > the major patterns of variations withing a multivariate dataset. Do
+> > you confirm?
+> >
+> > thanks in advance,
+> >
+> > Simone
+> >
+> 
+>         [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+Gavin Simpson, PhD                          [t] +1 306 337 8863
+Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+523 Research and Innovation Centre          [tw] @ucfagls
+University of Regina
+Regina, SK S4S 0A2, Canada
+
+
+From Antonia.NystromSandman at aquabiota.se  Tue Jun 11 10:25:37 2013
+From: Antonia.NystromSandman at aquabiota.se (Antonia Nystrom Sandman)
+Date: Tue, 11 Jun 2013 08:25:37 +0000
+Subject: [R-sig-eco] predict.gam se.fit to lookup table?
+Message-ID: <F5CA6E7F900D9446AF2C27394EA7CAFF122B39F8@SRV-EX01.aquabiota.local>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130611/7097e5be/attachment.pl>
+
+From kersusan.dylann at gmail.com  Tue Jun 11 17:36:27 2013
+From: kersusan.dylann at gmail.com (Dylann Kersusan)
+Date: Tue, 11 Jun 2013 17:36:27 +0200
+Subject: [R-sig-eco] Extract from class object ltraj.
+Message-ID: <CAEcqiB_CvHP26bK-sPU4BS0JUJT3JT4kc=r6zwAd9Y-hmzcMLw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130611/84625a29/attachment.pl>
+
+From sarah.goslee at gmail.com  Tue Jun 11 18:00:54 2013
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Tue, 11 Jun 2013 12:00:54 -0400
+Subject: [R-sig-eco] Extract from class object ltraj.
+In-Reply-To: <CAEcqiB_CvHP26bK-sPU4BS0JUJT3JT4kc=r6zwAd9Y-hmzcMLw@mail.gmail.com>
+References: <CAEcqiB_CvHP26bK-sPU4BS0JUJT3JT4kc=r6zwAd9Y-hmzcMLw@mail.gmail.com>
+Message-ID: <CAM_vjun7rZP=1dewGsOX2m6B201_NkSgNk+PpY+u+zvOdrxmhA@mail.gmail.com>
+
+Hi Dylann,
+
+On Tue, Jun 11, 2013 at 11:36 AM, Dylann Kersusan
+<kersusan.dylann at gmail.com> wrote:
+> Hi everyone,
+>
+> I am working on class object "ltraj" mainly using the package Adehabitat HT
+> and LT.
+> Is there a way to extract from this class object the distances between
+> relocations ("dist")? I am pretty sure that it is possible and it has to be
+> easy, but I am probably missing something. I tried the following though:
+>
+> ltrj.obj <- as.ltraj(xy, date = dates, id = data$name, infolocs =
+> data.frame(idnr = data$idnr))
+> str(ltrj.obj)
+>
+> List of 1
+>  $ :'data.frame':       1328 obs. of  10 variables:
+>   ..$ x        : int [1:1328] 1559670 1559665 1559687 1559695 1559695
+> 1559686 1559687 1559674 1559648 1559666 ...
+>   ..$ y        : int [1:1328] 7448557 7448603 7448611 7448592 7448594
+> 7448598 7448599 7448568 7448522 7448532 ...
+>   ..$ date     : POSIXct[1:1328], format: "2009-05-15 00:00:54"
+> "2009-05-15 00:30:21" "2009-05-15 01:00:35" ...
+>   ..$ dx       : int [1:1328] -5 22 8 0 -9 1 -13 -26 18 2 ...
+>   ..$ dy       : int [1:1328] 46 8 -19 2 4 1 -31 -46 10 -2 ...
+>   ..$ dist     : num [1:1328] 46.27 23.41 20.62 2 9.85 ...
+>   ..$ dt       : num [1:1328] 1767 1814 1842 1766 1799 ...
+>
+>
+> distance <- ltrj.obj$data.frame$dist
+
+You're conflating class and name.
+
+A ltraj object is a list of data frames. Your list happens to only
+have one data frame, but there can be many. That data frame has 10
+columns, and str() gives the names, as would
+names(ltrj.obj[[1]])
+
+length(ltrj.obj) # should be 1, based on the output you showed
+
+ltrj.obj[[1]]$dist
+
+will give you what you're looking for, as would
+
+ltrj.obj[[1]][['dist']]
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From sarah.goslee at gmail.com  Tue Jun 11 19:02:47 2013
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Tue, 11 Jun 2013 13:02:47 -0400
+Subject: [R-sig-eco] Extract from class object ltraj.
+In-Reply-To: <CAEcqiB-JhP07+QqDAPQ2bOVpiVoCUyL=24xFfMSN4hJMuqD5MQ@mail.gmail.com>
+References: <CAEcqiB_CvHP26bK-sPU4BS0JUJT3JT4kc=r6zwAd9Y-hmzcMLw@mail.gmail.com>
+	<CAM_vjun7rZP=1dewGsOX2m6B201_NkSgNk+PpY+u+zvOdrxmhA@mail.gmail.com>
+	<CAEcqiB-JhP07+QqDAPQ2bOVpiVoCUyL=24xFfMSN4hJMuqD5MQ@mail.gmail.com>
+Message-ID: <CAM_vjukqF8L5PigFAimD-CKpiRhgOvzJS1o8L7CoiTpTVPJe3Q@mail.gmail.com>
+
+Hi,
+
+On Tue, Jun 11, 2013 at 12:55 PM, Dylann Kersusan
+<kersusan.dylann at gmail.com> wrote:
+> Thanks a lot. It works perfectly fine! Though I don't know how to arrange
+> that into a column, I shall find something not too time consuming.
+
+The code I provided extracts the distances as a vector. What are you
+trying to do with them?
+
+ltrj.obj[[1]]['dist']
+
+will return a one-column data frame.
+
+You might like to take some time to read the intro to R documentation,
+particularly the parts about subsetting and the difference between [
+and [[ to understand why.
+
+Sarah
+
+>
+> 2013/6/11 Sarah Goslee <sarah.goslee at gmail.com>
+>>
+>> Hi Dylann,
+>>
+>> On Tue, Jun 11, 2013 at 11:36 AM, Dylann Kersusan
+>> <kersusan.dylann at gmail.com> wrote:
+>> > Hi everyone,
+>> >
+>> > I am working on class object "ltraj" mainly using the package Adehabitat
+>> > HT
+>> > and LT.
+>> > Is there a way to extract from this class object the distances between
+>> > relocations ("dist")? I am pretty sure that it is possible and it has to
+>> > be
+>> > easy, but I am probably missing something. I tried the following though:
+>> >
+>> > ltrj.obj <- as.ltraj(xy, date = dates, id = data$name, infolocs =
+>> > data.frame(idnr = data$idnr))
+>> > str(ltrj.obj)
+>> >
+>> > List of 1
+>> >  $ :'data.frame':       1328 obs. of  10 variables:
+>> >   ..$ x        : int [1:1328] 1559670 1559665 1559687 1559695 1559695
+>> > 1559686 1559687 1559674 1559648 1559666 ...
+>> >   ..$ y        : int [1:1328] 7448557 7448603 7448611 7448592 7448594
+>> > 7448598 7448599 7448568 7448522 7448532 ...
+>> >   ..$ date     : POSIXct[1:1328], format: "2009-05-15 00:00:54"
+>> > "2009-05-15 00:30:21" "2009-05-15 01:00:35" ...
+>> >   ..$ dx       : int [1:1328] -5 22 8 0 -9 1 -13 -26 18 2 ...
+>> >   ..$ dy       : int [1:1328] 46 8 -19 2 4 1 -31 -46 10 -2 ...
+>> >   ..$ dist     : num [1:1328] 46.27 23.41 20.62 2 9.85 ...
+>> >   ..$ dt       : num [1:1328] 1767 1814 1842 1766 1799 ...
+>> >
+>> >
+>> > distance <- ltrj.obj$data.frame$dist
+>>
+>> You're conflating class and name.
+>>
+>> A ltraj object is a list of data frames. Your list happens to only
+>> have one data frame, but there can be many. That data frame has 10
+>> columns, and str() gives the names, as would
+>> names(ltrj.obj[[1]])
+>>
+>> length(ltrj.obj) # should be 1, based on the output you showed
+>>
+>> ltrj.obj[[1]]$dist
+>>
+>> will give you what you're looking for, as would
+>>
+>> ltrj.obj[[1]][['dist']]
+>>
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From E.T.Pos at uu.nl  Wed Jun 12 13:46:04 2013
+From: E.T.Pos at uu.nl (Pos, E.T.)
+Date: Wed, 12 Jun 2013 11:46:04 +0000
+Subject: [R-sig-eco] testing if a slope is significantly different from the
+	slope y=x
+Message-ID: <CDDE27A2.2E84%e.t.pos@uu.nl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130612/bb56d006/attachment.pl>
+
+From lorenz at usgs.gov  Wed Jun 12 14:09:57 2013
+From: lorenz at usgs.gov (Lorenz, David)
+Date: Wed, 12 Jun 2013 07:09:57 -0500
+Subject: [R-sig-eco] testing if a slope is significantly different from
+ the slope y=x
+In-Reply-To: <CDDE27A2.2E84%e.t.pos@uu.nl>
+References: <CDDE27A2.2E84%e.t.pos@uu.nl>
+Message-ID: <CALxY2LfuMCozojF8m-KrvGUn9Y_PJ9hXG5sosuCzAMpyuNraEw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130612/cb60ad24/attachment.pl>
+
+From botta-dukat.zoltan at okologia.mta.hu  Wed Jun 12 14:21:17 2013
+From: botta-dukat.zoltan at okologia.mta.hu (Zoltan Botta-Dukat)
+Date: Wed, 12 Jun 2013 14:21:17 +0200
+Subject: [R-sig-eco] testing if a slope is significantly different from
+ the slope y=x
+In-Reply-To: <CDDE27A2.2E84%e.t.pos@uu.nl>
+References: <CDDE27A2.2E84%e.t.pos@uu.nl>
+Message-ID: <51B867BD.6050800@okologia.mta.hu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130612/50842483/attachment.pl>
+
+From thomas.mockel at nateko.lu.se  Wed Jun 12 15:58:13 2013
+From: thomas.mockel at nateko.lu.se (=?ISO-8859-1?Q?Thomas_M=F6ckel?=)
+Date: Wed, 12 Jun 2013 15:58:13 +0200
+Subject: [R-sig-eco] Rao entropy with presence-absence data
+Message-ID: <51B87E75.2080907@nateko.lu.se>
+
+Hello,
+Is it possible, and meaningful, to calculate  Rao`s quadratic entropy 
+index (function dbFD from package FD) with presence-absence data? I 
+don't get a error message but when I use the function with 
+(...,scale.Rao=TRUE) the calculations never end.
+
+Thank you for your answer.
+
+/Thomas
+
+-- 
+*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+Thomas M?ckel, PhD student
+
+Department of Earth and Ecosystem Science
+Lund University
+S?lvegatan 12
+SE-223 62 Lund
+Sweden
+
+Tel:+46 (0)46 - 222 4887
+E-mail: Thomas.Mockel at nateko.lu.se
+
+
+From botta-dukat.zoltan at okologia.mta.hu  Wed Jun 12 16:13:15 2013
+From: botta-dukat.zoltan at okologia.mta.hu (Zoltan Botta-Dukat)
+Date: Wed, 12 Jun 2013 16:13:15 +0200
+Subject: [R-sig-eco] Rao entropy with presence-absence data
+In-Reply-To: <51B87E75.2080907@nateko.lu.se>
+References: <51B87E75.2080907@nateko.lu.se>
+Message-ID: <51B881FB.7010407@okologia.mta.hu>
+
+Dear Thomas,
+
+
+>
+> Is it possible, and meaningful, to calculate  Rao`s quadratic entropy 
+> index (function dbFD from package FD) with presence-absence data?
+Yes, it is possible and meaningful. In this case it is simply the mean 
+distance between the occurring species.
+
+
+> I don't get a error message but when I use the function with 
+> (...,scale.Rao=TRUE) the calculations never end.
+I think this problem is not related to p/a data. Calculation may demand 
+long time for large datasets.
+Anyway, I think scaling by the possible maximum is meaningless if you 
+don't have abundance data.
+
+Best wishes
+
+Zoltan
+
+>
+> Thank you for your answer.
+>
+> /Thomas
+>
+
+
+-- 
+Botta-Duk?t Zolt?n
+--------------------------------
+?kol?giai ?s Botanikai Int?zet
+Magyar Tudom?nyos Akad?mia
+?kol?giai Kutat?k?zpont
+--------------------------------
+2163. V?cr?t?t, Alkotm?ny u. 2-4.
+tel: +36 28 360122/157
+fax: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+Zolt?n BOTTA-Duk?t
+--------------------------------
+Institute of Ecology and Botany
+Hungarian Academy of Sciences
+Centre for Ecological Research
+--------------------------------
+H-2163 V?cr?t?t, Alkom?ny u. 2-4.
+HUNGARY
+Phone: +36 28 360122/157
+Fax..: +36 28 360110
+botta-dukat.zoltan at okologia.mta.hu
+www.okologia.mta.hu
+
+
+From solymos at ualberta.ca  Wed Jun 12 17:17:18 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Wed, 12 Jun 2013 09:17:18 -0600
+Subject: [R-sig-eco] Rao entropy with presence-absence data
+In-Reply-To: <51B881FB.7010407@okologia.mta.hu>
+References: <51B87E75.2080907@nateko.lu.se> <51B881FB.7010407@okologia.mta.hu>
+Message-ID: <CAH9coKabtR5-HK5-9UKgrnO9cWYGT5-CMa-39kMeTDXYVnc5kQ@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130612/944c6403/attachment.pl>
+
+From dbprovete at gmail.com  Wed Jun 12 21:42:52 2013
+From: dbprovete at gmail.com (Diogo B. Provete)
+Date: Wed, 12 Jun 2013 14:42:52 -0500
+Subject: [R-sig-eco] intensive quadratic entropy (J)
+Message-ID: <CALJB7JSgpmwx5_SKuHS+wP4c_Mm2qyq833x_OBwae2f3HzUatw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130612/4d45cd6d/attachment.pl>
+
+From christian.higuita at gmail.com  Wed Jun 12 22:10:43 2013
+From: christian.higuita at gmail.com (Cristian Higuita)
+Date: Wed, 12 Jun 2013 15:10:43 -0500
+Subject: [R-sig-eco] Permanova with nested data
+Message-ID: <51b8d5c6.c586e00a.206d.1d74@mx.google.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130612/7435dd77/attachment.pl>
+
+From thomas.mockel at nateko.lu.se  Thu Jun 13 10:11:28 2013
+From: thomas.mockel at nateko.lu.se (=?ISO-8859-1?Q?Thomas_M=F6ckel?=)
+Date: Thu, 13 Jun 2013 10:11:28 +0200
+Subject: [R-sig-eco] Rao entropy with presence-absence data
+In-Reply-To: <CAH9coKabtR5-HK5-9UKgrnO9cWYGT5-CMa-39kMeTDXYVnc5kQ@mail.gmail.com>
+References: <51B87E75.2080907@nateko.lu.se> <51B881FB.7010407@okologia.mta.hu>
+	<CAH9coKabtR5-HK5-9UKgrnO9cWYGT5-CMa-39kMeTDXYVnc5kQ@mail.gmail.com>
+Message-ID: <51B97EB0.1010309@nateko.lu.se>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130613/739a46d3/attachment.pl>
+
+From solymos at ualberta.ca  Thu Jun 13 17:48:56 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Thu, 13 Jun 2013 09:48:56 -0600
+Subject: [R-sig-eco] Rao entropy with presence-absence data
+In-Reply-To: <51B97EB0.1010309@nateko.lu.se>
+References: <51B87E75.2080907@nateko.lu.se> <51B881FB.7010407@okologia.mta.hu>
+	<CAH9coKabtR5-HK5-9UKgrnO9cWYGT5-CMa-39kMeTDXYVnc5kQ@mail.gmail.com>
+	<51B97EB0.1010309@nateko.lu.se>
+Message-ID: <CAH9coKaXgp4byhykc4u1n=S3EaRULBu19pXyHMDOuEeNQ=ZLzg@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130613/779f950c/attachment.pl>
+
+From matutetote at hotmail.com  Fri Jun 14 12:39:28 2013
+From: matutetote at hotmail.com (Matias Ledesma)
+Date: Fri, 14 Jun 2013 10:39:28 +0000
+Subject: [R-sig-eco] offset function in glm.nb
+Message-ID: <BAY147-W54E937968E11CD8262651DD9800@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130614/ea9e3d37/attachment.pl>
+
+From solymos at ualberta.ca  Fri Jun 14 18:32:22 2013
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Fri, 14 Jun 2013 10:32:22 -0600
+Subject: [R-sig-eco] offset function in glm.nb
+In-Reply-To: <BAY147-W54E937968E11CD8262651DD9800@phx.gbl>
+References: <BAY147-W54E937968E11CD8262651DD9800@phx.gbl>
+Message-ID: <CAH9coKaZCG1YqcU1mXHv6tpXCe9Z3Z66S0vkGkbzMH31D2PhEA@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130614/bd899010/attachment.pl>
+
+From pdixon at iastate.edu  Sun Jun 16 03:54:06 2013
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Sun, 16 Jun 2013 01:54:06 +0000
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+Message-ID: <70BE37C808A96042AD67E77340C4D4634D3A6B3C@ITSDAG3D.its.iastate.edu>
+
+Matias,
+
+The situation when you most want to use an offset is when FECUND differs across individuals.  If FECUND is a constant for all observations, you could ignore it if you chose to.  If you did that, its constant effect gets rolled into the intercept.
+
+When it's not constant, the logic is:
+
+log(mu_i / F_i) = your model   <==> Log(mu_i) = your model + log(F_i)
+where mu_i is the mean count and F_i is the fecundity, both for individual i.  
+
+When F_i is a constant = F, the logic is:
+log(mu_i / F) = your model   <==> Log(mu_i) = B0 + rest of your model + log(F)  <==> B0 + log(F)  + rest of your model 
+where B0 + log(F) is the new "intercept"
+
+Best wishes,
+Philip Dixon
+
+
+From highstat at highstat.com  Mon Jun 17 08:35:48 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Mon, 17 Jun 2013 07:35:48 +0100
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+In-Reply-To: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+References: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+Message-ID: <51BEAE44.6040401@highstat.com>
+
+
+
+Matias,
+The only problem with the offset is that you implicitly assume:
+
+double the number of embryos per individual (FECUND)  ==> double the 
+expected value of damaged embryos per individual
+
+This simply follows from the equation that Philip wrote down. For some 
+scenarios this makes sense, but not for other scenarios.
+
+Alain
+
+> Matias,
+>
+> The situation when you most want to use an offset is when FECUND differs across individuals.  If FECUND is a constant for all observations, you could ignore it if you chose to.  If you did that, its constant effect gets rolled into the intercept.
+>
+> When it's not constant, the logic is:
+>
+> log(mu_i / F_i) = your model   <==> Log(mu_i) = your model + log(F_i)
+> where mu_i is the mean count and F_i is the fecundity, both for individual i.
+>
+> When F_i is a constant = F, the logic is:
+> log(mu_i / F) = your model   <==> Log(mu_i) = B0 + rest of your model + log(F)  <==> B0 + log(F)  + rest of your model
+> where B0 + log(F) is the new "intercept"
+>
+> Best wishes,
+> Philip Dixon
+>
+>
+>
+> ------------------------------
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> End of R-sig-ecology Digest, Vol 63, Issue 12
+> *********************************************
+>
+
+
+-- 
+
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007).
+Zuur, AF, Ieno, EN and Smith, GM. Springer. 680 p.
+URL: www.springer.com/0-387-45967-7
+
+
+2. Mixed effects models and extensions in ecology with R. (2009).
+Zuur, AF, Ieno, EN, Walker, N, Saveliev, AA, and Smith, GM. Springer.
+http://www.springer.com/life+sci/ecology/book/978-0-387-87457-9
+
+
+3. A Beginner's Guide to R (2009).
+Zuur, AF, Ieno, EN, Meesters, EHWG. Springer
+http://www.springer.com/statistics/computational/book/978-0-387-93836-3
+
+
+4. Zero Inflated Models and Generalized Linear Mixed Models with R. (2012) Zuur, Saveliev, Ieno.
+http://www.highstat.com/book4.htm
+
+Other books: http://www.highstat.com/books.htm
+
+
+Statistical consultancy, courses, data analysis and software
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From daniel.daedlow at uni-rostock.de  Mon Jun 17 13:09:15 2013
+From: daniel.daedlow at uni-rostock.de (Daniel Daedlow)
+Date: Mon, 17 Jun 2013 11:09:15 +0000
+Subject: [R-sig-eco] different sample size_highly skewed data
+Message-ID: <ED4C5D1F43685245B9A61EB681FE1BC97134C45C@mbx3.uni-rostock.de>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130617/19289c4f/attachment.pl>
+
+From thomas.mockel at nateko.lu.se  Mon Jun 17 15:05:55 2013
+From: thomas.mockel at nateko.lu.se (=?ISO-8859-1?Q?Thomas_M=F6ckel?=)
+Date: Mon, 17 Jun 2013 15:05:55 +0200
+Subject: [R-sig-eco] dbFD function of package FD ?
+Message-ID: <51BF09B3.7040407@nateko.lu.se>
+
+Dear list members,
+I have another question regarding the function dbFD.  I was wondering 
+when it is necessary to set scale.RaoQ = TRUE and what exactly it does 
+and mean.
+Thank you very much for your help.
+
+/Thomas
+
+-- 
+*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+Thomas M?ckel, PhD student
+
+Department of Earth and Ecosystem Science
+Lund University
+S?lvegatan 12
+SE-223 62 Lund
+Sweden
+
+Tel:+46 (0)46 - 222 4887
+E-mail: Thomas.Mockel at nateko.lu.se
+
+
+From matutetote at hotmail.com  Tue Jun 18 10:10:44 2013
+From: matutetote at hotmail.com (Matias Ledesma)
+Date: Tue, 18 Jun 2013 08:10:44 +0000
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 63, Issue 13
+In-Reply-To: <mailman.1.1371463202.13296.r-sig-ecology@r-project.org>
+References: <mailman.1.1371463202.13296.r-sig-ecology@r-project.org>
+Message-ID: <BAY147-W28752194CC78D3FE953A60D98C0@phx.gbl>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130618/e156fec8/attachment.pl>
+
+From kemcclun at ncsu.edu  Tue Jun 18 21:58:56 2013
+From: kemcclun at ncsu.edu (Kevin McCluney)
+Date: Tue, 18 Jun 2013 12:58:56 -0700 (PDT)
+Subject: [R-sig-eco] ordipointlabel with shortened names
+Message-ID: <1371585536282-7578224.post@n2.nabble.com>
+
+Hi,
+
+I've been trying to use ordipointlabel() to add taxa names to an nmds
+(metaMDS) graph in VEGAN.  I can add the full names from the database, but I
+would like to use the shortened names I created using make.cepnames().  I've
+tried:
+
+pl3v2 <- ordipointlabel(mds, dis="sp", add = TRUE, lab=shnam)
+
+But I get the following error message:
+
+Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+font,  : 
+  graphical parameter "lab" has the wrong length
+In addition: Warning message:
+In text.default(lab, labels = labels, col = col, cex = cex, font = font,  :
+  NAs introduced by coercion
+
+I've also tried "labels" instead of "lab" and I get:
+
+Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+font,  : 
+  formal argument "labels" matched by multiple actual arguments
+
+I guess this function doesn't yet work like orditorp?  Can anyone think of a
+workaround?
+
+I've tried orditkplot:
+
+orditkplot(pl3v2, dis = "sp")
+
+But I get this error:
+
+Error in structure(.External("dotTclObjv", objv, PACKAGE = "tcltk"), class =
+"tclObj") : 
+  [tcl] bad screen distance "-NaN".
+
+I've also tried using identify(), but I have a few taxa that are literally
+right on top of each other and try as I might, I can't get all of the taxa
+that are on top of each other to show up.
+
+Any help would be appreciated.  Thanks!
+
+Kevin E. McCluney, PhD
+Post-doctoral Research Scholar
+Department of Entomology
+North Carolina State University
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ordipointlabel-with-shortened-names-tp7578224.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From pnovack-gottshall at ben.edu  Tue Jun 18 23:28:07 2013
+From: pnovack-gottshall at ben.edu (Novack-Gottshall, Philip M.)
+Date: Tue, 18 Jun 2013 21:28:07 +0000
+Subject: [R-sig-eco] Fitting logistic function to data that crosses the
+	origin
+Message-ID: <8CF6FE2C677EA94F94FA6285289BAE68088D39ED@BENMAIL02.ben.pri>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130618/787f4ada/attachment.pl>
+
+From ubuntero.9161 at gmail.com  Wed Jun 19 12:53:33 2013
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Wed, 19 Jun 2013 13:53:33 +0300
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+In-Reply-To: <51BEAE44.6040401@highstat.com>
+References: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+	<51BEAE44.6040401@highstat.com>
+Message-ID: <CAAVnHsurM06HeOq3HV5__LCrhfVU3b8pNakY497qVJSmDDudmw@mail.gmail.com>
+
+On Tue, Jun 18, 2013 at 11:10 AM, Matias Ledesma <matutetote at hotmail.com> wrote:
+>
+>
+> Philip and Alain,
+>
+> Thank you for your assistence,
+> So, that mean that the  fuction offset its only possible if there is a relationship between the
+> damaged number of embryos and the total number of embryos per amphipod as you explained?
+
+As I'm facing a similar problem, I'd like to know as well if a
+variable should be passed as an offset to the formula only when it
+influences the outcome in some (linear) way. Does it make sense to
+include the exposure variable in the model as a regular input first,
+and if it's coefficient is around 1 to be taken as an indicator that
+it is better that variable to be included in the model as an offset?
+
+Cheers,
+Ivailo
+--
+UBUNTU: a person is a person through other persons.
+
+
+From pierre.d.thiriet at gmail.com  Wed Jun 19 14:08:07 2013
+From: pierre.d.thiriet at gmail.com (Pierre THIRIET)
+Date: Wed, 19 Jun 2013 14:08:07 +0200
+Subject: [R-sig-eco] Fitting logistic function to data that crosses the
+ origin
+In-Reply-To: <8CF6FE2C677EA94F94FA6285289BAE68088D39ED@BENMAIL02.ben.pri>
+References: <8CF6FE2C677EA94F94FA6285289BAE68088D39ED@BENMAIL02.ben.pri>
+Message-ID: <51C19F27.8040200@gmail.com>
+
+Dear Phil,
+
+I did not understand why you prefer working on logged data, if 
+untransformed data are already nicely S-shaped. Is it for fitting the 
+classical methods applied in all the previous studies?
+
+Anyway, I thik the nls self-start SSfpl() might be usefull. It fits a 
+four parameter sigmoid : inflection point, "slope", upper asymptote, and 
+lower asymptote. Thanks to this fourth parameter, you could deal with 
+negative y values without any rescaling.
+
+Maybe SSasympOff() might be also of interest, it is an Asymptotic 
+Regression Model with an Offset. And also all other self-start nlm:    
+?selfStart()
+
+HTH
+Pierre
+
+Le 18/06/2013 23:28, Novack-Gottshall, Philip M. a ?crit :
+> Greetings,
+>
+> I am looking for advice on fitting a logistic function to logged data that includes negative values.
+>
+> Background: The data is body-size data, which is conventionally analyzed in logarithmic form. Because the dependent variables cross the value of 1, the logged data includes both positive and negative values. I'm comparing the standard power function and the logistic function because I have reason to believe there is allometry, which approximately follows a logistic curve during ontogeny. And I want to use AICc model comparison in my model selection.
+>
+> Logistic functions, by definition, asymptotically approach (and never reach) zero, making it impossible to fit data that crosses the origin. But the data (see sample below), does have a sigmoidal appearance (both when plotted in linear and logged axes.) So I would like to fit a logistic model to it.
+>
+> I have no problem fitting a logistic model to the linear form. And I can shift the logged data upward by an arbitrary value so that all response values are positive. But because I want to use the log-likelihoods for the model fits to conduct model selection, I don't like this solution. This is because it's arbitrary, because the value of logLik() can change depending on how much I shift the dependent variables, and because I'd need to shift different samples by different amounts.
+>
+> Can anyone point me in a good direction on how to better fit logistic models to this data? (Or to calculate the correct logLik and residual sum-of-squares.) Should I just compare logistic in linear space to the power function in log-log space? Or how about rescaling the data between 0 and 1, which is arbitrary, but at least consistent among samples?
+>
+> Thanks,
+> Phil
+>
+>
+> # Basic example using sample data in linear-space
+> y <- c(0.01, 0.10, 0.17, 0.69, 1.35, 3.45, 4.07, 4.12)
+> x <- c(0.28, 0.64, 0.76, 1.43, 1.98, 2.99, 3.97, 4.43)
+> data <- data.frame(x=x, y=y)
+> plot(data)
+> # Estimate starting parameters
+> K <- max(data$y)      # Carrying capacity
+> x.0 <- min(data$y)    # Starting size
+> r <- 2                          # Rate
+> nlsfit <- nls(y ~ K / (1 + ((K - x.0)/x.0) * exp(-r * x)), data=data, start=list(K=K, r=r, x.0=x.0))
+> nlsfit
+> logLik(nlsfit)
+> xfit <- seq(min(data$x), max(data$x), (max(data$x)- min(data$x))/100)
+> yfit <- coef(nlsfit)[1] / (1 + ((coef(nlsfit)[1] - coef(nlsfit)[3]) / coef(nlsfit)[3]) * exp(-coef(nlsfit)[2] * xfit))
+> lines(spline(xfit, yfit), col="red")
+> # K = 4.185, r = 2.117, x.0 = 0.0325
+> # residual sum-of-squares: 0.0228
+> # logLik = 12.094
+>
+> # Now re-do, taking the log of both variables:
+> data <- data.frame(x=log(x), y=log(y))
+> plot(data)
+> K <- max(data$y) ; x.0 <- min(data$y); r <- .7
+> nlsfit <- nls(y ~ K / (1 + ((K - x.0)/x.0) * exp(-r * x)), data=data, start=list(K=K, r=r, x.0=x.0))
+> nlsfit
+> logLik(nlsfit)
+> xfit <- seq(min(data$x), max(data$x), (max(data$x)- min(data$x))/100)
+> yfit <- coef(nlsfit)[1] / (1 + ((coef(nlsfit)[1] - coef(nlsfit)[3]) / coef(nlsfit)[3]) * exp(-coef(nlsfit)[2] * xfit))
+> lines(spline(xfit, yfit), col="red")
+> # Line reaches asymptote as y approaches zero. (This is also how the logistic function works.)
+> # K = -4.738, r = -4.066, x.0 = -0.694
+> # residual sum-of-squares: 5.741
+> # logLik = -10.024
+>
+> # Now re-do, taking the log of both variables, then vertically shift by adding value of 5 to y variable to ensure all positive values:
+> data <- data.frame(x=log(x), y=log(y) + 5)
+> plot(data)
+> K <- max(data$y) ; x.0 <- min(data$y) ; r <- 2
+> nlsfit <- nls(y ~ K / (1 + ((K - x.0)/x.0) * exp(-r * x)), data=data, start=list(K=K, r=r, x.0=x.0))
+> nlsfit
+> logLik(nlsfit)
+> xfit <- seq(min(data$x), max(data$x), (max(data$x)- min(data$x))/100)
+> yfit <- coef(nlsfit)[1] / (1 + ((coef(nlsfit)[1] - coef(nlsfit)[3]) / coef(nlsfit)[3]) * exp(-coef(nlsfit)[2] * xfit))
+> lines(spline(xfit, yfit), col="red")
+> # K = 6.727, r = 1.810, x.0 = 3.843
+> # residual sum-of-squares: 0.354
+> # logLik =  1.120 # But this and residual sum-of-squares varies depending on what value data were shifted by.
+>
+> # Now take logged data and use vertically shifted model and down-shift it:
+> data <- data.frame(x=log(x), y=log(y))
+> plot(data)
+> xfit <- seq(min(data$x), max(data$x), (max(data$x)- min(data$x))/100)
+> yfit <- coef(nlsfit)[1] / (1 + ((coef(nlsfit)[1] - coef(nlsfit)[3]) / coef(nlsfit)[3]) * exp(-coef(nlsfit)[2] * xfit)) - 5
+> lines(spline(xfit, yfit), col="red")
+> # The model now fits well (visually), but I don't trust the logLik and residual values given the arbitrary vertical shift.
+>
+>
+>
+>
+> --
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>   Phil Novack-Gottshall
+>   Assistant Professor
+>   Department of Biological Sciences
+>   Benedictine University
+>   5700 College Road
+>   Lisle, IL 60532
+>
+>   pnovack-gottshall at ben.edu<mailto:pnovack-gottshall at ben.edu>
+>   Phone: 630-829-6514
+>   Fax: 630-829-6547
+>   Office: 332 Birck Hall
+>   Lab: 107 Birck Hall
+>   http://www1.ben.edu/faculty/pnovack-gottshall
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From pdixon at iastate.edu  Wed Jun 19 15:51:57 2013
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Wed, 19 Jun 2013 13:51:57 +0000
+Subject: [R-sig-eco] Logistic function between arbitrary parameter values
+Message-ID: <70BE37C808A96042AD67E77340C4D4634D3A8159@ITSDAG3D.its.iastate.edu>
+
+Phil,
+
+One reasonable solution is add two additional parameters for the bottom and top (or bottom and span) of your logistic.:
+
+Your function: K / (1 + ((K - x.0)/x.0) * exp(-r * x))  
+becomes        alpha + beta*K / (1 + ((K - x.0)/x.0) * exp(-r * x)),
+
+This logistic spans Y values from -alpha to -alpha + beta.
+You may have trouble fitting it, because Yhat will be undefined if alpha is not large enough and I would be surprised if there were high collinearity between \hat\alpha and \hat\x.0.  However, the choices of alpha and beta are no longer arbitrary.
+
+Best wishes,
+Philip Dixon
+
+
+From kersusan.dylann at gmail.com  Thu Jun 20 11:20:52 2013
+From: kersusan.dylann at gmail.com (Dylann Kersusan)
+Date: Thu, 20 Jun 2013 11:20:52 +0200
+Subject: [R-sig-eco] Working with trajectories: ltraj.
+Message-ID: <CAEcqiB9b7akB+yAphBD03gu=juXR_+OtiXCfpVM5OHn_2vyMqw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130620/7ec155f6/attachment.pl>
+
+From clement.calenge at oncfs.gouv.fr  Thu Jun 20 14:25:32 2013
+From: clement.calenge at oncfs.gouv.fr (Clement Calenge)
+Date: Thu, 20 Jun 2013 14:25:32 +0200
+Subject: [R-sig-eco] Working with trajectories: ltraj.
+In-Reply-To: <CAEcqiB9b7akB+yAphBD03gu=juXR_+OtiXCfpVM5OHn_2vyMqw@mail.gmail.com>
+References: <CAEcqiB9b7akB+yAphBD03gu=juXR_+OtiXCfpVM5OHn_2vyMqw@mail.gmail.com>
+Message-ID: <51C2F4BC.80900@oncfs.gouv.fr>
+
+
+[snip]
+> I am trying to select only a part of the trajectory stored in this ltraj
+> class object, following an example from Calenge in the package
+> 'adehabitatLT':
+>
+> lim <- as.POSIXct(strptime(c("28/05/2010 02:00:40", "30/06/2010 02:00:41"),
+> "%d/%m/%Y %H:%M:%S"))
+> ltrj.bis <- gdltraj(ltrj.obj, min=lim[1], max=lim[2], type="POSIXct" )
+>
+> but for some reasons it does not work properly. I got this error message
+> that I do not understand:
+>
+> Error in `[.default`(res, , names(res) %in% which, drop = FALSE) :
+>    number of dimensions incorrect
+>
+>
+> Anyone has an idea about why it doesn't work?
+
+You have identified a bug in the function gdltraj. I have corrected this 
+bug and uploaded a new version of the package to CRAN. It will be 
+available soon. Meanwhile, you can use this function instead:
+
+gdltraj <- function (x, min, max, type = c("POSIXct", "sec", "min", "hour",
+     "mday", "mon", "year", "wday", "yday"))
+{
+     if (!inherits(x, "ltraj"))
+         stop("x should be of class \"ltraj\"")
+     if (!attr(x, "typeII"))
+         stop("x should be of type II (time recorded)")
+     type <- match.arg(type)
+     if (type == "POSIXct") {
+         x <- lapply(x, function(y) {
+             infol <- attr(y, "infolocs")
+             if (!is.null(infol))
+                 infol <- infol[(y$date > min) & (y$date < max),
+                   , drop=FALSE]
+             y <- y[(y$date > min) & (y$date < max), ]
+             if (!is.null(infol))
+                 attr(y, "infolocs") <- infol
+             return(y)
+         })
+     }
+     else {
+         x <- lapply(x, function(y) {
+             da <- as.POSIXlt(y$date)[[type]]
+             infol <- attr(y, "infolocs")
+             if (!is.null(infol))
+                 infol <- infol[(da >= min) & (da < max), ,drop=FALSE]
+             y <- y[(da >= min) & (da < max), ]
+             if (!is.null(infol))
+                 attr(y, "infolocs") <- infol
+             return(y)
+         })
+     }
+     if (all(sapply(x, nrow) == 0))
+         stop("No relocations within the specified interval")
+     x[sapply(x, nrow) == 0] <- NULL
+     class(x) <- c("ltraj", "list")
+     attr(x, "typeII") <- TRUE
+     attr(x, "regular") <- is.regular(x)
+     x <- rec(x)
+     return(x)
+}
+
+HTH
+
+Cl?ment Calenge
+
+-- 
+Cl?ment CALENGE
+Cellule d'appui ? l'analyse de donn?es
+Direction des Etudes et de la Recherche
+Office national de la chasse et de la faune sauvage
+Saint Benoist - 78610 Auffargis
+tel. (33) 01.30.46.54.14
+
+
+From highstat at highstat.com  Thu Jun 20 14:29:22 2013
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Thu, 20 Jun 2013 13:29:22 +0100
+Subject: [R-sig-eco] New book: Beginner's Guide to GLM and GLMM with R
+Message-ID: <51C2F5A2.5060208@highstat.com>
+
+Members of this mailing list may be interested in the following new book:
+
+
+Beginner's Guide to GLM and GLMM with R.
+- A frequentist and Bayesian perspective for ecologists -
+
+Zuur AF, Hilbe JM and Ieno EN
+
+
+This book is only available from:
+http://www.highstat.com/BGGLM.htm
+
+
+
+This book presents Generalized Linear Models (GLM) and Generalized 
+Linear Mixed Models (GLMM) based on both frequency-based and Bayesian 
+concepts. Using ecological data from real-world studies, the text 
+introduces the reader to the basics of GLM and mixed effects models, 
+with demonstrations of binomial, gamma, Poisson, negative binomial 
+regression, and beta and beta-binomial GLMs and GLMMs. The book uses the 
+functions glm, lmer, glmer, glmmADMB, and also JAGS from within R. JAGS 
+results are compared with frequentist results.
+
+R code to construct, fit, interpret, and comparatively evaluate models 
+is provided at every stage. Otherwise challenging procedures are 
+presented in a clear and comprehensible manner with each step of the 
+modelling process explained in detail, and all code is provided so that 
+it can be reproduced by the reader.
+
+Readers of this book have free access to:
+
+Chapter 1 of Zero Inflated Models and Generalized Linear Mixed Models 
+with R. (2012a) Zuur, Saveliev, Ieno.
+Chapter 1 of Beginner's Guide to Generalized Additive Models with R. 
+(2012b) Zuur, AF.
+
+
+Keywords
+Introduction to GLM
+Poisson GLM and Negative binomial GLM for count data
+Binomial GLM for binary data
+Binomial GLM for proportional data
+Other distributions
+GLM applied to red squirrel data
+Bayesian approach ? running the Poisson GLM
+Running JAGS via R
+Applying a negative binomial GLM in JAGS
+GLM applied to presence-absence Polychaeta data
+Model selection using AIC, DIC and BIC in jags
+Introduction to mixed effects models
+GLMM applied on honeybee pollination data
+Poisson GLMM using glmer and JAGS
+Negative binomial GLMM using glmmADMD and JAGS
+GLMM with auto-regressive correlation
+GLMM for strictly positive data: biomass of rainforest trees
+gamma GLM using a frequentist approach
+Fitting a gamma GLM using JAGS
+Truncated Gaussian linear regression
+Tobit model in JAGS
+Tobit model with random effects in JAGS
+Binomial, beta-binomial, and beta GLMM applied to cheetah data
+
+Kind regards,
+
+Alain Zuur
+
+
+
+
+-- 
+
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007).
+Zuur, AF, Ieno, EN and Smith, GM. Springer. 680 p.
+URL: www.springer.com/0-387-45967-7
+
+
+2. Mixed effects models and extensions in ecology with R. (2009).
+Zuur, AF, Ieno, EN, Walker, N, Saveliev, AA, and Smith, GM. Springer.
+http://www.springer.com/life+sci/ecology/book/978-0-387-87457-9
+
+
+3. A Beginner's Guide to R (2009).
+Zuur, AF, Ieno, EN, Meesters, EHWG. Springer
+http://www.springer.com/statistics/computational/book/978-0-387-93836-3
+
+
+4. Zero Inflated Models and Generalized Linear Mixed Models with R. (2012) Zuur, Saveliev, Ieno.
+http://www.highstat.com/book4.htm
+
+Other books: http://www.highstat.com/books.htm
+
+
+Statistical consultancy, courses, data analysis and software
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+From gavin.simpson at ucl.ac.uk  Thu Jun 20 16:08:17 2013
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Thu, 20 Jun 2013 08:08:17 -0600
+Subject: [R-sig-eco] ordipointlabel with shortened names
+In-Reply-To: <1371585536282-7578224.post@n2.nabble.com>
+References: <1371585536282-7578224.post@n2.nabble.com>
+Message-ID: <1371737297.2393.13.camel@chrysothemis>
+
+Resending as I had some mail trouble yesterday and don't see this one to
+have gone through. See in-line below...
+
+On Tue, 2013-06-18 at 12:58 -0700, Kevin McCluney wrote:
+> Hi,
+> 
+> I've been trying to use ordipointlabel() to add taxa names to an nmds
+> (metaMDS) graph in VEGAN.  I can add the full names from the database, but I
+> would like to use the shortened names I created using make.cepnames().  I've
+> tried:
+> 
+> pl3v2 <- ordipointlabel(mds, dis="sp", add = TRUE, lab=shnam)
+
+I'm afraid this is not possible yet - the labels are hard coded from the
+species scores. Hence I suggest you do
+
+names(foo) <- make.cepnames(names(foo))
+
+where foo is your data frame. Then refit the NMDS.
+
+I'll see about allowing the passing in of labels but it won't happen for
+a few weeks.
+
+HTH
+
+G
+
+> But I get the following error message:
+> 
+> Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+> font,  : 
+>   graphical parameter "lab" has the wrong length
+> In addition: Warning message:
+> In text.default(lab, labels = labels, col = col, cex = cex, font = font,  :
+>   NAs introduced by coercion
+> 
+> I've also tried "labels" instead of "lab" and I get:
+> 
+> Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+> font,  : 
+>   formal argument "labels" matched by multiple actual arguments
+> 
+> I guess this function doesn't yet work like orditorp?  Can anyone think of a
+> workaround?
+> 
+> I've tried orditkplot:
+> 
+> orditkplot(pl3v2, dis = "sp")
+> 
+> But I get this error:
+> 
+> Error in structure(.External("dotTclObjv", objv, PACKAGE = "tcltk"), class =
+> "tclObj") : 
+>   [tcl] bad screen distance "-NaN".
+> 
+> I've also tried using identify(), but I have a few taxa that are literally
+> right on top of each other and try as I might, I can't get all of the taxa
+> that are on top of each other to show up.
+> 
+> Any help would be appreciated.  Thanks!
+> 
+> Kevin E. McCluney, PhD
+> Post-doctoral Research Scholar
+> Department of Entomology
+> North Carolina State University
+> 
+> 
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ordipointlabel-with-shortened-names-tp7578224.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+Gavin Simpson, PhD                          [t] +1 306 337 8863
+Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+523 Research and Innovation Centre          [tw] @ucfagls
+University of Regina
+Regina, SK S4S 0A2, Canada
+
+
+-- 
+Gavin Simpson, PhD                          [t] +1 306 337 8863
+Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+523 Research and Innovation Centre          [tw] @ucfagls
+University of Regina
+Regina, SK S4S 0A2, Canada
+
+
+From alexsouza at cb.ufrn.br  Sat Jun 22 03:16:54 2013
+From: alexsouza at cb.ufrn.br (Alexandre Fadigas de Souza)
+Date: Fri, 21 Jun 2013 22:16:54 -0300 (BRT)
+Subject: [R-sig-eco] Discriminant Analysis Crisis
+In-Reply-To: <mailman.1.1371808801.25939.r-sig-ecology@r-project.org>
+References: <mailman.1.1371808801.25939.r-sig-ecology@r-project.org>
+Message-ID: <2094259306.326690.1371863814590.JavaMail.root@cb.ufrn.br>
+
+Dear friends,
+
+  I have a doubt about how to use discriminant analysis. Could you possibly help me?
+
+  Briefly, here is my case.
+
+  I have clustered 64 subtropical tree species using k-means non-hierarchical cluster analysis. The cluster analysis was based on 10 continuous traits measured for individuals of each species. The analysis yielded 5 groups that interestingly correspond to empirical expectations about forest ecology.
+
+  I have some 20 more species for which I do not have all 10 variables but need to fit into the five groups classification. Based on the literature, I proceeded with a Discriminant Analysis, which selected three of the ten variables as most strongly related to the groups, and found regressions related to each group. There is a separate regression for each of the five groups.
+
+  And here comes my difficulties:
+
+1 - How will I assign a given new species to any single group if there is a separate equation for each group? Should I fit the species data in each group's equation and then chech which one resulted in a result nearer to that group number? This seems very awkward.
+
+2 - The DA provides an untransformed equation with a constant but also a standardized version withoug the constant and with one less group (4 instead of 5). I suppose I should use the unstandardized version, shouldn't I?
+
+   Thank you in advance for any help.
+
+   Sincerely,
+
+   Alexandre
+
+Dr. Alexandre F. Souza 
+Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia  Universidade Federal do Rio Grande do Norte (UFRN)  http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+ 
+
+----- Mensagem original -----
+De: r-sig-ecology-request at r-project.org
+Para: r-sig-ecology at r-project.org
+Enviadas: Fri, 21 Jun 2013 07:00:01 -0300 (BRT)
+Assunto: R-sig-ecology Digest, Vol 63, Issue 17
+
+Send R-sig-ecology mailing list submissions to
+	r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+	r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+	r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific
+than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. Re: Working with trajectories: ltraj. (Clement Calenge)
+   2. New book: Beginner's Guide to GLM and GLMM with R
+      (Highland Statistics Ltd)
+   3. Re: ordipointlabel with shortened names (Gavin Simpson)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Thu, 20 Jun 2013 14:25:32 +0200
+From: Clement Calenge <clement.calenge at oncfs.gouv.fr>
+To: Dylann Kersusan <kersusan.dylann at gmail.com>
+Cc: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Subject: Re: [R-sig-eco] Working with trajectories: ltraj.
+Message-ID: <51C2F4BC.80900 at oncfs.gouv.fr>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+
+
+[snip]
+> I am trying to select only a part of the trajectory stored in this ltraj
+> class object, following an example from Calenge in the package
+> 'adehabitatLT':
+>
+> lim <- as.POSIXct(strptime(c("28/05/2010 02:00:40", "30/06/2010 02:00:41"),
+> "%d/%m/%Y %H:%M:%S"))
+> ltrj.bis <- gdltraj(ltrj.obj, min=lim[1], max=lim[2], type="POSIXct" )
+>
+> but for some reasons it does not work properly. I got this error message
+> that I do not understand:
+>
+> Error in `[.default`(res, , names(res) %in% which, drop = FALSE) :
+>    number of dimensions incorrect
+>
+>
+> Anyone has an idea about why it doesn't work?
+
+You have identified a bug in the function gdltraj. I have corrected this 
+bug and uploaded a new version of the package to CRAN. It will be 
+available soon. Meanwhile, you can use this function instead:
+
+gdltraj <- function (x, min, max, type = c("POSIXct", "sec", "min", "hour",
+     "mday", "mon", "year", "wday", "yday"))
+{
+     if (!inherits(x, "ltraj"))
+         stop("x should be of class \"ltraj\"")
+     if (!attr(x, "typeII"))
+         stop("x should be of type II (time recorded)")
+     type <- match.arg(type)
+     if (type == "POSIXct") {
+         x <- lapply(x, function(y) {
+             infol <- attr(y, "infolocs")
+             if (!is.null(infol))
+                 infol <- infol[(y$date > min) & (y$date < max),
+                   , drop=FALSE]
+             y <- y[(y$date > min) & (y$date < max), ]
+             if (!is.null(infol))
+                 attr(y, "infolocs") <- infol
+             return(y)
+         })
+     }
+     else {
+         x <- lapply(x, function(y) {
+             da <- as.POSIXlt(y$date)[[type]]
+             infol <- attr(y, "infolocs")
+             if (!is.null(infol))
+                 infol <- infol[(da >= min) & (da < max), ,drop=FALSE]
+             y <- y[(da >= min) & (da < max), ]
+             if (!is.null(infol))
+                 attr(y, "infolocs") <- infol
+             return(y)
+         })
+     }
+     if (all(sapply(x, nrow) == 0))
+         stop("No relocations within the specified interval")
+     x[sapply(x, nrow) == 0] <- NULL
+     class(x) <- c("ltraj", "list")
+     attr(x, "typeII") <- TRUE
+     attr(x, "regular") <- is.regular(x)
+     x <- rec(x)
+     return(x)
+}
+
+HTH
+
+Cl?ment Calenge
+
+-- 
+Cl?ment CALENGE
+Cellule d'appui ? l'analyse de donn?es
+Direction des Etudes et de la Recherche
+Office national de la chasse et de la faune sauvage
+Saint Benoist - 78610 Auffargis
+tel. (33) 01.30.46.54.14
+
+
+
+------------------------------
+
+Message: 2
+Date: Thu, 20 Jun 2013 13:29:22 +0100
+From: Highland Statistics Ltd <highstat at highstat.com>
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] New book: Beginner's Guide to GLM and GLMM with R
+Message-ID: <51C2F5A2.5060208 at highstat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+
+Members of this mailing list may be interested in the following new book:
+
+
+Beginner's Guide to GLM and GLMM with R.
+- A frequentist and Bayesian perspective for ecologists -
+
+Zuur AF, Hilbe JM and Ieno EN
+
+
+This book is only available from:
+http://www.highstat.com/BGGLM.htm
+
+
+
+This book presents Generalized Linear Models (GLM) and Generalized 
+Linear Mixed Models (GLMM) based on both frequency-based and Bayesian 
+concepts. Using ecological data from real-world studies, the text 
+introduces the reader to the basics of GLM and mixed effects models, 
+with demonstrations of binomial, gamma, Poisson, negative binomial 
+regression, and beta and beta-binomial GLMs and GLMMs. The book uses the 
+functions glm, lmer, glmer, glmmADMB, and also JAGS from within R. JAGS 
+results are compared with frequentist results.
+
+R code to construct, fit, interpret, and comparatively evaluate models 
+is provided at every stage. Otherwise challenging procedures are 
+presented in a clear and comprehensible manner with each step of the 
+modelling process explained in detail, and all code is provided so that 
+it can be reproduced by the reader.
+
+Readers of this book have free access to:
+
+Chapter 1 of Zero Inflated Models and Generalized Linear Mixed Models 
+with R. (2012a) Zuur, Saveliev, Ieno.
+Chapter 1 of Beginner's Guide to Generalized Additive Models with R. 
+(2012b) Zuur, AF.
+
+
+Keywords
+Introduction to GLM
+Poisson GLM and Negative binomial GLM for count data
+Binomial GLM for binary data
+Binomial GLM for proportional data
+Other distributions
+GLM applied to red squirrel data
+Bayesian approach ? running the Poisson GLM
+Running JAGS via R
+Applying a negative binomial GLM in JAGS
+GLM applied to presence-absence Polychaeta data
+Model selection using AIC, DIC and BIC in jags
+Introduction to mixed effects models
+GLMM applied on honeybee pollination data
+Poisson GLMM using glmer and JAGS
+Negative binomial GLMM using glmmADMD and JAGS
+GLMM with auto-regressive correlation
+GLMM for strictly positive data: biomass of rainforest trees
+gamma GLM using a frequentist approach
+Fitting a gamma GLM using JAGS
+Truncated Gaussian linear regression
+Tobit model in JAGS
+Tobit model with random effects in JAGS
+Binomial, beta-binomial, and beta GLMM applied to cheetah data
+
+Kind regards,
+
+Alain Zuur
+
+
+
+
+-- 
+
+Dr. Alain F. Zuur
+First author of:
+
+1. Analysing Ecological Data (2007).
+Zuur, AF, Ieno, EN and Smith, GM. Springer. 680 p.
+URL: www.springer.com/0-387-45967-7
+
+
+2. Mixed effects models and extensions in ecology with R. (2009).
+Zuur, AF, Ieno, EN, Walker, N, Saveliev, AA, and Smith, GM. Springer.
+http://www.springer.com/life+sci/ecology/book/978-0-387-87457-9
+
+
+3. A Beginner's Guide to R (2009).
+Zuur, AF, Ieno, EN, Meesters, EHWG. Springer
+http://www.springer.com/statistics/computational/book/978-0-387-93836-3
+
+
+4. Zero Inflated Models and Generalized Linear Mixed Models with R. (2012) Zuur, Saveliev, Ieno.
+http://www.highstat.com/book4.htm
+
+Other books: http://www.highstat.com/books.htm
+
+
+Statistical consultancy, courses, data analysis and software
+Highland Statistics Ltd.
+6 Laverock road
+UK - AB41 6FN Newburgh
+Tel: 0044 1358 788177
+Email: highstat at highstat.com
+URL: www.highstat.com
+URL: www.brodgar.com
+
+
+
+------------------------------
+
+Message: 3
+Date: Thu, 20 Jun 2013 08:08:17 -0600
+From: Gavin Simpson <gavin.simpson at ucl.ac.uk>
+To: Kevin McCluney <kemcclun at ncsu.edu>
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] ordipointlabel with shortened names
+Message-ID: <1371737297.2393.13.camel at chrysothemis>
+Content-Type: text/plain; charset="UTF-8"
+
+Resending as I had some mail trouble yesterday and don't see this one to
+have gone through. See in-line below...
+
+On Tue, 2013-06-18 at 12:58 -0700, Kevin McCluney wrote:
+> Hi,
+> 
+> I've been trying to use ordipointlabel() to add taxa names to an nmds
+> (metaMDS) graph in VEGAN.  I can add the full names from the database, but I
+> would like to use the shortened names I created using make.cepnames().  I've
+> tried:
+> 
+> pl3v2 <- ordipointlabel(mds, dis="sp", add = TRUE, lab=shnam)
+
+I'm afraid this is not possible yet - the labels are hard coded from the
+species scores. Hence I suggest you do
+
+names(foo) <- make.cepnames(names(foo))
+
+where foo is your data frame. Then refit the NMDS.
+
+I'll see about allowing the passing in of labels but it won't happen for
+a few weeks.
+
+HTH
+
+G
+
+> But I get the following error message:
+> 
+> Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+> font,  : 
+>   graphical parameter "lab" has the wrong length
+> In addition: Warning message:
+> In text.default(lab, labels = labels, col = col, cex = cex, font = font,  :
+>   NAs introduced by coercion
+> 
+> I've also tried "labels" instead of "lab" and I get:
+> 
+> Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+> font,  : 
+>   formal argument "labels" matched by multiple actual arguments
+> 
+> I guess this function doesn't yet work like orditorp?  Can anyone think of a
+> workaround?
+> 
+> I've tried orditkplot:
+> 
+> orditkplot(pl3v2, dis = "sp")
+> 
+> But I get this error:
+> 
+> Error in structure(.External("dotTclObjv", objv, PACKAGE = "tcltk"), class =
+> "tclObj") : 
+>   [tcl] bad screen distance "-NaN".
+> 
+> I've also tried using identify(), but I have a few taxa that are literally
+> right on top of each other and try as I might, I can't get all of the taxa
+> that are on top of each other to show up.
+> 
+> Any help would be appreciated.  Thanks!
+> 
+> Kevin E. McCluney, PhD
+> Post-doctoral Research Scholar
+> Department of Entomology
+> North Carolina State University
+> 
+> 
+> 
+> --
+> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ordipointlabel-with-shortened-names-tp7578224.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+-- 
+Gavin Simpson, PhD                          [t] +1 306 337 8863
+Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+523 Research and Innovation Centre          [tw] @ucfagls
+University of Regina
+Regina, SK S4S 0A2, Canada
+
+
+-- 
+Gavin Simpson, PhD                          [t] +1 306 337 8863
+Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+523 Research and Innovation Centre          [tw] @ucfagls
+University of Regina
+Regina, SK S4S 0A2, Canada
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 63, Issue 17
+
+
+From jeffrey.stratford at wilkes.edu  Sun Jun 23 19:42:36 2013
+From: jeffrey.stratford at wilkes.edu (Stratford, Jeffrey)
+Date: Sun, 23 Jun 2013 13:42:36 -0400
+Subject: [R-sig-eco] coding question
+Message-ID: <CAP5kizQTDcU+YJ=7aiSTtCkqxgVGGJLkHVVpAbP=fkTSGTC0ew@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130623/4b262d28/attachment.pl>
+
+From chris at trickysolutions.com.au  Mon Jun 24 03:09:20 2013
+From: chris at trickysolutions.com.au (Chris Howden)
+Date: Mon, 24 Jun 2013 11:09:20 +1000
+Subject: [R-sig-eco] Discriminant Analysis Crisis
+In-Reply-To: <2094259306.326690.1371863814590.JavaMail.root@cb.ufrn.br>
+References: <mailman.1.1371808801.25939.r-sig-ecology@r-project.org>
+	<2094259306.326690.1371863814590.JavaMail.root@cb.ufrn.br>
+Message-ID: <6775749045626324082@unknownmsgid>
+
+The lda function has a corresponding predict function which u can use
+to classify new data. Try having a look at that and it's help
+contents.
+
+Chris Howden
+Founding Partner
+Tricky Solutions
+Tricky Solutions 4 Tricky Problems
+Evidence Based Strategic Development, IP Commercialisation and
+Innovation, Data Analysis, Modelling and Training
+
+(mobile) 0410 689 945
+(fax / office)
+chris at trickysolutions.com.au
+
+Disclaimer: The information in this email and any attachments to it are
+confidential and may contain legally privileged information. If you are not
+the named or intended recipient, please delete this communication and
+contact us immediately. Please note you are not authorised to copy,
+use or disclose this communication or any attachments without our
+consent. Although this email has been checked by anti-virus software,
+there is a risk that email messages may be corrupted or infected by
+viruses or other
+interferences. No responsibility is accepted for such interference. Unless
+expressly stated, the views of the writer are not those of the
+company. Tricky Solutions always does our best to provide accurate
+forecasts and analyses based on the data supplied, however it is
+possible that some important predictors were not included in the data
+sent to us. Information provided by us should not be solely relied
+upon when making decisions and clients should use their own judgement.
+
+On 22/06/2013, at 11:19, Alexandre Fadigas de Souza
+<alexsouza at cb.ufrn.br> wrote:
+
+> Dear friends,
+>
+>  I have a doubt about how to use discriminant analysis. Could you possibly help me?
+>
+>  Briefly, here is my case.
+>
+>  I have clustered 64 subtropical tree species using k-means non-hierarchical cluster analysis. The cluster analysis was based on 10 continuous traits measured for individuals of each species. The analysis yielded 5 groups that interestingly correspond to empirical expectations about forest ecology.
+>
+>  I have some 20 more species for which I do not have all 10 variables but need to fit into the five groups classification. Based on the literature, I proceeded with a Discriminant Analysis, which selected three of the ten variables as most strongly related to the groups, and found regressions related to each group. There is a separate regression for each of the five groups.
+>
+>  And here comes my difficulties:
+>
+> 1 - How will I assign a given new species to any single group if there is a separate equation for each group? Should I fit the species data in each group's equation and then chech which one resulted in a result nearer to that group number? This seems very awkward.
+>
+> 2 - The DA provides an untransformed equation with a constant but also a standardized version withoug the constant and with one less group (4 instead of 5). I suppose I should use the unstandardized version, shouldn't I?
+>
+>   Thank you in advance for any help.
+>
+>   Sincerely,
+>
+>   Alexandre
+>
+> Dr. Alexandre F. Souza
+> Professor Adjunto II Departamento de Botanica, Ecologia e Zoologia  Universidade Federal do Rio Grande do Norte (UFRN)  http://www.docente.ufrn.br/alexsouza  Curriculo: lattes.cnpq.br/7844758818522706
+>
+>
+> ----- Mensagem original -----
+> De: r-sig-ecology-request at r-project.org
+> Para: r-sig-ecology at r-project.org
+> Enviadas: Fri, 21 Jun 2013 07:00:01 -0300 (BRT)
+> Assunto: R-sig-ecology Digest, Vol 63, Issue 17
+>
+> Send R-sig-ecology mailing list submissions to
+>    r-sig-ecology at r-project.org
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+>    https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+>    r-sig-ecology-request at r-project.org
+>
+> You can reach the person managing the list at
+>    r-sig-ecology-owner at r-project.org
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+>
+>
+> Today's Topics:
+>
+>   1. Re: Working with trajectories: ltraj. (Clement Calenge)
+>   2. New book: Beginner's Guide to GLM and GLMM with R
+>      (Highland Statistics Ltd)
+>   3. Re: ordipointlabel with shortened names (Gavin Simpson)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Thu, 20 Jun 2013 14:25:32 +0200
+> From: Clement Calenge <clement.calenge at oncfs.gouv.fr>
+> To: Dylann Kersusan <kersusan.dylann at gmail.com>
+> Cc: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+> Subject: Re: [R-sig-eco] Working with trajectories: ltraj.
+> Message-ID: <51C2F4BC.80900 at oncfs.gouv.fr>
+> Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+>
+>
+> [snip]
+>> I am trying to select only a part of the trajectory stored in this ltraj
+>> class object, following an example from Calenge in the package
+>> 'adehabitatLT':
+>>
+>> lim <- as.POSIXct(strptime(c("28/05/2010 02:00:40", "30/06/2010 02:00:41"),
+>> "%d/%m/%Y %H:%M:%S"))
+>> ltrj.bis <- gdltraj(ltrj.obj, min=lim[1], max=lim[2], type="POSIXct" )
+>>
+>> but for some reasons it does not work properly. I got this error message
+>> that I do not understand:
+>>
+>> Error in `[.default`(res, , names(res) %in% which, drop = FALSE) :
+>>   number of dimensions incorrect
+>>
+>>
+>> Anyone has an idea about why it doesn't work?
+>
+> You have identified a bug in the function gdltraj. I have corrected this
+> bug and uploaded a new version of the package to CRAN. It will be
+> available soon. Meanwhile, you can use this function instead:
+>
+> gdltraj <- function (x, min, max, type = c("POSIXct", "sec", "min", "hour",
+>     "mday", "mon", "year", "wday", "yday"))
+> {
+>     if (!inherits(x, "ltraj"))
+>         stop("x should be of class \"ltraj\"")
+>     if (!attr(x, "typeII"))
+>         stop("x should be of type II (time recorded)")
+>     type <- match.arg(type)
+>     if (type == "POSIXct") {
+>         x <- lapply(x, function(y) {
+>             infol <- attr(y, "infolocs")
+>             if (!is.null(infol))
+>                 infol <- infol[(y$date > min) & (y$date < max),
+>                   , drop=FALSE]
+>             y <- y[(y$date > min) & (y$date < max), ]
+>             if (!is.null(infol))
+>                 attr(y, "infolocs") <- infol
+>             return(y)
+>         })
+>     }
+>     else {
+>         x <- lapply(x, function(y) {
+>             da <- as.POSIXlt(y$date)[[type]]
+>             infol <- attr(y, "infolocs")
+>             if (!is.null(infol))
+>                 infol <- infol[(da >= min) & (da < max), ,drop=FALSE]
+>             y <- y[(da >= min) & (da < max), ]
+>             if (!is.null(infol))
+>                 attr(y, "infolocs") <- infol
+>             return(y)
+>         })
+>     }
+>     if (all(sapply(x, nrow) == 0))
+>         stop("No relocations within the specified interval")
+>     x[sapply(x, nrow) == 0] <- NULL
+>     class(x) <- c("ltraj", "list")
+>     attr(x, "typeII") <- TRUE
+>     attr(x, "regular") <- is.regular(x)
+>     x <- rec(x)
+>     return(x)
+> }
+>
+> HTH
+>
+> Cl?ment Calenge
+>
+> --
+> Cl?ment CALENGE
+> Cellule d'appui ? l'analyse de donn?es
+> Direction des Etudes et de la Recherche
+> Office national de la chasse et de la faune sauvage
+> Saint Benoist - 78610 Auffargis
+> tel. (33) 01.30.46.54.14
+>
+>
+>
+> ------------------------------
+>
+> Message: 2
+> Date: Thu, 20 Jun 2013 13:29:22 +0100
+> From: Highland Statistics Ltd <highstat at highstat.com>
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] New book: Beginner's Guide to GLM and GLMM with R
+> Message-ID: <51C2F5A2.5060208 at highstat.com>
+> Content-Type: text/plain; charset=windows-1252; format=flowed
+>
+> Members of this mailing list may be interested in the following new book:
+>
+>
+> Beginner's Guide to GLM and GLMM with R.
+> - A frequentist and Bayesian perspective for ecologists -
+>
+> Zuur AF, Hilbe JM and Ieno EN
+>
+>
+> This book is only available from:
+> http://www.highstat.com/BGGLM.htm
+>
+>
+>
+> This book presents Generalized Linear Models (GLM) and Generalized
+> Linear Mixed Models (GLMM) based on both frequency-based and Bayesian
+> concepts. Using ecological data from real-world studies, the text
+> introduces the reader to the basics of GLM and mixed effects models,
+> with demonstrations of binomial, gamma, Poisson, negative binomial
+> regression, and beta and beta-binomial GLMs and GLMMs. The book uses the
+> functions glm, lmer, glmer, glmmADMB, and also JAGS from within R. JAGS
+> results are compared with frequentist results.
+>
+> R code to construct, fit, interpret, and comparatively evaluate models
+> is provided at every stage. Otherwise challenging procedures are
+> presented in a clear and comprehensible manner with each step of the
+> modelling process explained in detail, and all code is provided so that
+> it can be reproduced by the reader.
+>
+> Readers of this book have free access to:
+>
+> Chapter 1 of Zero Inflated Models and Generalized Linear Mixed Models
+> with R. (2012a) Zuur, Saveliev, Ieno.
+> Chapter 1 of Beginner's Guide to Generalized Additive Models with R.
+> (2012b) Zuur, AF.
+>
+>
+> Keywords
+> Introduction to GLM
+> Poisson GLM and Negative binomial GLM for count data
+> Binomial GLM for binary data
+> Binomial GLM for proportional data
+> Other distributions
+> GLM applied to red squirrel data
+> Bayesian approach ? running the Poisson GLM
+> Running JAGS via R
+> Applying a negative binomial GLM in JAGS
+> GLM applied to presence-absence Polychaeta data
+> Model selection using AIC, DIC and BIC in jags
+> Introduction to mixed effects models
+> GLMM applied on honeybee pollination data
+> Poisson GLMM using glmer and JAGS
+> Negative binomial GLMM using glmmADMD and JAGS
+> GLMM with auto-regressive correlation
+> GLMM for strictly positive data: biomass of rainforest trees
+> gamma GLM using a frequentist approach
+> Fitting a gamma GLM using JAGS
+> Truncated Gaussian linear regression
+> Tobit model in JAGS
+> Tobit model with random effects in JAGS
+> Binomial, beta-binomial, and beta GLMM applied to cheetah data
+>
+> Kind regards,
+>
+> Alain Zuur
+>
+>
+>
+>
+> --
+>
+> Dr. Alain F. Zuur
+> First author of:
+>
+> 1. Analysing Ecological Data (2007).
+> Zuur, AF, Ieno, EN and Smith, GM. Springer. 680 p.
+> URL: www.springer.com/0-387-45967-7
+>
+>
+> 2. Mixed effects models and extensions in ecology with R. (2009).
+> Zuur, AF, Ieno, EN, Walker, N, Saveliev, AA, and Smith, GM. Springer.
+> http://www.springer.com/life+sci/ecology/book/978-0-387-87457-9
+>
+>
+> 3. A Beginner's Guide to R (2009).
+> Zuur, AF, Ieno, EN, Meesters, EHWG. Springer
+> http://www.springer.com/statistics/computational/book/978-0-387-93836-3
+>
+>
+> 4. Zero Inflated Models and Generalized Linear Mixed Models with R. (2012) Zuur, Saveliev, Ieno.
+> http://www.highstat.com/book4.htm
+>
+> Other books: http://www.highstat.com/books.htm
+>
+>
+> Statistical consultancy, courses, data analysis and software
+> Highland Statistics Ltd.
+> 6 Laverock road
+> UK - AB41 6FN Newburgh
+> Tel: 0044 1358 788177
+> Email: highstat at highstat.com
+> URL: www.highstat.com
+> URL: www.brodgar.com
+>
+>
+>
+> ------------------------------
+>
+> Message: 3
+> Date: Thu, 20 Jun 2013 08:08:17 -0600
+> From: Gavin Simpson <gavin.simpson at ucl.ac.uk>
+> To: Kevin McCluney <kemcclun at ncsu.edu>
+> Cc: r-sig-ecology at r-project.org
+> Subject: Re: [R-sig-eco] ordipointlabel with shortened names
+> Message-ID: <1371737297.2393.13.camel at chrysothemis>
+> Content-Type: text/plain; charset="UTF-8"
+>
+> Resending as I had some mail trouble yesterday and don't see this one to
+> have gone through. See in-line below...
+>
+> On Tue, 2013-06-18 at 12:58 -0700, Kevin McCluney wrote:
+>> Hi,
+>>
+>> I've been trying to use ordipointlabel() to add taxa names to an nmds
+>> (metaMDS) graph in VEGAN.  I can add the full names from the database, but I
+>> would like to use the shortened names I created using make.cepnames().  I've
+>> tried:
+>>
+>> pl3v2 <- ordipointlabel(mds, dis="sp", add = TRUE, lab=shnam)
+>
+> I'm afraid this is not possible yet - the labels are hard coded from the
+> species scores. Hence I suggest you do
+>
+> names(foo) <- make.cepnames(names(foo))
+>
+> where foo is your data frame. Then refit the NMDS.
+>
+> I'll see about allowing the passing in of labels but it won't happen for
+> a few weeks.
+>
+> HTH
+>
+> G
+>
+>> But I get the following error message:
+>>
+>> Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+>> font,  :
+>>  graphical parameter "lab" has the wrong length
+>> In addition: Warning message:
+>> In text.default(lab, labels = labels, col = col, cex = cex, font = font,  :
+>>  NAs introduced by coercion
+>>
+>> I've also tried "labels" instead of "lab" and I get:
+>>
+>> Error in text.default(lab, labels = labels, col = col, cex = cex, font =
+>> font,  :
+>>  formal argument "labels" matched by multiple actual arguments
+>>
+>> I guess this function doesn't yet work like orditorp?  Can anyone think of a
+>> workaround?
+>>
+>> I've tried orditkplot:
+>>
+>> orditkplot(pl3v2, dis = "sp")
+>>
+>> But I get this error:
+>>
+>> Error in structure(.External("dotTclObjv", objv, PACKAGE = "tcltk"), class =
+>> "tclObj") :
+>>  [tcl] bad screen distance "-NaN".
+>>
+>> I've also tried using identify(), but I have a few taxa that are literally
+>> right on top of each other and try as I might, I can't get all of the taxa
+>> that are on top of each other to show up.
+>>
+>> Any help would be appreciated.  Thanks!
+>>
+>> Kevin E. McCluney, PhD
+>> Post-doctoral Research Scholar
+>> Department of Entomology
+>> North Carolina State University
+>>
+>>
+>>
+>> --
+>> View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ordipointlabel-with-shortened-names-tp7578224.html
+>> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> --
+> Gavin Simpson, PhD                          [t] +1 306 337 8863
+> Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+> Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+> 523 Research and Innovation Centre          [tw] @ucfagls
+> University of Regina
+> Regina, SK S4S 0A2, Canada
+>
+>
+> --
+> Gavin Simpson, PhD                          [t] +1 306 337 8863
+> Adjunct Professor, Department of Biology    [f] +1 306 337 2410
+> Institute of Environmental Change & Society [e] gavin.simpson at uregina.ca
+> 523 Research and Innovation Centre          [tw] @ucfagls
+> University of Regina
+> Regina, SK S4S 0A2, Canada
+>
+>
+>
+> ------------------------------
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> End of R-sig-ecology Digest, Vol 63, Issue 17
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From chrismcowen at gmail.com  Mon Jun 24 11:11:34 2013
+From: chrismcowen at gmail.com (Chris Mcowen)
+Date: Mon, 24 Jun 2013 10:11:34 +0100
+Subject: [R-sig-eco] Comparing variable importance across sites
+Message-ID: <002b01ce70ba$d4c56fa0$7e504ee0$@com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130624/549faf70/attachment.pl>
+
+From cadeb at usgs.gov  Mon Jun 24 17:47:59 2013
+From: cadeb at usgs.gov (Cade, Brian)
+Date: Mon, 24 Jun 2013 09:47:59 -0600
+Subject: [R-sig-eco] Comparing variable importance across sites
+In-Reply-To: <002b01ce70ba$d4c56fa0$7e504ee0$@com>
+References: <002b01ce70ba$d4c56fa0$7e504ee0$@com>
+Message-ID: <CAM5M9BSFfhKFGc+t0nctJ0_w-bZaBh-rvXEASNX1WxLgszFcEw@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20130624/9498def7/attachment.pl>
+
+From scott.foster at csiro.au  Tue Jun 25 13:02:51 2013
+From: scott.foster at csiro.au (Scott Foster)
+Date: Tue, 25 Jun 2013 21:02:51 +1000
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+In-Reply-To: <CAAVnHsurM06HeOq3HV5__LCrhfVU3b8pNakY497qVJSmDDudmw@mail.gmail.com>
+References: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+	<51BEAE44.6040401@highstat.com>
+	<CAAVnHsurM06HeOq3HV5__LCrhfVU3b8pNakY497qVJSmDDudmw@mail.gmail.com>
+Message-ID: <51C978DB.4080005@csiro.au>
+
+Hi Ivailo,
+
+Good question.  Difficult to answer, which is probably why you haven't 
+had any responses yet (that the list has seen).
+
+If you include an offset term with a log link function then you are 
+assuming that the random variable (counts say) depend on the offset with 
+a known relationship.  Generally, this is precisely what you want to do 
+-- for example standardising counts for the sampling effort taken to 
+obtain those counts.
+
+However, in some situations it is conceivable that the sampling effort 
+itself affects the count random variable.  An example may be fish in a 
+trawl net -- as the net gets full it becomes less and less efficacious.  
+In this case you may expect that a single unit of effort change will 
+have different effect when there has been lots of previous effort to 
+when there hasn't.
+
+If I thought that I was in the latter case, I may fit a model like
+
+log( E( count)) = log( effort) + f(effort) + other stuff.
+
+The function f(effort) can take any form, including beta*log(effort).  
+In such a case a test of beta==0 is equivalent to testing if the effect 
+of effort is purely scaling or if it is something else/sinister.  
+General forms of f(effort) may tell you much more but may also be much 
+more confusing.
+
+To choose between the two cases above (offset versus offset+covariate), 
+I would base my choice largely on prior knowledge of the system under 
+study.  This is especially so if I don't have much data.
+
+I hope that this has helped,
+
+Scott
+
+PS Is it just me or did the original question (damaged embryos with 
+offset of number of embryos) sound more like a binomial problem than a 
+Poisson/NB one?  Note though that they will start to coincide if the 
+number of embryos is large and the probability of damage is small 
+(Binomial -> Poisson in the limit).
+
+On 19/06/13 20:53, Ivailo wrote:
+> On Tue, Jun 18, 2013 at 11:10 AM, Matias Ledesma <matutetote at hotmail.com> wrote:
+>>
+>> Philip and Alain,
+>>
+>> Thank you for your assistence,
+>> So, that mean that the  fuction offset its only possible if there is a relationship between the
+>> damaged number of embryos and the total number of embryos per amphipod as you explained?
+> As I'm facing a similar problem, I'd like to know as well if a
+> variable should be passed as an offset to the formula only when it
+> influences the outcome in some (linear) way. Does it make sense to
+> include the exposure variable in the model as a regular input first,
+> and if it's coefficient is around 1 to be taken as an indicator that
+> it is better that variable to be included in the model as an offset?
+>
+> Cheers,
+> Ivailo
+> --
+> UBUNTU: a person is a person through other persons.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+-- 
+Scott Foster
+CSIRO Mathematics, Informatics and Statistics
+GPO Box 1538
+Castray Esplanade
+Hobart 7001
+Tasmania
+Australia
+
+Phone:     (03) 6232 5178
+Fax:       (03) 6232 5000
+Email:     scott.foster at csiro.au
+
+
+From ubuntero.9161 at gmail.com  Wed Jun 26 10:14:19 2013
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Wed, 26 Jun 2013 11:14:19 +0300
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+In-Reply-To: <51C978DB.4080005@csiro.au>
+References: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+	<51BEAE44.6040401@highstat.com>
+	<CAAVnHsurM06HeOq3HV5__LCrhfVU3b8pNakY497qVJSmDDudmw@mail.gmail.com>
+	<51C978DB.4080005@csiro.au>
+Message-ID: <CAAVnHsuCm1=6OZaJoXfEDrKQFhmZweYOSf0UYfcZGjASNRFiEw@mail.gmail.com>
+
+On Tue, Jun 25, 2013 at 2:02 PM, Scott Foster <scott.foster at csiro.au> wrote:
+> Hi Ivailo,
+>
+> Good question.  Difficult to answer, which is probably why you haven't had
+> any responses yet (that the list has seen).
+>
+> If you include an offset term with a log link function then you are assuming
+> that the random variable (counts say) depend on the offset with a known
+> relationship.  Generally, this is precisely what you want to do -- for
+> example standardising counts for the sampling effort taken to obtain those
+> counts.
+>
+> However, in some situations it is conceivable that the sampling effort
+> itself affects the count random variable.  An example may be fish in a trawl
+> net -- as the net gets full it becomes less and less efficacious.  In this
+> case you may expect that a single unit of effort change will have different
+> effect when there has been lots of previous effort to when there hasn't.
+
+Thanks for commenting on that, Scott!
+
+Although both alternatives you mention above assume that the RV
+depends on either the "offset" or the "sampling effort", but aren't
+these are essentially the same?
+
+> If I thought that I was in the latter case, I may fit a model like
+>
+> log( E( count)) = log( effort) + f(effort) + other stuff.
+>
+> The function f(effort) can take any form, including beta*log(effort).  In
+> such a case a test of beta==0 is equivalent to testing if the effect of
+> effort is purely scaling or if it is something else/sinister.  General forms
+> of f(effort) may tell you much more but may also be much more confusing.
+>
+> To choose between the two cases above (offset versus offset+covariate), I
+> would base my choice largely on prior knowledge of the system under study.
+> This is especially so if I don't have much data.
+
+My approach to modeling counts was primarily based on the widespread
+advise that varying effort should be considered by adding an offset to
+the model, but when I consulted the book by McCullagh and Nelder
+(1989), I found on pp. 206-207 hat they actually estimated the
+log(effort) term as being ~ 1. So started my confusion on the topic
+"to offset or to estimate" ;-)
+
+It never occurred to me, though, that the effort could be entered both
+as an offset *and* as a covariate into the model. As these two terms
+have good chances being collinear, I wonder how one can then separate
+their influence on the RV. I do not fully understand your idea
+regarding the form of the function "f(effort) ", but I get that if the
+coefficient of effort is estimated as == 0, then it should be
+concluded that effect of effort should be retained *only* as an offset
+to account for the "scaling". Am I right?
+
+Thanks again for your elucidating comment,
+Ivailo
+--
+UBUNTU: a person is a person through other persons.
+
+
+From scott.foster at csiro.au  Wed Jun 26 11:42:44 2013
+From: scott.foster at csiro.au (Scott Foster)
+Date: Wed, 26 Jun 2013 19:42:44 +1000
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+In-Reply-To: <CAAVnHsuCm1=6OZaJoXfEDrKQFhmZweYOSf0UYfcZGjASNRFiEw@mail.gmail.com>
+References: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+	<51BEAE44.6040401@highstat.com>
+	<CAAVnHsurM06HeOq3HV5__LCrhfVU3b8pNakY497qVJSmDDudmw@mail.gmail.com>
+	<51C978DB.4080005@csiro.au>
+	<CAAVnHsuCm1=6OZaJoXfEDrKQFhmZweYOSf0UYfcZGjASNRFiEw@mail.gmail.com>
+Message-ID: <51CAB794.6040205@csiro.au>
+
+Hi again Ivailo,
+
+Yes, the `offset' and the covariate are the same thing.  Including them 
+both simply alters the functional form of the linear predictor in your 
+model.  No, they are not collinear in the typical sense as there is only 
+one parameter (linear form) between them -- the offset term does not 
+have a parameter that will be estimated associated with it.  For 
+example, with log( effort) added as a linear covariate the log-link GLM is
+
+log( E(y)) = offset + beta * log( effort) + other_stuff = log( effort) + 
+beta * log( effort) + other_stuff = beta_1 * log( effort) + other_stuff
+where beta_1=1+beta.
+
+If you test that beta==0 (which is not beta_1) then you are testing that 
+the effect of effect is purely scaling (as per nomenclature before).  
+This is the same as McCullagh and Nelder's testing to see if beta_1==1.  
+Thanks for the pointer to McCullagh and Nelder -- I didn't know that 
+they suggested that.
+
+My depiction of the effect of effort as f( effort) is to allow for the 
+possibility that the effect of effort may be non-linear on the link 
+scale.  A simple example is when f(effort) is a low-order polynomial.  
+Departures from effort being a purely scaling term may extend beyond 
+linearity.  One may even want to consider regression splines or even 
+more flexible GAMs.
+
+Having said all this though, it is my practice to be quite conservative 
+with including effort as anything but a scaling variable (offset).  It 
+seems to me that there needs to be good reason before jumping to strong 
+conclusions that may have no basis in the phenomenon under study.
+
+Hope this helps,
+
+Scott
+
+On 26/06/13 18:14, Ivailo wrote:
+> On Tue, Jun 25, 2013 at 2:02 PM, Scott Foster <scott.foster at csiro.au> wrote:
+>> Hi Ivailo,
+>>
+>> Good question.  Difficult to answer, which is probably why you haven't had
+>> any responses yet (that the list has seen).
+>>
+>> If you include an offset term with a log link function then you are assuming
+>> that the random variable (counts say) depend on the offset with a known
+>> relationship.  Generally, this is precisely what you want to do -- for
+>> example standardising counts for the sampling effort taken to obtain those
+>> counts.
+>>
+>> However, in some situations it is conceivable that the sampling effort
+>> itself affects the count random variable.  An example may be fish in a trawl
+>> net -- as the net gets full it becomes less and less efficacious.  In this
+>> case you may expect that a single unit of effort change will have different
+>> effect when there has been lots of previous effort to when there hasn't.
+> Thanks for commenting on that, Scott!
+>
+> Although both alternatives you mention above assume that the RV
+> depends on either the "offset" or the "sampling effort", but aren't
+> these are essentially the same?
+>
+>> If I thought that I was in the latter case, I may fit a model like
+>>
+>> log( E( count)) = log( effort) + f(effort) + other stuff.
+>>
+>> The function f(effort) can take any form, including beta*log(effort).  In
+>> such a case a test of beta==0 is equivalent to testing if the effect of
+>> effort is purely scaling or if it is something else/sinister.  General forms
+>> of f(effort) may tell you much more but may also be much more confusing.
+>>
+>> To choose between the two cases above (offset versus offset+covariate), I
+>> would base my choice largely on prior knowledge of the system under study.
+>> This is especially so if I don't have much data.
+> My approach to modeling counts was primarily based on the widespread
+> advise that varying effort should be considered by adding an offset to
+> the model, but when I consulted the book by McCullagh and Nelder
+> (1989), I found on pp. 206-207 hat they actually estimated the
+> log(effort) term as being ~ 1. So started my confusion on the topic
+> "to offset or to estimate" ;-)
+>
+> It never occurred to me, though, that the effort could be entered both
+> as an offset *and* as a covariate into the model. As these two terms
+> have good chances being collinear, I wonder how one can then separate
+> their influence on the RV. I do not fully understand your idea
+> regarding the form of the function "f(effort) ", but I get that if the
+> coefficient of effort is estimated as == 0, then it should be
+> concluded that effect of effort should be retained *only* as an offset
+> to account for the "scaling". Am I right?
+>
+> Thanks again for your elucidating comment,
+> Ivailo
+> --
+> UBUNTU: a person is a person through other persons.
+>
+>
+
+-- 
+Scott Foster
+CSIRO Mathematics, Informatics and Statistics
+GPO Box 1538
+Castray Esplanade
+Hobart 7001
+Tasmania
+Australia
+
+Phone:     (03) 6232 5178
+Fax:       (03) 6232 5000
+Email:     scott.foster at csiro.au
+
+
+From ubuntero.9161 at gmail.com  Thu Jun 27 08:57:44 2013
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Thu, 27 Jun 2013 09:57:44 +0300
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+In-Reply-To: <51CAB794.6040205@csiro.au>
+References: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+	<51BEAE44.6040401@highstat.com>
+	<CAAVnHsurM06HeOq3HV5__LCrhfVU3b8pNakY497qVJSmDDudmw@mail.gmail.com>
+	<51C978DB.4080005@csiro.au>
+	<CAAVnHsuCm1=6OZaJoXfEDrKQFhmZweYOSf0UYfcZGjASNRFiEw@mail.gmail.com>
+	<51CAB794.6040205@csiro.au>
+Message-ID: <CAAVnHsvSnqZ8z8Ki0=EYSZiOreXUd45M-3x1m6R4m9ii73D69Q@mail.gmail.com>
+
+On Wed, Jun 26, 2013 at 12:42 PM, Scott Foster <scott.foster at csiro.au> wrote:
+> Hi again Ivailo,
+>
+> Yes, the `offset' and the covariate are the same thing.  Including them both
+> simply alters the functional form of the linear predictor in your model.
+> No, they are not collinear in the typical sense as there is only one
+> parameter (linear form) between them -- the offset term does not have a
+> parameter that will be estimated associated with it.  For example, with log(
+> effort) added as a linear covariate the log-link GLM is
+>
+> log( E(y)) = offset + beta * log( effort) + other_stuff = log( effort) +
+> beta * log( effort) + other_stuff = beta_1 * log( effort) + other_stuff
+> where beta_1=1+beta.
+>
+> If you test that beta==0 (which is not beta_1) then you are testing that the
+> effect of effect is purely scaling (as per nomenclature before).  This is
+> the same as McCullagh and Nelder's testing to see if beta_1==1.  Thanks for
+> the pointer to McCullagh and Nelder -- I didn't know that they suggested
+> that.
+
+Thanks a lot for the brilliant explanation, Scott! Now things make
+sense to me, and I'm interested what the modeling strategy would be if
+beta_1 turns out to be significantly <> 1. Would the option you
+mention below be viable alternative in that case?
+
+> My depiction of the effect of effort as f( effort) is to allow for the
+> possibility that the effect of effort may be non-linear on the link scale.
+> A simple example is when f(effort) is a low-order polynomial.  Departures
+> from effort being a purely scaling term may extend beyond linearity.  One
+> may even want to consider regression splines or even more flexible GAMs.
+> Having said all this though, it is my practice to be quite conservative with
+> including effort as anything but a scaling variable (offset).  It seems to
+> me that there needs to be good reason before jumping to strong conclusions
+> that may have no basis in the phenomenon under study.
+
+I imagine that the fishing-net example you mentioned earlier could be
+a case of a non-linear effect of effort -- wouldn't this warrant
+modeling the effort as being non-linear on the link scale?
+
+Cheers,
+Ivailo
+--
+UBUNTU: a person is a person through other persons.
+
+
+From scott.foster at csiro.au  Thu Jun 27 11:02:59 2013
+From: scott.foster at csiro.au (Scott Foster)
+Date: Thu, 27 Jun 2013 19:02:59 +1000
+Subject: [R-sig-eco] Offsets in Poisson or Neg. Bin regression
+In-Reply-To: <CAAVnHsvSnqZ8z8Ki0=EYSZiOreXUd45M-3x1m6R4m9ii73D69Q@mail.gmail.com>
+References: <mailman.1.1371376801.31660.r-sig-ecology@r-project.org>
+	<51BEAE44.6040401@highstat.com>
+	<CAAVnHsurM06HeOq3HV5__LCrhfVU3b8pNakY497qVJSmDDudmw@mail.gmail.com>
+	<51C978DB.4080005@csiro.au>
+	<CAAVnHsuCm1=6OZaJoXfEDrKQFhmZweYOSf0UYfcZGjASNRFiEw@mail.gmail.com>
+	<51CAB794.6040205@csiro.au>
+	<CAAVnHsvSnqZ8z8Ki0=EYSZiOreXUd45M-3x1m6R4m9ii73D69Q@mail.gmail.com>
+Message-ID: <51CBFFC3.20604@csiro.au>
+
+Hi Ivailo,
+
+If the effort term is not just present in the model for the purpose of 
+scaling the outcome random variable, then I think that it should just be 
+treated as a regression-type problem.  All the questions your raised 
+seem(?) to be standard in that setting too: Is the covariate acting 
+linearly (on the link scale)?  Are any non-linearities (on the link 
+scale) important enough to warrant using some curvi-linear or 
+basis-expanded function of the effort variable?  And so on...
+
+Yes, the fishing net example *may* be one where the (scaling) effort 
+variable acts non-linearly.  I have not thought about this though. I 
+typically use effort as a scaling factor only as I have a strong a 
+priori belief that effort will be multiplicatively related to expected 
+outcome (log offset with log-link).  I am sure that I will need to 
+revise this belief sometime;-)
+
+Scott
+
+On 27/06/13 16:57, Ivailo wrote:
+> On Wed, Jun 26, 2013 at 12:42 PM, Scott Foster <scott.foster at csiro.au> wrote:
+>> Hi again Ivailo,
+>>
+>> Yes, the `offset' and the covariate are the same thing.  Including them both
+>> simply alters the functional form of the linear predictor in your model.
+>> No, they are not collinear in the typical sense as there is only one
+>> parameter (linear form) between them -- the offset term does not have a
+>> parameter that will be estimated associated with it.  For example, with log(
+>> effort) added as a linear covariate the log-link GLM is
+>>
+>> log( E(y)) = offset + beta * log( effort) + other_stuff = log( effort) +
+>> beta * log( effort) + other_stuff = beta_1 * log( effort) + other_stuff
+>> where beta_1=1+beta.
+>>
+>> If you test that beta==0 (which is not beta_1) then you are testing that the
+>> effect of effect is purely scaling (as per nomenclature before).  This is
+>> the same as McCullagh and Nelder's testing to see if beta_1==1.  Thanks for
+>> the pointer to McCullagh and Nelder -- I didn't know that they suggested
+>> that.
+> Thanks a lot for the brilliant explanation, Scott! Now things make
+> sense to me, and I'm interested what the modeling strategy would be if
+> beta_1 turns out to be significantly <> 1. Would the option you
+> mention below be viable alternative in that case?
+>
+>> My depiction of the effect of effort as f( effort) is to allow for the
+>> possibility that the effect of effort may be non-linear on the link scale.
+>> A simple example is when f(effort) is a low-order polynomial.  Departures
+>> from effort being a purely scaling term may extend beyond linearity.  One
+>> may even want to consider regression splines or even more flexible GAMs.
+>> Having said all this though, it is my practice to be quite conservative with
+>> including effort as anything but a scaling variable (offset).  It seems to
+>> me that there needs to be good reason before jumping to strong conclusions
+>> that may have no basis in the phenomenon under study.
+> I imagine that the fishing-net example you mentioned earlier could be
+> a case of a non-linear effect of effort -- wouldn't this warrant
+> modeling the effort as being non-linear on the link scale?
+>
+> Cheers,
+> Ivailo
+> --
+> UBUNTU: a person is a person through other persons.
+>
+>
+
+-- 
+Scott Foster
+CSIRO Mathematics, Informatics and Statistics
+GPO Box 1538
+Castray Esplanade
+Hobart 7001
+Tasmania
+Australia
+
+Phone:     (03) 6232 5178
+Fax:       (03) 6232 5000
+Email:     scott.foster at csiro.au
+
+

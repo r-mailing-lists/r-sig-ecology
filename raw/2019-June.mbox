@@ -1,0 +1,3103 @@
+From g|@n@benucc| @end|ng |rom gm@||@com  Sat Jun  1 01:53:51 2019
+From: g|@n@benucc| @end|ng |rom gm@||@com (=?UTF-8?Q?Gian_Maria_Niccol=C3=B2_Benucci?=)
+Date: Fri, 31 May 2019 19:53:51 -0400
+Subject: [R-sig-eco] reorder vegdist objects
+Message-ID: <CAPxEaEQk4SYZzu4aJsTZEX9KyXf2AsLzSdyBQAPuq74W3ZtWXg@mail.gmail.com>
+
+Hello,
+
+I have two vegan::vegdist objects I want to use into a vegan::mantel test.
+However, rows and columns of the two objects are not in the same order. Is
+there a way to reorder them one another?
+
+For example,
+
+>dist_a
+        Lycovolu  Hupeaust  Lycofast  Lycodeut
+Hupeaust 0.9045557
+
+Lycofast 0.6835441 0.8569781
+
+Lycodeut 0.8036577 0.8294657 0.7958988   ...
+...
+
+>dist_b
+         Lycodeut   Lycofast   Lycoscar   Lycovolu
+Lycofast 0.09340659
+
+Lycoscar 0.08974359 0.01831502
+
+Lycovolu 0.09073476 0.01099655 0.01008080   ...
+...
+
+Thanks,
+
+-- 
+Gian
+
+	[[alternative HTML version deleted]]
+
+
+From b|@|ev||@t @end|ng |rom gm@||@com  Sat Jun  1 06:47:02 2019
+From: b|@|ev||@t @end|ng |rom gm@||@com (=?UTF-8?Q?Bede-Fazekas_=c3=81kos?=)
+Date: Sat, 1 Jun 2019 06:47:02 +0200
+Subject: [R-sig-eco] reorder vegdist objects
+In-Reply-To: <CAPxEaEQk4SYZzu4aJsTZEX9KyXf2AsLzSdyBQAPuq74W3ZtWXg@mail.gmail.com>
+References: <CAPxEaEQk4SYZzu4aJsTZEX9KyXf2AsLzSdyBQAPuq74W3ZtWXg@mail.gmail.com>
+Message-ID: <849e8bb8-73af-a14d-77f5-7a4bc80954dc@gmail.com>
+
+Dear Gian,
+Let's do a small reproducible example:
+library(vegan)
+data(varespec)
+set.seed(12345)
+df_a <- t(varespec)
+df_b <- t(varespec[, sample.int(ncol(varespec))]) # shuffle the original 
+column order
+dist_a <- vegdist(df_a); dist_b <- vegdist(df_b)
+all.equal(dist_a, dist_b, check.attributes = FALSE)
+
+Now, you have two options. If you have access to the original 
+data.frame/matrix from which the dist object was created, you can 
+reorder the rows of the second dataset to match that of the first one. 
+Then do the distance matrix calculation again.
+df_b_reordered <- df_b[rownames(df_a), ]
+dist_b_reordered1 <- vegdist(df_b_reordered)
+all.equal(dist_a, dist_b_reordered1, check.attributes = FALSE)
+
+If you have no access to the original dataset and/or can not recalculate 
+the distance matrix (e.g. due to computer capacity or time), you can 
+reorder the distance matrix (both the rows and columns).
+dist_b_reordered2 <- as.dist(as.matrix(dist_b)[attr(dist_a, "Labels"), 
+attr(dist_a, "Labels")])
+all.equal(dist_a, dist_b_reordered2, check.attributes = FALSE)
+
+HTH,
+?kos Bede-Fazekas
+Hungarian Academy of Sciences
+
+
+2019.06.01. 1:53 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+> Hello,
+>
+> I have two vegan::vegdist objects I want to use into a vegan::mantel test.
+> However, rows and columns of the two objects are not in the same order. Is
+> there a way to reorder them one another?
+>
+> For example,
+>
+>> dist_a
+>          Lycovolu  Hupeaust  Lycofast  Lycodeut
+> Hupeaust 0.9045557
+>
+> Lycofast 0.6835441 0.8569781
+>
+> Lycodeut 0.8036577 0.8294657 0.7958988   ...
+> ...
+>
+>> dist_b
+>           Lycodeut   Lycofast   Lycoscar   Lycovolu
+> Lycofast 0.09340659
+>
+> Lycoscar 0.08974359 0.01831502
+>
+> Lycovolu 0.09073476 0.01099655 0.01008080   ...
+> ...
+>
+> Thanks,
+>
+
+
+From h|gh@t@t @end|ng |rom h|gh@t@t@com  Mon Jun  3 10:35:21 2019
+From: h|gh@t@t @end|ng |rom h|gh@t@t@com (Highland Statistics Ltd)
+Date: Mon, 3 Jun 2019 09:35:21 +0100
+Subject: [R-sig-eco] Stats course: Mixed effects modelling
+Message-ID: <d0f63193-b141-3aa1-709c-7a33a479c11e@highstat.com>
+
+We would like to announce the following 3 statistics courses.
+
+Course: Linear Mixed Effects Models and GLMM with R-INLA.
+Where and when:
+
+  * Northwest Atlantic Fisheries Centre, St John?s, Canada. 12-16 August
+    2019
+  * University of C?diz, C?diz, Spain. 2-6 September 2019
+  * University of Ghent, Ghent, Belgium. 2-6 December 2019
+
+Course website: http://highstat.com/index.php/courses-upcoming
+
+
+Kind regards,
+
+
+Alain Zuur
+
+
+Other upcoming courses:
+
+Introduction to regression models with spatial and temporal correlation 
+using R-INLA
+NIOZ, Texel, The Netherlands. 23-27 September 2019
+
+Introduction to regression models with spatial and spatial-temporal 
+correlation using R-INLA
+Burlington (close to Toronto), ON, Canada. 28 October - 1 November 2019
+
+Data exploration, regression, GLM & GAM with introduction to R
+Lisbon, Portugal. 3 - 7 February 2020
+
+Introduction to regression models with spatial correlation using R-INLA
+IEO, Vigo, Spain. 10 - 13 February 2020
+
+
+
+
+-- 
+
+Dr. Alain F. Zuur
+Highland Statistics Ltd.
+9 St Clair Wynd
+AB41 6DZ Newburgh, UK
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+And:
+NIOZ Royal Netherlands Institute for Sea Research,
+Department of Coastal Systems, and Utrecht University,
+P.O. Box 59, 1790 AB Den Burg,
+Texel, The Netherlands
+
+
+
+Author of:
+1. Beginner's Guide to Spatial, Temporal and Spatial-Temporal Ecological Data Analysis with R-INLA. (2017).
+2. Beginner's Guide to Zero-Inflated Models with R (2016).
+3. Beginner's Guide to Data Exploration and Visualisation with R (2015).
+4. Beginner's Guide to GAMM with R (2014).
+5. Beginner's Guide to GLM and GLMM with R (2013).
+6. Beginner's Guide to GAM with R (2012).
+7. Zero Inflated Models and GLMM with R (2012).
+8. A Beginner's Guide to R (2009).
+9. Mixed effects models and extensions in ecology with R (2009).
+10. Analysing Ecological Data (2007).
+
+
+	[[alternative HTML version deleted]]
+
+
+From g|@n@benucc| @end|ng |rom gm@||@com  Mon Jun  3 17:44:19 2019
+From: g|@n@benucc| @end|ng |rom gm@||@com (=?UTF-8?Q?Gian_Maria_Niccol=C3=B2_Benucci?=)
+Date: Mon, 3 Jun 2019 11:44:19 -0400
+Subject: [R-sig-eco] reorder vegdist objects
+In-Reply-To: <849e8bb8-73af-a14d-77f5-7a4bc80954dc@gmail.com>
+References: <CAPxEaEQk4SYZzu4aJsTZEX9KyXf2AsLzSdyBQAPuq74W3ZtWXg@mail.gmail.com>
+ <849e8bb8-73af-a14d-77f5-7a4bc80954dc@gmail.com>
+Message-ID: <CAPxEaEQx_EqCQi3pHjE_dTQjzak+8PJYOB7jcA0tuYsvksO8qg@mail.gmail.com>
+
+Hi Akos,
+
+Thank you for the code. It worked. I reordered the dist objects as I cannot
+access the dataset of one of the two distance matrix.
+
+> dist_b_reordered <- as.dist(as.matrix(dist_b)[attr(dist_a, "Labels"),
+attr(dist_a, "Labels")])
+> all.equal(dist_a, dist_b_reordered, check.attributes = FALSE)
+[1] "Mean relative difference: 0.8977224"
+
+There is any statistical test that you suggest to compare the two
+distances? I would like to see if the two matrices show a similar pattern,
+e.g. mantel test?
+
+Thanks,
+
+Gian
+
+
+
+
+
+
+On Sat, 1 Jun 2019 at 00:55, Bede-Fazekas ?kos <bfalevlist at gmail.com> wrote:
+
+> Dear Gian,
+> Let's do a small reproducible example:
+> library(vegan)
+> data(varespec)
+> set.seed(12345)
+> df_a <- t(varespec)
+> df_b <- t(varespec[, sample.int(ncol(varespec))]) # shuffle the original
+> column order
+> dist_a <- vegdist(df_a); dist_b <- vegdist(df_b)
+> all.equal(dist_a, dist_b, check.attributes = FALSE)
+>
+> Now, you have two options. If you have access to the original
+> data.frame/matrix from which the dist object was created, you can
+> reorder the rows of the second dataset to match that of the first one.
+> Then do the distance matrix calculation again.
+> df_b_reordered <- df_b[rownames(df_a), ]
+> dist_b_reordered1 <- vegdist(df_b_reordered)
+> all.equal(dist_a, dist_b_reordered1, check.attributes = FALSE)
+>
+> If you have no access to the original dataset and/or can not recalculate
+> the distance matrix (e.g. due to computer capacity or time), you can
+> reorder the distance matrix (both the rows and columns).
+> dist_b_reordered2 <- as.dist(as.matrix(dist_b)[attr(dist_a, "Labels"),
+> attr(dist_a, "Labels")])
+> all.equal(dist_a, dist_b_reordered2, check.attributes = FALSE)
+>
+> HTH,
+> ?kos Bede-Fazekas
+> Hungarian Academy of Sciences
+>
+>
+> 2019.06.01. 1:53 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+> > Hello,
+> >
+> > I have two vegan::vegdist objects I want to use into a vegan::mantel
+> test.
+> > However, rows and columns of the two objects are not in the same order.
+> Is
+> > there a way to reorder them one another?
+> >
+> > For example,
+> >
+> >> dist_a
+> >          Lycovolu  Hupeaust  Lycofast  Lycodeut
+> > Hupeaust 0.9045557
+> >
+> > Lycofast 0.6835441 0.8569781
+> >
+> > Lycodeut 0.8036577 0.8294657 0.7958988   ...
+> > ...
+> >
+> >> dist_b
+> >           Lycodeut   Lycofast   Lycoscar   Lycovolu
+> > Lycofast 0.09340659
+> >
+> > Lycoscar 0.08974359 0.01831502
+> >
+> > Lycovolu 0.09073476 0.01099655 0.01008080   ...
+> > ...
+> >
+> > Thanks,
+> >
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecolog
+> <https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>y
+
+
+
+*----- Do not print this email unless you really need to. Save paper and
+protect the environment! -----*
+
+	[[alternative HTML version deleted]]
+
+
+From b|@|ev||@t @end|ng |rom gm@||@com  Mon Jun  3 23:24:45 2019
+From: b|@|ev||@t @end|ng |rom gm@||@com (=?UTF-8?Q?Bede-Fazekas_=c3=81kos?=)
+Date: Mon, 3 Jun 2019 23:24:45 +0200
+Subject: [R-sig-eco] reorder vegdist objects
+In-Reply-To: <CAPxEaEQx_EqCQi3pHjE_dTQjzak+8PJYOB7jcA0tuYsvksO8qg@mail.gmail.com>
+References: <CAPxEaEQk4SYZzu4aJsTZEX9KyXf2AsLzSdyBQAPuq74W3ZtWXg@mail.gmail.com>
+ <849e8bb8-73af-a14d-77f5-7a4bc80954dc@gmail.com>
+ <CAPxEaEQx_EqCQi3pHjE_dTQjzak+8PJYOB7jcA0tuYsvksO8qg@mail.gmail.com>
+Message-ID: <b99dab7c-6c07-511d-af36-b199d0021be1@gmail.com>
+
+Dear Gian,
+I'm not a statistician but software developer... hope that other members 
+of the mailing list are expert of distance matrices and can answer your 
+question.
+Have a nice week,
+?kos
+
+2019.06.03. 17:44 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+> Hi Akos,
+>
+> Thank you for the code. It worked. I reordered the dist objects as I 
+> cannot access the dataset of one of the two distance matrix.
+>
+> > dist_b_reordered <- as.dist(as.matrix(dist_b)[attr(dist_a, 
+> "Labels"), attr(dist_a, "Labels")])
+> > all.equal(dist_a, dist_b_reordered, check.attributes = FALSE)
+> [1] "Mean relative difference: 0.8977224"
+>
+> There is any statistical test that you suggest to compare the two 
+> distances? I would like to see if the two matrices show a similar 
+> pattern, e.g. mantel test?
+>
+> Thanks,
+>
+> Gian
+>
+>
+>
+>
+>
+>
+> On Sat, 1 Jun 2019 at 00:55, Bede-Fazekas ?kos <bfalevlist at gmail.com 
+> <mailto:bfalevlist at gmail.com>> wrote:
+>
+>     Dear Gian,
+>     Let's do a small reproducible example:
+>     library(vegan)
+>     data(varespec)
+>     set.seed(12345)
+>     df_a <- t(varespec)
+>     df_b <- t(varespec[, sample.int
+>     <http://sample.int>(ncol(varespec))]) # shuffle the original
+>     column order
+>     dist_a <- vegdist(df_a); dist_b <- vegdist(df_b)
+>     all.equal(dist_a, dist_b, check.attributes = FALSE)
+>
+>     Now, you have two options. If you have access to the original
+>     data.frame/matrix from which the dist object was created, you can
+>     reorder the rows of the second dataset to match that of the first
+>     one.
+>     Then do the distance matrix calculation again.
+>     df_b_reordered <- df_b[rownames(df_a), ]
+>     dist_b_reordered1 <- vegdist(df_b_reordered)
+>     all.equal(dist_a, dist_b_reordered1, check.attributes = FALSE)
+>
+>     If you have no access to the original dataset and/or can not
+>     recalculate
+>     the distance matrix (e.g. due to computer capacity or time), you can
+>     reorder the distance matrix (both the rows and columns).
+>     dist_b_reordered2 <- as.dist(as.matrix(dist_b)[attr(dist_a,
+>     "Labels"),
+>     attr(dist_a, "Labels")])
+>     all.equal(dist_a, dist_b_reordered2, check.attributes = FALSE)
+>
+>     HTH,
+>     ?kos Bede-Fazekas
+>     Hungarian Academy of Sciences
+>
+>
+>     2019.06.01. 1:53 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+>     > Hello,
+>     >
+>     > I have two vegan::vegdist objects I want to use into a
+>     vegan::mantel test.
+>     > However, rows and columns of the two objects are not in the same
+>     order. Is
+>     > there a way to reorder them one another?
+>     >
+>     > For example,
+>     >
+>     >> dist_a
+>     >? ? ? ? ? Lycovolu? Hupeaust? Lycofast? Lycodeut
+>     > Hupeaust 0.9045557
+>     >
+>     > Lycofast 0.6835441 0.8569781
+>     >
+>     > Lycodeut 0.8036577 0.8294657 0.7958988? ?...
+>     > ...
+>     >
+>     >> dist_b
+>     >? ? ? ? ? ?Lycodeut? ?Lycofast? ?Lycoscar? ?Lycovolu
+>     > Lycofast 0.09340659
+>     >
+>     > Lycoscar 0.08974359 0.01831502
+>     >
+>     > Lycovolu 0.09073476 0.01099655 0.01008080? ?...
+>     > ...
+>     >
+>     > Thanks,
+>     >
+>
+>     _______________________________________________
+>     R-sig-ecology mailing list
+>     R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>
+>     https://stat.ethz.ch/mailman/listinfo/r-sig-ecolog
+>     <https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>y 
+>
+>
+>
+> /----- Do not print this email unless you really need to. Save paper 
+> and protect the environment! -----/
+
+
+	[[alternative HTML version deleted]]
+
+
+From J@A@B@|buen@ @end|ng |rom uv@e@  Tue Jun  4 00:02:13 2019
+From: J@A@B@|buen@ @end|ng |rom uv@e@ (Juan Antonio Balbuena)
+Date: Tue, 4 Jun 2019 00:02:13 +0200 (CEST)
+Subject: [R-sig-eco] reorder vegdist objects
+In-Reply-To: <b99dab7c-6c07-511d-af36-b199d0021be1@gmail.com>
+References: <b99dab7c-6c07-511d-af36-b199d0021be1@gmail.com>
+Message-ID: <2777625445balbuena@uv.es>
+
+Hi Gian,
+A Mantel test looks right for your problem. Check also protest in vegan.
+Best,
+
+Juan A. Balbuena
+
+> Dear Gian,
+> I'm not a statistician but software developer... hope that other members 
+> of the mailing list are expert of distance matrices and can answer your 
+> question.
+> Have a nice week,
+> ?kos
+> 
+> 2019.06.03. 17:44 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+> > Hi Akos,
+> >
+> > Thank you for the code. It worked. I reordered the dist objects as I 
+> > cannot access the dataset of one of the two distance matrix.
+> >
+> > > dist_b_reordered <- as.dist(as.matrix(dist_b)[attr(dist_a, 
+> > "Labels"), attr(dist_a, "Labels")])
+> > > all.equal(dist_a, dist_b_reordered, check.attributes = FALSE)
+> > [1] "Mean relative difference: 0.8977224"
+> >
+> > There is any statistical test that you suggest to compare the two 
+> > distances? I would like to see if the two matrices show a similar 
+> > pattern, e.g. mantel test?
+> >
+> > Thanks,
+> >
+> > Gian
+> >
+> >
+> >
+> >
+> >
+> >
+> > On Sat, 1 Jun 2019 at 00:55, Bede-Fazekas ?kos <bfalevlist at gmail.com 
+> > <mailto:bfalevlist at gmail.com>> wrote:
+> >
+> >     Dear Gian,
+> >     Let's do a small reproducible example:
+> >     library(vegan)
+> >     data(varespec)
+> >     set.seed(12345)
+> >     df_a <- t(varespec)
+> >     df_b <- t(varespec[, sample.int
+> >     <http://sample.int>(ncol(varespec))]) # shuffle the original
+> >     column order
+> >     dist_a <- vegdist(df_a); dist_b <- vegdist(df_b)
+> >     all.equal(dist_a, dist_b, check.attributes = FALSE)
+> >
+> >     Now, you have two options. If you have access to the original
+> >     data.frame/matrix from which the dist object was created, you can
+> >     reorder the rows of the second dataset to match that of the first
+> >     one.
+> >     Then do the distance matrix calculation again.
+> >     df_b_reordered <- df_b[rownames(df_a), ]
+> >     dist_b_reordered1 <- vegdist(df_b_reordered)
+> >     all.equal(dist_a, dist_b_reordered1, check.attributes = FALSE)
+> >
+> >     If you have no access to the original dataset and/or can not
+> >     recalculate
+> >     the distance matrix (e.g. due to computer capacity or time), you can
+> >     reorder the distance matrix (both the rows and columns).
+> >     dist_b_reordered2 <- as.dist(as.matrix(dist_b)[attr(dist_a,
+> >     "Labels"),
+> >     attr(dist_a, "Labels")])
+> >     all.equal(dist_a, dist_b_reordered2, check.attributes = FALSE)
+> >
+> >     HTH,
+> >     ?kos Bede-Fazekas
+> >     Hungarian Academy of Sciences
+> >
+> >
+> >     2019.06.01. 1:53 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+> >     > Hello,
+> >     >
+> >     > I have two vegan::vegdist objects I want to use into a
+> >     vegan::mantel test.
+> >     > However, rows and columns of the two objects are not in the same
+> >     order. Is
+> >     > there a way to reorder them one another?
+> >     >
+> >     > For example,
+> >     >
+> >     >> dist_a
+> >     >? ? ? ? ? Lycovolu? Hupeaust? Lycofast? Lycodeut
+> >     > Hupeaust 0.9045557
+> >     >
+> >     > Lycofast 0.6835441 0.8569781
+> >     >
+> >     > Lycodeut 0.8036577 0.8294657 0.7958988? ?...
+> >     > ...
+> >     >
+> >     >> dist_b
+> >     >? ? ? ? ? ?Lycodeut? ?Lycofast? ?Lycoscar? ?Lycovolu
+> >     > Lycofast 0.09340659
+> >     >
+> >     > Lycoscar 0.08974359 0.01831502
+> >     >
+> >     > Lycovolu 0.09073476 0.01099655 0.01008080? ?...
+> >     > ...
+> >     >
+> >     > Thanks,
+> >     >
+> >
+> >     _______________________________________________
+> >     R-sig-ecology mailing list
+> >     R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>
+> >     https://stat.ethz.ch/mailman/listinfo/r-sig-ecolog
+> >     <https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>y 
+> >
+> >
+> >
+> > /----- Do not print this email unless you really need to. Save paper 
+> > and protect the environment! -----/
+> 
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+--
+--
+Dr. Juan A. Balbuena
+Cavanilles Institute of Biodiversity and Evolutionary
+Biology
+University of Valencia
+P.O. Box 22085
+46071 Valencia, Spain
+e-mail: j.a.balbuena at uv.es    tel. +34 963 543 658
++++++++++++++++++++++++++++++++++++++++++++++++++++
+NOTE! For shipments by EXPRESS COURIER use the
+following street address:
+C/ Catedr?tico Jos? Beltr?n 2, 46980 Paterna
+(Valencia), Spain.
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+From |@@d@mo90 @end|ng |rom gm@||@com  Thu Jun  6 16:34:20 2019
+From: |@@d@mo90 @end|ng |rom gm@||@com (Irene Adamo)
+Date: Thu, 6 Jun 2019 16:34:20 +0200
+Subject: [R-sig-eco] forward selection of significant eigenvectors
+Message-ID: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+
+Dear all,
+
+I am trying to run a variaion partitioning in using the varpart function in
+vegan. I would like to include the geographic coordinates as explanatory
+variables so I calculated the principle coordinates of neighbour matrices.
+Now I would like to perform a selection of the significant spatial
+eigenvectors but I don`t know how to do it in R. Could anybody help me?
+
+data(mite.xy)
+pcnm1 <- pcnm(dist(mite.xy))
+
+then I get the pcnm vectors and I would like to select only the
+significant ones.
+
+Thanks a lot!
+
+	[[alternative HTML version deleted]]
+
+
+From @tevenmb|ttner @end|ng |rom gm@||@com  Thu Jun  6 16:39:34 2019
+From: @tevenmb|ttner @end|ng |rom gm@||@com (steven bittner)
+Date: Thu, 6 Jun 2019 09:39:34 -0500
+Subject: [R-sig-eco] forward selection of significant eigenvectors
+In-Reply-To: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+References: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+Message-ID: <CAFOpKbC1pXwx0pzcXbWTY3OR3-L0k9MqsjKc_se53dENGB=D6A@mail.gmail.com>
+
+Hi Irene,
+
+The forward.sel function in the package ade4 or adespatial is a good one to
+use! Here is a bit of code for you.
+##################################################
+space.dbmem <- dbmem(dist(spatial), MEM.autocor = "positive") #calculate
+positive dbmem's or in your case pcnm's
+fwsel_spat <- forward.sel(species_matrix,space.dbmem) # forward select .
+need to install package mentioned above
+spat_exp <-space.dbmem[,fwsel_spat$order] # selects forward selected
+variables
+##################################################
+
+Good luck! let me know if you have any questions.
+
+-Steve
+
+On Thu, Jun 6, 2019 at 9:34 AM Irene Adamo <i.adamo90 at gmail.com> wrote:
+
+> Dear all,
+>
+> I am trying to run a variaion partitioning in using the varpart function in
+> vegan. I would like to include the geographic coordinates as explanatory
+> variables so I calculated the principle coordinates of neighbour matrices.
+> Now I would like to perform a selection of the significant spatial
+> eigenvectors but I don`t know how to do it in R. Could anybody help me?
+>
+> data(mite.xy)
+> pcnm1 <- pcnm(dist(mite.xy))
+>
+> then I get the pcnm vectors and I would like to select only the
+> significant ones.
+>
+> Thanks a lot!
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From tr|chter @end|ng |rom un|-bremen@de  Thu Jun  6 16:41:19 2019
+From: tr|chter @end|ng |rom un|-bremen@de (Tim Richter-Heitmann)
+Date: Thu, 6 Jun 2019 16:41:19 +0200
+Subject: [R-sig-eco] forward selection of significant eigenvectors
+In-Reply-To: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+References: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+Message-ID: <45900c6b-098d-718c-3fac-7306f5c509cf@uni-bremen.de>
+
+Dear Irene,
+
+i found this tutorial very useful:
+
+https://sites.ualberta.ca/~ahamann/teaching/renr690/Lab9.pdf
+
+You basically do a forward selection (forward.sel() from packfor 
+package) using the adjusted R-square (RsquareAdj() from vegan package).
+
+Hope this helps, Tim
+
+Am 06.06.2019 um 16:34 schrieb Irene Adamo:
+> Dear all,
+>
+> I am trying to run a variaion partitioning in using the varpart function in
+> vegan. I would like to include the geographic coordinates as explanatory
+> variables so I calculated the principle coordinates of neighbour matrices.
+> Now I would like to perform a selection of the significant spatial
+> eigenvectors but I don`t know how to do it in R. Could anybody help me?
+>
+> data(mite.xy)
+> pcnm1 <- pcnm(dist(mite.xy))
+>
+> then I get the pcnm vectors and I would like to select only the
+> significant ones.
+>
+> Thanks a lot!
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+Dr. Tim Richter-Heitmann
+
+University of Bremen
+Microbial Ecophysiology Group (AG Friedrich)
+FB02 - Biologie/Chemie
+Leobener Stra?e (NW2 A2130)
+D-28359 Bremen
+Tel.: 0049(0)421 218-63062
+Fax: 0049(0)421 218-63069
+
+
+From @teph@ne@dr@y @end|ng |rom un|v-|yon1@|r  Thu Jun  6 17:03:30 2019
+From: @teph@ne@dr@y @end|ng |rom un|v-|yon1@|r (=?UTF-8?Q?St=c3=a9phane_Dray?=)
+Date: Thu, 6 Jun 2019 17:03:30 +0200
+Subject: [R-sig-eco] forward selection of significant eigenvectors
+In-Reply-To: <45900c6b-098d-718c-3fac-7306f5c509cf@uni-bremen.de>
+References: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+ <45900c6b-098d-718c-3fac-7306f5c509cf@uni-bremen.de>
+Message-ID: <1b91003a-5a2a-6b23-d47c-c8ca25cf95b5@univ-lyon1.fr>
+
+Hi,
+
+we introduced a new function mem.select in adespatial (that used 
+forward.sel)? based on the work by Bauman et al 
+(https://onlinelibrary.wiley.com/doi/abs/10.1111/ecog.03380)
+Basically, we showed that you should use a global test before performing 
+forward selection (this step is suggested by Blanchet et al but rarely 
+performed? in ecological studies).
+
+Cheers
+
+
+Le 06/06/2019 ? 16:41, Tim Richter-Heitmann a ?crit?:
+> Dear Irene,
+>
+> i found this tutorial very useful:
+>
+> https://sites.ualberta.ca/~ahamann/teaching/renr690/Lab9.pdf
+>
+> You basically do a forward selection (forward.sel() from packfor 
+> package) using the adjusted R-square (RsquareAdj() from vegan package).
+>
+> Hope this helps, Tim
+>
+> Am 06.06.2019 um 16:34 schrieb Irene Adamo:
+>> Dear all,
+>>
+>> I am trying to run a variaion partitioning in using the varpart 
+>> function in
+>> vegan. I would like to include the geographic coordinates as explanatory
+>> variables so I calculated the principle coordinates of neighbour 
+>> matrices.
+>> Now I would like to perform a selection of the significant spatial
+>> eigenvectors but I don`t know how to do it in R. Could anybody help me?
+>>
+>> data(mite.xy)
+>> pcnm1 <- pcnm(dist(mite.xy))
+>>
+>> then I get the pcnm vectors and I would like to select only the
+>> significant ones.
+>>
+>> Thanks a lot!
+>>
+>> ????[[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+-- 
+St?phane DRAY (stephane.dray at univ-lyon1.fr)
+Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+http://pbil.univ-lyon1.fr/members/dray/
+GdR EcoStat : https://sites.google.com/site/gdrecostat/
+
+
+From tr|chter @end|ng |rom un|-bremen@de  Thu Jun  6 17:17:46 2019
+From: tr|chter @end|ng |rom un|-bremen@de (Tim Richter-Heitmann)
+Date: Thu, 6 Jun 2019 17:17:46 +0200
+Subject: [R-sig-eco] forward selection of significant eigenvectors
+In-Reply-To: <1b91003a-5a2a-6b23-d47c-c8ca25cf95b5@univ-lyon1.fr>
+References: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+ <45900c6b-098d-718c-3fac-7306f5c509cf@uni-bremen.de>
+ <1b91003a-5a2a-6b23-d47c-c8ca25cf95b5@univ-lyon1.fr>
+Message-ID: <6f8e9df7-c871-a048-dd1f-3f47168ed91f@uni-bremen.de>
+
+Hi Stephane,
+
+thank you for this very useful information.
+
+As for the global test, the tutorial of Benoit Gendreau-Berthiaume (as 
+linked in my mail) does start the analysis with anova.cca on a RDA 
+fitting all available dbMEM before doing variable selection.
+
+Does this satisfy the requirement of a global test?
+
+Cheers, Tim
+
+Am 06.06.2019 um 17:03 schrieb St?phane Dray:
+> Hi,
+>
+> we introduced a new function mem.select in adespatial (that used 
+> forward.sel)? based on the work by Bauman et al 
+> (https://onlinelibrary.wiley.com/doi/abs/10.1111/ecog.03380)
+> Basically, we showed that you should use a global test before 
+> performing forward selection (this step is suggested by Blanchet et al 
+> but rarely performed? in ecological studies).
+>
+> Cheers
+>
+>
+> Le 06/06/2019 ? 16:41, Tim Richter-Heitmann a ?crit?:
+>> Dear Irene,
+>>
+>> i found this tutorial very useful:
+>>
+>> https://sites.ualberta.ca/~ahamann/teaching/renr690/Lab9.pdf
+>>
+>> You basically do a forward selection (forward.sel() from packfor 
+>> package) using the adjusted R-square (RsquareAdj() from vegan package).
+>>
+>> Hope this helps, Tim
+>>
+>> Am 06.06.2019 um 16:34 schrieb Irene Adamo:
+>>> Dear all,
+>>>
+>>> I am trying to run a variaion partitioning in using the varpart 
+>>> function in
+>>> vegan. I would like to include the geographic coordinates as 
+>>> explanatory
+>>> variables so I calculated the principle coordinates of neighbour 
+>>> matrices.
+>>> Now I would like to perform a selection of the significant spatial
+>>> eigenvectors but I don`t know how to do it in R. Could anybody help me?
+>>>
+>>> data(mite.xy)
+>>> pcnm1 <- pcnm(dist(mite.xy))
+>>>
+>>> then I get the pcnm vectors and I would like to select only the
+>>> significant ones.
+>>>
+>>> Thanks a lot!
+>>>
+>>> ????[[alternative HTML version deleted]]
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+-- 
+Dr. Tim Richter-Heitmann
+
+University of Bremen
+Microbial Ecophysiology Group (AG Friedrich)
+FB02 - Biologie/Chemie
+Leobener Stra?e (NW2 A2130)
+D-28359 Bremen
+Tel.: 0049(0)421 218-63062
+Fax: 0049(0)421 218-63069
+
+
+	[[alternative HTML version deleted]]
+
+
+From @teph@ne@dr@y @end|ng |rom un|v-|yon1@|r  Thu Jun  6 17:30:30 2019
+From: @teph@ne@dr@y @end|ng |rom un|v-|yon1@|r (=?UTF-8?Q?St=c3=a9phane_Dray?=)
+Date: Thu, 6 Jun 2019 17:30:30 +0200
+Subject: [R-sig-eco] forward selection of significant eigenvectors
+In-Reply-To: <6f8e9df7-c871-a048-dd1f-3f47168ed91f@uni-bremen.de>
+References: <CAKJjPx5i2tE_Tddk2mu1Wu53DRiH5GBq9P0yc=OenYEmx-65gw@mail.gmail.com>
+ <45900c6b-098d-718c-3fac-7306f5c509cf@uni-bremen.de>
+ <1b91003a-5a2a-6b23-d47c-c8ca25cf95b5@univ-lyon1.fr>
+ <6f8e9df7-c871-a048-dd1f-3f47168ed91f@uni-bremen.de>
+Message-ID: <606d9159-94ef-d563-b155-10d2b9c99fe4@univ-lyon1.fr>
+
+Yes ! Perfect.
+
+
+Le 06/06/2019 ? 17:17, Tim Richter-Heitmann a ?crit?:
+> Hi Stephane,
+>
+> thank you for this very useful information.
+>
+> As for the global test, the tutorial of Benoit Gendreau-Berthiaume (as
+> linked in my mail) does start the analysis with anova.cca on a RDA
+> fitting all available dbMEM before doing variable selection.
+>
+> Does this satisfy the requirement of a global test?
+>
+> Cheers, Tim
+>
+> Am 06.06.2019 um 17:03 schrieb St?phane Dray:
+>> Hi,
+>>
+>> we introduced a new function mem.select in adespatial (that used
+>> forward.sel)? based on the work by Bauman et al
+>> (https://onlinelibrary.wiley.com/doi/abs/10.1111/ecog.03380)
+>> Basically, we showed that you should use a global test before
+>> performing forward selection (this step is suggested by Blanchet et al
+>> but rarely performed? in ecological studies).
+>>
+>> Cheers
+>>
+>>
+>> Le 06/06/2019 ? 16:41, Tim Richter-Heitmann a ?crit?:
+>>> Dear Irene,
+>>>
+>>> i found this tutorial very useful:
+>>>
+>>> https://sites.ualberta.ca/~ahamann/teaching/renr690/Lab9.pdf
+>>>
+>>> You basically do a forward selection (forward.sel() from packfor
+>>> package) using the adjusted R-square (RsquareAdj() from vegan package).
+>>>
+>>> Hope this helps, Tim
+>>>
+>>> Am 06.06.2019 um 16:34 schrieb Irene Adamo:
+>>>> Dear all,
+>>>>
+>>>> I am trying to run a variaion partitioning in using the varpart
+>>>> function in
+>>>> vegan. I would like to include the geographic coordinates as
+>>>> explanatory
+>>>> variables so I calculated the principle coordinates of neighbour
+>>>> matrices.
+>>>> Now I would like to perform a selection of the significant spatial
+>>>> eigenvectors but I don`t know how to do it in R. Could anybody help me?
+>>>>
+>>>> data(mite.xy)
+>>>> pcnm1 <- pcnm(dist(mite.xy))
+>>>>
+>>>> then I get the pcnm vectors and I would like to select only the
+>>>> significant ones.
+>>>>
+>>>> Thanks a lot!
+>>>>
+>>>>  ????[[alternative HTML version deleted]]
+>>>>
+>>>> _______________________________________________
+>>>> R-sig-ecology mailing list
+>>>> R-sig-ecology at r-project.org
+>>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+St?phane DRAY (stephane.dray at univ-lyon1.fr)
+Laboratoire BBE-CNRS-UMR-5558, Univ. C. Bernard - Lyon I
+43, Bd du 11 Novembre 1918, 69622 Villeurbanne Cedex, France
+http://pbil.univ-lyon1.fr/members/dray/
+GdR EcoStat : https://sites.google.com/site/gdrecostat/
+
+
+From |@r@@@|p@@||v@ @end|ng |rom gm@||@com  Fri Jun  7 15:45:57 2019
+From: |@r@@@|p@@||v@ @end|ng |rom gm@||@com (Lara Silva)
+Date: Fri, 7 Jun 2019 13:45:57 +0000
+Subject: [R-sig-eco] Modelling: opinion of new methods
+Message-ID: <CALN9TEQU745zwSrU+1T3RRgRmk3L_pnW7McVV0m+=uouEzPEAw@mail.gmail.com>
+
+Hello everyone!
+
+I am new in modelling species (plants). However, I used some approaches
+like ENFA (Biomapper), Maxent, generalized linear and additive models (in
+R) and Biomod2.
+
+I would like to improve my knowledge in this area.Currently, what methods
+have been used?
+Any suggestions?
+
+Regards,
+
+Lara
+
+<https://www.avast.com/sig-email?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+Sem
+v?rus. www.avast.com
+<https://www.avast.com/sig-email?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+<#DAB4FAD8-2DD7-40BB-A1B8-4E2AA1F9FDF2>
+
+	[[alternative HTML version deleted]]
+
+
+From b|@|ev||@t @end|ng |rom gm@||@com  Fri Jun  7 16:03:11 2019
+From: b|@|ev||@t @end|ng |rom gm@||@com (=?UTF-8?Q?Bede-Fazekas_=c3=81kos?=)
+Date: Fri, 7 Jun 2019 16:03:11 +0200
+Subject: [R-sig-eco] [R-sig-Geo] Modelling: opinion of new methods
+In-Reply-To: <CALN9TEQU745zwSrU+1T3RRgRmk3L_pnW7McVV0m+=uouEzPEAw@mail.gmail.com>
+References: <CALN9TEQU745zwSrU+1T3RRgRmk3L_pnW7McVV0m+=uouEzPEAw@mail.gmail.com>
+Message-ID: <28733edd-4153-474c-73d7-bd3e5663689f@gmail.com>
+
+Dear Lara,
+
+Several correlative species distribution models exist (and are used 
+currently), including machine learning approaches as well, such as 
+artificial neural network (ANN), boosted regression trees (RGB / GBM), 
+genetic algorithm (GA), and random forests (RF).
+You may find the papers comparing or grouping them interesting:
+- Dormann CF, Elith J, Bacher S, Buchmann C, Carl G, Carr? G, Garc?a 
+Marqu?z JR, Gruber B, Lafourcade B, Leit?o PJ, M?nkem?ller T, McClean C, 
+Osborne PE, Reineking B, Schr?der B, Skidmore AK, Zurell D, Lautenbach S 
+(2013): Collinearity: a review of methods to deal with it and a 
+simulation study evaluating their performance. Ecography 36(1): 27?46.
+- Elith J, Graham CH (2009)? Do they? How do they? Why do they differ? 
+On finding reasons for differing performances of species distribution 
+models. Ecography 32(1) 66?77.
+- Heikkinen RK, Luoto M, Ara?jo MB, Virkkala R, Thuiller W, Sykes MT 
+(2006): Methods and uncertainties in bioclimatic envelope modelling 
+under climate change. Progress in Physical Geography 30(6): 751?777.
+- Hernandez PA, Graham CH, Master LL, Albert DL (2006): The effect of 
+sample size and species characteristics on performance of different 
+species distribution modeling methods. Ecography 29(5): 773?785.
+- Pearson RG, Thuiller W, Ara?jo MB, Martinez-Meyer E, Brotons L, 
+McClean C, Miles L, Segurado P, Dawson TE, Lees DC (2006): Model-based 
+uncertainty in species? range prediction. Journal of Biogeography 
+33(10): 1704?1711.
+- Thuiller W (2004): Patterns and uncertainties of species? range shifts 
+under climate change. Global Change Biology 10(12): 2020?2027.
+
+Also see package 'sdm' by Naimi and Ara?jo.
+HTH,
+?kos Bede-Fazekas
+Hungarian Academy of Sciences
+
+2019.06.07. 15:45 keltez?ssel, Lara Silva ?rta:
+> Hello everyone!
+>
+> I am new in modelling species (plants). However, I used some approaches
+> like ENFA (Biomapper), Maxent, generalized linear and additive models (in
+> R) and Biomod2.
+>
+> I would like to improve my knowledge in this area.Currently, what methods
+> have been used?
+> Any suggestions?
+>
+> Regards,
+>
+> Lara
+>
+> <https://www.avast.com/sig-email?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+> Sem
+> v?rus. www.avast.com
+> <https://www.avast.com/sig-email?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+> <#DAB4FAD8-2DD7-40BB-A1B8-4E2AA1F9FDF2>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-Geo mailing list
+> R-sig-Geo at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-geo
+>
+
+
+From g|@n@benucc| @end|ng |rom gm@||@com  Fri Jun  7 22:07:12 2019
+From: g|@n@benucc| @end|ng |rom gm@||@com (=?UTF-8?Q?Gian_Maria_Niccol=C3=B2_Benucci?=)
+Date: Fri, 7 Jun 2019 16:07:12 -0400
+Subject: [R-sig-eco] reorder vegdist objects
+In-Reply-To: <2777625445balbuena@uv.es>
+References: <b99dab7c-6c07-511d-af36-b199d0021be1@gmail.com>
+ <2777625445balbuena@uv.es>
+Message-ID: <CAPxEaERAppaO1n1Jdf1eE_eFwKdL+HG+-proByYQrp4SqxDyRg@mail.gmail.com>
+
+Thank you Juan and Akos for all your help. It worked.
+
+Gian
+
+On Mon, 3 Jun 2019 at 18:03, Juan Antonio Balbuena <J.A.Balbuena at uv.es>
+wrote:
+
+> Hi Gian,
+> A Mantel test looks right for your problem. Check also protest in vegan.
+> Best,
+>
+> Juan A. Balbuena
+>
+> > Dear Gian,
+> > I'm not a statistician but software developer... hope that other members
+> > of the mailing list are expert of distance matrices and can answer your
+> > question.
+> > Have a nice week,
+> > ?kos
+> >
+> > 2019.06.03. 17:44 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+> > > Hi Akos,
+> > >
+> > > Thank you for the code. It worked. I reordered the dist objects as I
+> > > cannot access the dataset of one of the two distance matrix.
+> > >
+> > > > dist_b_reordered <- as.dist(as.matrix(dist_b)[attr(dist_a,
+> > > "Labels"), attr(dist_a, "Labels")])
+> > > > all.equal(dist_a, dist_b_reordered, check.attributes = FALSE)
+> > > [1] "Mean relative difference: 0.8977224"
+> > >
+> > > There is any statistical test that you suggest to compare the two
+> > > distances? I would like to see if the two matrices show a similar
+> > > pattern, e.g. mantel test?
+> > >
+> > > Thanks,
+> > >
+> > > Gian
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > > On Sat, 1 Jun 2019 at 00:55, Bede-Fazekas ?kos <bfalevlist at gmail.com
+> > > <mailto:bfalevlist at gmail.com>> wrote:
+> > >
+> > >     Dear Gian,
+> > >     Let's do a small reproducible example:
+> > >     library(vegan)
+> > >     data(varespec)
+> > >     set.seed(12345)
+> > >     df_a <- t(varespec)
+> > >     df_b <- t(varespec[, sample.int
+> > >     <http://sample.int>(ncol(varespec))]) # shuffle the original
+> > >     column order
+> > >     dist_a <- vegdist(df_a); dist_b <- vegdist(df_b)
+> > >     all.equal(dist_a, dist_b, check.attributes = FALSE)
+> > >
+> > >     Now, you have two options. If you have access to the original
+> > >     data.frame/matrix from which the dist object was created, you can
+> > >     reorder the rows of the second dataset to match that of the first
+> > >     one.
+> > >     Then do the distance matrix calculation again.
+> > >     df_b_reordered <- df_b[rownames(df_a), ]
+> > >     dist_b_reordered1 <- vegdist(df_b_reordered)
+> > >     all.equal(dist_a, dist_b_reordered1, check.attributes = FALSE)
+> > >
+> > >     If you have no access to the original dataset and/or can not
+> > >     recalculate
+> > >     the distance matrix (e.g. due to computer capacity or time), you
+> can
+> > >     reorder the distance matrix (both the rows and columns).
+> > >     dist_b_reordered2 <- as.dist(as.matrix(dist_b)[attr(dist_a,
+> > >     "Labels"),
+> > >     attr(dist_a, "Labels")])
+> > >     all.equal(dist_a, dist_b_reordered2, check.attributes = FALSE)
+> > >
+> > >     HTH,
+> > >     ?kos Bede-Fazekas
+> > >     Hungarian Academy of Sciences
+> > >
+> > >
+> > >     2019.06.01. 1:53 keltez?ssel, Gian Maria Niccol? Benucci ?rta:
+> > >     > Hello,
+> > >     >
+> > >     > I have two vegan::vegdist objects I want to use into a
+> > >     vegan::mantel test.
+> > >     > However, rows and columns of the two objects are not in the same
+> > >     order. Is
+> > >     > there a way to reorder them one another?
+> > >     >
+> > >     > For example,
+> > >     >
+> > >     >> dist_a
+> > >     >          Lycovolu  Hupeaust  Lycofast  Lycodeut
+> > >     > Hupeaust 0.9045557
+> > >     >
+> > >     > Lycofast 0.6835441 0.8569781
+> > >     >
+> > >     > Lycodeut 0.8036577 0.8294657 0.7958988   ...
+> > >     > ...
+> > >     >
+> > >     >> dist_b
+> > >     >           Lycodeut   Lycofast   Lycoscar   Lycovolu
+> > >     > Lycofast 0.09340659
+> > >     >
+> > >     > Lycoscar 0.08974359 0.01831502
+> > >     >
+> > >     > Lycovolu 0.09073476 0.01099655 0.01008080   ...
+> > >     > ...
+> > >     >
+> > >     > Thanks,
+> > >     >
+> > >
+> > >     _______________________________________________
+> > >     R-sig-ecology mailing list
+> > >     R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>
+> > >     https://stat.ethz.ch/mailman/listinfo/r-sig-ecolog
+> > >     <https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>y
+> > >
+> > >
+> > >
+> > > /----- Do not print this email unless you really need to. Save paper
+> > > and protect the environment! -----/
+> >
+> >
+> >       [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+>
+>
+> --
+> --
+> Dr. Juan A. Balbuena
+> Cavanilles Institute of Biodiversity and Evolutionary
+> Biology
+> University of Valencia
+> P.O. Box 22085
+> 46071 Valencia, Spain
+> e-mail: j.a.balbuena at uv.es    tel. +34 963 543 658
+> +++++++++++++++++++++++++++++++++++++++++++++++++++
+> NOTE! For shipments by EXPRESS COURIER use the
+> following street address:
+> C/ Catedr?tico Jos? Beltr?n 2, 46980 Paterna
+> (Valencia), Spain.
+> +++++++++++++++++++++++++++++++++++++++++++++++++++
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+-- 
+Gian Maria Niccol? Benucci, Ph.D.
+Michigan State University
+Department of Plant, Soil and Microbial Sciences
+1066 Bogue Street
+48825 East Lansing, MI
+Lab: +1 (517) 844-6966
+Email: gian.benucci at gmail.com
+
+
+*----- Do not print this email unless you really need to. Save paper and
+protect the environment! -----*
+
+	[[alternative HTML version deleted]]
+
+
+From er|c@t@doucette @end|ng |rom gm@||@com  Tue Jun 11 22:08:22 2019
+From: er|c@t@doucette @end|ng |rom gm@||@com (Eric Doucette)
+Date: Tue, 11 Jun 2019 16:08:22 -0400
+Subject: [R-sig-eco] Producing images of Plant leaves in R
+Message-ID: <CAHB=UwGLWawg2A4CGxnZ70W76e7DHaHCvTSp=SD=sQdB4p5G3Q@mail.gmail.com>
+
+Hello, does anyone know of a package(s) or methods to reproduce the shapes
+of plant leaves in R? I have a large dataset (over 7500) of individual
+plant leaves for which I have the following measurements: leaf length, leaf
+width, leaf width at 1/10 of the overall length below the apex, and leaf
+width at 1/10 of the overall length above the base. I am looking for a way
+to code to get a visual representation of these lengths. They do not have
+to actually be the same as the "real" measurements as long as the ratio of
+measurements is correct. Thanks for any advice you can provide,
+Eric
+
+	[[alternative HTML version deleted]]
+
+
+From tom_ph|||pp| @end|ng |rom np@@gov  Tue Jun 11 23:14:20 2019
+From: tom_ph|||pp| @end|ng |rom np@@gov (Philippi, Tom)
+Date: Tue, 11 Jun 2019 14:14:20 -0700
+Subject: [R-sig-eco] [EXTERNAL]  Producing images of Plant leaves in R
+In-Reply-To: <CAHB=UwGLWawg2A4CGxnZ70W76e7DHaHCvTSp=SD=sQdB4p5G3Q@mail.gmail.com>
+References: <CAHB=UwGLWawg2A4CGxnZ70W76e7DHaHCvTSp=SD=sQdB4p5G3Q@mail.gmail.com>
+Message-ID: <CAM9kYqg2kBohsGmN+asZJDyz=i1Bf5mtu4Zupm0g=1+Jdk4eXA@mail.gmail.com>
+
+Eric--
+If you don't care about "leaf-like" shape, you have 6 X,Y points defined
+plus a pair of points at the maximum width at some undefined distance from
+the apex.  Assuming bilateral symmetry, and assuming that the maximum width
+is at 50% from apex to base, you have 5 points {0,0, b10width/2,length*.1,
+maxW/2,length/2,  b90width/2,length*.9, and 0,length}, so you could
+trivially fit a 4th order polynomial to those points, plot it and the
+mirror image, and have blobs with those specific measurements.
+
+I suspect that those blobs will not really look like your leaves.  Looking
+at  https://en.wikipedia.org/wiki/Glossary_of_leaf_morphology , maybe
+acute, obtuse, perforate, & oblanceolate might have max width at 50% of
+length.  You _might_ be able to guess a position along the base-apex axis
+for the maximum width (e.g., 35%) and get more reasonable shapes.  But I
+suspect you need more measurements to characterize most leaf shapes.
+
+Alternatively, if you only have one shape of leaves, you might be able to
+take that shape, then scale & warp it to your truss of points.
+
+Tom
+
+On Tue, Jun 11, 2019 at 1:09 PM Eric Doucette <eric.t.doucette at gmail.com>
+wrote:
+
+> Hello, does anyone know of a package(s) or methods to reproduce the shapes
+> of plant leaves in R? I have a large dataset (over 7500) of individual
+> plant leaves for which I have the following measurements: leaf length, leaf
+> width, leaf width at 1/10 of the overall length below the apex, and leaf
+> width at 1/10 of the overall length above the base. I am looking for a way
+> to code to get a visual representation of these lengths. They do not have
+> to actually be the same as the "real" measurements as long as the ratio of
+> measurements is correct. Thanks for any advice you can provide,
+> Eric
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From @@r@h@go@|ee @end|ng |rom gm@||@com  Wed Jun 12 19:24:18 2019
+From: @@r@h@go@|ee @end|ng |rom gm@||@com (Sarah Goslee)
+Date: Wed, 12 Jun 2019 13:24:18 -0400
+Subject: [R-sig-eco] Producing images of Plant leaves in R
+In-Reply-To: <CAHB=UwGLWawg2A4CGxnZ70W76e7DHaHCvTSp=SD=sQdB4p5G3Q@mail.gmail.com>
+References: <CAHB=UwGLWawg2A4CGxnZ70W76e7DHaHCvTSp=SD=sQdB4p5G3Q@mail.gmail.com>
+Message-ID: <CAM_vjun1pW67Mzey9xO_BXFFq6B9__xpZXTE_jAS9WG-e6hbFg@mail.gmail.com>
+
+Hi Eric,
+
+I didn't look for an existing tool (you might try rseek.org) but
+here's a quick and dirty leaf sketch tool that might give you an idea
+for making your own.
+
+leaf <- function(leafheight, width10, width50, width90, origin = c(0,
+0), add = TRUE, main = "Leaf sketches", scaleheight, ...) {
+
+# draws a schematic leaf based on height and three widths
+# if add = FALSE, creates a blank plot
+# places leaf base at origin point
+# takes additional parameters to polygon such as col
+# if scaleheight is missing, scales measurements so leafheight == 1
+
+if(missing(scaleheight))
+scaleheight <- leafheight
+
+width10 <- (width10 / scaleheight) / 2
+width50 <- (width50 / scaleheight) / 2
+width90 <- (width90 / scaleheight) / 2
+leafheight <- leafheight / scaleheight
+
+maxwidth <- max(c(width10, width50, width90))
+
+if(!add)
+plot(c(-maxwidth, maxwidth), c(0, 1), xaxt = "n", yaxt = "n", xlab =
+"", ylab = "", type = "n", main = main)
+
+x <- c(0, width10, width50, width90, 0, -width90, -width50, -width10, 0)
+y <- c(0, .1, .5, .9, 1, .9, .5, .1, 0) * leafheight
+polygon(x, y, ...)
+
+invisible()
+}
+
+
+
+
+###
+
+leaf(50, 60, 30, 10, add = FALSE, main = "Leaf sketches")
+leaf(20, 5, 8, 2, scaleheight = 50, border = "green", lwd = 3)
+leaf(50, 2, 10, 15, scaleheight = 50, border = "red")
+
+On Tue, Jun 11, 2019 at 4:08 PM Eric Doucette <eric.t.doucette at gmail.com> wrote:
+>
+> Hello, does anyone know of a package(s) or methods to reproduce the shapes
+> of plant leaves in R? I have a large dataset (over 7500) of individual
+> plant leaves for which I have the following measurements: leaf length, leaf
+> width, leaf width at 1/10 of the overall length below the apex, and leaf
+> width at 1/10 of the overall length above the base. I am looking for a way
+> to code to get a visual representation of these lengths. They do not have
+> to actually be the same as the "real" measurements as long as the ratio of
+> measurements is correct. Thanks for any advice you can provide,
+> Eric
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+-- 
+Sarah Goslee (she/her)
+http://www.numberwright.com
+
+
+From boycer @end|ng |rom nku@edu  Fri Jun 14 20:41:47 2019
+From: boycer @end|ng |rom nku@edu (Richard Boyce)
+Date: Fri, 14 Jun 2019 18:41:47 +0000
+Subject: [R-sig-eco] Doing repeated measures on a randomized block design
+Message-ID: <0B581062-D8DA-435D-87D0-BC99FED2D151@nku.edu>
+
+I?m measuring chlorophyll fluorescence (FvFm), my measured variable, on N and S exposures (treatment variable) of 4 red cedar trees. Here?s what the beginning of the data file looks like: 
+
+head(perm.fvfm).
+
+  Tree Exposure   Date  FvFm
+1    1        S 13.Feb 0.775
+2    1        N 13.Feb 0.795
+3    2        S 13.Feb 0.737
+4    2        N 13.Feb 0.759
+5    3        S 13.Feb 0.615
+6    3        N 13.Feb 0.712
+
+If I were just doing this one time, this would be a randomized block design, where trees were the blocks (random variable) and exposure was the treatment variable (fixed variable). Actually, since there are only two treatment levels, it would be a paired t-test.
+
+However, I?ve repeated this on many dates (18 so far this year). So this also requires a repeated-measures design, with trees as subjects. 
+
+Repeated-measures, however, usually have time (date) as a within-subject variable and then some other treatment that is a between-subjects variable. I don?t have have a between-subjects variable, however, as all subjects (trees) get both levels of exposure and all levels of time (date).
+
+I?ve searched the web, but there is not a lot out there for this kind of design. It looks like lm, lme, lmer, and permuco in R might all work, but advice for how to set up the Error() or random variable designations are confusing and sometimes contradictory. Any advice would be much appreciated!
+
+Thanks,
+Rick Boyce
+
+
+From b@t@nc@t@ @end|ng |rom gm@||@com  Sat Jun 15 18:16:14 2019
+From: b@t@nc@t@ @end|ng |rom gm@||@com (Bruce Miller)
+Date: Sat, 15 Jun 2019 12:16:14 -0400
+Subject: [R-sig-eco] Having issue trying to get plot to have plain-white
+ background
+In-Reply-To: <000000000000a443be0588ee1aa2@google.com>
+References: <000000000000a443be0588ee1aa2@google.com>
+Message-ID: <8cf447ae-93f7-e920-8060-553195086120@gmail.com>
+
+Hi all, This is not directly an R-Ecology question but neither the 
+general R help forum nor GGplot forums has any responses.
+This is an ecology based application however LOL
+
+
+I need to save plots for a publication but can not seem to get he syntax 
+correct to have GGPLOT use only a white background vs. the default gray one.
+
+I have tried the various themes but nothing seems to work.
+This is the existing code for the plot and followed by what I have tried 
+to no avail.
+
+Works with gray plot frame backgrounds
+
+
+ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+
+geom_point() +
+
+**scale_colour_hue(l=40)+
+
+ggtitle(label = ' Linderos temporal activity')+
+
+facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+
+scale_y_continuous(labels = label_hours, breaks = break_hours) +
+
+theme(axis.text.x = element_text(angle = 270))
+
+Trying theme bw does not seem to work!
+I did also load one of the "themes" packages to see if that was the 
+issue.? Not.
+
+ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+
+geom_point() +
+
+**scale_colour_hue(l=40)+
+
+ggtitle(label = 'Temporal activty')+
+
+facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+
+scale_y_continuous(labels = label_hours, breaks = break_hours) +
+
+*theme_b**w*(axis.text.x=element_text(angle = 270))
+
+
+Any guidance on correct syntax/usage to plot clean-white plot back 
+ground? welcomed.
+
+Bruce
+
+
+	[[alternative HTML version deleted]]
+
+
+From mo|||eebrook@ @end|ng |rom gm@||@com  Sat Jun 15 18:18:58 2019
+From: mo|||eebrook@ @end|ng |rom gm@||@com (Mollie Brooks)
+Date: Sat, 15 Jun 2019 18:18:58 +0200
+Subject: [R-sig-eco] Having issue trying to get plot to have plain-white
+ background
+In-Reply-To: <8cf447ae-93f7-e920-8060-553195086120@gmail.com>
+References: <000000000000a443be0588ee1aa2@google.com>
+ <8cf447ae-93f7-e920-8060-553195086120@gmail.com>
+Message-ID: <5DA5938F-319A-4D66-A3A4-732521F3DB03@gmail.com>
+
+Hi Bruce,
+
+I like to use this line by default so that all the plots have white backgrounds.
+
+library(ggplot2); theme_set(theme_bw())
+
+I?m sure it?s also possible to use theme_bw() on individual plots somehow, but I haven?t tried.
+
+cheers,
+Mollie
+
+> On 15Jun 2019, at 18:16, Bruce Miller <batsncats at gmail.com> wrote:
+> 
+> Hi all, This is not directly an R-Ecology question but neither the 
+> general R help forum nor GGplot forums has any responses.
+> This is an ecology based application however LOL
+> 
+> 
+> I need to save plots for a publication but can not seem to get he syntax 
+> correct to have GGPLOT use only a white background vs. the default gray one.
+> 
+> I have tried the various themes but nothing seems to work.
+> This is the existing code for the plot and followed by what I have tried 
+> to no avail.
+> 
+> Works with gray plot frame backgrounds
+> 
+> 
+> ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+> 
+> geom_point() +
+> 
+> **scale_colour_hue(l=40)+
+> 
+> ggtitle(label = ' Linderos temporal activity')+
+> 
+> facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+> 
+> scale_y_continuous(labels = label_hours, breaks = break_hours) +
+> 
+> theme(axis.text.x = element_text(angle = 270))
+> 
+> Trying theme bw does not seem to work!
+> I did also load one of the "themes" packages to see if that was the 
+> issue.  Not.
+> 
+> ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+> 
+> geom_point() +
+> 
+> **scale_colour_hue(l=40)+
+> 
+> ggtitle(label = 'Temporal activty')+
+> 
+> facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+> 
+> scale_y_continuous(labels = label_hours, breaks = break_hours) +
+> 
+> *theme_b**w*(axis.text.x=element_text(angle = 270))
+> 
+> 
+> Any guidance on correct syntax/usage to plot clean-white plot back 
+> ground  welcomed.
+> 
+> Bruce
+> 
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From @|t@|2 @end|ng |rom u@|bert@@c@  Sat Jun 15 18:36:14 2019
+From: @|t@|2 @end|ng |rom u@|bert@@c@ (Altaf Hussain)
+Date: Sat, 15 Jun 2019 10:36:14 -0600
+Subject: [R-sig-eco] Having issue trying to get plot to have plain-white
+ background
+In-Reply-To: <5DA5938F-319A-4D66-A3A4-732521F3DB03@gmail.com>
+References: <000000000000a443be0588ee1aa2@google.com>
+ <8cf447ae-93f7-e920-8060-553195086120@gmail.com>
+ <5DA5938F-319A-4D66-A3A4-732521F3DB03@gmail.com>
+Message-ID: <CAPrgTPvnbPcEjPdD5SHqxu4JYOsG+uxyH8q+pJT8ae2zTR6rhA@mail.gmail.com>
+
+I find the following code really helpful to further play with theme_bw()
+
+myplot + theme_bw() + theme(panel.border = element_blank(),
+panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour =
+"black"))
+
+Cheers,
+Altaf
+
+On Sat, Jun 15, 2019 at 10:26 AM Mollie Brooks <mollieebrooks at gmail.com>
+wrote:
+
+> Hi Bruce,
+>
+> I like to use this line by default so that all the plots have white
+> backgrounds.
+>
+> library(ggplot2); theme_set(theme_bw())
+>
+> I?m sure it?s also possible to use theme_bw() on individual plots somehow,
+> but I haven?t tried.
+>
+> cheers,
+> Mollie
+>
+> > On 15Jun 2019, at 18:16, Bruce Miller <batsncats at gmail.com> wrote:
+> >
+> > Hi all, This is not directly an R-Ecology question but neither the
+> > general R help forum nor GGplot forums has any responses.
+> > This is an ecology based application however LOL
+> >
+> >
+> > I need to save plots for a publication but can not seem to get he syntax
+> > correct to have GGPLOT use only a white background vs. the default gray
+> one.
+> >
+> > I have tried the various themes but nothing seems to work.
+> > This is the existing code for the plot and followed by what I have tried
+> > to no avail.
+> >
+> > Works with gray plot frame backgrounds
+> >
+> >
+> > ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+> >
+> > geom_point() +
+> >
+> > **scale_colour_hue(l=40)+
+> >
+> > ggtitle(label = ' Linderos temporal activity')+
+> >
+> > facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+> >
+> > scale_y_continuous(labels = label_hours, breaks = break_hours) +
+> >
+> > theme(axis.text.x = element_text(angle = 270))
+> >
+> > Trying theme bw does not seem to work!
+> > I did also load one of the "themes" packages to see if that was the
+> > issue.  Not.
+> >
+> > ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+> >
+> > geom_point() +
+> >
+> > **scale_colour_hue(l=40)+
+> >
+> > ggtitle(label = 'Temporal activty')+
+> >
+> > facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+> >
+> > scale_y_continuous(labels = label_hours, breaks = break_hours) +
+> >
+> > *theme_b**w*(axis.text.x=element_text(angle = 270))
+> >
+> >
+> > Any guidance on correct syntax/usage to plot clean-white plot back
+> > ground  welcomed.
+> >
+> > Bruce
+> >
+> >
+> >       [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From jcm@@@@nte @end|ng |rom hotm@||@com  Sat Jun 15 18:54:29 2019
+From: jcm@@@@nte @end|ng |rom hotm@||@com (Jhonny Capichoni Massante)
+Date: Sat, 15 Jun 2019 16:54:29 +0000
+Subject: [R-sig-eco] RES: Having issue trying to get plot to have
+ plain-white background
+In-Reply-To: <CAPrgTPvnbPcEjPdD5SHqxu4JYOsG+uxyH8q+pJT8ae2zTR6rhA@mail.gmail.com>
+References: <000000000000a443be0588ee1aa2@google.com>
+ <8cf447ae-93f7-e920-8060-553195086120@gmail.com>
+ <5DA5938F-319A-4D66-A3A4-732521F3DB03@gmail.com>,
+ <CAPrgTPvnbPcEjPdD5SHqxu4JYOsG+uxyH8q+pJT8ae2zTR6rhA@mail.gmail.com>
+Message-ID: <SC1PR80MB3823B7ED6134C88A4913F2CFD4E90@SC1PR80MB3823.lamprd80.prod.outlook.com>
+
+Hi,
+
+I think what you need is just this:
+
+myplot + theme_classic()
+
+It gives you a complete white background, different from theme_bw(), which gives you a white background combined with a grey grid. Altaf?s solution gives the same output, but it is much longer IMO.
+
+Best,
+Jhonny
+
+De: Altaf Hussain<mailto:altaf2 at ualberta.ca>
+Enviado:15 June 2019 19:36
+Para: Mollie Brooks<mailto:mollieebrooks at gmail.com>
+Cc:r-sig-ecology at r-project.org<mailto:r-sig-ecology at r-project.org>; Bruce Miller<mailto:batsncats at gmail.com>
+Assunto: Re: [R-sig-eco] Having issue trying to get plot to have plain-white background
+
+I find the following code really helpful to further play with theme_bw()
+
+myplot + theme_bw() + theme(panel.border = element_blank(),
+panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.line = element_line(colour =
+"black"))
+
+Cheers,
+Altaf
+
+On Sat, Jun 15, 2019 at 10:26 AM Mollie Brooks <mollieebrooks at gmail.com>
+wrote:
+
+> Hi Bruce,
+>
+> I like to use this line by default so that all the plots have white
+> backgrounds.
+>
+> library(ggplot2); theme_set(theme_bw())
+>
+> I?m sure it?s also possible to use theme_bw() on individual plots somehow,
+> but I haven?t tried.
+>
+> cheers,
+> Mollie
+>
+> > On 15Jun 2019, at 18:16, Bruce Miller <batsncats at gmail.com> wrote:
+> >
+> > Hi all, This is not directly an R-Ecology question but neither the
+> > general R help forum nor GGplot forums has any responses.
+> > This is an ecology based application however LOL
+> >
+> >
+> > I need to save plots for a publication but can not seem to get he syntax
+> > correct to have GGPLOT use only a white background vs. the default gray
+> one.
+> >
+> > I have tried the various themes but nothing seems to work.
+> > This is the existing code for the plot and followed by what I have tried
+> > to no avail.
+> >
+> > Works with gray plot frame backgrounds
+> >
+> >
+> > ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+> >
+> > geom_point() +
+> >
+> > **scale_colour_hue(l=40)+
+> >
+> > ggtitle(label = ' Linderos temporal activity')+
+> >
+> > facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+> >
+> > scale_y_continuous(labels = label_hours, breaks = break_hours) +
+> >
+> > theme(axis.text.x = element_text(angle = 270))
+> >
+> > Trying theme bw does not seem to work!
+> > I did also load one of the "themes" packages to see if that was the
+> > issue.  Not.
+> >
+> > ggplot(polished, aes(x =Night, y = Time, colour = Species)) +
+> >
+> > geom_point() +
+> >
+> > **scale_colour_hue(l=40)+
+> >
+> > ggtitle(label = 'Temporal activty')+
+> >
+> > facet_grid(. ~ Night) +facet_wrap(facets = ~Species)+
+> >
+> > scale_y_continuous(labels = label_hours, breaks = break_hours) +
+> >
+> > *theme_b**w*(axis.text.x=element_text(angle = 270))
+> >
+> >
+> > Any guidance on correct syntax/usage to plot clean-white plot back
+> > ground  welcomed.
+> >
+> > Bruce
+> >
+> >
+> >       [[alternative HTML version deleted]]
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+        [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From pne|@on1 @end|ng |rom uc@c@edu  Sun Jun 16 06:20:42 2019
+From: pne|@on1 @end|ng |rom uc@c@edu (Peter Nelson)
+Date: Sun, 16 Jun 2019 07:20:42 +0300
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 135, Issue 8
+In-Reply-To: <mailman.5970.11.1560592802.28003.r-sig-ecology@r-project.org>
+References: <mailman.5970.11.1560592802.28003.r-sig-ecology@r-project.org>
+Message-ID: <FF4214F6-EA6E-409B-9469-DDD6FA8BEEAA@ucsc.edu>
+
+What does a time series approach have to offer? I?m away from my usual resources and can?t recall the the terms I think might be relevant (or even helpful), but suggest looking for a cluster analysis applicable to a ts that may provide a partial solution. 
+
+Let us know what you come up with!
+
+Cheers, Pete
+
+Sent from my iPhone
+
+> On Jun 15, 2019, at 13:00, r-sig-ecology-request at r-project.org wrote:
+> 
+> Send R-sig-ecology mailing list submissions to
+>    r-sig-ecology at r-project.org
+> 
+> To subscribe or unsubscribe via the World Wide Web, visit
+>    https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+>    r-sig-ecology-request at r-project.org
+> 
+> You can reach the person managing the list at
+>    r-sig-ecology-owner at r-project.org
+> 
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+> 
+> 
+> Today's Topics:
+> 
+>   1. Doing repeated measures on a randomized block design
+>      (Richard Boyce)
+> 
+> ----------------------------------------------------------------------
+> 
+> Message: 1
+> Date: Fri, 14 Jun 2019 18:41:47 +0000
+> From: Richard Boyce <boycer at nku.edu>
+> To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+> Subject: [R-sig-eco] Doing repeated measures on a randomized block
+>    design
+> Message-ID: <0B581062-D8DA-435D-87D0-BC99FED2D151 at nku.edu>
+> Content-Type: text/plain; charset="utf-8"
+> 
+> I?m measuring chlorophyll fluorescence (FvFm), my measured variable, on N and S exposures (treatment variable) of 4 red cedar trees. Here?s what the beginning of the data file looks like: 
+> 
+> head(perm.fvfm).
+> 
+>  Tree Exposure   Date  FvFm
+> 1    1        S 13.Feb 0.775
+> 2    1        N 13.Feb 0.795
+> 3    2        S 13.Feb 0.737
+> 4    2        N 13.Feb 0.759
+> 5    3        S 13.Feb 0.615
+> 6    3        N 13.Feb 0.712
+> 
+> If I were just doing this one time, this would be a randomized block design, where trees were the blocks (random variable) and exposure was the treatment variable (fixed variable). Actually, since there are only two treatment levels, it would be a paired t-test.
+> 
+> However, I?ve repeated this on many dates (18 so far this year). So this also requires a repeated-measures design, with trees as subjects. 
+> 
+> Repeated-measures, however, usually have time (date) as a within-subject variable and then some other treatment that is a between-subjects variable. I don?t have have a between-subjects variable, however, as all subjects (trees) get both levels of exposure and all levels of time (date).
+> 
+> I?ve searched the web, but there is not a lot out there for this kind of design. It looks like lm, lme, lmer, and permuco in R might all work, but advice for how to set up the Error() or random variable designations are confusing and sometimes contradictory. Any advice would be much appreciated!
+> 
+> Thanks,
+> Rick Boyce
+> 
+> 
+> 
+> ------------------------------
+> 
+> Subject: Digest Footer
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> ------------------------------
+> 
+> End of R-sig-ecology Digest, Vol 135, Issue 8
+> *********************************************
+
+
+From p@co||pe @end|ng |rom gm@||@com  Sun Jun 16 15:45:27 2019
+From: p@co||pe @end|ng |rom gm@||@com (Pedro Pequeno)
+Date: Sun, 16 Jun 2019 09:45:27 -0400
+Subject: [R-sig-eco] 
+ Doing repeated measures on a randomized block design
+In-Reply-To: <0B581062-D8DA-435D-87D0-BC99FED2D151@nku.edu>
+References: <0B581062-D8DA-435D-87D0-BC99FED2D151@nku.edu>
+Message-ID: <CAC4PjDsRoJj-iwEgDvhU1=mUcYCgAEwqn-cOseedf-5M6tuS0w@mail.gmail.com>
+
+Dear Richard,
+
+your question could be handled using a linear model incorporating a
+temporal autcorrelation structure within trees. However, I don't think
+using "tree" as random factor (e.g. in lme()) would be very helpful here
+because random factors assume a compound symmetry autocorrelation structure
+(same correlation for any temporal distance), which is probably overly
+simplistic for long time series. Instead, you could use Generalized Least
+Squares, gls() in R, which is a standard choice in such cases. For instance:
+
+gls(FvFm ~ Exposure, correlation = corAR1(form = ~time|Tree), data =
+perm.fvfm)
+
+This will fit a model assuming a first-order autoregressive correlation
+structure, i.e. residual autocorrelation should decrease as the temporal
+distance between them increases. Notice that "time" should be the temporal
+order of observations within trees, so you will have to convert your "Date"
+to this format first. For other correlation structures, relevant R
+functions and examples similar to yours, see Zuur et al. (2009), "Mixed
+effects models and extensions in ecology with R".
+
+Best wishes,
+
+Pedro
+
+Em sex, 14 de jun de 2019 ?s 14:42, Richard Boyce <boycer at nku.edu> escreveu:
+
+> I?m measuring chlorophyll fluorescence (FvFm), my measured variable, on N
+> and S exposures (treatment variable) of 4 red cedar trees. Here?s what the
+> beginning of the data file looks like:
+>
+> head(perm.fvfm).
+>
+>   Tree Exposure   Date  FvFm
+> 1    1        S 13.Feb 0.775
+> 2    1        N 13.Feb 0.795
+> 3    2        S 13.Feb 0.737
+> 4    2        N 13.Feb 0.759
+> 5    3        S 13.Feb 0.615
+> 6    3        N 13.Feb 0.712
+>
+> If I were just doing this one time, this would be a randomized block
+> design, where trees were the blocks (random variable) and exposure was the
+> treatment variable (fixed variable). Actually, since there are only two
+> treatment levels, it would be a paired t-test.
+>
+> However, I?ve repeated this on many dates (18 so far this year). So this
+> also requires a repeated-measures design, with trees as subjects.
+>
+> Repeated-measures, however, usually have time (date) as a within-subject
+> variable and then some other treatment that is a between-subjects variable.
+> I don?t have have a between-subjects variable, however, as all subjects
+> (trees) get both levels of exposure and all levels of time (date).
+>
+> I?ve searched the web, but there is not a lot out there for this kind of
+> design. It looks like lm, lme, lmer, and permuco in R might all work, but
+> advice for how to set up the Error() or random variable designations are
+> confusing and sometimes contradictory. Any advice would be much appreciated!
+>
+> Thanks,
+> Rick Boyce
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From boycer @end|ng |rom nku@edu  Sun Jun 16 19:59:32 2019
+From: boycer @end|ng |rom nku@edu (Richard Boyce)
+Date: Sun, 16 Jun 2019 17:59:32 +0000
+Subject: [R-sig-eco] 
+ Doing repeated measures on a randomized block design
+In-Reply-To: <CAC4PjDsRoJj-iwEgDvhU1=mUcYCgAEwqn-cOseedf-5M6tuS0w@mail.gmail.com>
+References: <0B581062-D8DA-435D-87D0-BC99FED2D151@nku.edu>
+ <CAC4PjDsRoJj-iwEgDvhU1=mUcYCgAEwqn-cOseedf-5M6tuS0w@mail.gmail.com>
+Message-ID: <1136D2CA-0E3C-422A-8C99-B94CD7B8F477@nku.edu>
+
+Dear Pedro,
+
+Thanks so much! Your comments got me headed in right direction.
+
+First, I converted Dates to a day-of-year format and sorted by Date.
+
+Second, I gave it a group structure, using:
+
+fvfm <- groupedData(FvFm ~ Date | Tree/Exposure, perm.fvfm)
+
+head(fvfm)
+Grouped Data: FvFm ~ Date | Tree/Exposure
+  Tree Exposure Date   FvFm
+1    1        N   44 0.7950
+2    1        S   44 0.7750
+3    1        N   51 0.7790
+4    1        S   51 0.6980
+5    1        N   58 0.7725
+6    1        S   58 0.6475
+
+I needed to nest Exposure in Tree, otherwise I got the following error when running the GLS:
+
+Error in Initialize.corAR1(X[[i]], ...) :
+  covariate must have unique values within groups for "corAR1" objects
+
+Then I ran GLS as:
+
+gls.fvfm<-gls(FvFm ~ Exposure, correlation = corAR1(form = ~Date|Tree/Exposure), data = perm.fvfm);summary(gls.fvfm)
+
+which gave me:
+
+Generalized least squares fit by REML
+  Model: FvFm ~ Exposure
+  Data: perm.fvfm
+        AIC      BIC   logLik
+  -306.1793 -294.356 157.0896
+
+Correlation Structure: ARMA(1,0)
+ Formula: ~Date | Tree/Exposure
+ Parameter estimate(s):
+Phi1
+   0
+
+Coefficients:
+                 Value   Std.Error  t-value p-value
+(Intercept)  0.7780694 0.009153179 85.00538  0.0000
+ExposureS   -0.0214861 0.012944549 -1.65986  0.0991
+
+ Correlation:
+          (Intr)
+ExposureS -0.707
+
+Standardized residuals:
+       Min         Q1        Med         Q3        Max
+-4.0182078 -0.3630604  0.2468685  0.6717131  2.0139322
+
+Residual standard error: 0.0776673
+Degrees of freedom: 144 total; 142 residual
+
+I?m interpreting this to mean that Exposure is marginally significant, with S < N (which is what I?ve observed).
+
+Once again, much thanks!
+
+Rick
+
+On Jun 16, 2019, at 9:45 AM, Pedro Pequeno <pacolipe at gmail.com<mailto:pacolipe at gmail.com>> wrote:
+
+Dear Richard,
+
+your question could be handled using a linear model incorporating a temporal autcorrelation structure within trees. However, I don't think using "tree" as random factor (e.g. in lme()) would be very helpful here because random factors assume a compound symmetry autocorrelation structure (same correlation for any temporal distance), which is probably overly simplistic for long time series. Instead, you could use Generalized Least Squares, gls() in R, which is a standard choice in such cases. For instance:
+
+gls(FvFm ~ Exposure, correlation = corAR1(form = ~time|Tree), data = perm.fvfm)
+
+This will fit a model assuming a first-order autoregressive correlation structure, i.e. residual autocorrelation should decrease as the temporal distance between them increases. Notice that "time" should be the temporal order of observations within trees, so you will have to convert your "Date" to this format first. For other correlation structures, relevant R functions and examples similar to yours, see Zuur et al. (2009), "Mixed effects models and extensions in ecology with R".
+
+Best wishes,
+
+Pedro
+
+Em sex, 14 de jun de 2019 ?s 14:42, Richard Boyce <boycer at nku.edu<mailto:boycer at nku.edu>> escreveu:
+I?m measuring chlorophyll fluorescence (FvFm), my measured variable, on N and S exposures (treatment variable) of 4 red cedar trees. Here?s what the beginning of the data file looks like:
+
+head(perm.fvfm).
+
+  Tree Exposure   Date  FvFm
+1    1        S 13.Feb 0.775
+2    1        N 13.Feb 0.795
+3    2        S 13.Feb 0.737
+4    2        N 13.Feb 0.759
+5    3        S 13.Feb 0.615
+6    3        N 13.Feb 0.712
+
+If I were just doing this one time, this would be a randomized block design, where trees were the blocks (random variable) and exposure was the treatment variable (fixed variable). Actually, since there are only two treatment levels, it would be a paired t-test.
+
+However, I?ve repeated this on many dates (18 so far this year). So this also requires a repeated-measures design, with trees as subjects.
+
+Repeated-measures, however, usually have time (date) as a within-subject variable and then some other treatment that is a between-subjects variable. I don?t have have a between-subjects variable, however, as all subjects (trees) get both levels of exposure and all levels of time (date).
+
+I?ve searched the web, but there is not a lot out there for this kind of design. It looks like lm, lme, lmer, and permuco in R might all work, but advice for how to set up the Error() or random variable designations are confusing and sometimes contradictory. Any advice would be much appreciated!
+
+Thanks,
+Rick Boyce
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+================================
+Richard L. Boyce, Ph.D.
+Professor
+Associate Editor, Journal of the Torrey Botanical Society
+Department of Biological Sciences, SC 150
+Northern Kentucky University
+Nunn Drive
+Highland Heights, KY  41099  USA
+
+859-572-1407 (tel.)
+859-572-5639 (fax)
+boycer at nku.edu<mailto:boycer at nku.edu>
+http://www.nku.edu/~boycer/
+=================================
+
+"One of the advantages of being disorderly is that one is constantly making exciting discoveries." - A.A. Milne
+
+
+
+
+
+
+
+
+
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From p@co||pe @end|ng |rom gm@||@com  Sun Jun 16 22:20:19 2019
+From: p@co||pe @end|ng |rom gm@||@com (Pedro Pequeno)
+Date: Sun, 16 Jun 2019 16:20:19 -0400
+Subject: [R-sig-eco] 
+ Doing repeated measures on a randomized block design
+In-Reply-To: <1136D2CA-0E3C-422A-8C99-B94CD7B8F477@nku.edu>
+References: <0B581062-D8DA-435D-87D0-BC99FED2D151@nku.edu>
+ <CAC4PjDsRoJj-iwEgDvhU1=mUcYCgAEwqn-cOseedf-5M6tuS0w@mail.gmail.com>
+ <1136D2CA-0E3C-422A-8C99-B94CD7B8F477@nku.edu>
+Message-ID: <CAC4PjDtLmNm+mQT3R6xdLS=DegnpbyuyYZzuoEXSZZe2HAwBCA@mail.gmail.com>
+
+Dear Rick,
+
+I believe the error occurs because the "time" covariate in the correlation
+structure cannot have repeated values; these functions assume that you have
+a single observation for each time step. The simplest solution is to create
+a time variable that counts time as half-days, so that the two "Exposure"
+values within the same day have different values for the time variable.
+Alternatively, you could use one of R's spatial correlatiom structures
+(i.e. by treating your time series as a transect), which I think do not
+have this restriction.
+
+Hope this helps.
+
+Pedro
+
+Em domingo, 16 de junho de 2019, Richard Boyce <boycer at nku.edu> escreveu:
+
+> Dear Pedro,
+>
+> Thanks so much! Your comments got me headed in right direction.
+>
+> First, I converted Dates to a day-of-year format and sorted by Date.
+>
+> Second, I gave it a group structure, using:
+>
+> fvfm <- groupedData(FvFm ~ Date | Tree/Exposure, perm.fvfm)
+>
+> head(fvfm)
+> Grouped Data: FvFm ~ Date | Tree/Exposure
+>   Tree Exposure Date   FvFm
+> 1    1        N   44 0.7950
+> 2    1        S   44 0.7750
+> 3    1        N   51 0.7790
+> 4    1        S   51 0.6980
+> 5    1        N   58 0.7725
+> 6    1        S   58 0.6475
+>
+> I needed to nest Exposure in Tree, otherwise I got the following error
+> when running the GLS:
+>
+> Error in Initialize.corAR1(X[[i]], ...) :
+>   covariate must have unique values within groups for "corAR1" objects
+>
+> Then I ran GLS as:
+>
+> gls.fvfm<-gls(FvFm ~ Exposure, correlation = corAR1(form = ~Date|Tree/
+> Exposure), data = perm.fvfm);summary(gls.fvfm)
+>
+> which gave me:
+>
+> Generalized least squares fit by REML
+>   Model: FvFm ~ Exposure
+>   Data: perm.fvfm
+>         AIC      BIC   logLik
+>   -306.1793 -294.356 157.0896
+>
+> Correlation Structure: ARMA(1,0)
+>  Formula: ~Date | Tree/Exposure
+>  Parameter estimate(s):
+> Phi1
+>    0
+>
+> Coefficients:
+>                  Value   Std.Error  t-value p-value
+> (Intercept)  0.7780694 0.009153179 85.00538  0.0000
+> ExposureS   -0.0214861 0.012944549 -1.65986  0.0991
+>
+>  Correlation:
+>           (Intr)
+> ExposureS -0.707
+>
+> Standardized residuals:
+>        Min         Q1        Med         Q3        Max
+> -4.0182078 -0.3630604  0.2468685  0.6717131  2.0139322
+>
+> Residual standard error: 0.0776673
+> Degrees of freedom: 144 total; 142 residual
+>
+> I?m interpreting this to mean that Exposure is marginally significant,
+> with S < N (which is what I?ve observed).
+>
+> Once again, much thanks!
+>
+> Rick
+>
+> On Jun 16, 2019, at 9:45 AM, Pedro Pequeno <pacolipe at gmail.com> wrote:
+>
+> Dear Richard,
+>
+> your question could be handled using a linear model incorporating a
+> temporal autcorrelation structure within trees. However, I don't think
+> using "tree" as random factor (e.g. in lme()) would be very helpful here
+> because random factors assume a compound symmetry autocorrelation structure
+> (same correlation for any temporal distance), which is probably overly
+> simplistic for long time series. Instead, you could use Generalized Least
+> Squares, gls() in R, which is a standard choice in such cases. For instance:
+>
+> gls(FvFm ~ Exposure, correlation = corAR1(form = ~time|Tree), data =
+> perm.fvfm)
+>
+> This will fit a model assuming a first-order autoregressive correlation
+> structure, i.e. residual autocorrelation should decrease as the temporal
+> distance between them increases. Notice that "time" should be the temporal
+> order of observations within trees, so you will have to convert your "Date"
+> to this format first. For other correlation structures, relevant R
+> functions and examples similar to yours, see Zuur et al. (2009), "Mixed
+> effects models and extensions in ecology with R".
+>
+> Best wishes,
+>
+> Pedro
+>
+> Em sex, 14 de jun de 2019 ?s 14:42, Richard Boyce <boycer at nku.edu>
+> escreveu:
+>
+>> I?m measuring chlorophyll fluorescence (FvFm), my measured variable, on N
+>> and S exposures (treatment variable) of 4 red cedar trees. Here?s what the
+>> beginning of the data file looks like:
+>>
+>> head(perm.fvfm).
+>>
+>>   Tree Exposure   Date  FvFm
+>> 1    1        S 13.Feb 0.775
+>> 2    1        N 13.Feb 0.795
+>> 3    2        S 13.Feb 0.737
+>> 4    2        N 13.Feb 0.759
+>> 5    3        S 13.Feb 0.615
+>> 6    3        N 13.Feb 0.712
+>>
+>> If I were just doing this one time, this would be a randomized block
+>> design, where trees were the blocks (random variable) and exposure was the
+>> treatment variable (fixed variable). Actually, since there are only two
+>> treatment levels, it would be a paired t-test.
+>>
+>> However, I?ve repeated this on many dates (18 so far this year). So this
+>> also requires a repeated-measures design, with trees as subjects.
+>>
+>> Repeated-measures, however, usually have time (date) as a within-subject
+>> variable and then some other treatment that is a between-subjects variable.
+>> I don?t have have a between-subjects variable, however, as all subjects
+>> (trees) get both levels of exposure and all levels of time (date).
+>>
+>> I?ve searched the web, but there is not a lot out there for this kind of
+>> design. It looks like lm, lme, lmer, and permuco in R might all work, but
+>> advice for how to set up the Error() or random variable designations are
+>> confusing and sometimes contradictory. Any advice would be much appreciated!
+>>
+>> Thanks,
+>> Rick Boyce
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+> ================================
+> Richard L. Boyce, Ph.D.
+> Professor
+> Associate Editor, Journal of the Torrey Botanical Society
+> Department of Biological Sciences, SC 150
+> Northern Kentucky University
+> Nunn Drive
+> Highland Heights, KY  41099  USA
+>
+> 859-572-1407 (tel.)
+> 859-572-5639 (fax)
+> boycer at nku.edu
+> http://www.nku.edu/~boycer/
+> =================================
+>
+> "One of the advantages of being disorderly is that one is constantly
+> making exciting discoveries." - A.A. Milne
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From pd|xon @end|ng |rom |@@t@te@edu  Mon Jun 17 01:27:26 2019
+From: pd|xon @end|ng |rom |@@t@te@edu (Dixon, Philip M [STAT])
+Date: Sun, 16 Jun 2019 23:27:26 +0000
+Subject: [R-sig-eco] Doing repeated measures on a randomized block design
+In-Reply-To: <mailman.5970.11.1560592802.28003.r-sig-ecology@r-project.org>
+References: <mailman.5970.11.1560592802.28003.r-sig-ecology@r-project.org>
+Message-ID: <DM6PR04MB4489C709B0F5E87A16FF333BDBE80@DM6PR04MB4489.namprd04.prod.outlook.com>
+
+Rick,
+
+There are (at least) two ways to set up a model for your experiment.  The difference is a detail of your sampling.  The two most likely schemes are:
+1)	Each time you sampled, you went to the same branch (or perhaps same leaf).  Here, the repeated measurements are on the branch, not the tree.  Exposure (N/S) is characteristic of the branch.  In terms of the model variables, a branch is identified by combination of tree and exposure.  This leads to the traditional between/within repeated measures design.  If you assume compound symmetry (nested random effects), the lmer model  would be FvFm ~ Tree + Exposure + Date + Date:Exposure + (1|Tree:Exposure)
+2)	Each time you sampled, you went to different branches.  Now the only level of repeatedness is the tree.  Now there is one observation per branch; each is characterized by exposure and date.  The model is simply a 2 way factorial inside blocks.  If you wanted to set up something like a compound symmetry model, you would have tree and observation as the random effects.  Since there are only 4 trees, I would treat trees as fixed. The lmer model is FvFm ~ Tree + Exposure + Date + Date:Exposure 
+
+With 18 dates, I would stongly advice against a compound symmetry (split plot in time) model.  There is probably some structure to the correlations.  This means using lme() with something like a corAR1() correlation structure.  You can add that to either model, (to get CS+AR(1) for the first option or AR(1) in blocks for the second).  Or you could a "just an AR(1)" model for the first option by replace (1|Tree:Exposure) with the corAR1().
+Best,
+Philip Dixon
+
+
+From |@r@@@|p@@||v@ @end|ng |rom gm@||@com  Tue Jun 18 15:46:08 2019
+From: |@r@@@|p@@||v@ @end|ng |rom gm@||@com (Lara Silva)
+Date: Tue, 18 Jun 2019 13:46:08 +0000
+Subject: [R-sig-eco] GAM parameters: Biomod 2
+Message-ID: <CALN9TESvDGWfNcd=p0Emt4Ri_WEhOXbQhidpRJ1N=eU74V+zzA@mail.gmail.com>
+
+Hello,
+
+I am using Biomod 2 to modelling species distribution. I ran some
+algorithms like GAM, GLM, RF and CTA.
+
+I did not change the parameters. How can I known the quadratic terms of GAM?
+
+
+I used the variables with form linear (e.g.  precipitation, altimetry,
+temperature) I did not use temperature ^2.
+
+
+Any suggestions?
+
+Regards,
+
+
+Lara
+
+
+
+
+
+
+<https://www.avast.com/sig-email?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+Sem
+v?rus. www.avast.com
+<https://www.avast.com/sig-email?utm_medium=email&utm_source=link&utm_campaign=sig-email&utm_content=webmail>
+<#DAB4FAD8-2DD7-40BB-A1B8-4E2AA1F9FDF2>
+
+	[[alternative HTML version deleted]]
+
+
+From |@@d@mo90 @end|ng |rom gm@||@com  Thu Jun 20 16:28:11 2019
+From: |@@d@mo90 @end|ng |rom gm@||@com (Irene Adamo)
+Date: Thu, 20 Jun 2019 16:28:11 +0200
+Subject: [R-sig-eco] trasformation of matrix for iNEXT extrapolation
+ interpolation of Hill's numbers
+Message-ID: <CAKJjPx6Q4686t7FXRmS0k8b7tOGnpw-2VkJS9eK2Ei+a-Vtbvg@mail.gmail.com>
+
+Hi all,
+
+I am working with iNEXT package for diversity analyses however, I would
+like to use a incidence_raw data type which in iNEXT is a list of matrices
+like this:
+
+data(ciliates)
+head(ciliates)
+
+$SouthernNamibDesert
+                                                     x9 x17 x19 x20 x21 x22
+x23 x24
+Acaryophrya.collaris                                  0   0   0   0   0   0
+  0   0
+Actinobolina.multinucleata.n..sp.                     0   0   0   0   0   0
+  0   0
+Afroamphisiella.multinucleata.n..sp.                  0   0   0   0   0   0
+  0   0
+Afrothrix.multinucleata.n..sp.                        0   1   0   0   0   0
+  0   0
+Amphisiella.binucleata.multicirrata.n..ssp.           0   0   0   0   0   0
+  0   0
+Amphisiella.elegans.n..sp.                            0   0   0   0   0   0
+  1   0
+Amphisiella.longiseries.n..sp.                        0   0   0   0   0   0
+  0   0
+Amphisiella.magnigranulosa                            0   0   0   0   0   0
+  0   1
+Amphisiella.multinucleata.n..sp.                      0   0   0   0   0   0
+  0   0
+Amphisiella.namibiensis.n..sp.                        0   0   0   0   0   0
+  0   0
+Amphisiella.polycirrata                               0   0   0   0   0   0
+  0   0
+Amphisiella.procera.n..sp.                            1   0   0   0   0   0
+  0   0
+
+do you know how can I create anlist with four matrices like the one they
+have in example data?
+
+thanks a lot for any help!
+
+	[[alternative HTML version deleted]]
+
+
+From tor@ten@h@u||e @end|ng |rom gm@||@com  Thu Jun 20 16:31:11 2019
+From: tor@ten@h@u||e @end|ng |rom gm@||@com (Torsten Hauffe)
+Date: Thu, 20 Jun 2019 16:31:11 +0200
+Subject: [R-sig-eco] trasformation of matrix for iNEXT extrapolation
+ interpolation of Hill's numbers
+In-Reply-To: <CAKJjPx6Q4686t7FXRmS0k8b7tOGnpw-2VkJS9eK2Ei+a-Vtbvg@mail.gmail.com>
+References: <CAKJjPx6Q4686t7FXRmS0k8b7tOGnpw-2VkJS9eK2Ei+a-Vtbvg@mail.gmail.com>
+Message-ID: <CAGCrCxaAUqqpaLsD+11ed6ixbOW9v3Jf-_kBgHu0HqGa1JXDqA@mail.gmail.com>
+
+Hi,
+
+In general, you can create a list containing matrices, data.frames, or
+(almost) any object in the following way:
+
+# 2 Matrices as example
+M1 <- matrix(NA, ncol = 5, nrow = 3)
+M2 <- matrix(NA, ncol = 3, nrow = 5)
+
+List <- list() # initiate an empty list
+List[[1]] <- M1 # Enter M1 as first element of the list
+List[[2]] <- M2
+names(List) <- c("Matrix1", "Matrix2") # Maybe iNEXT needs names?
+List
+
+HTH,
+Torsten
+
+
+On Thu, 20 Jun 2019 at 16:28, Irene Adamo <i.adamo90 at gmail.com> wrote:
+
+> Hi all,
+>
+> I am working with iNEXT package for diversity analyses however, I would
+> like to use a incidence_raw data type which in iNEXT is a list of matrices
+> like this:
+>
+> data(ciliates)
+> head(ciliates)
+>
+> $SouthernNamibDesert
+>                                                      x9 x17 x19 x20 x21 x22
+> x23 x24
+> Acaryophrya.collaris                                  0   0   0   0   0   0
+>   0   0
+> Actinobolina.multinucleata.n..sp.                     0   0   0   0   0   0
+>   0   0
+> Afroamphisiella.multinucleata.n..sp.                  0   0   0   0   0   0
+>   0   0
+> Afrothrix.multinucleata.n..sp.                        0   1   0   0   0   0
+>   0   0
+> Amphisiella.binucleata.multicirrata.n..ssp.           0   0   0   0   0   0
+>   0   0
+> Amphisiella.elegans.n..sp.                            0   0   0   0   0   0
+>   1   0
+> Amphisiella.longiseries.n..sp.                        0   0   0   0   0   0
+>   0   0
+> Amphisiella.magnigranulosa                            0   0   0   0   0   0
+>   0   1
+> Amphisiella.multinucleata.n..sp.                      0   0   0   0   0   0
+>   0   0
+> Amphisiella.namibiensis.n..sp.                        0   0   0   0   0   0
+>   0   0
+> Amphisiella.polycirrata                               0   0   0   0   0   0
+>   0   0
+> Amphisiella.procera.n..sp.                            1   0   0   0   0   0
+>   0   0
+>
+> do you know how can I create anlist with four matrices like the one they
+> have in example data?
+>
+> thanks a lot for any help!
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From J@@on@L@w @end|ng |rom port|@ndoregon@gov  Thu Jun 20 20:34:03 2019
+From: J@@on@L@w @end|ng |rom port|@ndoregon@gov (Law, Jason)
+Date: Thu, 20 Jun 2019 18:34:03 +0000
+Subject: [R-sig-eco] trasformation of matrix for iNEXT extrapolation
+ interpolation of Hill's numbers
+In-Reply-To: <CAKJjPx6Q4686t7FXRmS0k8b7tOGnpw-2VkJS9eK2Ei+a-Vtbvg@mail.gmail.com>
+References: <CAKJjPx6Q4686t7FXRmS0k8b7tOGnpw-2VkJS9eK2Ei+a-Vtbvg@mail.gmail.com>
+Message-ID: <MWHPR0901MB2185B73F19E261D73BA2CD4087E40@MWHPR0901MB2185.namprd09.prod.outlook.com>
+
+I'm not sure what your data looks like. But the reshape package can be used to easily create matrix or array data from a 'long' format. Combining that with split would make it relatively to create matrices.
+
+library(iNEXT)
+library(reshape2)
+data(ciliates)
+# Maybe your data is in long format like this:
+df <- melt(ciliates, varnames = c('species', 'sample'), value.name = 'count') 
+# Then this will work
+df.list <- lapply(split(df, df$L1), function(x) acast(x, species ~ sample, value.var='count')) 
+
+# If your data is just one wide (sorted) matrix, then you just need lapply and the column indices
+mat <- acast(df, species ~ L1 + sample, value.var='count')
+df.list <- lapply(list(c(1,17), c(18,36), c(37,51)), function(i) mat[,i[1]:i[2]])
+
+Regards,
+
+Jason
+
+-----Original Message-----
+From: R-sig-ecology <r-sig-ecology-bounces at r-project.org> On Behalf Of Irene Adamo
+Sent: Thursday, June 20, 2019 07:28
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] trasformation of matrix for iNEXT extrapolation interpolation of Hill's numbers
+
+Hi all,
+
+I am working with iNEXT package for diversity analyses however, I would like to use a incidence_raw data type which in iNEXT is a list of matrices like this:
+
+data(ciliates)
+head(ciliates)
+
+$SouthernNamibDesert
+                                                     x9 x17 x19 x20 x21 x22
+x23 x24
+Acaryophrya.collaris                                  0   0   0   0   0   0
+  0   0
+Actinobolina.multinucleata.n..sp.                     0   0   0   0   0   0
+  0   0
+Afroamphisiella.multinucleata.n..sp.                  0   0   0   0   0   0
+  0   0
+Afrothrix.multinucleata.n..sp.                        0   1   0   0   0   0
+  0   0
+Amphisiella.binucleata.multicirrata.n..ssp.           0   0   0   0   0   0
+  0   0
+Amphisiella.elegans.n..sp.                            0   0   0   0   0   0
+  1   0
+Amphisiella.longiseries.n..sp.                        0   0   0   0   0   0
+  0   0
+Amphisiella.magnigranulosa                            0   0   0   0   0   0
+  0   1
+Amphisiella.multinucleata.n..sp.                      0   0   0   0   0   0
+  0   0
+Amphisiella.namibiensis.n..sp.                        0   0   0   0   0   0
+  0   0
+Amphisiella.polycirrata                               0   0   0   0   0   0
+  0   0
+Amphisiella.procera.n..sp.                            1   0   0   0   0   0
+  0   0
+
+do you know how can I create anlist with four matrices like the one they have in example data?
+
+thanks a lot for any help!
+
+	[[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From tom_ph|||pp| @end|ng |rom np@@gov  Thu Jun 20 22:00:47 2019
+From: tom_ph|||pp| @end|ng |rom np@@gov (Philippi, Tom)
+Date: Thu, 20 Jun 2019 13:00:47 -0700
+Subject: [R-sig-eco] [EXTERNAL] Re: trasformation of matrix for iNEXT
+ extrapolation interpolation of Hill's numbers
+In-Reply-To: <MWHPR0901MB2185B73F19E261D73BA2CD4087E40@MWHPR0901MB2185.namprd09.prod.outlook.com>
+References: <CAKJjPx6Q4686t7FXRmS0k8b7tOGnpw-2VkJS9eK2Ei+a-Vtbvg@mail.gmail.com>
+ <MWHPR0901MB2185B73F19E261D73BA2CD4087E40@MWHPR0901MB2185.namprd09.prod.outlook.com>
+Message-ID: <CAM9kYqj21Wtkr8R3evpdtT9T6F04kAQrWbLy=NsOta7==+dm7w@mail.gmail.com>
+
+Or, if the component matrices need to be numeric with species names as row
+names and sites as column names, Dave Roberts' labdsv package has matrify()
+that does that and fills in the unseen combinations with 0s as opposed to
+NAs.  Converting {site, taxon, abundance} triplets to matrix form is a very
+common operation for vegan, labdsv, and other vegetation packages.  Thus,
+you could build the list of 4 matrices with something like:
+
+ciliates <- list(
+                     M1 = labdsv::matrify(d1),
+                     M2 = labdsv::matrify(d2),
+                     M3 = labdsv::matrify(d3),
+                     M4 = labdsv::matrify(d4)
+                    )
+
+Tom
+
+
+
+On Thu, Jun 20, 2019 at 11:35 AM Law, Jason <Jason.Law at portlandoregon.gov>
+wrote:
+
+> I'm not sure what your data looks like. But the reshape package can be
+> used to easily create matrix or array data from a 'long' format. Combining
+> that with split would make it relatively to create matrices.
+>
+> library(iNEXT)
+> library(reshape2)
+> data(ciliates)
+> # Maybe your data is in long format like this:
+> df <- melt(ciliates, varnames = c('species', 'sample'), value.name =
+> 'count')
+> # Then this will work
+> df.list <- lapply(split(df, df$L1), function(x) acast(x, species ~ sample,
+> value.var='count'))
+>
+> # If your data is just one wide (sorted) matrix, then you just need lapply
+> and the column indices
+> mat <- acast(df, species ~ L1 + sample, value.var='count')
+> df.list <- lapply(list(c(1,17), c(18,36), c(37,51)), function(i)
+> mat[,i[1]:i[2]])
+>
+> Regards,
+>
+> Jason
+>
+> -----Original Message-----
+> From: R-sig-ecology <r-sig-ecology-bounces at r-project.org> On Behalf Of
+> Irene Adamo
+> Sent: Thursday, June 20, 2019 07:28
+> To: r-sig-ecology at r-project.org
+> Subject: [R-sig-eco] trasformation of matrix for iNEXT extrapolation
+> interpolation of Hill's numbers
+>
+> Hi all,
+>
+> I am working with iNEXT package for diversity analyses however, I would
+> like to use a incidence_raw data type which in iNEXT is a list of matrices
+> like this:
+>
+> data(ciliates)
+> head(ciliates)
+>
+> $SouthernNamibDesert
+>                                                      x9 x17 x19 x20 x21 x22
+> x23 x24
+> Acaryophrya.collaris                                  0   0   0   0   0   0
+>   0   0
+> Actinobolina.multinucleata.n..sp.                     0   0   0   0   0   0
+>   0   0
+> Afroamphisiella.multinucleata.n..sp.                  0   0   0   0   0   0
+>   0   0
+> Afrothrix.multinucleata.n..sp.                        0   1   0   0   0   0
+>   0   0
+> Amphisiella.binucleata.multicirrata.n..ssp.           0   0   0   0   0   0
+>   0   0
+> Amphisiella.elegans.n..sp.                            0   0   0   0   0   0
+>   1   0
+> Amphisiella.longiseries.n..sp.                        0   0   0   0   0   0
+>   0   0
+> Amphisiella.magnigranulosa                            0   0   0   0   0   0
+>   0   1
+> Amphisiella.multinucleata.n..sp.                      0   0   0   0   0   0
+>   0   0
+> Amphisiella.namibiensis.n..sp.                        0   0   0   0   0   0
+>   0   0
+> Amphisiella.polycirrata                               0   0   0   0   0   0
+>   0   0
+> Amphisiella.procera.n..sp.                            1   0   0   0   0   0
+>   0   0
+>
+> do you know how can I create anlist with four matrices like the one they
+> have in example data?
+>
+> thanks a lot for any help!
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From |@r@@@|p@@||v@ @end|ng |rom gm@||@com  Sat Jun 22 07:42:09 2019
+From: |@r@@@|p@@||v@ @end|ng |rom gm@||@com (Lara Silva)
+Date: Sat, 22 Jun 2019 05:42:09 +0000
+Subject: [R-sig-eco] Plot map in R - center and move labels: x.coords and
+ y.coords
+Message-ID: <CALN9TEQkDKKHZaEtfEzN=bM0tacN6DF4HsZ=y_yLgk-U4x0Rbw@mail.gmail.com>
+
+Hello,
+
+I am new in R and I want to plot a map,  but I am not able to center and
+move the label of "y.coords"
+
+library (rgdal)
+p1<-readOGR(".", "WGS")
+clab = 0.8
+cmain = 2
+caxis = 0.8
+par(mar=c(4,3,1,1), mgp=c(3, 1, 0), las=1)
+plot(p1,asp=1, main= "A - P", xlab="x.coords",
+ylab="y.coords",cex.axis=caxis)
+#mtext ("y.coords", 1, 1.5)
+points(AcaciaP,cex=0.5,pch = 20)
+axis(1,at = seq (365000,415000,5000))
+axis(2,at = seq (4245000,4275000,5000),pos=365000)
+
+Regards,
+Lara
+
+From o||verhooker @end|ng |rom pr@t@t|@t|c@@com  Mon Jun 24 17:22:57 2019
+From: o||verhooker @end|ng |rom pr@t@t|@t|c@@com (Oliver Hooker)
+Date: Mon, 24 Jun 2019 16:22:57 +0100
+Subject: [R-sig-eco] PART-FUNDED SCHOLARSHIPS for the course - Introduction
+ to spatial analysis of ecological data using R
+Message-ID: <CAEsSYzwpv_DCFpmTeP7e+rE71-R7ec1g584NQuKHVWELe95tfA@mail.gmail.com>
+
+5 PART-FUNDED SCHOLARSHIPS for the course "Introduction to spatial
+analysis of ecological data using R (ISPE01)"
+
+Please share!
+
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe01/
+
+PR statistics are pleased to offer through their funding scheme 5 all
+inclusive places on the up-coming course "Introduction to spatial
+analysis of ecological data using R"
+
+All inclusive course fees have been subsidized by over 40% to ?450
+(from ?775.00).
+
+This fee covers the  5 day course and accommodation, breakfast,
+lunches, and refreshments (full details at the bottom of this email).
+
+This course will be delivered by Dr Jakub Nowasad from July 29th -
+August 2nd in Glasgow City Centre.
+
+Applications should be sent to oliverhooker at prstatistics.com and
+contain the following.
+
+1. Full name
+2. Institute name
+3. PhD subject title or Post doc research questions
+4. Do you hold a funded position
+5. 150 words why this course would be relevant to your research or how
+it would help.
+
+Application deadline is Friday 28th June and decisions will be made by
+Sunday 30th June.
+
+Course overview:
+The aim of the course is to introduce you to a spatial data
+processing, analysis, and visualization capabilities of the R
+programming language. It will teach a range of techniques using a
+mixture of lectures, computer exercises and case studies.
+
+By the end of the course participants should:
+
+Understand the basic concepts of spatial data analysis
+Know R?s spatial capabilities
+Understand how to import a range of spatial data sources into R
+Be confident with using R?s command-line interface (CLI) for spatial
+data processing
+Be able to perform a range of attribute operations (e.g. subsetting
+and joining), spatial operations (e.g. distance relations, topological
+relations), and geometry operations (e.g. clipping, aggregations)
+Understand coordinate reference systems (CRSs), be able to decide
+which CRS to use, and how to reproject spatial data
+Know how to visualize the results of a spatial analysis in the form of
+static and interactive maps
+Have the confidence to apply spatial analysis skills to their own projects
+
+ALL INCLUSIVE PACKAGE ? Includes breakfast, lunch, refreshments and
+welcome dinner Monday evening. Self-catering facilities are available
+in the accommodation. Accommodation is approximately a 6-minute walk
+from the PR informatics head office. Accommodation is multiple
+occupancy (max 3-4 people) single sex en-suite rooms. Arrival Sunday
+28th July (between 17:00 ? 21:00 and departure Friday 2nd August
+(accommodation must be vacated by 09:15).
+
+Check out our sister sites
+www.PRstatistics.com (Ecology and Life Sciences)
+www.PRstatistics.com/consultancy
+www.PSstatistics.com (Behaviour and cognition)
+
+1. June 24th ? 28th 2019
+MICROBIOME DATA ANALYSIS USING QIIME2 (MBQM01)
+Glasgow, Scotland, Dr. Yoshiki Vazquez Baeza, Dr. Antonio Gonzalez Pena
+https://www.prinformatics.com/course/microbiome-data-analysis-using-qiime2-mbqm01/
+
+2. July 1st ? 5th 2019
+BIOACOUSTICS FOR ECOLOGISTS: HARDWARE, SURVEY DESIGN AND DATA ANALYSIS (BIAC01)
+Glasgow, Scotland, Dr. Paul Howden-Leach
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac01/
+
+3. July 8th ? 12th 2019
+INTRODUCTION TO BAYESIAN HIERARCHICAL MODELLING USING R (IBHM03)
+Glasgow, Scotland, Dr. Andrew Parnell
+https://www.psstatistics.com/course/introduction-to-bayesian-hierarchical-modelling-using-r-ibhm03/
+
+4. July 29th ? August 2nd 2019
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISPE01)
+Glasgow, Scotland, Dr. Jakub Nowosad
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe01/
+
+5. September 2nd ? 6th 2019
+APPLIED METHODS FOR ANALYSING CAPTURE-RECAPTURE (MARK-RECAPTURE) DATA
+USING SPATIALLY EXPLICIT AND NON-SPATIAL TECHNIQUES (MARK01)
+Glasgow, Scotland, Dr. Joanne Potts, Dr. David Borchers
+https://www.prstatistics.com/course/applied-methods-for-analysing-capture-recapture-mark-recapture-data-using-spatially-explicit-and-non-spatial-techniques-mark01/
+
+6. September 9th ? 13th 2019
+GENERALISED LINEAR (MIXED) (GLMM), NONLINEAR (NLGLM) AND GENERAL
+ADDITIVE MODELS (MIXED) (GAMM) (GNAM01)
+Glasgow, Scotland, Dr. Mark Andrews
+https://www.psstatistics.com/course/generalised-linear-glm-nonlinear-nlglm-and-general-additive-models-gam-gnam01/
+
+7. September 16th ? 20th 2019
+R PACKAGE DESIGN AND DEVELOPMENT AND REPRODUCIBLE DATA SCIENCE FOR
+BIOLOGISTS (RPKG01)
+Glasgow, Scotland, Dr. Cory Merow, Dr. Andy Rominger
+https://www.prstatistics.com/course/r-package-design-and-development-and-reproducible-data-science-for-biologists-rpkg01/
+
+8. September 16th ? 20th 2019
+STRUCTURAL EQUATION MODELLING AND PATH ANALYSIS (SMPA01)
+Glasgow, Scotland, Dr. Mark Andrews
+https://www.psstatistics.com/course/structural-equation-modelling-and-path-analysis-smpa01/
+
+9. September 23rd ? 27th 2019
+DATA SCIENCE/ANALYTICS USING PYTHON (DSAP01)
+Glasgow, Scotland, Dr. Mark Andrews
+https://www.psstatistics.com/course/data-science-analytics-using-python-dsap01/
+
+10. September 30th ? October 4th 2019
+GEOMETRIC MORPHOMETRICS USING R (GMMR02)
+Glasgow, Scotland, Prof. Dean Adams, Prof. Michael Collyer, Dr.
+Antigoni Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr02/
+
+11. October 7th ? 11th 2019
+CONSERVATION PLANNING USING PRIORITIZR : FROM THEORY TO PRACTICE (PRTZ01)
+Athens, GREECE, Dr Richard Schuster and Nina Morell
+https://www.prstatistics.com/course/conservation-planning-using-prioritizr-from-theory-to-practice-prtz01/
+
+12. October 14th ? 18th 2019
+INTRODUCTION TO BEHAVIOURAL DATA ANALYSIS USINR R (IBDA01)
+Glasgow, Scotland, Dr Will Hoppitt
+https://www.psstatistics.com/course/introduction-to-behavioural-data-analysis-using-r-ibda01/
+
+13. October 21st ? 25th 2019
+MULTIVARIATE ANALYSIS OF ECOLOGICAL COMMUNITIES USING THE VEGAN PACKAGE (VGNR01)
+Glasgow, Scotland, Dr. Guillaume Blanchet
+www.prstatistics.com/course/multivariate-analysis-of-ecological-communities-in-r-with-the-vegan-package-vgnr01/
+
+14. November 4th ? 8th 2019
+Glasgow, Scotland, Dr. Mark Andrews
+INTRODUCTION TO BAYESIAN DATA ANALYSIS FOR SOCIAL AND BEHAVIOURAL
+SCIENCES USING R AND STAN (BDRS02)
+https://www.psstatistics.com/course/introduction-to-bayesian-data-analysis-for-social-and-behavioural-sciences-using-r-and-stan-bdrs02/
+
+15. November 4th ? 8th 2019
+BEHAVIOURAL DATA ANALYSIS USING MAXIMUM LIKELIHOOD (BDML02)
+Glasgow, Scotland, Dr Will Hoppitt
+https://www.psstatistics.com/course/behavioural-data-analysis-using-maximum-likelihood-bdml02/
+
+16. November 11th ? 15th 2019
+APPLIED BAYESIAN MODELLING FOR ECOLOGISTS AND EPIDEMIOLOGISTS (ABME05)
+Glasgow, Scotland, Dr Matt Denwood, Emma Howard
+https://www.prstatistics.com/course/applied-bayesian-modelling-for-ecologists-and-epidemiologists-abme05/
+
+17. November 18th ? 22nd 2019
+INTRODUCTION TO STRUCTURED POPULATION MODELS AND DEMOGRAPHIC
+DISTRIBUTION MODELS (IIPM01)
+Athens, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/introduction-to-structured-population-models-and-demographic-distribution-models-iipm01/
+
+18. November 25th ? 29th 2019
+Geostatistics ? Handling Spatial and Spatial-temporal data Using R (GSFE01)
+Wimmipeg, CANADA, Dr Guillaume Blanchet
+https://www.prstatistics.com/course/geostatistics-handling-spatial-and-spatial-temporal-data-using-r-gsfe01/
+
+19. November 25th ? 29th 2019
+ADVANCED RANGE, NICHE, AND DISTRIBUTION MODELING (ASDM01)
+Athens, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/advanced-range-niche-and-distribution-modeling-asdm01/
+
+20. May 11th ? 15th 2020
+FORMALIZING UNCERTAINTY: FUZZY LOGIC IN SPECIES DISTRIBUTION AND
+DIVERSITY PATTERNS (FLDM01)
+Glasgow, Scotland, Dr. Marcia Barbosa
+https://www.prstatistics.com/course/formalizing-uncertainty-fuzzy-logic-in-species-distribution-and-diversity-patterns-fldm01/
+
+21. May 18th ? 22nd 2020
+STRUCTUAL EQUATION MODELLING FOR ECOLOGISTS AND EVOLUTIONARY BIOLOGISTS (SEMR02)
+Glasgow, Scotland, Dr. Jonathan Lefcheck, Dr. Jim (james) Grace
+https://www.prstatistics.com/course/structural-equation-modelling-for-ecologists-and-evolutionary-biologists-semr02/
+
+22. October 5th ? 9th 2020
+ECOLOGICAL NICHE MODELLING USING R (ENMR04)
+Glasgow, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr04/
+
+23. October 11th ? 16th 2020
+ADVANCED ECOLOGICAL NICHE MODELLING USING R (ABNMR01)
+Glasgow, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/advanced-ecological-niche-modelling-using-r-anmr01/
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2019 publications;
+
+A way forward with eco evo devo: an extended theory of resource
+polymorphism with postglacial fishes as model systems. Biological
+Reviews (2019).
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
++44 (0) 7966500340
+
+
+From b@t@nc@t@ @end|ng |rom gm@||@com  Sat Jun 29 19:55:40 2019
+From: b@t@nc@t@ @end|ng |rom gm@||@com (Bruce Miller)
+Date: Sat, 29 Jun 2019 13:55:40 -0400
+Subject: [R-sig-eco] aggregation of data (cou8nts) by time
+In-Reply-To: <mailman.5984.11.1561111428.56980.r-sig-ecology@r-project.org>
+References: <mailman.5984.11.1561111428.56980.r-sig-ecology@r-project.org>
+Message-ID: <96db7de6-98f1-12d6-cb0c-ee9221573fd9@gmail.com>
+
+I am having an issue with trying to aggregate data by time.
+I have 3+ years of bat data recorded from dusk to dawn at a fixed site, 
+along with moon phase and associated weather data.
+
+Older version of code I have for reshape/reshape2 is not working.
+
+I need to reformat data to run GAM to see what association there may be 
+between bat activity, weather (wind, rain etc.) and moon phase 
+(illumination).
+
+It has been since R 2.1 that I last tried to address this data. :-[
+
+My data is in long format and tidy as:
+
+Species??? Date??? Time
+Baudub??? 4/7/2000??? 19:16
+Baudub??? 4/7/2000??? 20:18
+Baudub??? 4/7/2000??? 21:11
+Eptfur??? 4/7/2000??? 19:12
+Eptfur??? 4/7/2000??? 20:47
+Eptfur??? 4/7/2000??? 20:49
+Eptfur??? 4/7/2000??? 21:06
+Eptfur??? 4/7/2000??? 21:36
+Eptfur??? 4/7/2000??? 21:42
+Eptfur??? 4/7/2000??? 21:43
+Eptfur??? 4/7/2000??? 21:48
+Eptfur??? 4/7/2000??? 21:48
+Eptfur??? 4/7/2000??? 22:06
+Eptfur??? 4/7/2000??? 22:07
+Eptfur??? 4/7/2000??? 22:31
+Eptfur??? 4/7/2000??? 22:32
+Eptfur??? 4/8/2000??? 00:01
+Lasega??? 4/7/2000??? 20:13
+Mormeg??? 4/7/2000??? 20:28
+Mormeg??? 4/7/2000??? 20:29
+Mormeg??? 4/7/2000??? 21:26
+Mormeg??? 4/7/2000??? 22:50
+Mormeg??? 4/7/2000??? 22:50
+Mormeg??? 4/7/2000??? 23:16
+Mormeg??? 4/8/2000??? 00:03
+Myoele??? 4/7/2000??? 19:32
+Myoele??? 4/7/2000??? 19:33
+
+What I have in an older database with a data tbl that is in this wide 
+format:
+Certainly not tidy.
+
+ ?Date??? Time??? Sacbil??? Dicalb??? Ptedav??? Ptepar??? Pteper 
+Mormeg??? Lasega??? Lasblo??? Rhotum??? Eptfur??? Myoele Molmol??? Molruf
+1/4/2000??? 22:51??? 0??? 0??? 2??? 0??? 0??? 0??? 0??? 0??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 22:52??? 0??? 2??? 2??? 0??? 0??? 0??? 0??? 0??? 0 0??? 1??? 
+0??? 1
+1/4/2000??? 22:53??? 0??? 0??? 1??? 0??? 0??? 0??? 0??? 1??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 22:54??? 0??? 0??? 1??? 0??? 0??? 0??? 0??? 2??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 22:55??? 0??? 1??? 0??? 0??? 0??? 0??? 0??? 1??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 22:56??? 0??? 1??? 0??? 0??? 0??? 0??? 0??? 0??? 0 0??? 0??? 
+0??? 0
+1/4/2000??? 22:57??? 0??? 0??? 0??? 0??? 0??? 0??? 0??? 0??? 0 0??? 0??? 
+0??? 0
+1/4/2000??? 22:58??? 0??? 1??? 1??? 0??? 0??? 0??? 0??? 1??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 23:00??? 0??? 1??? 1??? 0??? 0??? 0??? 0??? 0??? 0 0??? 3??? 
+0??? 0
+1/4/2000??? 23:02??? 0??? 2??? 1??? 0??? 0??? 0??? 0??? 1??? 0 0??? 2??? 
+0??? 0
+1/4/2000??? 23:04??? 0??? 0??? 4??? 0??? 0??? 0??? 0??? 0??? 0 0??? 2??? 
+0??? 0
+1/4/2000??? 23:05??? 0??? 1??? 2??? 0??? 0??? 0??? 0??? 1??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 23:07??? 0??? 0??? 1??? 0??? 0??? 0??? 0??? 1??? 1 0??? 1??? 
+0??? 0
+1/4/2000??? 23:08??? 0??? 0??? 1??? 0??? 0??? 0??? 0??? 1??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 23:09??? 0??? 0??? 1??? 0??? 0??? 0??? 0??? 0??? 0 0??? 2??? 
+0??? 0
+1/4/2000??? 23:11??? 0??? 0??? 1??? 0??? 0??? 0??? 0??? 0??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 23:12??? 0??? 0??? 0??? 0??? 0??? 0??? 0??? 0??? 0 0??? 1??? 
+0??? 0
+1/4/2000??? 23:16??? 0??? 0??? 1??? 0??? 0??? 0??? 0??? 2??? 0 0??? 2??? 
+0??? 0
+1/4/2000??? 23:17??? 0??? 0??? 2??? 0??? 0??? 0??? 0??? 2??? 0 0??? 3??? 
+0??? 0
+1/4/2000??? 23:18??? 0??? 0??? 5??? 0??? 0??? 0??? 0??? 0??? 0 0??? 2??? 
+0??? 0
+1/4/2000??? 23:19??? 0??? 0??? 3??? 0??? 0??? 0??? 0??? 0??? 0 0??? 5??? 
+0??? 0
+
+
+I assume I need to aggregate the data so I have a count of occurrences 
+by time.
+
+Melt works fine but can not seem to obtain a count of times a bat was 
+detected for each date/time interval.
+
+I have read on-line about tidyr and apparently this has replaced 
+reshape2 etc.? What I have tried has not been useful so far.
+
+Or perhaps I can/should start a fresh new analysis with new packages and 
+a different approach.
+Currently I am unsure of what direction to take evaluate species 
+specific activity to weather data and moon phase/illumination with all 
+linked to specific date/times.
+
+Any suggestions appreciated.
+
+Cheers,
+Bruce
+
+	[[alternative HTML version deleted]]
+
+

@@ -1,0 +1,4094 @@
+From ArnottS at dnr.sc.gov  Thu Oct  1 19:20:10 2009
+From: ArnottS at dnr.sc.gov (Steve Arnott)
+Date: Thu, 1 Oct 2009 13:20:10 -0400
+Subject: [R-sig-eco] Mantel test with skew-symmetric matrices?
+Message-ID: <0E3714A8DB10454894B2A69D050B39620B25E45D4A@Mx1>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091001/e7dc248a/attachment.pl>
+
+From jari.oksanen at oulu.fi  Thu Oct  1 19:31:15 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 01 Oct 2009 20:31:15 +0300
+Subject: [R-sig-eco] Mantel test with skew-symmetric matrices?
+In-Reply-To: <0E3714A8DB10454894B2A69D050B39620B25E45D4A@Mx1>
+Message-ID: <C6EAC213.3A9E%jari.oksanen@oulu.fi>
+
+Steve,
+
+My answer concerning the vegan part is so short that I top-post (my
+apologies for those who are sensitive about this): No, you cannot use
+non-symmetric matrices in mantel() functions in vegan. The functions use the
+standard R distance objects which are regarded as symmetric. If you supply a
+non-symmetric matrix, only its lower triangle will be used. Changing this
+would require redesign of the functions. Contributions are welcome and will
+be credited in the vegan manual pages to their authors.
+
+Best wishes, Jari Oksanen
+
+
+On 1/10/09 20:20 PM, "Steve Arnott" <ArnottS at dnr.sc.gov> wrote:
+
+> Hello All,
+> 
+> I'm interested in using the mantel()and mantel.partial() functions in the
+> 'vegan' R package to examine fish morphology in several lakes with respect to
+> distance between lakes, lake elevation (above sea level) and various habitat
+> measures. For example, several authors have postulated that jaw length varies
+> with habitat conditions, but jaw length, lake distance, elevation and the
+> habitat measures co-vary. Applying a partial Mantel to control for elevation
+> or lake distance seems like a good way of attacking the problem.
+> 
+> Typically, Mantel tests are performed using symmetrical distance matrices
+> based upon absolute distances. For example, a symmetrical matrix of distances
+> between 3 lakes might look like this:
+> 
+> 0 7 3
+> 7 0 4
+> 3 4 0
+> 
+> This makes sense with distance data (miles, km, etc), but information is lost
+> on the direction of effect between lakes with data such as jaw length or
+> elevation. Instead, a so-called skew-symmetric matrix can be generated, which
+> would instead look something like this:
+> 
+>  0  7  3
+> -7  0 -4
+> -3  4  0
+> 
+> I have two questions:
+> 
+> 1) Is it wrong to use skew-symmetric matrices - i.e. should I just forget
+> about the skew data and use absolute values to make all my matrices symmetric?
+> The original Mantel paper (1967, Cancer Research, 2: 209-220) does talk about
+> skew-symmetric matrices, but the published applications I've come across only
+> seem to use symmetric matrices.
+> 
+>  2) If it is ok to use skew-symmetric matrices, do the mantel() and
+> mantel.partial() functions in 'vegan' (or related functions in other packages,
+> such as 'ecodist') handle them correctly? I've found that it is possible to
+> process skew data and generate results using these functions, but I'm
+> uncertain from the documentation whether the results are meaningful (i.e. is
+> the coding designed to handle such cases appropriately?)
+> 
+> With thanks, Steve
+> 
+> ------------------------------------------------------------------------------
+> Stephen A. Arnott, PhD
+> Associate Marine Scientist
+> Marine Resources Research Institute
+> South Carolina Department of Natural Resources
+> P.O. Box 12559
+> Charleston
+> SC 29422-2559
+> 
+> Phone: (1)-843-953-9794
+> Fax: (1)-843-953-9820
+> E-mail: arnotts at dnr.sc.gov<mailto:arnotts at dnr.sc.gov>
+> ------------------------------------------------------------------------------
+> 
+> 
+> [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From sarah.goslee at gmail.com  Thu Oct  1 19:36:16 2009
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 1 Oct 2009 13:36:16 -0400
+Subject: [R-sig-eco] Mantel test with skew-symmetric matrices?
+In-Reply-To: <0E3714A8DB10454894B2A69D050B39620B25E45D4A@Mx1>
+References: <0E3714A8DB10454894B2A69D050B39620B25E45D4A@Mx1>
+Message-ID: <efb536d50910011036gc92a188mcd00dc0e74d49a37@mail.gmail.com>
+
+I can only speak for the mantel() within ecodist, but I can tell you that it
+will not take full matrices - the upper triangle will be dropped. You could
+roll your own very easily, but it would be exceedingly slow, eg:
+
+mat1 <- # some square skew-symmetric matrix
+mat2 <- # some other square skew-symmetric matrix
+
+mantelr <- cor(as.vector(mat1), as.vector(mat2))
+nperm <- 100 # bigger for real problem, of course
+permresults <- numeric(nperm)
+permresults[1] <- mantelr
+
+for(thisperm in 2:nperm) {
+   randsample <- sample(1:nrow(mat1))
+   permresults[thisperm] <- cor(as.vector(mat1[randsample,
+randsample]), as.vector(mat2))
+}
+and then use permresults to estimate your test statistic of interest.
+
+I haven't thought at all about any statistical issues raised by use of full
+non-symmetric matrices - you're on your own there. It's certainly
+*possible*, and
+I don't see any immediate reason why it would be wrong, but haven't
+pondered the issue.
+
+I see Jari replied as well while I was writing - as for vegan, the
+ecodist function would
+need to be heavily modified to do this. If I'm persuaded that there's
+enough interest,
+I could add it to the list.
+
+Sarah
+
+On Thu, Oct 1, 2009 at 1:20 PM, Steve Arnott <ArnottS at dnr.sc.gov> wrote:
+> Hello All,
+
+> 1) Is it wrong to use skew-symmetric matrices - i.e. should I just forget about the skew data and use absolute values to make all my matrices symmetric? The original Mantel paper (1967, Cancer Research, 2: 209-220) does talk about skew-symmetric matrices, but the published applications I've come across only seem to use symmetric matrices.
+>
+> ?2) If it is ok to use skew-symmetric matrices, do the mantel() and mantel.partial() functions in 'vegan' (or related functions in other packages, such as 'ecodist') handle them correctly? I've found that it is possible to process skew data and generate results using these functions, but I'm uncertain from the documentation whether the results are meaningful (i.e. is the coding designed to handle such cases appropriately?)
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From jari.oksanen at oulu.fi  Thu Oct  1 19:46:43 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Thu, 01 Oct 2009 20:46:43 +0300
+Subject: [R-sig-eco] Mantel test with skew-symmetric matrices?
+In-Reply-To: <efb536d50910011036gc92a188mcd00dc0e74d49a37@mail.gmail.com>
+Message-ID: <C6EAC5B3.3AA7%jari.oksanen@oulu.fi>
+
+
+
+
+On 1/10/09 20:36 PM, "Sarah Goslee" <sarah.goslee at gmail.com> wrote:
+
+> I can only speak for the mantel() within ecodist, but I can tell you that it
+> will not take full matrices - the upper triangle will be dropped. You could
+> roll your own very easily, but it would be exceedingly slow, eg:
+> 
+> mat1 <- # some square skew-symmetric matrix
+> mat2 <- # some other square skew-symmetric matrix
+> 
+> mantelr <- cor(as.vector(mat1), as.vector(mat2))
+> nperm <- 100 # bigger for real problem, of course
+> permresults <- numeric(nperm)
+> permresults[1] <- mantelr
+> 
+> for(thisperm in 2:nperm) {
+>    randsample <- sample(1:nrow(mat1))
+>    permresults[thisperm] <- cor(as.vector(mat1[randsample,
+> randsample]), as.vector(mat2))
+> }
+> and then use permresults to estimate your test statistic of interest.
+> 
+Sarah & Steve,
+
+This was the design I had on my mind. However, I was not sure how
+skew-symmetry actually was defined, and therefore I didn't know if free
+permutation of rows and columns (even when done correctly like above) will
+retain the skew-symmetry. The free permutation would be OK for non-symmetric
+matrices, but what about skew-symmetric? (Little thinking and pen & paper
+probably would give a quick answer, but I won't do that for a while).
+
+Cheers, Jari
+
+> I haven't thought at all about any statistical issues raised by use of full
+> non-symmetric matrices - you're on your own there. It's certainly
+> *possible*, and
+> I don't see any immediate reason why it would be wrong, but haven't
+> pondered the issue.
+> 
+> I see Jari replied as well while I was writing - as for vegan, the
+> ecodist function would
+> need to be heavily modified to do this. If I'm persuaded that there's
+> enough interest,
+> I could add it to the list.
+> 
+> Sarah
+> 
+> On Thu, Oct 1, 2009 at 1:20 PM, Steve Arnott <ArnottS at dnr.sc.gov> wrote:
+>> Hello All,
+> 
+>> 1) Is it wrong to use skew-symmetric matrices - i.e. should I just forget
+>> about the skew data and use absolute values to make all my matrices
+>> symmetric? The original Mantel paper (1967, Cancer Research, 2: 209-220) does
+>> talk about skew-symmetric matrices, but the published applications I've come
+>> across only seem to use symmetric matrices.
+>> 
+>> ?2) If it is ok to use skew-symmetric matrices, do the mantel() and
+>> mantel.partial() functions in 'vegan' (or related functions in other
+>> packages, such as 'ecodist') handle them correctly? I've found that it is
+>> possible to process skew data and generate results using these functions, but
+>> I'm uncertain from the documentation whether the results are meaningful (i.e.
+>> is the coding designed to handle such cases appropriately?)
+
+
+From sarah.goslee at gmail.com  Thu Oct  1 19:56:22 2009
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Thu, 1 Oct 2009 13:56:22 -0400
+Subject: [R-sig-eco] Mantel test with skew-symmetric matrices?
+In-Reply-To: <C6EAC5B3.3AA7%jari.oksanen@oulu.fi>
+References: <efb536d50910011036gc92a188mcd00dc0e74d49a37@mail.gmail.com>
+	<C6EAC5B3.3AA7%jari.oksanen@oulu.fi>
+Message-ID: <efb536d50910011056n44b3c713o4241e0663be74218@mail.gmail.com>
+
+On Thu, Oct 1, 2009 at 1:46 PM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+>
+>
+> Sarah & Steve,
+>
+> This was the design I had on my mind. However, I was not sure how
+> skew-symmetry actually was defined, and therefore I didn't know if free
+> permutation of rows and columns (even when done correctly like above) will
+> retain the skew-symmetry. The free permutation would be OK for non-symmetric
+> matrices, but what about skew-symmetric? (Little thinking and pen & paper
+> probably would give a quick answer, but I won't do that for a while).
+
+Exactly. It would need some thinking through, and I don't have a quick answer.
+
+Steve asked elsewhere what I thought about using just the symmetric component.
+It depends on whether directionality is important: if the distance
+from A to B is
+not the same as the distance from B to A, then discarding that information
+would not give the same results. But then you're out of Mantel test
+territory, and
+into network analysis or something similar.
+
+That directional component could be problematic, especially if as Jari mentions,
+the permutation must preserve that skew-symmetry (mine doesn't). You
+could instead
+permute the matrix by reordering the rows and columns, then forcing
+the lower triangle
+to be positive and the upper to be negative.
+
+Sarah
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From solymos at ualberta.ca  Thu Oct  1 20:01:16 2009
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Thu, 1 Oct 2009 12:01:16 -0600
+Subject: [R-sig-eco] Mantel test with skew-symmetric matrices?
+In-Reply-To: <C6EAC5B3.3AA7%jari.oksanen@oulu.fi>
+References: <efb536d50910011036gc92a188mcd00dc0e74d49a37@mail.gmail.com>
+	<C6EAC5B3.3AA7%jari.oksanen@oulu.fi>
+Message-ID: <34896f090910011101j43e9a34cx99a847b204a03880@mail.gmail.com>
+
+Dear Steve,
+
+If the direction is important, you can use that information as a
+separate matrix with signs to scale up its effect. Because distance
+can't be negative, you might end up with numbers hard to interpret.
+
+Yours,
+
+Peter
+
+P?ter S?lymos
+Alberta Biodiversity Monitoring Institute
+Department of Biological Sciences
+CW 405, Biological Sciences Bldg
+University of Alberta
+Edmonton, Alberta, T6G 2E9, Canada
+Phone: 780.492.8534
+email <- paste("solymos", "ualberta.ca", sep = "@")
+
+
+
+On Thu, Oct 1, 2009 at 11:46 AM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+>
+>
+>
+> On 1/10/09 20:36 PM, "Sarah Goslee" <sarah.goslee at gmail.com> wrote:
+>
+>> I can only speak for the mantel() within ecodist, but I can tell you that it
+>> will not take full matrices - the upper triangle will be dropped. You could
+>> roll your own very easily, but it would be exceedingly slow, eg:
+>>
+>> mat1 <- # some square skew-symmetric matrix
+>> mat2 <- # some other square skew-symmetric matrix
+>>
+>> mantelr <- cor(as.vector(mat1), as.vector(mat2))
+>> nperm <- 100 # bigger for real problem, of course
+>> permresults <- numeric(nperm)
+>> permresults[1] <- mantelr
+>>
+>> for(thisperm in 2:nperm) {
+>> ? ?randsample <- sample(1:nrow(mat1))
+>> ? ?permresults[thisperm] <- cor(as.vector(mat1[randsample,
+>> randsample]), as.vector(mat2))
+>> }
+>> and then use permresults to estimate your test statistic of interest.
+>>
+> Sarah & Steve,
+>
+> This was the design I had on my mind. However, I was not sure how
+> skew-symmetry actually was defined, and therefore I didn't know if free
+> permutation of rows and columns (even when done correctly like above) will
+> retain the skew-symmetry. The free permutation would be OK for non-symmetric
+> matrices, but what about skew-symmetric? (Little thinking and pen & paper
+> probably would give a quick answer, but I won't do that for a while).
+>
+> Cheers, Jari
+>
+>> I haven't thought at all about any statistical issues raised by use of full
+>> non-symmetric matrices - you're on your own there. It's certainly
+>> *possible*, and
+>> I don't see any immediate reason why it would be wrong, but haven't
+>> pondered the issue.
+>>
+>> I see Jari replied as well while I was writing - as for vegan, the
+>> ecodist function would
+>> need to be heavily modified to do this. If I'm persuaded that there's
+>> enough interest,
+>> I could add it to the list.
+>>
+>> Sarah
+>>
+>> On Thu, Oct 1, 2009 at 1:20 PM, Steve Arnott <ArnottS at dnr.sc.gov> wrote:
+>>> Hello All,
+>>
+>>> 1) Is it wrong to use skew-symmetric matrices - i.e. should I just forget
+>>> about the skew data and use absolute values to make all my matrices
+>>> symmetric? The original Mantel paper (1967, Cancer Research, 2: 209-220) does
+>>> talk about skew-symmetric matrices, but the published applications I've come
+>>> across only seem to use symmetric matrices.
+>>>
+>>> ?2) If it is ok to use skew-symmetric matrices, do the mantel() and
+>>> mantel.partial() functions in 'vegan' (or related functions in other
+>>> packages, such as 'ecodist') handle them correctly? I've found that it is
+>>> possible to process skew data and generate results using these functions, but
+>>> I'm uncertain from the documentation whether the results are meaningful (i.e.
+>>> is the coding designed to handle such cases appropriately?)
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From Canning-ClodeJ at si.edu  Thu Oct  1 20:30:26 2009
+From: Canning-ClodeJ at si.edu (Canning-Clode, Joao)
+Date: Thu, 1 Oct 2009 14:30:26 -0400
+Subject: [R-sig-eco] Negative binomial
+Message-ID: <C6EA6D82.622%Canning-ClodeJ@si.edu>
+
+Hi all,
+
+1st time user here!
+I am an ecologist working with marine fouling assemblages. I just got a paper back for revision. I am working with count data (species richness). I have used a linear model but the reviewers are recommending the use of negative binomial or Poisson. As far as I could understand from the literature these complex models should be used and the distribution is skewed left (lots of zeros). Well, my data is perfectly normal distributed. My main question is: can I still use negative binomial or poisson even if my data is normal? Does that make sense?
+
+Thanks in advance
+
+Jo?o Canning Clode, PhD
+Postdoctoral Fellow
+Marine Invasions Research Lab
+Smithsonian Environmental Research Center
+647 Contees Wharf Road
+Edgewater, MD 21037
+
+Email: canning-clodej at si.edu
+Web: www.canning-clode.com
+Tel: 443-482-2354
+
+
+From jeffrey.stratford at wilkes.edu  Thu Oct  1 21:12:40 2009
+From: jeffrey.stratford at wilkes.edu (Stratford, Jeffrey)
+Date: Thu, 1 Oct 2009 15:12:40 -0400
+Subject: [R-sig-eco] Negative binomial
+In-Reply-To: <C6EA6D82.622%Canning-ClodeJ@si.edu>
+References: <C6EA6D82.622%Canning-ClodeJ@si.edu>
+Message-ID: <72B2B2BDFE51E64DAC6381495614980003858F81@STAFFEXCHVS3.wilkesu.wilkes.edu>
+
+Oi Joao,
+
+>From my understanding of the Poisson, as the Poisson mean (lambda) increases, the distribution converges with the mean.  I believe there are also issues with the intercept since counts cannot be negative.  If the variance is excessive (var/df >> 1) then switch to negative binomial. So go ahead with the Poisson first then check results.   
+
+This is my first post with my stats cap on.. and I'll let others decide if I'm right (I'll do a little dance if I am).
+
+HTH,
+
+Jeff
+
+ 
+********************************************
+Dr. Jeffrey A. Stratford
+Assistant Professor of Biology 
+Department of Biology and Health Sciences
+WIlkes University, PA 18766
+570-332-2942 (cell and preferred)
+570-408-4761 (office) 
+http://web.wilkes.edu/jeffrey.stratford/
+********************************************
+
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Canning-Clode, Joao
+Sent: Thursday, October 01, 2009 2:30 PM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Negative binomial
+
+Hi all,
+
+1st time user here!
+I am an ecologist working with marine fouling assemblages. I just got a paper back for revision. I am working with count data (species richness). I have used a linear model but the reviewers are recommending the use of negative binomial or Poisson. As far as I could understand from the literature these complex models should be used and the distribution is skewed left (lots of zeros). Well, my data is perfectly normal distributed. My main question is: can I still use negative binomial or poisson even if my data is normal? Does that make sense?
+
+Thanks in advance
+
+Jo?o Canning Clode, PhD
+Postdoctoral Fellow
+Marine Invasions Research Lab
+Smithsonian Environmental Research Center
+647 Contees Wharf Road
+Edgewater, MD 21037
+
+Email: canning-clodej at si.edu
+Web: www.canning-clode.com
+Tel: 443-482-2354
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From luciano.selzer at gmail.com  Thu Oct  1 21:26:02 2009
+From: luciano.selzer at gmail.com (Luciano Selzer)
+Date: Thu, 1 Oct 2009 16:26:02 -0300
+Subject: [R-sig-eco] Negative binomial
+In-Reply-To: <C6EA6D82.622%Canning-ClodeJ@si.edu>
+References: <C6EA6D82.622%Canning-ClodeJ@si.edu>
+Message-ID: <13549e790910011226w61f92cd8o487b08d8cc266de6@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091001/2b72326e/attachment.pl>
+
+From carsten.dormann at ufz.de  Fri Oct  2 08:29:10 2009
+From: carsten.dormann at ufz.de (Carsten Dormann)
+Date: Fri, 02 Oct 2009 08:29:10 +0200
+Subject: [R-sig-eco] Negative binomial
+In-Reply-To: <C6EA6D82.622%Canning-ClodeJ@si.edu>
+References: <C6EA6D82.622%Canning-ClodeJ@si.edu>
+Message-ID: <4AC59DB6.9030001@ufz.de>
+
+Dear Joao,
+
+I propose you do the following (and wait for the outcry-responses to 
+this email to see if it is a reasonable proposal):
+
+Fit your model with different types of distributions and compare their 
+logLik-values:
+logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=gaussian))
+logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=poisson))
+logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=quasipoisson))
+logLik(glm.nb(y ~ x1+x2+x3+I(x1^2) + x1:x3)) # require(MASS)
+
+The model with the highest log-Likelihood is the distribution of choice 
+and you can defend it against reviewer.
+
+A few notes:
+1. You obviously cannot do this when one of the models uses transformed 
+responses (e.g. log(y)), because the LL will then be completely different.
+2. When you use a more complex model (say a GLMM), you can approximate 
+the neg.bin through a two-step procedure: 1. fit a (wrongly structured) 
+glm.nb and extract the theta value from the summary of the model, say 
+theta=4.5 (that is the second parameter of the neg.bin distribution). 
+Then fit the GLMM again, giving as family the argument: 
+negative.binomial(theta=4.5) (again from package MASS). The same holds 
+for GAMs and other models requiring a specification of family.
+3. You may want to dig around for books recommending the above 
+procedure. I think I got this as advice from someone else, but haven't 
+bothered yet to look it up (obviously MASS would be a good starting 
+place, in their description of the neg.bin). I saw a paper that does 
+this (using the minimum AIC but otherwise this approach), but it is not 
+a statistical, but rather an ecological paper (although the analyst in 
+the author group is a biometrician whom I full trust): Weigelt, A., 
+Schumacher, J., Walther, T. Bartelheimer, M., Steinlein, T., Beyschlag, 
+W. (2006) Identifying mechanisms of competition in multispecies 
+communities. Journal of Ecology 95:53-64
+
+HTH,
+
+Carsten
+
+
+Canning-Clode, Joao wrote:
+> Hi all,
+>
+> 1st time user here!
+> I am an ecologist working with marine fouling assemblages. I just got a paper back for revision. I am working with count data (species richness). I have used a linear model but the reviewers are recommending the use of negative binomial or Poisson. As far as I could understand from the literature these complex models should be used and the distribution is skewed left (lots of zeros). Well, my data is perfectly normal distributed. My main question is: can I still use negative binomial or poisson even if my data is normal? Does that make sense?
+>
+> Thanks in advance
+>
+> Jo?o Canning Clode, PhD
+> Postdoctoral Fellow
+> Marine Invasions Research Lab
+> Smithsonian Environmental Research Center
+> 647 Contees Wharf Road
+> Edgewater, MD 21037
+>
+> Email: canning-clodej at si.edu
+> Web: www.canning-clode.com
+> Tel: 443-482-2354
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>   
+
+-- 
+Dr. Carsten F. Dormann
+Department of Computational Landscape Ecology
+Helmholtz Centre for Environmental Research-UFZ
+Permoserstr. 15
+04318 Leipzig
+Germany
+
+Tel: ++49(0)341 2351946
+Fax: ++49(0)341 2351939
+Email: carsten.dormann at ufz.de
+internet: http://www.ufz.de/index.php?de=4205
+
+
+From wilfried.thuiller at ujf-grenoble.fr  Fri Oct  2 08:45:25 2009
+From: wilfried.thuiller at ujf-grenoble.fr (Wilfried Thuiller)
+Date: Fri, 02 Oct 2009 08:45:25 +0200
+Subject: [R-sig-eco] Negative binomial
+In-Reply-To: <4AC59DB6.9030001@ufz.de>
+References: <C6EA6D82.622%Canning-ClodeJ@si.edu> <4AC59DB6.9030001@ufz.de>
+Message-ID: <4AC5A185.3070008@ujf-grenoble.fr>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091002/bfbe5b06/attachment.pl>
+
+From pdixon at iastate.edu  Fri Oct  2 17:39:03 2009
+From: pdixon at iastate.edu (Philip Dixon)
+Date: Fri, 02 Oct 2009 10:39:03 CDT
+Subject: [R-sig-eco] Poisson regression vs. linear model on transformed data
+Message-ID: <200910021539.KAA04890@gauss.stat.iastate.edu>
+
+Theory suggests that the Poisson, overdispersed Poisson, Negative Binomial, 
+Zero inflated Poisson, or some other appropriate distribution should be the 
+best method.  Practical implementation issues often suggest otherwise.
+
+Linda Young did a comparative study of LM, Poisson and Negative Binomial 
+regression for overdispersed data in a 1 way layout.  She found the LM often 
+worked best and identified those situations.  The paper is
+
+Linda J. Young, Nancy L. Campbell and George A. Capuano, 1999
+Analysis of Overdispersed Count Data from Single-Factor Experiments: A 
+Comparative Study
+JABES 4:258-275.
+
+Philip Dixon
+
+
+From nikko at hailmail.net  Fri Oct  2 17:53:58 2009
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Fri, 02 Oct 2009 08:53:58 -0700
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 19, Issue 2
+In-Reply-To: <mailman.1.1254477601.13788.r-sig-ecology@r-project.org>
+References: <mailman.1.1254477601.13788.r-sig-ecology@r-project.org>
+Message-ID: <1254498838.22832.1337751831@webmail.messagingengine.com>
+
+ No No No No No!
+The log likelihood of the Poisson and the Gaussian are not comparable.
+One is a discrete distribution and the other continuous, you can get
+into all
+sorts of trouble there and not just pathological cases. They are on
+totally different scales.
+
+You need to make a decision if you want to model the MEAN species
+richness as
+continuous, and not worry about answers like 3.1 species. You are
+modeling the mean.
+Or go with a discrete distribution like Poisson or quasi-Poisson, you
+can test
+for overdispersion within a discrete family of distributions.  As
+someone
+mentioned before if your counts are away from zero, the Poisson is very
+symmetric,
+and goes asymptotically to a normal. But for practical purposes your
+results
+should be similar. For small samples, ie with categorical predictors and
+few 
+counts per cell, it can make a difference.
+
+So, if you want to do model selection, you have to first choose
+discrete or continuous, then within that set compare log likelihoods. 
+(you are on firmer ground if the models are somehow nested).
+
+Nicholas 
+> Message: 10
+> Date: Fri, 02 Oct 2009 08:29:10 +0200
+> From: Carsten Dormann <carsten.dormann at ufz.de>
+> Subject: Re: [R-sig-eco] Negative binomial
+> To: "Canning-Clode, Joao" <Canning-ClodeJ at si.edu>
+> Cc: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+> Message-ID: <4AC59DB6.9030001 at ufz.de>
+> Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+> 
+> Dear Joao,
+> 
+> I propose you do the following (and wait for the outcry-responses to 
+> this email to see if it is a reasonable proposal):
+> 
+> Fit your model with different types of distributions and compare their 
+> logLik-values:
+> logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=gaussian))
+> logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=poisson))
+> logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=quasipoisson))
+> logLik(glm.nb(y ~ x1+x2+x3+I(x1^2) + x1:x3)) # require(MASS)
+> 
+> The model with the highest log-Likelihood is the distribution of choice 
+> and you can defend it against reviewer.
+> 
+> A few notes:
+> 1. You obviously cannot do this when one of the models uses transformed 
+> responses (e.g. log(y)), because the LL will then be completely
+> different.
+> 2. When you use a more complex model (say a GLMM), you can approximate 
+> the neg.bin through a two-step procedure: 1. fit a (wrongly structured) 
+> glm.nb and extract the theta value from the summary of the model, say 
+> theta=4.5 (that is the second parameter of the neg.bin distribution). 
+> Then fit the GLMM again, giving as family the argument: 
+> negative.binomial(theta=4.5) (again from package MASS). The same holds 
+> for GAMs and other models requiring a specification of family.
+> 3. You may want to dig around for books recommending the above 
+> procedure. I think I got this as advice from someone else, but haven't 
+> bothered yet to look it up (obviously MASS would be a good starting 
+> place, in their description of the neg.bin). I saw a paper that does 
+> this (using the minimum AIC but otherwise this approach), but it is not 
+> a statistical, but rather an ecological paper (although the analyst in 
+> the author group is a biometrician whom I full trust): Weigelt, A., 
+> Schumacher, J., Walther, T. Bartelheimer, M., Steinlein, T., Beyschlag, 
+> W. (2006) Identifying mechanisms of competition in multispecies 
+> communities. Journal of Ecology 95:53-64
+> 
+> HTH,
+> 
+> Carsten
+> 
+> 
+> Canning-Clode, Joao wrote:
+> > Hi all,
+> >
+> > 1st time user here!
+> > I am an ecologist working with marine fouling assemblages. I just got a paper back for revision. I am working with count data (species richness). I have used a linear model but the reviewers are recommending the use of negative binomial or Poisson. As far as I could understand from the literature these complex models should be used and the distribution is skewed left (lots of zeros). Well, my data is perfectly normal distributed. My main question is: can I still use negative binomial or poisson even if my data is normal? Does that make sense?
+> >
+> > Thanks in advance
+> >
+> > Jo?o Canning Clode, PhD
+> > Postdoctoral Fellow
+> > Marine Invasions Research Lab
+> > Smithsonian Environmental Research Center
+> > 647 Contees Wharf Road
+> > Edgewater, MD 21037
+> >
+> > Email: canning-clodej at si.edu
+> > Web: www.canning-clode.com
+> > Tel: 443-482-2354
+> >
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> >
+> >   
+> 
+> -- 
+> Dr. Carsten F. Dormann
+> Department of Computational Landscape Ecology
+> Helmholtz Centre for Environmental Research-UFZ
+> Permoserstr. 15
+> 04318 Leipzig
+> Germany
+> 
+> Tel: ++49(0)341 2351946
+> Fax: ++49(0)341 2351939
+> Email: carsten.dormann at ufz.de
+> internet: http://www.ufz.de/index.php?de=4205
+> 
+> 
+>
+
+
+From solymos at ualberta.ca  Fri Oct  2 18:23:24 2009
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Fri, 2 Oct 2009 10:23:24 -0600
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 19, Issue 2
+In-Reply-To: <1254498838.22832.1337751831@webmail.messagingengine.com>
+References: <mailman.1.1254477601.13788.r-sig-ecology@r-project.org>
+	<1254498838.22832.1337751831@webmail.messagingengine.com>
+Message-ID: <34896f090910020923k4cd41b1dx1c448dc5c21d8340@mail.gmail.com>
+
+Dear All,
+
+I admit that overdispersion can be a problem. But you can't compare
+Poisson with quasi-Poisson based on logLik, because the likelihood is
+not defined for quasi* models. The quasi-likelihood can be maximized
+to get the dispersion parameter, but coefficients are the same, only
+SE's and p-values are corrected:
+
+## some random data
+y<-rpois(100, 3)
+x<-rnorm(100)
+## GLMs
+m1 <- glm(y~x,family=poisson)
+m2 <- glm(y~x,family=quasipoisson)
+## coefficients are equal
+all.equal(coef(m1), coef(m2))
+## SE's are not
+rbind(pois=coef(summary(m1))[,2], qpois=coef(summary(m2))[,2])
+## p-values are not
+rbind(pois=coef(summary(m1))[,4], qpois=coef(summary(m2))[,4])
+## logLik for Poisson: OK
+logLik(m1)
+## logLik for Poisson: NA
+logLik(m2)
+
+The pscl package provides negative binomial models with zero inflation
+too (see Achim Zeileis, Christian Kleiber, Simon Jackman:
+Regression Models for Count Data in R, JSS, http://www.jstatsoft.org/v27/i08).
+
+If you have fancier (say GLMM) models, you can make likelihood ratio
+test, but that might be quite advanced to do so (see Jos? Miguel
+Ponciano, Mark L. Taper, Brian Dennis, Subhash R. Lele (2009)
+Hierarchical models in ecology: confidence intervals, hypothesis
+testing, and model selection using data cloning. Ecology: Vol. 90, No.
+2, pp. 356-362.).
+
+Yours,
+
+Peter
+
+P?ter S?lymos
+Alberta Biodiversity Monitoring Institute
+Department of Biological Sciences
+CW 405, Biological Sciences Bldg
+University of Alberta
+Edmonton, Alberta, T6G 2E9, Canada
+Phone: 780.492.8534
+email <- paste("solymos", "ualberta.ca", sep = "@")
+
+
+
+On Fri, Oct 2, 2009 at 9:53 AM, Nicholas Lewin-Koh <nikko at hailmail.net> wrote:
+> ?No No No No No!
+> The log likelihood of the Poisson and the Gaussian are not comparable.
+> One is a discrete distribution and the other continuous, you can get
+> into all
+> sorts of trouble there and not just pathological cases. They are on
+> totally different scales.
+>
+> You need to make a decision if you want to model the MEAN species
+> richness as
+> continuous, and not worry about answers like 3.1 species. You are
+> modeling the mean.
+> Or go with a discrete distribution like Poisson or quasi-Poisson, you
+> can test
+> for overdispersion within a discrete family of distributions. ?As
+> someone
+> mentioned before if your counts are away from zero, the Poisson is very
+> symmetric,
+> and goes asymptotically to a normal. But for practical purposes your
+> results
+> should be similar. For small samples, ie with categorical predictors and
+> few
+> counts per cell, it can make a difference.
+>
+> So, if you want to do model selection, you have to first choose
+> discrete or continuous, then within that set compare log likelihoods.
+> (you are on firmer ground if the models are somehow nested).
+>
+> Nicholas
+>> Message: 10
+>> Date: Fri, 02 Oct 2009 08:29:10 +0200
+>> From: Carsten Dormann <carsten.dormann at ufz.de>
+>> Subject: Re: [R-sig-eco] Negative binomial
+>> To: "Canning-Clode, Joao" <Canning-ClodeJ at si.edu>
+>> Cc: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+>> Message-ID: <4AC59DB6.9030001 at ufz.de>
+>> Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+>>
+>> Dear Joao,
+>>
+>> I propose you do the following (and wait for the outcry-responses to
+>> this email to see if it is a reasonable proposal):
+>>
+>> Fit your model with different types of distributions and compare their
+>> logLik-values:
+>> logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=gaussian))
+>> logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=poisson))
+>> logLik(glm(y ~ x1+x2+x3+I(x1^2) + x1:x3, family=quasipoisson))
+>> logLik(glm.nb(y ~ x1+x2+x3+I(x1^2) + x1:x3)) # require(MASS)
+>>
+>> The model with the highest log-Likelihood is the distribution of choice
+>> and you can defend it against reviewer.
+>>
+>> A few notes:
+>> 1. You obviously cannot do this when one of the models uses transformed
+>> responses (e.g. log(y)), because the LL will then be completely
+>> different.
+>> 2. When you use a more complex model (say a GLMM), you can approximate
+>> the neg.bin through a two-step procedure: 1. fit a (wrongly structured)
+>> glm.nb and extract the theta value from the summary of the model, say
+>> theta=4.5 (that is the second parameter of the neg.bin distribution).
+>> Then fit the GLMM again, giving as family the argument:
+>> negative.binomial(theta=4.5) (again from package MASS). The same holds
+>> for GAMs and other models requiring a specification of family.
+>> 3. You may want to dig around for books recommending the above
+>> procedure. I think I got this as advice from someone else, but haven't
+>> bothered yet to look it up (obviously MASS would be a good starting
+>> place, in their description of the neg.bin). I saw a paper that does
+>> this (using the minimum AIC but otherwise this approach), but it is not
+>> a statistical, but rather an ecological paper (although the analyst in
+>> the author group is a biometrician whom I full trust): Weigelt, A.,
+>> Schumacher, J., Walther, T. Bartelheimer, M., Steinlein, T., Beyschlag,
+>> W. (2006) Identifying mechanisms of competition in multispecies
+>> communities. Journal of Ecology 95:53-64
+>>
+>> HTH,
+>>
+>> Carsten
+>>
+>>
+>> Canning-Clode, Joao wrote:
+>> > Hi all,
+>> >
+>> > 1st time user here!
+>> > I am an ecologist working with marine fouling assemblages. I just got a paper back for revision. I am working with count data (species richness). I have used a linear model but the reviewers are recommending the use of negative binomial or Poisson. As far as I could understand from the literature these complex models should be used and the distribution is skewed left (lots of zeros). Well, my data is perfectly normal distributed. My main question is: can I still use negative binomial or poisson even if my data is normal? Does that make sense?
+>> >
+>> > Thanks in advance
+>> >
+>> > Jo?o Canning Clode, PhD
+>> > Postdoctoral Fellow
+>> > Marine Invasions Research Lab
+>> > Smithsonian Environmental Research Center
+>> > 647 Contees Wharf Road
+>> > Edgewater, MD 21037
+>> >
+>> > Email: canning-clodej at si.edu
+>> > Web: www.canning-clode.com
+>> > Tel: 443-482-2354
+>> >
+>> > _______________________________________________
+>> > R-sig-ecology mailing list
+>> > R-sig-ecology at r-project.org
+>> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> >
+>> >
+>>
+>> --
+>> Dr. Carsten F. Dormann
+>> Department of Computational Landscape Ecology
+>> Helmholtz Centre for Environmental Research-UFZ
+>> Permoserstr. 15
+>> 04318 Leipzig
+>> Germany
+>>
+>> Tel: ++49(0)341 2351946
+>> Fax: ++49(0)341 2351939
+>> Email: carsten.dormann at ufz.de
+>> internet: http://www.ufz.de/index.php?de=4205
+>>
+>>
+>>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From roman.lustrik at gmail.com  Sat Oct  3 14:47:42 2009
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Sat, 3 Oct 2009 14:47:42 +0200
+Subject: [R-sig-eco] student seeking help for ecological analysis in marine
+	ecology
+Message-ID: <63a206010910030547o35c6d2fds4b021879ef02525a@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091003/d3d21447/attachment.pl>
+
+From trevor.avery at acadiau.ca  Sun Oct  4 15:23:36 2009
+From: trevor.avery at acadiau.ca (tavery)
+Date: Sun, 04 Oct 2009 10:23:36 -0300
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 19, Issue 4
+In-Reply-To: <mailman.1.1254650401.22632.r-sig-ecology@r-project.org>
+References: <mailman.1.1254650401.22632.r-sig-ecology@r-project.org>
+Message-ID: <4AC8A1D8.9010704@acadiau.ca>
+
+Roman,
+BiodiversityR and vegan are two packages that help with ecological 
+analysis like species richness, diversity indices, relatedness, etc.. 
+The PDF help files have a lot of information on biodiversity analysis in 
+general (check out the vegan website too). There is a book called 
+Ecological Methods  by Henderson and Southwood that covers a lot of 
+material. As far performing GLMs or Mixed Models or other ecological 
+models, Ecological Models in R by Ben Bolker (2008) is a good resource 
+(he also has most of the information posted to his website) and I have 
+found Mixed Effects Models and Extensions in Ecology with R (Statistics 
+for Biology and Health) by Alain F. Zuur, Elena N. Ieno, Neil J. Walker, 
+and Anatoly A. Saveliev (2009) excellent as well.
+
+It is difficult to determine what you want to do with the data as you do 
+not provide details.
+
+cheers,
+trevor
+> Message: 1
+> Date: Sat, 3 Oct 2009 14:47:42 +0200
+> From: Roman Lu?trik <roman.lustrik at gmail.com>
+> Subject: [R-sig-eco] student seeking help for ecological analysis in
+> 	marine	ecology
+> To: r-sig-ecology at r-project.org
+> Message-ID:
+> 	<63a206010910030547o35c6d2fds4b021879ef02525a at mail.gmail.com>
+> Content-Type: text/plain
+>
+> Hello List-o-members,
+>
+> my name is Roman Lustrik and I'm a student of biology-ecology at the
+> University of Ljubljana. I am nearing the end of my formal education path
+> and a graduation thesis is in order. I have hooked up with marine biologists
+> from our only research station in Piran and together, we sampled hard bottom
+> sediments along the entire Slovenian coast. My responsibility was gathering
+> data on polychaetes. Along side, I was made available a number of other
+> data, including algae cover and geomorphological parameters of sampling
+> sites.
+>
+> I was hoping I could run all the analyses using R and make this somewhat
+> central theme of my thesis. Hopefully, this would help spur future students
+> in taking up professional open source software solutions like R. To my
+> knowledge, R has not been of central theme in grad theses in ecology
+> analysis in Slovenia.
+> Since I'm somewhat new to ecological analyses I was hoping someone
+> subscribing to this list could lend me a hand with a hint of literature
+> relevant to my subject (a book, a paper or something that would start me off
+> with relevant analyses). While I do have a formal mentor who is keeping in
+> order the biological part of my thesis, I am fully susceptible to guidance
+> from a willing co-mentor who is working in R and ecology.
+>
+> If anyone can help me in any way as described above, it would be most
+> appreciated.
+>
+> With best wishes,
+> Roman
+>
+> 	[[alternative HTML version deleted]]
+>
+
+
+From Canning-ClodeJ at si.edu  Tue Oct  6 22:56:19 2009
+From: Canning-ClodeJ at si.edu (Canning-Clode, Joao)
+Date: Tue, 6 Oct 2009 16:56:19 -0400
+Subject: [R-sig-eco] Liner vs. Poisson vs. Mixed effect models
+Message-ID: <C6F12733.67C%Canning-ClodeJ@si.edu>
+
+Hi all,
+
+First of all thanks to all for helping me with my previous post on negative binomial.
+As I mentioned I got a paper back for revision requesting alternative analysis, and I am seeking advice from the forum. I really appreciate any help you could provide.
+
+My major question was to explore the local-regional richness relationship in fouling assemblages at a global scale. I have deployed PVC sampling plates in the water at 8 different regions, and sampled the benthic communities 4 times (after 2, 4, 6 and 8 months).
+
+Therefore, my experimental design included 8 regions, each having one estimate for regional taxonomic richness (RTR), one estimate for regional functional richness(RFR) (both estimated with a jackknife estimator), 8 measures of open space (OS) on panels, 8 measures of local functional richness (LFR)and 8 measures of local taxonomic richness (LTR).
+
+One of my objectives is to examine how these variables affect local taxonomical richness (LTR) and a suggestion to try a linear mixed effects models where RTR, RFR and OS are fixed effects; LFR is a random effect nested within region.  I square-root transformed LTR, used the lme function and set my model as
+
+LTR.LME <- lme(LTR~RTR+RFR+OS+LFR, random=~1|LFR/region)
+
+A question I have - is it okay to have the random effect LFR in the left (fixed-effects) equation?  I wish to estimate the coefficients to examine the effects of LFR; maybe I should treat this as a fixed effect instead?
+
+A second question is that I have repeated measures (over four time periods).  Is it possible to set up the above equation in a repeated fashion say using a auto-regressive 1 structure?
+
+Thank you in advance for any help,
+Joao
+
+Jo?o Canning Clode, PhD
+Postdoctoral Fellow
+Marine Invasions Research Lab
+Smithsonian Environmental Research Center
+647 Contees Wharf Road
+Edgewater, MD 21037
+
+Email: canning-clodej at si.edu
+Web: www.canning-clode.com
+Tel: 443-482-2354
+
+
+From bessie.bug at gmail.com  Wed Oct  7 00:13:01 2009
+From: bessie.bug at gmail.com (Elizabeth Green)
+Date: Tue, 6 Oct 2009 14:13:01 -0800
+Subject: [R-sig-eco] representing a third variable on a stripplot
+Message-ID: <53515818-2E2E-45D9-BE3E-6F4D4B450408@gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091006/23ab6838/attachment.pl>
+
+From byrnes at msi.ucsb.edu  Wed Oct  7 00:25:16 2009
+From: byrnes at msi.ucsb.edu (Jarrett Byrnes)
+Date: Tue, 6 Oct 2009 15:25:16 -0700
+Subject: [R-sig-eco] representing a third variable on a stripplot
+In-Reply-To: <53515818-2E2E-45D9-BE3E-6F4D4B450408@gmail.com>
+References: <53515818-2E2E-45D9-BE3E-6F4D4B450408@gmail.com>
+Message-ID: <724F0F96-128D-441B-9F02-3FA95BA881F1@msi.ucsb.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091006/71bb8de9/attachment.pl>
+
+From mdu at ceh.ac.uk  Wed Oct  7 12:33:47 2009
+From: mdu at ceh.ac.uk (Dunbar, Michael)
+Date: Wed, 7 Oct 2009 11:33:47 +0100
+Subject: [R-sig-eco] Liner vs. Poisson vs. Mixed effect models
+In-Reply-To: <C6F12733.67C%Canning-ClodeJ@si.edu>
+References: <C6F12733.67C%Canning-ClodeJ@si.edu>
+Message-ID: <9C29AFE27E3FBA4DB1742CC8E8F74ECD04693FD927@nerckwmb1.ad.nerc.ac.uk>
+
+Dear Joao
+
+I'm not entirely sure that I understand your design correctly, but I will try to help. Please bear this in mind though that I may have misunderstood. For example what is local? What is a panel, is it the same as a plate? One thing I couldn't get at from your description is whether there is one plate per region or more than one. If more than one, then you need an identifier for the plate in the model if you're dealing with multiple time points or if you have plate level measurements. I'm assuming this is the case, because if you don't have more than one plate per region, then it isn't really a mixed model, it's just a multiple regression and you can't say anything about the regions.
+
+It does not seem to make sense to have LFR/region. LFR is a measure of something, so it cannot be a grouping variable.
+
+For region being a random effect, this seems OK, but are your regions a sample of possible regions, with the estimated variation across your regions being an estimator for general regional variability?
+
+I'd strongly suggest building your models without the time component initially.
+
+When you decide to include it, you need to make some decisions as to what it is about time that you are trying to get at. Are you expecting temporal trends or are the time points just replicates? Forget about auto-regressive structures for the time being, you only have four time points. So long as you have more than one plate per region, you can do:
+
+LTR.LME <- lme(LTR~RTR+RFR+OS+LFR+month, random=~1|region/plate)
+
+regards
+
+Mike
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Canning-Clode, Joao
+Sent: 06 October 2009 21:56
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Liner vs. Poisson vs. Mixed effect models
+
+Hi all,
+
+First of all thanks to all for helping me with my previous post on negative binomial.
+As I mentioned I got a paper back for revision requesting alternative analysis, and I am seeking advice from the forum. I really appreciate any help you could provide.
+
+My major question was to explore the local-regional richness relationship in fouling assemblages at a global scale. I have deployed PVC sampling plates in the water at 8 different regions, and sampled the benthic communities 4 times (after 2, 4, 6 and 8 months).
+
+Therefore, my experimental design included 8 regions, each having one estimate for regional taxonomic richness (RTR), one estimate for regional functional richness(RFR) (both estimated with a jackknife estimator), 8 measures of open space (OS) on panels, 8 measures of local functional richness (LFR)and 8 measures of local taxonomic richness (LTR).
+
+One of my objectives is to examine how these variables affect local taxonomical richness (LTR) and a suggestion to try a linear mixed effects models where RTR, RFR and OS are fixed effects; LFR is a random effect nested within region.  I square-root transformed LTR, used the lme function and set my model as
+
+LTR.LME <- lme(LTR~RTR+RFR+OS+LFR, random=~1|LFR/region)
+
+A question I have - is it okay to have the random effect LFR in the left (fixed-effects) equation?  I wish to estimate the coefficients to examine the effects of LFR; maybe I should treat this as a fixed effect instead?
+
+A second question is that I have repeated measures (over four time periods).  Is it possible to set up the above equation in a repeated fashion say using a auto-regressive 1 structure?
+
+Thank you in advance for any help,
+Joao
+
+Jo?o Canning Clode, PhD
+Postdoctoral Fellow
+Marine Invasions Research Lab
+Smithsonian Environmental Research Center
+647 Contees Wharf Road
+Edgewater, MD 21037
+
+Email: canning-clodej at si.edu
+Web: www.canning-clode.com
+Tel: 443-482-2354
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+-- 
+This message (and any attachments) is for the recipient ...{{dropped:6}}
+
+
+From Canning-ClodeJ at si.edu  Wed Oct  7 15:34:11 2009
+From: Canning-ClodeJ at si.edu (Canning-Clode, Joao)
+Date: Wed, 7 Oct 2009 09:34:11 -0400
+Subject: [R-sig-eco] Liner vs. Poisson vs. Mixed effect models
+In-Reply-To: <9C29AFE27E3FBA4DB1742CC8E8F74ECD04693FD927@nerckwmb1.ad.nerc.ac.uk>
+Message-ID: <C6F21113.689%Canning-ClodeJ@si.edu>
+
+Yes, we do have more than one panel (=plate) per region. Local richness was assessed as the mean number of observed species in 8 panels. Regional richness was estimated based on a species accumulation curve (with Jackknife 2) with other different 60 panels.
+
+
+On 10/7/09 6:33 AM, "Dunbar, Michael" <mdu at ceh.ac.uk> wrote:
+
+Dear Joao
+
+I'm not entirely sure that I understand your design correctly, but I will try to help. Please bear this in mind though that I may have misunderstood. For example what is local? What is a panel, is it the same as a plate? One thing I couldn't get at from your description is whether there is one plate per region or more than one. If more than one, then you need an identifier for the plate in the model if you're dealing with multiple time points or if you have plate level measurements. I'm assuming this is the case, because if you don't have more than one plate per region, then it isn't really a mixed model, it's just a multiple regression and you can't say anything about the regions.
+
+It does not seem to make sense to have LFR/region. LFR is a measure of something, so it cannot be a grouping variable.
+
+For region being a random effect, this seems OK, but are your regions a sample of possible regions, with the estimated variation across your regions being an estimator for general regional variability?
+
+I'd strongly suggest building your models without the time component initially.
+
+When you decide to include it, you need to make some decisions as to what it is about time that you are trying to get at. Are you expecting temporal trends or are the time points just replicates? Forget about auto-regressive structures for the time being, you only have four time points. So long as you have more than one plate per region, you can do:
+
+LTR.LME <- lme(LTR~RTR+RFR+OS+LFR+month, random=~1|region/plate)
+
+regards
+
+Mike
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Canning-Clode, Joao
+Sent: 06 October 2009 21:56
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Liner vs. Poisson vs. Mixed effect models
+
+Hi all,
+
+First of all thanks to all for helping me with my previous post on negative binomial.
+As I mentioned I got a paper back for revision requesting alternative analysis, and I am seeking advice from the forum. I really appreciate any help you could provide.
+
+My major question was to explore the local-regional richness relationship in fouling assemblages at a global scale. I have deployed PVC sampling plates in the water at 8 different regions, and sampled the benthic communities 4 times (after 2, 4, 6 and 8 months).
+
+Therefore, my experimental design included 8 regions, each having one estimate for regional taxonomic richness (RTR), one estimate for regional functional richness(RFR) (both estimated with a jackknife estimator), 8 measures of open space (OS) on panels, 8 measures of local functional richness (LFR)and 8 measures of local taxonomic richness (LTR).
+
+One of my objectives is to examine how these variables affect local taxonomical richness (LTR) and a suggestion to try a linear mixed effects models where RTR, RFR and OS are fixed effects; LFR is a random effect nested within region.  I square-root transformed LTR, used the lme function and set my model as
+
+LTR.LME <- lme(LTR~RTR+RFR+OS+LFR, random=~1|LFR/region)
+
+A question I have - is it okay to have the random effect LFR in the left (fixed-effects) equation?  I wish to estimate the coefficients to examine the effects of LFR; maybe I should treat this as a fixed effect instead?
+
+A second question is that I have repeated measures (over four time periods).  Is it possible to set up the above equation in a repeated fashion say using a auto-regressive 1 structure?
+
+Thank you in advance for any help,
+Joao
+
+Jo?o Canning Clode, PhD
+Postdoctoral Fellow
+Marine Invasions Research Lab
+Smithsonian Environmental Research Center
+647 Contees Wharf Road
+Edgewater, MD 21037
+
+Email: canning-clodej at si.edu
+Web: www.canning-clode.com
+Tel: 443-482-2354
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+--
+This message (and any attachments) is for the recipient ...{{dropped:19}}
+
+
+From roman.lustrik at gmail.com  Mon Oct 12 18:54:39 2009
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Mon, 12 Oct 2009 18:54:39 +0200
+Subject: [R-sig-eco] trouble with BiodiversityR:diversityresult function
+In-Reply-To: <63a206010910120913r76a82af0pae4fd1e5f7b43e88@mail.gmail.com>
+References: <63a206010910120913r76a82af0pae4fd1e5f7b43e88@mail.gmail.com>
+Message-ID: <63a206010910120954l191d1b83s69be959ef0223743@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091012/4dc9adf3/attachment.pl>
+
+From jari.oksanen at oulu.fi  Mon Oct 12 19:30:19 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Mon, 12 Oct 2009 20:30:19 +0300
+Subject: [R-sig-eco] trouble with BiodiversityR:diversityresult function
+In-Reply-To: <63a206010910120954l191d1b83s69be959ef0223743@mail.gmail.com>
+Message-ID: <C6F9425B.4113%jari.oksanen@oulu.fi>
+
+Roman,
+
+The user interface of vegan function 'specpool' changed in latest release,
+and the BiodiversityR didn't follow along. The index name should now be
+"jack1" instead of "Jack.1". This requires changes in a couple of places in
+BiodiversityR, but I don't know its source code so well that I could easily
+spot those changes (probably in BiodiversityRGUI, diversityresult,
+diversityresult0). I have cc'ed this to Roeland Kindt, but I think the
+Internet connection is not always so good so that it may take some time
+before he answers. I can look if I can hack around this in vegan.
+
+Cheers, Jari Oksanen
+
+
+On 12/10/09 19:54 PM, "Roman Lu?trik" <roman.lustrik at gmail.com> wrote:
+
+> Hello list,
+> 
+> I have a felling this is a generic error but nonetheless, it has been
+> bugging me extensively. If anyone can chip in, I would most appreciate.
+> 
+> I'm trying to calculate expected species richness, following Kindt&Coe Tree
+> diversity analysis from my dataset but I get the following error:
+> 
+>> divjack <- diversityresult(PoCom, index="Jack.1")
+> Error in round(result, digits = digits) :
+>   Non-numeric argument to mathematical function
+> 
+> PoCom is a community data.frame with rows as locations and columns as
+> species (as in test dataset called "dune" in the book mentioned earlier).
+> Here is a head(PoCom) and first few lines of str(PoCom):
+> 
+>> head(PoCom)
+>     Sal_idae Pil_mili Syl_idae Ner_sp. Ner_rava Sab_spin Neo_pseu
+> HM1       12       14        5      13        1        1       28
+> HM2      123        5      113      28       44       17        0
+> HM3       13       55        8      40        0        2        7
+> HM4      141       23       56      91       74        6        0
+> HM5        7        0       20      18       11      114        0
+> HM6       13       14        0       7        0       39        8
+> 
+>> str(PoCom)
+> 'data.frame':   10 obs. of  83 variables:
+>  $ Sal_idae : int  12 123 13 141 7 13 289 318 99 124
+>  $ Pil_mili : int  14 5 55 23 0 14 15 23 86 138
+>  $ Syl_idae : int  5 113 8 56 20 0 45 122 0 2
+>  $ Ner_sp.  : int  13 28 40 91 18 7 42 41 24 0
+>  $ Ner_rava : int  1 44 0 74 11 0 16 34 0 35
+>  $ Sab_spin : int  1 17 2 6 114 39 0 8 2 0
+>  $ Neo_pseu : int  28 0 7 0 0 8 3 0 12 99
+> 
+> Debugging stops here:
+> 
+> Browse[1]> n
+> debug: if (method != "jackknife") {
+>     result2 <- round(result, digits = digits)
+>     result2 <- data.frame(result2)
+>     colnames(result2) <- index
+> }
+> Browse[1]> n
+> debug: result2 <- round(result, digits = digits)
+> Browse[1]> n
+> Error in round(result, digits = digits) :
+>   Non-numeric argument to mathematical function
+> 
+> [[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From jari.oksanen at oulu.fi  Mon Oct 12 19:54:48 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Mon, 12 Oct 2009 20:54:48 +0300
+Subject: [R-sig-eco] trouble with BiodiversityR:diversityresult function
+In-Reply-To: <63a206010910120954l191d1b83s69be959ef0223743@mail.gmail.com>
+Message-ID: <C6F94818.411C%jari.oksanen@oulu.fi>
+
+
+
+
+On 12/10/09 19:54 PM, "Roman Lu?trik" <roman.lustrik at gmail.com> wrote:
+
+> Hello list,
+> 
+> I have a felling this is a generic error but nonetheless, it has been
+> bugging me extensively. If anyone can chip in, I would most appreciate.
+> 
+> I'm trying to calculate expected species richness, following Kindt&Coe Tree
+> diversity analysis from my dataset but I get the following error:
+> 
+>> divjack <- diversityresult(PoCom, index="Jack.1")
+> Error in round(result, digits = digits) :
+>   Non-numeric argument to mathematical function
+
+Roman,
+
+I am not quite sure how BiodiversityR displays the results (I do not use it
+regularly). However, when I look at its documentation, it looks to me like
+it only would call specpool() of vegan and format the result. So if you go
+to the script windown in BiodiversityR and type
+
+ specpool(PoCom)
+
+ and click "submit" you should get the result.
+
+Cheers, Jari
+
+
+From oldeland at gmx.de  Tue Oct 13 16:20:55 2009
+From: oldeland at gmx.de (Jens Oldeland)
+Date: Tue, 13 Oct 2009 16:20:55 +0200
+Subject: [R-sig-eco] using two distance metrices in formula
+Message-ID: <4AD48CC7.4050704@gmx.de>
+
+Dear R-sig-ecology group,
+
+is there a way to use two self-made dissimilarity matrices for the 
+left-hand side (LHS) and right hand side (RHS) in vegan functions such 
+as capscale or adonis?
+I created those matrices in a GIS using 3D-information therefore I don?t 
+want to simply use distances between 2D-coordinates. But as I found out, 
+there is only the possibility to use a dist object for LHS.
+
+Can anyone suggest a solution or had similar problems?
+
+best regards,
+Jens
+
+-- 
++++++++++++++++++++++++++++++++++++++++++
+Dipl.Biol. Jens Oldeland
+University of Hamburg
+Biocentre Klein Flottbek and Botanical Garden
+Ohnhorststr. 18
+22609 Hamburg,
+Germany
+
+Tel:    0049-(0)40-42816-407
+Fax:    0049-(0)40-42816-543
+Mail: 	Oldeland at botanik.uni-hamburg.de
+        Jens.Oldeland at DLR.de  (for attachments > 2mb!!)
+http://www.biologie.uni-hamburg.de/bzf/fbda005/fbda005.htm
++++++++++++++++++++++++++++++++++++++++++
+
+
+From sarah.goslee at gmail.com  Tue Oct 13 16:51:23 2009
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Tue, 13 Oct 2009 10:51:23 -0400
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <4AD48CC7.4050704@gmx.de>
+References: <4AD48CC7.4050704@gmx.de>
+Message-ID: <efb536d50910130751w52ea9c8dpbc43cd1643f613f4@mail.gmail.com>
+
+Jens,
+
+You can make your imported dissimilarities into a dist object quite easily.
+
+Say D is your imported dissimilarity data. It needs to be in lower-triangular
+format (assuming you imported it as a symmetric square matrix).
+
+D <- as.matrix(D)
+D <- D[col(D) < row(D)]
+attr(D, "Size") <- N # number of samples (# of rows and cols)
+attr(D, "Labels") <- 1:N # or names of samples, of length N
+attr(D, "Diag") <- FALSE
+attr(D, "Upper") <- FALSE
+attr(D, "method") <- "imported" # name of index, or NULL
+class(D) <- "dist"
+
+Sarah
+
+On Tue, Oct 13, 2009 at 10:20 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+> Dear R-sig-ecology group,
+>
+> is there a way to use two self-made dissimilarity matrices for the left-hand
+> side (LHS) and right hand side (RHS) in vegan functions such as capscale or
+> adonis?
+> I created those matrices in a GIS using 3D-information therefore I don?t
+> want to simply use distances between 2D-coordinates. But as I found out,
+> there is only the possibility to use a dist object for LHS.
+>
+> Can anyone suggest a solution or had similar problems?
+>
+> best regards,
+> Jens
+>
+> --
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From jari.oksanen at oulu.fi  Tue Oct 13 17:03:31 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 13 Oct 2009 18:03:31 +0300
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <efb536d50910130751w52ea9c8dpbc43cd1643f613f4@mail.gmail.com>
+Message-ID: <C6FA7173.3F30%jari.oksanen@oulu.fi>
+
+
+
+On 13/10/2009 17:51, "Sarah Goslee" <sarah.goslee at gmail.com> wrote:
+
+> Jens,
+> 
+> You can make your imported dissimilarities into a dist object quite easily.
+> 
+> Say D is your imported dissimilarity data. It needs to be in lower-triangular
+> format (assuming you imported it as a symmetric square matrix).
+> 
+> D <- as.matrix(D)
+> D <- D[col(D) < row(D)]
+> attr(D, "Size") <- N # number of samples (# of rows and cols)
+> attr(D, "Labels") <- 1:N # or names of samples, of length N
+> attr(D, "Diag") <- FALSE
+> attr(D, "Upper") <- FALSE
+> attr(D, "method") <- "imported" # name of index, or NULL
+> class(D) <- "dist"
+> 
+There is still easier way:
+
+D <- as.dist(D), or
+D <- as.dist(as.matrix(D))
+
+which actually does exactly those things Sarah list above.
+
+
+> On Tue, Oct 13, 2009 at 10:20 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+>> Dear R-sig-ecology group,
+>> 
+>> is there a way to use two self-made dissimilarity matrices for the left-hand
+>> side (LHS) and right hand side (RHS) in vegan functions such as capscale or
+>> adonis?
+>> I created those matrices in a GIS using 3D-information therefore I don?t
+>> want to simply use distances between 2D-coordinates. But as I found out,
+>> there is only the possibility to use a dist object for LHS.
+>> 
+>> Can anyone suggest a solution or had similar problems?
+
+However, vegan functions such as capscale or adonis do not accept
+dissimilarities on both sides of the formula. The RHS always must be
+rectangular data. There are some functions that take dist objects on both
+sides, but they are less powerful, and in general, I wouldn't recommend
+their use except in special situations (although they are available in
+vegan). 
+
+It is difficult to suggest a solution when we do not know what you want to
+solve. Why would you want to have dissimilarities on both sides of the
+formula? You can do that with, say, Mantel tests available in several
+packages in R, but what are the things you want to solve by using
+dissimilarities?
+
+Cheers, Jari Oksanen
+
+
+From sarah.goslee at gmail.com  Tue Oct 13 17:21:44 2009
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Tue, 13 Oct 2009 11:21:44 -0400
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <4AD49927.2090900@gmx.de>
+References: <4AD48CC7.4050704@gmx.de>
+	<efb536d50910130751w52ea9c8dpbc43cd1643f613f4@mail.gmail.com>
+	<4AD49927.2090900@gmx.de>
+Message-ID: <efb536d50910130821r4875b5c8x4f2d00fed3fc8c50@mail.gmail.com>
+
+That doesn't make much sense to me. You'd need an entirely different method
+than capscale.
+
+Perhaps what you're looking for is more like multiple regression on distance
+matrices (implemented in MRM in ecodist)?
+
+     Lichstein, J. 2007. Multiple regression on distance matrices: A
+     multivariate spatial analysis tool. Plant Ecology 188: 117-131.
+
+     Legendre, P.; Lapointe, F. and Casgrain, P. 1994. Modeling brain
+     evolution from behavior: A permutational regression approach.
+     Evolution 48: 1487-1499.
+
+Sarah
+
+On Tue, Oct 13, 2009 at 11:13 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+> Dear Sarah dear Jari,
+>
+> many thanks for your explanations. However, it wasnt what I thought about,
+> sorry I definitely have to be more specific about the problem.
+>
+> Okay I try be more precise:
+>
+> the problem was that for example ?capscale accepts ? "capscale(dist.matrix.1
+> ~ N + P + K *Ag, data=varechem)"
+> but I need ?"capscale(dist.matrix.1 ~ dist.matrix.2, data=dist.matrix.2)"
+> ?so the trick was not on how to create a distance matrix but how to use a
+> second on in a formula.
+>
+> We are trying a similar analysis like the the "distlm" program by Marti
+> Anderson does, however we had a problem with that and wanted to try the
+> analysis in R.
+>
+> thanks already for all your comments !
+>
+> best
+> Jens
+
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From oldeland at gmx.de  Tue Oct 13 17:44:32 2009
+From: oldeland at gmx.de (Jens Oldeland)
+Date: Tue, 13 Oct 2009 17:44:32 +0200
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <efb536d50910130821r4875b5c8x4f2d00fed3fc8c50@mail.gmail.com>
+References: <4AD48CC7.4050704@gmx.de>	
+	<efb536d50910130751w52ea9c8dpbc43cd1643f613f4@mail.gmail.com>	
+	<4AD49927.2090900@gmx.de>
+	<efb536d50910130821r4875b5c8x4f2d00fed3fc8c50@mail.gmail.com>
+Message-ID: <4AD4A060.4090806@gmx.de>
+
+Hi again,
+
+our distance matrices are 1) genetic distance (Jaccard) and 2) 
+3D-Euclidean Distance and the question we want to solve is if there is 
+an effect called "Isolation by Distance" (IBD) in our data (genetic and 
+"real"-distances of snails on the island of crete) or not. There was a 
+debate on the topic if the mantel test or the partial mantel test (isn?t 
+this similar to MRM?) in several papers mainly in evolution-journals:
+
+Raufaste, N. and F. Rousset. 2001. Are partial Mantel tests adequate? 
+Evolution 55:1703?1705
+Castellano, S. and E. Balletto. 2002. Is the partial Mantel test 
+inadequate? Evolution 56:1871?1873.
+
+
+Geffen, E., Anderson, M.J., & Wayne, R.K. (2004). Climate and habitat 
+barriers to dispersal in the highly mobile grey wolf. Molecular Ecology, 
+13, 2481-2490
+explain it nicely on page p.2483 (LHS)
+
+"The problem arises due to the lack of independence of individual 
+distances in a distance matrix. Although a simple Mantel test overcomes 
+this issue by the
+use of permutations, a permutational approach does not necessarily solve 
+problems introduced by several uncontrolled nuisance parameters in the 
+case of more than one
+regressor (i.e. partial tests). Thus, we do not use a Mantel approach 
+here, but rather use the distance-based multivariate approach of McArdle 
+& Anderson (2001). The important point is that, for dbRDA, the 
+individual distances are not treated as a single univariate response 
+variable, as in the Mantel test, but rather the individual sites are the 
+units of observation for analysis, about which we have calculated 
+distances using an entire set of genetic variables. The distance matrix 
+is therefore treated as information regarding multivariate 
+response.Taking this multivariate approach avoids the problems 
+associated with the partial Mantel test."
+
+so we thought it would be a good idea not to use mantel and friends 
+since the problem of IBD seems to need a different approach here.
+
+best,
+Jens
+
+
+
+
+
+Sarah Goslee schrieb:
+> That doesn't make much sense to me. You'd need an entirely different method
+> than capscale.
+>
+> Perhaps what you're looking for is more like multiple regression on distance
+> matrices (implemented in MRM in ecodist)?
+>
+>      Lichstein, J. 2007. Multiple regression on distance matrices: A
+>      multivariate spatial analysis tool. Plant Ecology 188: 117-131.
+>
+>      Legendre, P.; Lapointe, F. and Casgrain, P. 1994. Modeling brain
+>      evolution from behavior: A permutational regression approach.
+>      Evolution 48: 1487-1499.
+>
+> Sarah
+>
+> On Tue, Oct 13, 2009 at 11:13 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+>   
+>> Dear Sarah dear Jari,
+>>
+>> many thanks for your explanations. However, it wasnt what I thought about,
+>> sorry I definitely have to be more specific about the problem.
+>>
+>> Okay I try be more precise:
+>>
+>> the problem was that for example  capscale accepts   "capscale(dist.matrix.1
+>> ~ N + P + K *Ag, data=varechem)"
+>> but I need  "capscale(dist.matrix.1 ~ dist.matrix.2, data=dist.matrix.2)"
+>>  so the trick was not on how to create a distance matrix but how to use a
+>> second on in a formula.
+>>
+>> We are trying a similar analysis like the the "distlm" program by Marti
+>> Anderson does, however we had a problem with that and wanted to try the
+>> analysis in R.
+>>
+>> thanks already for all your comments !
+>>
+>> best
+>> Jens
+>>     
+>
+>
+>
+>   
+
+
+-- 
++++++++++++++++++++++++++++++++++++++++++
+Dipl.Biol. Jens Oldeland
+University of Hamburg
+Biocentre Klein Flottbek and Botanical Garden
+Ohnhorststr. 18
+22609 Hamburg,
+Germany
+
+Tel:    0049-(0)40-42816-407
+Fax:    0049-(0)40-42816-543
+Mail: 	Oldeland at botanik.uni-hamburg.de
+        Jens.Oldeland at DLR.de  (for attachments > 2mb!!)
+http://www.biologie.uni-hamburg.de/bzf/fbda005/fbda005.htm
++++++++++++++++++++++++++++++++++++++++++
+
+
+From jari.oksanen at oulu.fi  Tue Oct 13 18:07:30 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 13 Oct 2009 19:07:30 +0300
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <4AD4A060.4090806@gmx.de>
+Message-ID: <C6FA8072.41B9%jari.oksanen@oulu.fi>
+
+
+
+
+On 13/10/09 18:44 PM, "Jens Oldeland" <oldeland at gmx.de> wrote:
+
+> Hi again,
+> 
+> our distance matrices are 1) genetic distance (Jaccard) and 2)
+> 3D-Euclidean Distance and the question we want to solve is if there is
+> an effect called "Isolation by Distance" (IBD) in our data (genetic and
+> "real"-distances of snails on the island of crete) or not. There was a
+> debate on the topic if the mantel test or the partial mantel test (isn?t
+> this similar to MRM?) in several papers mainly in evolution-journals:
+> 
+> Raufaste, N. and F. Rousset. 2001. Are partial Mantel tests adequate?
+> Evolution 55:1703?1705
+> Castellano, S. and E. Balletto. 2002. Is the partial Mantel test
+> inadequate? Evolution 56:1871?1873.
+> 
+> 
+> Geffen, E., Anderson, M.J., & Wayne, R.K. (2004). Climate and habitat
+> barriers to dispersal in the highly mobile grey wolf. Molecular Ecology,
+> 13, 2481-2490
+> explain it nicely on page p.2483 (LHS)
+> 
+> "The problem arises due to the lack of independence of individual
+> distances in a distance matrix. Although a simple Mantel test overcomes
+> this issue by the
+> use of permutations, a permutational approach does not necessarily solve
+> problems introduced by several uncontrolled nuisance parameters in the
+> case of more than one
+> regressor (i.e. partial tests). Thus, we do not use a Mantel approach
+> here, but rather use the distance-based multivariate approach of McArdle
+> & Anderson (2001). The important point is that, for dbRDA, the
+> individual distances are not treated as a single univariate response
+> variable, as in the Mantel test, but rather the individual sites are the
+> units of observation for analysis, about which we have calculated
+> distances using an entire set of genetic variables. The distance matrix
+> is therefore treated as information regarding multivariate
+> response.Taking this multivariate approach avoids the problems
+> associated with the partial Mantel test."
+
+Jens,
+
+There has been a very similar discussion in the Ecology recently between my
+good friends, Hanna Tuomisto & co vs. Pierre Legendre & co. However, the
+point here and above exactly was that you cannot use dissimilarities on the
+RHS (lack of independence), but you must use rectangular data in dbRDA. If
+you use distances on the RHS you won't have dbRDA but you get Mantel family
+methods (like MRM in ecodist). The problem, of course, is how to map
+distances onto Euclidean space (= rectangular data) *and* still study the
+effects of the distances instead of the effects of *location*. I don't know
+any really good solution here, but all proposed solutions have their
+problems. Pierre Legendre, Daniel Borcard and Hanna Tuomisto have all tried
+to convince me of their point of view, and while all their conflicting
+arguments make sense, they are not yet an optimal solution.
+
+Cheers, Jari Oksanen
+> 
+> so we thought it would be a good idea not to use mantel and friends
+> since the problem of IBD seems to need a different approach here.
+> 
+> best,
+> Jens
+> 
+> 
+> 
+> 
+> 
+> Sarah Goslee schrieb:
+>> That doesn't make much sense to me. You'd need an entirely different method
+>> than capscale.
+>> 
+>> Perhaps what you're looking for is more like multiple regression on distance
+>> matrices (implemented in MRM in ecodist)?
+>> 
+>>      Lichstein, J. 2007. Multiple regression on distance matrices: A
+>>      multivariate spatial analysis tool. Plant Ecology 188: 117-131.
+>> 
+>>      Legendre, P.; Lapointe, F. and Casgrain, P. 1994. Modeling brain
+>>      evolution from behavior: A permutational regression approach.
+>>      Evolution 48: 1487-1499.
+>> 
+>> Sarah
+>> 
+>> On Tue, Oct 13, 2009 at 11:13 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+>>   
+>>> Dear Sarah dear Jari,
+>>> 
+>>> many thanks for your explanations. However, it wasnt what I thought about,
+>>> sorry I definitely have to be more specific about the problem.
+>>> 
+>>> Okay I try be more precise:
+>>> 
+>>> the problem was that for example  capscale accepts   "capscale(dist.matrix.1
+>>> ~ N + P + K *Ag, data=varechem)"
+>>> but I need  "capscale(dist.matrix.1 ~ dist.matrix.2, data=dist.matrix.2)"
+>>>  so the trick was not on how to create a distance matrix but how to use a
+>>> second on in a formula.
+>>> 
+>>> We are trying a similar analysis like the the "distlm" program by Marti
+>>> Anderson does, however we had a problem with that and wanted to try the
+>>> analysis in R.
+>>> 
+>>> thanks already for all your comments !
+>>> 
+>>> best
+>>> Jens
+>>>     
+>> 
+>> 
+>> 
+>>   
+> 
+
+
+From sarah.goslee at gmail.com  Tue Oct 13 18:28:44 2009
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Tue, 13 Oct 2009 12:28:44 -0400
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <C6FA8072.41B9%jari.oksanen@oulu.fi>
+References: <4AD4A060.4090806@gmx.de> <C6FA8072.41B9%jari.oksanen@oulu.fi>
+Message-ID: <efb536d50910130928j2af8daddre2eab7a25ae19e1b@mail.gmail.com>
+
+And actually, MRM isn't quite part of the Mantel family, although there
+are strong mathematical relationships:
+
+Goslee, S. 2009. Correlation analysis of dissimilarity matrices. Plant Ecology.
+Online at: http://www.springerlink.com/content/k4051127l6430nr1/
+for subscribing institutions.
+
+It isn't a good solution, but rather an attempt to reconcile the different
+perspectives mathematically.
+
+Sarah
+
+> There has been a very similar discussion in the Ecology recently between my
+> good friends, Hanna Tuomisto & co vs. Pierre Legendre & co. However, the
+> point here and above exactly was that you cannot use dissimilarities on the
+> RHS (lack of independence), but you must use rectangular data in dbRDA. If
+> you use distances on the RHS you won't have dbRDA but you get Mantel family
+> methods (like MRM in ecodist). The problem, of course, is how to map
+> distances onto Euclidean space (= rectangular data) *and* still study the
+> effects of the distances instead of the effects of *location*. I don't know
+> any really good solution here, but all proposed solutions have their
+> problems. Pierre Legendre, Daniel Borcard and Hanna Tuomisto have all tried
+> to convince me of their point of view, and while all their conflicting
+> arguments make sense, they are not yet an optimal solution.
+>
+> Cheers, Jari Oksanen
+>>
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From solymos at ualberta.ca  Tue Oct 13 18:36:00 2009
+From: solymos at ualberta.ca (Peter Solymos)
+Date: Tue, 13 Oct 2009 10:36:00 -0600
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <C6FA8072.41B9%jari.oksanen@oulu.fi>
+References: <4AD4A060.4090806@gmx.de> <C6FA8072.41B9%jari.oksanen@oulu.fi>
+Message-ID: <34896f090910130936we991712p98138331629d746d@mail.gmail.com>
+
+Dear All,
+
+Perhaps, there is another way of approaching this problem: the
+Monmonier's maximum-difference barriers algorithm.
+
+Monmonier, M. (1973) Maximum-difference barriers: an alternative
+numerical regionalization method. Geographic Analysis, 3, 245?261.
+Manni, F., Guerard, E. and Heyer, E. (2004) Geographic patterns of
+(genetic, morphologic, linguistic) variation: how barriers can be
+detected by "Monmonier's algorithm". Human Biology, 76, 173?190
+
+Nice documantation and a free software Barrier here:
+http://www.mnhn.fr/mnhn/ecoanthropologie/software/barrier.html
+The R implementation has been done by Thibaut Jombart in the adegenet
+package (function monmonier), that is slightly different in handling
+tessellation at the margin. Permutation test are discussed in the
+Manni paper as I recall and implemented in Barrier. This is especially
+useful for genetic distances (and NOT for biotic data, because of
+profoundly different dispersal mechanisms involved in shaping genetic
+vs. community structures).
+
+Yours,
+
+Peter
+
+P?ter S?lymos
+Alberta Biodiversity Monitoring Institute
+Department of Biological Sciences
+CW 405, Biological Sciences Bldg
+University of Alberta
+Edmonton, Alberta, T6G 2E9, Canada
+Phone: 780.492.8534
+Fax: 780.492.7635
+email <- paste("solymos", "ualberta.ca", sep = "@")
+
+
+
+On Tue, Oct 13, 2009 at 10:07 AM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+>
+>
+>
+> On 13/10/09 18:44 PM, "Jens Oldeland" <oldeland at gmx.de> wrote:
+>
+>> Hi again,
+>>
+>> our distance matrices are 1) genetic distance (Jaccard) and 2)
+>> 3D-Euclidean Distance and the question we want to solve is if there is
+>> an effect called "Isolation by Distance" (IBD) in our data (genetic and
+>> "real"-distances of snails on the island of crete) or not. There was a
+>> debate on the topic if the mantel test or the partial mantel test (isn?t
+>> this similar to MRM?) in several papers mainly in evolution-journals:
+>>
+>> Raufaste, N. and F. Rousset. 2001. Are partial Mantel tests adequate?
+>> Evolution 55:1703?1705
+>> Castellano, S. and E. Balletto. 2002. Is the partial Mantel test
+>> inadequate? Evolution 56:1871?1873.
+>>
+>>
+>> Geffen, E., Anderson, M.J., & Wayne, R.K. (2004). Climate and habitat
+>> barriers to dispersal in the highly mobile grey wolf. Molecular Ecology,
+>> 13, 2481-2490
+>> explain it nicely on page p.2483 (LHS)
+>>
+>> "The problem arises due to the lack of independence of individual
+>> distances in a distance matrix. Although a simple Mantel test overcomes
+>> this issue by the
+>> use of permutations, a permutational approach does not necessarily solve
+>> problems introduced by several uncontrolled nuisance parameters in the
+>> case of more than one
+>> regressor (i.e. partial tests). Thus, we do not use a Mantel approach
+>> here, but rather use the distance-based multivariate approach of McArdle
+>> & Anderson (2001). The important point is that, for dbRDA, the
+>> individual distances are not treated as a single univariate response
+>> variable, as in the Mantel test, but rather the individual sites are the
+>> units of observation for analysis, about which we have calculated
+>> distances using an entire set of genetic variables. The distance matrix
+>> is therefore treated as information regarding multivariate
+>> response.Taking this multivariate approach avoids the problems
+>> associated with the partial Mantel test."
+>
+> Jens,
+>
+> There has been a very similar discussion in the Ecology recently between my
+> good friends, Hanna Tuomisto & co vs. Pierre Legendre & co. However, the
+> point here and above exactly was that you cannot use dissimilarities on the
+> RHS (lack of independence), but you must use rectangular data in dbRDA. If
+> you use distances on the RHS you won't have dbRDA but you get Mantel family
+> methods (like MRM in ecodist). The problem, of course, is how to map
+> distances onto Euclidean space (= rectangular data) *and* still study the
+> effects of the distances instead of the effects of *location*. I don't know
+> any really good solution here, but all proposed solutions have their
+> problems. Pierre Legendre, Daniel Borcard and Hanna Tuomisto have all tried
+> to convince me of their point of view, and while all their conflicting
+> arguments make sense, they are not yet an optimal solution.
+>
+> Cheers, Jari Oksanen
+>>
+>> so we thought it would be a good idea not to use mantel and friends
+>> since the problem of IBD seems to need a different approach here.
+>>
+>> best,
+>> Jens
+>>
+>>
+>>
+>>
+>>
+>> Sarah Goslee schrieb:
+>>> That doesn't make much sense to me. You'd need an entirely different method
+>>> than capscale.
+>>>
+>>> Perhaps what you're looking for is more like multiple regression on distance
+>>> matrices (implemented in MRM in ecodist)?
+>>>
+>>> ? ? ?Lichstein, J. 2007. Multiple regression on distance matrices: A
+>>> ? ? ?multivariate spatial analysis tool. Plant Ecology 188: 117-131.
+>>>
+>>> ? ? ?Legendre, P.; Lapointe, F. and Casgrain, P. 1994. Modeling brain
+>>> ? ? ?evolution from behavior: A permutational regression approach.
+>>> ? ? ?Evolution 48: 1487-1499.
+>>>
+>>> Sarah
+>>>
+>>> On Tue, Oct 13, 2009 at 11:13 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+>>>
+>>>> Dear Sarah dear Jari,
+>>>>
+>>>> many thanks for your explanations. However, it wasnt what I thought about,
+>>>> sorry I definitely have to be more specific about the problem.
+>>>>
+>>>> Okay I try be more precise:
+>>>>
+>>>> the problem was that for example ?capscale accepts ? "capscale(dist.matrix.1
+>>>> ~ N + P + K *Ag, data=varechem)"
+>>>> but I need ?"capscale(dist.matrix.1 ~ dist.matrix.2, data=dist.matrix.2)"
+>>>> ?so the trick was not on how to create a distance matrix but how to use a
+>>>> second on in a formula.
+>>>>
+>>>> We are trying a similar analysis like the the "distlm" program by Marti
+>>>> Anderson does, however we had a problem with that and wanted to try the
+>>>> analysis in R.
+>>>>
+>>>> thanks already for all your comments !
+>>>>
+>>>> best
+>>>> Jens
+>>>>
+>>>
+>>>
+>>>
+>>>
+>>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From oldeland at gmx.de  Wed Oct 14 09:12:05 2009
+From: oldeland at gmx.de (Jens Oldeland)
+Date: Wed, 14 Oct 2009 09:12:05 +0200
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <34896f090910130936we991712p98138331629d746d@mail.gmail.com>
+References: <4AD4A060.4090806@gmx.de> <C6FA8072.41B9%jari.oksanen@oulu.fi>
+	<34896f090910130936we991712p98138331629d746d@mail.gmail.com>
+Message-ID: <4AD579C5.60007@gmx.de>
+
+Dear Sarah, Jari and Peter,
+
+let me summarize what has been written so far
+
+1) Jari said that: dbRDA needs rectangular data on right hand side of 
+the formula --> dist.matrix on RHS leads to a lack of independence *no 
+optimal solution*
+2) Sarah suggests *MRM *
+3) Peter suggests *Monmonier's maximum-difference barriers algorithm*   
+(especially useful for genetic distances) *
+*
+it seems that there is still need for case studies testing and 
+discussion on that topic,
+
+My colleague and I will first dig a bit deeper into that problem, 
+reading the suggested literature, then testing the different options and 
+after that I will write our findings on R-sig-eco list again.
+
+We like to thank you all for that very interesting discussion!!
+
+many thanks so far!
+
+Jens & Jan
+
+PS: any further hints on literature would be great!
+
+
+Peter Solymos schrieb:
+> Dear All,
+>
+> Perhaps, there is another way of approaching this problem: the
+> Monmonier's maximum-difference barriers algorithm.
+>
+> Monmonier, M. (1973) Maximum-difference barriers: an alternative
+> numerical regionalization method. Geographic Analysis, 3, 245?261.
+> Manni, F., Guerard, E. and Heyer, E. (2004) Geographic patterns of
+> (genetic, morphologic, linguistic) variation: how barriers can be
+> detected by "Monmonier's algorithm". Human Biology, 76, 173?190
+>
+> Nice documantation and a free software Barrier here:
+> http://www.mnhn.fr/mnhn/ecoanthropologie/software/barrier.html
+> The R implementation has been done by Thibaut Jombart in the adegenet
+> package (function monmonier), that is slightly different in handling
+> tessellation at the margin. Permutation test are discussed in the
+> Manni paper as I recall and implemented in Barrier. This is especially
+> useful for genetic distances (and NOT for biotic data, because of
+> profoundly different dispersal mechanisms involved in shaping genetic
+> vs. community structures).
+>
+> Yours,
+>
+> Peter
+>
+> P?ter S?lymos
+> Alberta Biodiversity Monitoring Institute
+> Department of Biological Sciences
+> CW 405, Biological Sciences Bldg
+> University of Alberta
+> Edmonton, Alberta, T6G 2E9, Canada
+> Phone: 780.492.8534
+> Fax: 780.492.7635
+> email <- paste("solymos", "ualberta.ca", sep = "@")
+>
+>
+>
+> On Tue, Oct 13, 2009 at 10:07 AM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+>   
+>>
+>> On 13/10/09 18:44 PM, "Jens Oldeland" <oldeland at gmx.de> wrote:
+>>
+>>     
+>>> Hi again,
+>>>
+>>> our distance matrices are 1) genetic distance (Jaccard) and 2)
+>>> 3D-Euclidean Distance and the question we want to solve is if there is
+>>> an effect called "Isolation by Distance" (IBD) in our data (genetic and
+>>> "real"-distances of snails on the island of crete) or not. There was a
+>>> debate on the topic if the mantel test or the partial mantel test (isn?t
+>>> this similar to MRM?) in several papers mainly in evolution-journals:
+>>>
+>>> Raufaste, N. and F. Rousset. 2001. Are partial Mantel tests adequate?
+>>> Evolution 55:1703?1705
+>>> Castellano, S. and E. Balletto. 2002. Is the partial Mantel test
+>>> inadequate? Evolution 56:1871?1873.
+>>>
+>>>
+>>> Geffen, E., Anderson, M.J., & Wayne, R.K. (2004). Climate and habitat
+>>> barriers to dispersal in the highly mobile grey wolf. Molecular Ecology,
+>>> 13, 2481-2490
+>>> explain it nicely on page p.2483 (LHS)
+>>>
+>>> "The problem arises due to the lack of independence of individual
+>>> distances in a distance matrix. Although a simple Mantel test overcomes
+>>> this issue by the
+>>> use of permutations, a permutational approach does not necessarily solve
+>>> problems introduced by several uncontrolled nuisance parameters in the
+>>> case of more than one
+>>> regressor (i.e. partial tests). Thus, we do not use a Mantel approach
+>>> here, but rather use the distance-based multivariate approach of McArdle
+>>> & Anderson (2001). The important point is that, for dbRDA, the
+>>> individual distances are not treated as a single univariate response
+>>> variable, as in the Mantel test, but rather the individual sites are the
+>>> units of observation for analysis, about which we have calculated
+>>> distances using an entire set of genetic variables. The distance matrix
+>>> is therefore treated as information regarding multivariate
+>>> response.Taking this multivariate approach avoids the problems
+>>> associated with the partial Mantel test."
+>>>       
+>> Jens,
+>>
+>> There has been a very similar discussion in the Ecology recently between my
+>> good friends, Hanna Tuomisto & co vs. Pierre Legendre & co. However, the
+>> point here and above exactly was that you cannot use dissimilarities on the
+>> RHS (lack of independence), but you must use rectangular data in dbRDA. If
+>> you use distances on the RHS you won't have dbRDA but you get Mantel family
+>> methods (like MRM in ecodist). The problem, of course, is how to map
+>> distances onto Euclidean space (= rectangular data) *and* still study the
+>> effects of the distances instead of the effects of *location*. I don't know
+>> any really good solution here, but all proposed solutions have their
+>> problems. Pierre Legendre, Daniel Borcard and Hanna Tuomisto have all tried
+>> to convince me of their point of view, and while all their conflicting
+>> arguments make sense, they are not yet an optimal solution.
+>>
+>> Cheers, Jari Oksanen
+>>     
+>>> so we thought it would be a good idea not to use mantel and friends
+>>> since the problem of IBD seems to need a different approach here.
+>>>
+>>> best,
+>>> Jens
+>>>
+>>>
+>>>
+>>>
+>>>
+>>> Sarah Goslee schrieb:
+>>>       
+>>>> That doesn't make much sense to me. You'd need an entirely different method
+>>>> than capscale.
+>>>>
+>>>> Perhaps what you're looking for is more like multiple regression on distance
+>>>> matrices (implemented in MRM in ecodist)?
+>>>>
+>>>>      Lichstein, J. 2007. Multiple regression on distance matrices: A
+>>>>      multivariate spatial analysis tool. Plant Ecology 188: 117-131.
+>>>>
+>>>>      Legendre, P.; Lapointe, F. and Casgrain, P. 1994. Modeling brain
+>>>>      evolution from behavior: A permutational regression approach.
+>>>>      Evolution 48: 1487-1499.
+>>>>
+>>>> Sarah
+>>>>
+>>>> On Tue, Oct 13, 2009 at 11:13 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+>>>>
+>>>>         
+>>>>> Dear Sarah dear Jari,
+>>>>>
+>>>>> many thanks for your explanations. However, it wasnt what I thought about,
+>>>>> sorry I definitely have to be more specific about the problem.
+>>>>>
+>>>>> Okay I try be more precise:
+>>>>>
+>>>>> the problem was that for example  capscale accepts   "capscale(dist.matrix.1
+>>>>> ~ N + P + K *Ag, data=varechem)"
+>>>>> but I need  "capscale(dist.matrix.1 ~ dist.matrix.2, data=dist.matrix.2)"
+>>>>>  so the trick was not on how to create a distance matrix but how to use a
+>>>>> second on in a formula.
+>>>>>
+>>>>> We are trying a similar analysis like the the "distlm" program by Marti
+>>>>> Anderson does, however we had a problem with that and wanted to try the
+>>>>> analysis in R.
+>>>>>
+>>>>> thanks already for all your comments !
+>>>>>
+>>>>> best
+>>>>> Jens
+>>>>>
+>>>>>           
+>>>>
+>>>>
+>>>>         
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>>
+>>     
+>
+>   
+
+
+-- 
++++++++++++++++++++++++++++++++++++++++++
+Dipl.Biol. Jens Oldeland
+University of Hamburg
+Biocentre Klein Flottbek and Botanical Garden
+Ohnhorststr. 18
+22609 Hamburg,
+Germany
+
+Tel:    0049-(0)40-42816-407
+Fax:    0049-(0)40-42816-543
+Mail: 	Oldeland at botanik.uni-hamburg.de
+        Jens.Oldeland at DLR.de  (for attachments > 2mb!!)
+http://www.biologie.uni-hamburg.de/bzf/fbda005/fbda005.htm
++++++++++++++++++++++++++++++++++++++++++
+
+
+From Maarten.deGroot at nib.si  Wed Oct 14 09:13:57 2009
+From: Maarten.deGroot at nib.si (Maarten de Groot)
+Date: Wed, 14 Oct 2009 09:13:57 +0200
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <efb536d50910130821r4875b5c8x4f2d00fed3fc8c50@mail.gmail.com>
+References: <4AD48CC7.4050704@gmx.de>	<efb536d50910130751w52ea9c8dpbc43cd1643f613f4@mail.gmail.com>	<4AD49927.2090900@gmx.de>
+	<efb536d50910130821r4875b5c8x4f2d00fed3fc8c50@mail.gmail.com>
+Message-ID: <4AD57A35.9080802@nib.si>
+
+Dear Jens,
+
+As far as I understood you are looking for the influence of one distance 
+matrix on another. (Please correct me if I am wrong) Than the following 
+reference might be useful:
+
+ter Braak, C. J. F. and Schaffers, A. P. 2004: Co-correspondence 
+analysis: a new ordination method to relate two community compositions. 
+Ecology 85, 834-846.
+
+I don't know whether this is implemented in R, though.
+
+Kind regards,
+
+Maarten
+
+Sarah Goslee wrote:
+> That doesn't make much sense to me. You'd need an entirely different method
+> than capscale.
+>
+> Perhaps what you're looking for is more like multiple regression on distance
+> matrices (implemented in MRM in ecodist)?
+>
+>      Lichstein, J. 2007. Multiple regression on distance matrices: A
+>      multivariate spatial analysis tool. Plant Ecology 188: 117-131.
+>
+>      Legendre, P.; Lapointe, F. and Casgrain, P. 1994. Modeling brain
+>      evolution from behavior: A permutational regression approach.
+>      Evolution 48: 1487-1499.
+>
+> Sarah
+>
+> On Tue, Oct 13, 2009 at 11:13 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+>   
+>> Dear Sarah dear Jari,
+>>
+>> many thanks for your explanations. However, it wasnt what I thought about,
+>> sorry I definitely have to be more specific about the problem.
+>>
+>> Okay I try be more precise:
+>>
+>> the problem was that for example  capscale accepts   "capscale(dist.matrix.1
+>> ~ N + P + K *Ag, data=varechem)"
+>> but I need  "capscale(dist.matrix.1 ~ dist.matrix.2, data=dist.matrix.2)"
+>>  so the trick was not on how to create a distance matrix but how to use a
+>> second on in a formula.
+>>
+>> We are trying a similar analysis like the the "distlm" program by Marti
+>> Anderson does, however we had a problem with that and wanted to try the
+>> analysis in R.
+>>
+>> thanks already for all your comments !
+>>
+>> best
+>> Jens
+>>     
+>
+>
+>
+>
+
+
+From tisseuil at cict.fr  Wed Oct 14 09:15:49 2009
+From: tisseuil at cict.fr (=?UTF-8?Q?Cl=C3=A9ment_Tisseuil?=)
+Date: Wed, 14 Oct 2009 09:15:49 +0200
+Subject: [R-sig-eco] hierarchical partitioning: adaptation and interpretation
+Message-ID: <8f656ccd0910140015r2fdbbc23qdc9765ac83761628@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091014/4297ecad/attachment.pl>
+
+From ct529 at york.ac.uk  Wed Oct 14 10:20:10 2009
+From: ct529 at york.ac.uk (Corrado)
+Date: Wed, 14 Oct 2009 09:20:10 +0100
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+Message-ID: <200910140920.11193.ct529@york.ac.uk>
+
+Dear friends,
+
+I have a large matrix of species (first 1100 columns) and environmental 
+variables (last 36 columns) for approx 2000 sites.
+
+The distance between sites varies. Some sites are near to each other, others 
+are far. 
+
+I would like to select a subset of N sites (for example: 400 sites) with the 
+minimum spatial autocorrelation. The aim is to obtain a significant number of 
+sites to carry out some statistical analysis, but with spatial autocorrelation 
+significantly reduced.
+
+Is there a procedure to do so in R? How would you approach the problem?
+
+The aim of the "reduction" is to then work on dissimilarities between sites 
+that have the lowest possible spatial autocorrelation.
+
+Thanks
+-- 
+Corrado Topi
+
+Global Climate Change & Biodiversity Indicators
+Area 18,Department of Biology
+University of York, York, YO10 5YW, UK
+Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+
+
+From gavin.simpson at ucl.ac.uk  Wed Oct 14 10:50:02 2009
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 14 Oct 2009 09:50:02 +0100
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <4AD57A35.9080802@nib.si>
+References: <4AD48CC7.4050704@gmx.de>
+	<efb536d50910130751w52ea9c8dpbc43cd1643f613f4@mail.gmail.com>
+	<4AD49927.2090900@gmx.de>
+	<efb536d50910130821r4875b5c8x4f2d00fed3fc8c50@mail.gmail.com>
+	<4AD57A35.9080802@nib.si>
+Message-ID: <1255510202.2660.12.camel@desktop2.simpson>
+
+On Wed, 2009-10-14 at 09:13 +0200, Maarten de Groot wrote:
+> Dear Jens,
+> 
+> As far as I understood you are looking for the influence of one distance 
+> matrix on another. (Please correct me if I am wrong) Than the following 
+> reference might be useful:
+> 
+> ter Braak, C. J. F. and Schaffers, A. P. 2004: Co-correspondence 
+> analysis: a new ordination method to relate two community compositions. 
+> Ecology 85, 834-846.
+> 
+> I don't know whether this is implemented in R, though.
+
+It is, in the cocorresp package (by yours truly); although I think it
+fair to say that whilst the package will do the necessary computations,
+the associated functions for plotting ordination results and the like
+are somewhat lacking, very much so when compared to the offerings in
+packages like vegan and ade4. The code does little more than the Matlab
+code provided with the paper you cite.
+
+>From my reading of the thread and Jens' postings, Co-CA probably isn't
+quite the right method as it was specifically designed for two species
+matrices and uses an underlying unimodal response model like CA; you
+could think of Co-CA as a version of CCA that allows unlimited
+constraints and fits a non-linear (instead of linear) model in those
+constraints.
+
+Furthermore, Co-CA, and its implementation in cocorresp, requires the
+original data matrices on both sides of the model formula, not
+dissimilarity matrices.
+
+HTH
+
+G
+
+> 
+> Kind regards,
+> 
+> Maarten
+> 
+> Sarah Goslee wrote:
+> > That doesn't make much sense to me. You'd need an entirely different method
+> > than capscale.
+> >
+> > Perhaps what you're looking for is more like multiple regression on distance
+> > matrices (implemented in MRM in ecodist)?
+> >
+> >      Lichstein, J. 2007. Multiple regression on distance matrices: A
+> >      multivariate spatial analysis tool. Plant Ecology 188: 117-131.
+> >
+> >      Legendre, P.; Lapointe, F. and Casgrain, P. 1994. Modeling brain
+> >      evolution from behavior: A permutational regression approach.
+> >      Evolution 48: 1487-1499.
+> >
+> > Sarah
+> >
+> > On Tue, Oct 13, 2009 at 11:13 AM, Jens Oldeland <oldeland at gmx.de> wrote:
+> >   
+> >> Dear Sarah dear Jari,
+> >>
+> >> many thanks for your explanations. However, it wasnt what I thought about,
+> >> sorry I definitely have to be more specific about the problem.
+> >>
+> >> Okay I try be more precise:
+> >>
+> >> the problem was that for example  capscale accepts   "capscale(dist.matrix.1
+> >> ~ N + P + K *Ag, data=varechem)"
+> >> but I need  "capscale(dist.matrix.1 ~ dist.matrix.2, data=dist.matrix.2)"
+> >>  so the trick was not on how to create a distance matrix but how to use a
+> >> second on in a formula.
+> >>
+> >> We are trying a similar analysis like the the "distlm" program by Marti
+> >> Anderson does, however we had a problem with that and wanted to try the
+> >> analysis in R.
+> >>
+> >> thanks already for all your comments !
+> >>
+> >> best
+> >> Jens
+> >>     
+> >
+> >
+> >
+> >
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From marcelino.delacruz at upm.es  Wed Oct 14 11:22:35 2009
+From: marcelino.delacruz at upm.es (Marcelino de la Cruz)
+Date: Wed, 14 Oct 2009 11:22:35 +0200
+Subject: [R-sig-eco] using two distance metrices in formula
+In-Reply-To: <1255510202.2660.12.camel@desktop2.simpson>
+References: <4AD48CC7.4050704@gmx.de>
+	<efb536d50910130751w52ea9c8dpbc43cd1643f613f4@mail.gmail.com>
+	<4AD49927.2090900@gmx.de>
+	<efb536d50910130821r4875b5c8x4f2d00fed3fc8c50@mail.gmail.com>
+	<4AD57A35.9080802@nib.si>
+	<1255510202.2660.12.camel@desktop2.simpson>
+Message-ID: <200910140922.n9E9MUiE014153@edison.ccupm.upm.es>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091014/615e13e8/attachment.pl>
+
+From rlandis at middlebury.edu  Wed Oct 14 14:11:04 2009
+From: rlandis at middlebury.edu (Matthew Landis)
+Date: Wed, 14 Oct 2009 08:11:04 -0400
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+In-Reply-To: <200910140920.11193.ct529@york.ac.uk>
+References: <200910140920.11193.ct529@york.ac.uk>
+Message-ID: <4AD5BFD8.9030303@middlebury.edu>
+
+Corrado:
+
+The simplest way would be to take a subset of sites to maximize the 
+distance between them.  Say, choose 400 sites evenly spread over the 
+study area.  That would minimize autocorrelation to the greatest extent 
+possible, but you would be throwing away data.
+
+The second thing you could try would be to incorporate the spatial 
+variation in the model to control for it.  This way you can also study 
+the autocorrelation, see what spatial scales it is operating and what it 
+looks like and try to learn something from it.  Legendre, Borcard, Dray 
+and colleagues have developed some really interesting ways of dealing 
+with multivariate data and decomposing the variance into spatial 
+component vs. explanatory variables.  I believe it is called PCNM and 
+can be found in the spacemakeR package (don't think it is on CRAN - have 
+to do a google search). 
+
+Good luck!
+
+Matthew Landis
+
+Corrado wrote:
+> Dear friends,
+>
+> I have a large matrix of species (first 1100 columns) and environmental 
+> variables (last 36 columns) for approx 2000 sites.
+>
+> The distance between sites varies. Some sites are near to each other, others 
+> are far. 
+>
+> I would like to select a subset of N sites (for example: 400 sites) with the 
+> minimum spatial autocorrelation. The aim is to obtain a significant number of 
+> sites to carry out some statistical analysis, but with spatial autocorrelation 
+> significantly reduced.
+>
+> Is there a procedure to do so in R? How would you approach the problem?
+>
+> The aim of the "reduction" is to then work on dissimilarities between sites 
+> that have the lowest possible spatial autocorrelation.
+>
+> Thanks
+>
+
+
+From ct529 at york.ac.uk  Wed Oct 14 14:25:02 2009
+From: ct529 at york.ac.uk (Corrado)
+Date: Wed, 14 Oct 2009 13:25:02 +0100
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+In-Reply-To: <4AD5BFD8.9030303@middlebury.edu>
+References: <200910140920.11193.ct529@york.ac.uk>
+	<4AD5BFD8.9030303@middlebury.edu>
+Message-ID: <200910141325.02385.ct529@york.ac.uk>
+
+Dear Matthew,
+
+thanks for your kind answer!
+
+The first approach you describe is the one I have been looking at until now.
+
+I am puzzled about the second one: I do not really understand it. What model 
+are you talking about, when you say "incorporate the spatial variation in the 
+model"? At the moment I have no model, just the data and I am trying to reduce 
+autocorrelation before analysing the data.
+
+Do you have any good reference (articles or books) about the approach you 
+mention?
+
+Thanks in advance
+
+
+On Wednesday 14 October 2009 13:11:04 Matthew Landis wrote:
+> Corrado:
+>
+> The simplest way would be to take a subset of sites to maximize the
+> distance between them.  Say, choose 400 sites evenly spread over the
+> study area.  That would minimize autocorrelation to the greatest extent
+> possible, but you would be throwing away data.
+>
+> The second thing you could try would be to incorporate the spatial
+> variation in the model to control for it.  This way you can also study
+> the autocorrelation, see what spatial scales it is operating and what it
+> looks like and try to learn something from it.  Legendre, Borcard, Dray
+> and colleagues have developed some really interesting ways of dealing
+> with multivariate data and decomposing the variance into spatial
+> component vs. explanatory variables.  I believe it is called PCNM and
+> can be found in the spacemakeR package (don't think it is on CRAN - have
+> to do a google search).
+>
+> Good luck!
+>
+> Matthew Landis
+>
+> Corrado wrote:
+> > Dear friends,
+> >
+> > I have a large matrix of species (first 1100 columns) and environmental
+> > variables (last 36 columns) for approx 2000 sites.
+> >
+> > The distance between sites varies. Some sites are near to each other,
+> > others are far.
+> >
+> > I would like to select a subset of N sites (for example: 400 sites) with
+> > the minimum spatial autocorrelation. The aim is to obtain a significant
+> > number of sites to carry out some statistical analysis, but with spatial
+> > autocorrelation significantly reduced.
+> >
+> > Is there a procedure to do so in R? How would you approach the problem?
+> >
+> > The aim of the "reduction" is to then work on dissimilarities between
+> > sites that have the lowest possible spatial autocorrelation.
+> >
+> > Thanks
+
+
+
+-- 
+Corrado Topi
+
+Global Climate Change & Biodiversity Indicators
+Area 18,Department of Biology
+University of York, York, YO10 5YW, UK
+Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+
+
+From martinpiazzon at gmail.com  Wed Oct 14 14:49:07 2009
+From: martinpiazzon at gmail.com (Martin Alejandro Piazzon de Haro)
+Date: Wed, 14 Oct 2009 14:49:07 +0200
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+In-Reply-To: <200910141325.02385.ct529@york.ac.uk>
+References: <200910140920.11193.ct529@york.ac.uk>
+	<4AD5BFD8.9030303@middlebury.edu> 
+	<200910141325.02385.ct529@york.ac.uk>
+Message-ID: <25bb72bd0910140549y2b49815am6fecafbbac246479@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091014/d0a55c9c/attachment.pl>
+
+From marcelino.delacruz at upm.es  Wed Oct 14 15:34:35 2009
+From: marcelino.delacruz at upm.es (Marcelino de la Cruz)
+Date: Wed, 14 Oct 2009 15:34:35 +0200
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+In-Reply-To: <25bb72bd0910140549y2b49815am6fecafbbac246479@mail.gmail.co
+ m>
+References: <200910140920.11193.ct529@york.ac.uk>
+	<4AD5BFD8.9030303@middlebury.edu>
+	<200910141325.02385.ct529@york.ac.uk>
+	<25bb72bd0910140549y2b49815am6fecafbbac246479@mail.gmail.com>
+Message-ID: <200910141334.n9EDYWqG010232@edison.ccupm.upm.es>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091014/6553ad25/attachment.pl>
+
+From rlandis at middlebury.edu  Wed Oct 14 15:41:46 2009
+From: rlandis at middlebury.edu (Matthew Landis)
+Date: Wed, 14 Oct 2009 09:41:46 -0400
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+In-Reply-To: <200910141334.n9EDYWqG010232@edison.ccupm.upm.es>
+References: <200910140920.11193.ct529@york.ac.uk>	<4AD5BFD8.9030303@middlebury.edu>	<200910141325.02385.ct529@york.ac.uk>	<25bb72bd0910140549y2b49815am6fecafbbac246479@mail.gmail.com>
+	<200910141334.n9EDYWqG010232@edison.ccupm.upm.es>
+Message-ID: <4AD5D51A.2080003@middlebury.edu>
+
+That's a really great paper, but if memory serves, it focuses on 
+univariate regression models.  Useful in this context for exploring the 
+responses of a single species at a time, instead of a multivariate 
+approach considering multiple species simultaneously.
+
+By the way, I have the author as Dormann.
+
+M
+
+Marcelino de la Cruz wrote:
+> I would recomend the paper of  Dortman et al. 
+> (Ecography 30: 609628, 2007). This reviews  many 
+> available spatial statistical methods to take 
+> spatial autocorrelation into account in tests of 
+> statistical significance. From their abstract:
+>
+> "Here, we describe six different statistical 
+> approaches to infer correlates of species? 
+> distributions, for both presence/absence
+> (binary response) and species abundance data 
+> (poisson or normally distributed response), while accounting for
+> spatial autocorrelation in model residuals: 
+> autocovariate regression; spatial eigenvector mapping; generalised
+> least squares; (conditional and simultaneous) 
+> autoregressive models and generalised estimating equations."
+>
+> The suplementary material includes R scripts to run all the methods.
+>
+> HTH
+>
+> Marcelino
+>
+>
+>
+>
+>
+> At 14:49 14/10/2009, Martin Alejandro Piazzon de Haro wrote:
+>   
+>> Content-Type: text/plain
+>> Content-Disposition: inline
+>> Content-length: 3518
+>>
+>> Dear friends,
+>>
+>> I found this thread very useful, so I wanted to apport something, Corrado,
+>> you asked for some references about PCNM, here is what i found:
+>>
+>> Borcard, D. and Legendre, P. 2002. All-scale spatial analysis of
+>> ecological data by means of principal coordinates of neighbour
+>> matrices. Ecological Modelling 153: 51-68.
+>>
+>> Borcard, D., P. Legendre, Avois-Jacquet, C. & Tuomisto, H. 2004.
+>> Dissecting the spatial structures of ecologial data at all scales.
+>> Ecology 85(7): 1826-1832.
+>>
+>> I hope will help you.
+>>
+>> 2009/10/14 Corrado <ct529 at york.ac.uk>
+>>
+>>     
+>>> Dear Matthew,
+>>>
+>>> thanks for your kind answer!
+>>>
+>>> The first approach you describe is the one I have been looking at until
+>>> now.
+>>>
+>>> I am puzzled about the second one: I do not really understand it. What
+>>> model
+>>> are you talking about, when you say "incorporate the spatial variation in
+>>> the
+>>> model"? At the moment I have no model, just the data and I am trying to
+>>> reduce
+>>> autocorrelation before analysing the data.
+>>>
+>>> Do you have any good reference (articles or books) about the approach you
+>>> mention?
+>>>
+>>> Thanks in advance
+>>>
+>>>
+>>> On Wednesday 14 October 2009 13:11:04 Matthew Landis wrote:
+>>>       
+>>>> Corrado:
+>>>>
+>>>> The simplest way would be to take a subset of sites to maximize the
+>>>> distance between them.  Say, choose 400 sites evenly spread over the
+>>>> study area.  That would minimize autocorrelation to the greatest extent
+>>>> possible, but you would be throwing away data.
+>>>>
+>>>> The second thing you could try would be to incorporate the spatial
+>>>> variation in the model to control for it.  This way you can also study
+>>>> the autocorrelation, see what spatial scales it is operating and what it
+>>>> looks like and try to learn something from it.  Legendre, Borcard, Dray
+>>>> and colleagues have developed some really interesting ways of dealing
+>>>> with multivariate data and decomposing the variance into spatial
+>>>> component vs. explanatory variables.  I believe it is called PCNM and
+>>>> can be found in the spacemakeR package (don't think it is on CRAN - have
+>>>> to do a google search).
+>>>>
+>>>> Good luck!
+>>>>
+>>>> Matthew Landis
+>>>>
+>>>> Corrado wrote:
+>>>>         
+>>>>> Dear friends,
+>>>>>
+>>>>> I have a large matrix of species (first 1100 columns) and environmental
+>>>>> variables (last 36 columns) for approx 2000 sites.
+>>>>>
+>>>>> The distance between sites varies. Some sites are near to each other,
+>>>>> others are far.
+>>>>>
+>>>>> I would like to select a subset of N sites (for example: 400 sites)
+>>>>>           
+>>> with
+>>>       
+>>>>> the minimum spatial autocorrelation. The aim is to obtain a significant
+>>>>> number of sites to carry out some statistical analysis, but with
+>>>>>           
+>>> spatial
+>>>       
+>>>>> autocorrelation significantly reduced.
+>>>>>
+>>>>> Is there a procedure to do so in R? How would you approach the problem?
+>>>>>
+>>>>> The aim of the "reduction" is to then work on dissimilarities between
+>>>>> sites that have the lowest possible spatial autocorrelation.
+>>>>>
+>>>>> Thanks
+>>>>>           
+>>>
+>>> --
+>>> Corrado Topi
+>>>
+>>> Global Climate Change & Biodiversity Indicators
+>>> Area 18,Department of Biology
+>>> University of York, York, YO10 5YW, UK
+>>> Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+>>>
+>>> _______________________________________________
+>>> R-sig-ecology mailing list
+>>> R-sig-ecology at r-project.org
+>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>>       
+>>
+>> --
+>> Mart?n Alejandro Piazzon de Haro
+>> PhD Student
+>>
+>> IMEDEA (CSIC)
+>> C/Miquel Marques, 21
+>> (07190) Esporles
+>> Mallorca, Illes balears.
+>> Spain.
+>> Tlf: (+34) 971611807
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>     
+>
+> 	[[alternative HTML version deleted]]
+>
+>
+
+
+From rlandis at middlebury.edu  Wed Oct 14 15:45:39 2009
+From: rlandis at middlebury.edu (Matthew Landis)
+Date: Wed, 14 Oct 2009 09:45:39 -0400
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+Message-ID: <4AD5D603.4010404@middlebury.edu>
+
+Dear list - Apologies if this is not a repost.  I sent it the first time 
+in html format inadvertently and it hasn't shown up.
+
+Corrado -
+I meant to refer to a regression model - presumably you are going to 
+build a regression model of sorts (although multivariate because of all 
+the species) to see which of your explanatory variables is important.
+
+For some more informtion:
+Here is the website for SpaceMaker2, by Borcard and Legendre - they list 
+a number of papers to describe the method.  
+http://www.bio.umontreal.ca/casgrain/en/labo/spacemaker.html
+
+I also found this paper by Stephane Dray to be helpful. 
+http://pbil.univ-lyon1.fr/members/dray/articles/SD163.php
+
+I must say, it is not all that simple to work out how to do the 
+analysis.  But the results are very interesting.
+
+M
+
+Corrado wrote:
+> Dear Matthew,
+>
+> thanks for your kind answer!
+>
+> The first approach you describe is the one I have been looking at until now.
+>
+> I am puzzled about the second one: I do not really understand it. What model 
+> are you talking about, when you say "incorporate the spatial variation in the 
+> model"? At the moment I have no model, just the data and I am trying to reduce 
+> autocorrelation before analysing the data.
+>
+> Do you have any good reference (articles or books) about the approach you 
+> mention?
+>
+> Thanks in advance
+>
+>
+> On Wednesday 14 October 2009 13:11:04 Matthew Landis wrote:
+>   
+>> Corrado:
+>>
+>> The simplest way would be to take a subset of sites to maximize the
+>> distance between them.  Say, choose 400 sites evenly spread over the
+>> study area.  That would minimize autocorrelation to the greatest extent
+>> possible, but you would be throwing away data.
+>>
+>> The second thing you could try would be to incorporate the spatial
+>> variation in the model to control for it.  This way you can also study
+>> the autocorrelation, see what spatial scales it is operating and what it
+>> looks like and try to learn something from it.  Legendre, Borcard, Dray
+>> and colleagues have developed some really interesting ways of dealing
+>> with multivariate data and decomposing the variance into spatial
+>> component vs. explanatory variables.  I believe it is called PCNM and
+>> can be found in the spacemakeR package (don't think it is on CRAN - have
+>> to do a google search).
+>>
+>> Good luck!
+>>
+>> Matthew Landis
+>>
+>> Corrado wrote:
+>>     
+>>> Dear friends,
+>>>
+>>> I have a large matrix of species (first 1100 columns) and environmental
+>>> variables (last 36 columns) for approx 2000 sites.
+>>>
+>>> The distance between sites varies. Some sites are near to each other,
+>>> others are far.
+>>>
+>>> I would like to select a subset of N sites (for example: 400 sites) with
+>>> the minimum spatial autocorrelation. The aim is to obtain a significant
+>>> number of sites to carry out some statistical analysis, but with spatial
+>>> autocorrelation significantly reduced.
+>>>
+>>> Is there a procedure to do so in R? How would you approach the problem?
+>>>
+>>> The aim of the "reduction" is to then work on dissimilarities between
+>>> sites that have the lowest possible spatial autocorrelation.
+>>>
+>>> Thanks
+>>>       
+>
+>
+>
+>
+
+
+From eric.howe at ontario.ca  Wed Oct 14 16:14:51 2009
+From: eric.howe at ontario.ca (Howe, Eric (MNR))
+Date: Wed, 14 Oct 2009 10:14:51 -0400
+Subject: [R-sig-eco] hierarchical partitioning: type of R-squared
+In-Reply-To: <8f656ccd0910140015r2fdbbc23qdc9765ac83761628@mail.gmail.com>
+References: <8f656ccd0910140015r2fdbbc23qdc9765ac83761628@mail.gmail.com>
+Message-ID: <AAC4F31A1A63A844AD2451547E1757310415E4E2@CTSPITDCEMMVX13.cihs.ad.gov.on.ca>
+
+Good day Clement, and R users,
+I've used the hier.part package.  I think that conceptually, if the form of relationship with the dependent variable differs among independent variables, hier.part won't provide unbiased results.  Different samples from the same population should yield the same estimates of the relative contribution of different independent variables to (explained) variation in the dependent variable (Chevan and Sutherland 1991). If the form of the relationships between independent and the dependent variables differ, then you'd get different results from different samples, e.g. if one sample included more values of the dependent variable from one end of the possible range (?).  Maybe someone can confirm or refute this? Or explain it better?
+
+Since I use this package, I'd like to clear up something I noticed in Clement's message: I thought that when using "R-squ" as the goodness of fit measures, unadjusted values were used. That seemed consistent with Pearson's correlation coefficients. Can anyone confirm?
+
+Thanks,
+Eric Howe
+
+
+-----Original Message-----
+From: r-sig-ecology-bounces at r-project.org [mailto:r-sig-ecology-bounces at r-project.org] On Behalf Of Cl?ment Tisseuil
+Sent: October 14, 2009 3:16 AM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] hierarchical partitioning: adaptation and interpretation
+
+Dear R users,
+
+In the hier.part package, hierarchical partitioning is built upon a GLM
+(generalized linear model) framework to assess the independent and joint
+effect from a set of predictors onto a single quantitative response
+variable. In this context, the joint and independent effect from each factor
+can be evaluated throughout the R? calculation (adjusted). My two questions
+are:
+
+1. Conceptually and from a statistical point of view, are there any problems
+to adapt the philosophy of hierarchical partitioning to a GAM (generalized
+additive model) framework when some quantitative predictors are supposed to
+have a non-linear effect with the response variable?
+
+2. Let's say that the total variance of a single continuous variable can be
+explained by two qualitative factors (X1 and X2). I wonder if this total R?
+value resulting from the hier.part analysis (total=joint+independent value),
+and calculated individually for X1 and X2, can be discussed in terms of the
+inter-group variance (i.e. something like the variance between the means of
+each modalities of factors). If so, can the unexplained variation from the
+analysis (1- total R?) be associated to the intra-group variance (e.g.
+something like the variance within each modalities of factors)?
+.
+Thanks in advance for your help,
+
+Clement
+
+-- 
+Clement Tisseuil - PhD student
+
+Laboratoire  "Evolution et Diversit? Biologique" (EDB)
+UMR 5174 - Universit? Paul Sabatier CNRS
+118 route de Narbonne, B?t 4R3, Porte 112
+31062 Toulouse Cedex 9 - France
+Phone : +33 5 61 55 67 35
+Fax: +33 5 61 55 67 28
+webpage: http://www.clement-tisseuil.eu
+
+	[[alternative HTML version deleted]]
+
+
+From marcelino.delacruz at upm.es  Thu Oct 15 10:58:37 2009
+From: marcelino.delacruz at upm.es (Marcelino de la Cruz)
+Date: Thu, 15 Oct 2009 10:58:37 +0200
+Subject: [R-sig-eco] Reducing spatial autocorrelation
+In-Reply-To: <4AD5D51A.2080003@middlebury.edu>
+References: <200910140920.11193.ct529@york.ac.uk>
+	<4AD5BFD8.9030303@middlebury.edu>
+	<200910141325.02385.ct529@york.ac.uk>
+	<25bb72bd0910140549y2b49815am6fecafbbac246479@mail.gmail.com>
+	<200910141334.n9EDYWqG010232@edison.ccupm.upm.es>
+	<4AD5D51A.2080003@middlebury.edu>
+Message-ID: <200910150858.n9F8wUUB029778@edison.ccupm.upm.es>
+
+
+My apologies to Carsten for misspelling his name, 
+but I still see its paper appropriate in the multivariate case.
+
+I was thinking on  something like computing your 
+favourite ordination or NMDS on the species or 
+environmental or both (i.e RDA), and then compute 
+a correlogram on your ordination scores. This 
+would let you select the minimum distance between 
+sites to minimize autocorrelation (this could 
+also be obtained from a multivariate Mantel correlogram).
+And /or you could also generate autocovariates 
+from your ordination score(s) and include them as 
+predictors in that "some statistical analyses" to 
+account for the autocorrelation.
+
+
+Marcelino
+
+
+At 15:41 14/10/2009, Matthew Landis wrote:
+>That's a really great paper, but if memory 
+>serves, it focuses on univariate regression 
+>models.  Useful in this context for exploring 
+>the responses of a single species at a time, 
+>instead of a multivariate approach considering multiple species simultaneously.
+>
+>By the way, I have the author as Dormann.
+>
+>M
+>
+>Marcelino de la Cruz wrote:
+>>I would recomend the paper of  Dortman et al. 
+>>(Ecography 30: 609628, 2007). This 
+>>reviews  many available spatial statistical 
+>>methods to take spatial autocorrelation into 
+>>account in tests of statistical significance. From their abstract:
+>>
+>>"Here, we describe six different statistical 
+>>approaches to infer correlates of species? 
+>>distributions, for both presence/absence
+>>(binary response) and species abundance data 
+>>(poisson or normally distributed response), while accounting for
+>>spatial autocorrelation in model residuals: 
+>>autocovariate regression; spatial eigenvector mapping; generalised
+>>least squares; (conditional and simultaneous) 
+>>autoregressive models and generalised estimating equations."
+>>
+>>The suplementary material includes R scripts to run all the methods.
+>>
+>>HTH
+>>
+>>Marcelino
+>>
+>>
+>>
+>>
+>>
+>>At 14:49 14/10/2009, Martin Alejandro Piazzon de Haro wrote:
+>>
+>>>Content-Type: text/plain
+>>>Content-Disposition: inline
+>>>Content-length: 3518
+>>>
+>>>Dear friends,
+>>>
+>>>I found this thread very useful, so I wanted to apport something, Corrado,
+>>>you asked for some references about PCNM, here is what i found:
+>>>
+>>>Borcard, D. and Legendre, P. 2002. All-scale spatial analysis of
+>>>ecological data by means of principal coordinates of neighbour
+>>>matrices. Ecological Modelling 153: 51-68.
+>>>
+>>>Borcard, D., P. Legendre, Avois-Jacquet, C. & Tuomisto, H. 2004.
+>>>Dissecting the spatial structures of ecologial data at all scales.
+>>>Ecology 85(7): 1826-1832.
+>>>
+>>>I hope will help you.
+>>>
+>>>2009/10/14 Corrado <ct529 at york.ac.uk>
+>>>
+>>>
+>>>>Dear Matthew,
+>>>>
+>>>>thanks for your kind answer!
+>>>>
+>>>>The first approach you describe is the one I have been looking at until
+>>>>now.
+>>>>
+>>>>I am puzzled about the second one: I do not really understand it. What
+>>>>model
+>>>>are you talking about, when you say "incorporate the spatial variation in
+>>>>the
+>>>>model"? At the moment I have no model, just the data and I am trying to
+>>>>reduce
+>>>>autocorrelation before analysing the data.
+>>>>
+>>>>Do you have any good reference (articles or books) about the approach you
+>>>>mention?
+>>>>
+>>>>Thanks in advance
+>>>>
+>>>>
+>>>>On Wednesday 14 October 2009 13:11:04 Matthew Landis wrote:
+>>>>
+>>>>>Corrado:
+>>>>>
+>>>>>The simplest way would be to take a subset of sites to maximize the
+>>>>>distance between them.  Say, choose 400 sites evenly spread over the
+>>>>>study area.  That would minimize autocorrelation to the greatest extent
+>>>>>possible, but you would be throwing away data.
+>>>>>
+>>>>>The second thing you could try would be to incorporate the spatial
+>>>>>variation in the model to control for it.  This way you can also study
+>>>>>the autocorrelation, see what spatial scales it is operating and what it
+>>>>>looks like and try to learn something from it.  Legendre, Borcard, Dray
+>>>>>and colleagues have developed some really interesting ways of dealing
+>>>>>with multivariate data and decomposing the variance into spatial
+>>>>>component vs. explanatory variables.  I believe it is called PCNM and
+>>>>>can be found in the spacemakeR package (don't think it is on CRAN - have
+>>>>>to do a google search).
+>>>>>
+>>>>>Good luck!
+>>>>>
+>>>>>Matthew Landis
+>>>>>
+>>>>>Corrado wrote:
+>>>>>
+>>>>>>Dear friends,
+>>>>>>
+>>>>>>I have a large matrix of species (first 1100 columns) and environmental
+>>>>>>variables (last 36 columns) for approx 2000 sites.
+>>>>>>
+>>>>>>The distance between sites varies. Some sites are near to each other,
+>>>>>>others are far.
+>>>>>>
+>>>>>>I would like to select a subset of N sites (for example: 400 sites)
+>>>>>>
+>>>>with
+>>>>
+>>>>>>the minimum spatial autocorrelation. The aim is to obtain a significant
+>>>>>>number of sites to carry out some statistical analysis, but with
+>>>>>>
+>>>>spatial
+>>>>
+>>>>>>autocorrelation significantly reduced.
+>>>>>>
+>>>>>>Is there a procedure to do so in R? How would you approach the problem?
+>>>>>>
+>>>>>>The aim of the "reduction" is to then work on dissimilarities between
+>>>>>>sites that have the lowest possible spatial autocorrelation.
+>>>>>>
+>>>>>>Thanks
+>>>>>>
+>>>>
+>>>>--
+>>>>Corrado Topi
+>>>>
+>>>>Global Climate Change & Biodiversity Indicators
+>>>>Area 18,Department of Biology
+>>>>University of York, York, YO10 5YW, UK
+>>>>Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+>>>>
+>>>>_______________________________________________
+>>>>R-sig-ecology mailing list
+>>>>R-sig-ecology at r-project.org
+>>>>https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>>
+>>>>
+>>>
+>>>--
+>>>Mart?n Alejandro Piazzon de Haro
+>>>PhD Student
+>>>
+>>>IMEDEA (CSIC)
+>>>C/Miquel Marques, 21
+>>>(07190) Esporles
+>>>Mallorca, Illes balears.
+>>>Spain.
+>>>Tlf: (+34) 971611807
+>>>
+>>>         [[alternative HTML version deleted]]
+>>>
+>>>
+>>>_______________________________________________
+>>>R-sig-ecology mailing list
+>>>R-sig-ecology at r-project.org
+>>>https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>>
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>>
+>
+>________________________________
+>
+>Marcelino de la Cruz Rot
+>
+>Departamento de  Biolog?a Vegetal
+>E.U.T.I. Agr?cola
+>Universidad Polit?cnica de Madrid
+>28040-Madrid
+>Tel.: 91 336 54 35
+>Fax: 91 336 56 56
+>marcelino.delacruz at upm.es
+>_________________________________ 
+
+
+From lailaliana78 at yahoo.com  Fri Oct 16 17:28:58 2009
+From: lailaliana78 at yahoo.com (Claudia liliana Ballesteros Mejia)
+Date: Fri, 16 Oct 2009 08:28:58 -0700 (PDT)
+Subject: [R-sig-eco] reading large files in R
+Message-ID: <488303.3021.qm@web36807.mail.mud.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091016/2b015ae1/attachment.pl>
+
+From ct529 at york.ac.uk  Fri Oct 16 17:34:46 2009
+From: ct529 at york.ac.uk (Corrado)
+Date: Fri, 16 Oct 2009 16:34:46 +0100
+Subject: [R-sig-eco] reading large files in R
+In-Reply-To: <488303.3021.qm@web36807.mail.mud.yahoo.com>
+References: <488303.3021.qm@web36807.mail.mud.yahoo.com>
+Message-ID: <200910161634.46331.ct529@york.ac.uk>
+
+What is your hardware and software set up? I have just read in a 20Gb object, 
+and it worked.
+
+Best,
+
+
+On Friday 16 October 2009 16:28:58 Claudia liliana Ballesteros Mejia wrote:
+> Dear list,
+> I'm working with modeling spatial distributions of some species of
+>  butterflies and I want to work with the BIOMOD package. But I have a very
+>  large file (1.25 GB) with 5925284 rows and 28 columns. When I try to load
+>  it with read.table it says: Error in read.table(file = file, header =
+>  header, sep = sep, quote = quote,  : cannot allocate buffer in
+>  'readTableHead'.
+> 
+> so I try to use the code written in "Using R to process large data files",
+>  published in @CSC.
+>  (http://www.csc.fi/sivut/atcsc/arkisto/atcsc3_2007/ohjelmistot_html/R_and_
+> large_data/) but I can't get it right. So here is my code.
+> 
+> "spdiez.txt" is my file, and they suggest to create a matrix dropping the
+>  columns and rows names.
+> 
+> length(scan("spdiez.txt", nlines=1, sep="\t", what="character"))
+> 
+> m<-matrix(nrow=5925283, ncol=27)
+> filecon<-file("spdiez.txt", open="r")
+> pos<-seek(filecon, rw="r")
+> 
+> for(i in 1:5925283) {
+> 
+>  if (i  % %  100 == 0) {
+> 
+>  print(i)
+> 
+>  }
+>     tt<-readLines(filecon, n=1)
+>     tt2<-na.omit(as.numeric(unlist(strsplit(tt, "\t"))))
+>     if(i!=1) {
+>        m[(i-1),]<-t(tt2)
+>     },>     pos<-seek(filecon, rw="r")
+>  }
+> 
+> but after this, it throws this error
+> 
+> Error in m[(i - 1), ] <- t(tt2) : replacement has length zero
+> In addition: Warning messages:
+> 1: closing unused connection 3 (spdiez.txt)
+> 2: In na.omit(as.numeric(unlist(strsplit(tt, "\t")))) :
+>   NAs introduced by coercion
+> 3: In na.omit(as.numeric(unlist(strsplit(tt, "\t")))) :
+>   NAs introduced by coercion
+> 
+> I would appreciate any help or idea that I can use to solve my problem.
+> 
+> Kind regards, and thanks in advanced for any suggestion.
+> 
+> Liliana.
+> 
+> 
+> --------------------------------------
+> Liliana Ballesteros Mejia
+> PhD. Student
+> Institute of Biogeography
+> University of Basel
+> St. Johanns Vorstadt 10
+> CH 4056 Basel
+> Tel: +41-612670803
+> Switzerland
+> 
+> 
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+
+-- 
+Corrado Topi
+
+Global Climate Change & Biodiversity Indicators
+Area 18,Department of Biology
+University of York, York, YO10 5YW, UK
+Phone: + 44 (0) 1904 328645, E-mail: ct529 at york.ac.uk
+
+
+From jan.hanspach at ufz.de  Mon Oct 19 13:44:57 2009
+From: jan.hanspach at ufz.de (Jan Hanspach)
+Date: Mon, 19 Oct 2009 13:44:57 +0200
+Subject: [R-sig-eco] Rotations for PCoA?
+Message-ID: <4ADC5139.9000707@ufz.de>
+
+Dear all,
+I have a bunch of plant species and their traits (life span, pollination
+type, strategy type, association to human disturbance... overall 5
+categorical and two interval scaled variables). I want to know how the
+traits are interrelated, e.g. are annual plants predominantly ruderals
+that grow in habitats strongly disturbed by humans.
+
+Therefore I calculated a Gower dissimilarity matrix on the species
+traits (species=rows, traits=columns; using daisy(), which seems to be
+appropriate for mixed variable types). With the dissimilartiy matrix I
+calculate a PCoA using cmdscale and that works fine (beside some
+negative Eigenvalues).
+
+Now, I want to know if  it is possible to get rotations for my traits,
+like it is calculated for a PCA? So that I can plot my traits within the
+ordinations space (or give the values in a table).
+Thanks!
+Jan
+
+
+-- 
+Jan Hanspach
+Doktorand / Department Bioz?noseforschung
+PhD-Student / Department of Community Ecology
+
+Helmholtz-Zentrum f?r Umweltforschung GmbH - UFZ
+Helmholtz Centre for Environmental Research - UFZ
+Theodor-Lieser-Str. 4 / 06120 Halle (Saale) / Germany
+
+jan.hanspach at ufz.de / http://www.ufz.de
+phone +49 345 558 5307 / Fax +49 345 558 5329
+
+Home: http://www.ufz.de/index.php?en=10434
+Protected areas in Germany under climate change:
+http://www.pik-potsdam.de/vme/schutzgebiete
+http://www.pik-potsdam.de/infothek/klimawandel-und-schutzgebiete
+
+
+From sarah.goslee at gmail.com  Mon Oct 19 15:31:24 2009
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Mon, 19 Oct 2009 09:31:24 -0400
+Subject: [R-sig-eco] Rotations for PCoA?
+In-Reply-To: <4ADC5139.9000707@ufz.de>
+References: <4ADC5139.9000707@ufz.de>
+Message-ID: <efb536d50910190631t303a904ve85538679dfae9f7@mail.gmail.com>
+
+It isn't "just like a PCA" but you can use a permutation procedure to fit
+the traits to a 2-dimensional ordination configuration using vf() in the
+ecodist package.
+
+Sarah
+
+On Mon, Oct 19, 2009 at 7:44 AM, Jan Hanspach <jan.hanspach at ufz.de> wrote:
+> Dear all,
+> I have a bunch of plant species and their traits (life span, pollination
+> type, strategy type, association to human disturbance... overall 5
+> categorical and two interval scaled variables). I want to know how the
+> traits are interrelated, e.g. are annual plants predominantly ruderals
+> that grow in habitats strongly disturbed by humans.
+>
+> Therefore I calculated a Gower dissimilarity matrix on the species
+> traits (species=rows, traits=columns; using daisy(), which seems to be
+> appropriate for mixed variable types). With the dissimilartiy matrix I
+> calculate a PCoA using cmdscale and that works fine (beside some
+> negative Eigenvalues).
+>
+> Now, I want to know if ?it is possible to get rotations for my traits,
+> like it is calculated for a PCA? So that I can plot my traits within the
+> ordinations space (or give the values in a table).
+> Thanks!
+> Jan
+>
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From jan.hanspach at ufz.de  Mon Oct 19 16:12:28 2009
+From: jan.hanspach at ufz.de (Jan Hanspach)
+Date: Mon, 19 Oct 2009 16:12:28 +0200
+Subject: [R-sig-eco] Rotations for PCoA?
+In-Reply-To: <efb536d50910190631t303a904ve85538679dfae9f7@mail.gmail.com>
+References: <4ADC5139.9000707@ufz.de>
+	<efb536d50910190631t303a904ve85538679dfae9f7@mail.gmail.com>
+Message-ID: <4ADC73CC.9070807@ufz.de>
+
+Dear Sarah,
+that sounds good to me, thanks!
+
+Still, I have two more questions:
+
+The variable fitting with vf() does only work when I "dummy-transform" 
+my categorical variables. Are the derived correlations then still 
+comparable to the Gower distance - PCoA scores where my categorical 
+variables where defined as such?
+
+Is it reasonable to do more than the correlations with two axes with 
+vf(), i.e. after calculating the correlation for the first and the 
+second axis doing the same for the third and the forth? I guess this is 
+a very naive question, but shouldn't this work for the p-Values since 
+they are calculated with a permutation procedure?
+
+Best
+Jan
+
+Sarah Goslee wrote:
+> It isn't "just like a PCA" but you can use a permutation procedure to fit
+> the traits to a 2-dimensional ordination configuration using vf() in the
+> ecodist package.
+>
+> Sarah
+>
+> On Mon, Oct 19, 2009 at 7:44 AM, Jan Hanspach <jan.hanspach at ufz.de> wrote:
+>   
+>> Dear all,
+>> I have a bunch of plant species and their traits (life span, pollination
+>> type, strategy type, association to human disturbance... overall 5
+>> categorical and two interval scaled variables). I want to know how the
+>> traits are interrelated, e.g. are annual plants predominantly ruderals
+>> that grow in habitats strongly disturbed by humans.
+>>
+>> Therefore I calculated a Gower dissimilarity matrix on the species
+>> traits (species=rows, traits=columns; using daisy(), which seems to be
+>> appropriate for mixed variable types). With the dissimilartiy matrix I
+>> calculate a PCoA using cmdscale and that works fine (beside some
+>> negative Eigenvalues).
+>>
+>> Now, I want to know if  it is possible to get rotations for my traits,
+>> like it is calculated for a PCA? So that I can plot my traits within the
+>> ordinations space (or give the values in a table).
+>> Thanks!
+>> Jan
+>>
+>>     
+>
+>   
+
+-- 
+Jan Hanspach
+Doktorand / Department Bioz?noseforschung
+PhD-Student / Department of Community Ecology
+
+Helmholtz-Zentrum f?r Umweltforschung GmbH - UFZ
+Helmholtz Centre for Environmental Research - UFZ
+Theodor-Lieser-Str. 4 / 06120 Halle (Saale) / Germany
+
+jan.hanspach at ufz.de / http://www.ufz.de
+phone +49 345 558 5307 / Fax +49 345 558 5329
+
+Home: http://www.ufz.de/index.php?en=10434
+Protected areas in Germany under climate change:
+http://www.pik-potsdam.de/vme/schutzgebiete
+http://www.pik-potsdam.de/infothek/klimawandel-und-schutzgebiete
+
+
+From jung at siu.edu  Mon Oct 19 16:29:21 2009
+From: jung at siu.edu (Lene Jung Kjaer)
+Date: Mon, 19 Oct 2009 09:29:21 -0500
+Subject: [R-sig-eco] Mixed model mutiple regression for circular data
+Message-ID: <75E62082F5F7419BB2E51F4539493EAF@Lene>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091019/4f91f69b/attachment.pl>
+
+From sarah.goslee at gmail.com  Mon Oct 19 16:41:10 2009
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Mon, 19 Oct 2009 10:41:10 -0400
+Subject: [R-sig-eco] Rotations for PCoA?
+In-Reply-To: <4ADC73CC.9070807@ufz.de>
+References: <4ADC5139.9000707@ufz.de>
+	<efb536d50910190631t303a904ve85538679dfae9f7@mail.gmail.com>
+	<4ADC73CC.9070807@ufz.de>
+Message-ID: <efb536d50910190741o401ad362u6c7230198adcd61f@mail.gmail.com>
+
+On Mon, Oct 19, 2009 at 10:12 AM, Jan Hanspach <jan.hanspach at ufz.de> wrote:
+> Dear Sarah,
+> that sounds good to me, thanks!
+>
+> Still, I have two more questions:
+>
+> The variable fitting with vf() does only work when I "dummy-transform" my
+> categorical variables. Are the derived correlations then still comparable to
+> the Gower distance - PCoA scores where my categorical variables where
+> defined as such?
+
+I think it only makes sense with quantitative variables. There's no "direction"
+to categorical variables, so how could you fit one? Usually with categorical
+variables I plot the ordination with different symbols to denote the class of
+the categorical variables, and look at pattern that way.
+
+> Is it reasonable to do more than the correlations with two axes with vf(),
+> i.e. after calculating the correlation for the first and the second axis
+> doing the same for the third and the forth? I guess this is a very naive
+> question, but shouldn't this work for the p-Values since they are calculated
+> with a permutation procedure?
+
+You're fitting the variables to that ordination diagram. It's entirely possible
+ that the best fit for dimensions 3 and 4 of a four-dimensional fit are not the
+same as the best fit of axis 3 and 4 by themselves. So it depends on your
+question.
+
+Alternatively, I think the vegan package has a more sophisticated vector-
+fitting function.
+
+Sarah
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From lailaliana78 at yahoo.com  Tue Oct 20 09:59:31 2009
+From: lailaliana78 at yahoo.com (Claudia liliana Ballesteros Mejia)
+Date: Tue, 20 Oct 2009 00:59:31 -0700 (PDT)
+Subject: [R-sig-eco] reading large files in R
+In-Reply-To: <2439f5740910161525u5037579fwf0a20475aef71976@mail.gmail.com>
+References: <488303.3021.qm@web36807.mail.mud.yahoo.com>
+	<2439f5740910161525u5037579fwf0a20475aef71976@mail.gmail.com>
+Message-ID: <826378.56301.qm@web36807.mail.mud.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20091020/5627e648/attachment.pl>
+
+From etiennelaliberte at gmail.com  Tue Oct 20 12:19:15 2009
+From: etiennelaliberte at gmail.com (=?ISO-8859-1?Q?Etienne_Lalibert=E9?=)
+Date: Tue, 20 Oct 2009 23:19:15 +1300
+Subject: [R-sig-eco] Rotations for PCoA?
+Message-ID: <554cd6450910200319l7528f406i76703ab0d4904d99@mail.gmail.com>
+
+> Date: Mon, 19 Oct 2009 13:44:57 +0200
+> From: Jan Hanspach <jan.hanspach at ufz.de>
+> Subject: [R-sig-eco] Rotations for PCoA?
+> To: r-sig-ecology at r-project.org
+> Message-ID: <4ADC5139.9000707 at ufz.de>
+> Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+>
+>
+>
+> Now, I want to know if ?it is possible to get rotations for my traits,
+> like it is calculated for a PCA? So that I can plot my traits within the
+> ordinations space (or give the values in a table).
+> Thanks!
+> Jan
+
+Pierre Legendre recently emailed me one function which does exactly
+that. I haven't found it on his website so I assume it's not
+"official" yet. In any case, I'm sure he wouldn't mind me sharing it
+and it can certainly give you some good ideas on how to represent the
+original variables in a PCoA biplot. Here's the code. Enjoy.
+
+
+pcoa.biplot <- function(Y, D, dir.axis.1=1, dir.axis.2=1)
+
+#
+
+# This principal coordinate analysis (PCoA) function produces a biplot
+
+# of the points with projection of the original variables.
+
+#
+
+# Y = (n x p) data table
+
+# D = distance matrix of order n
+
+# dir.axis.1 = -1 to revert axis 1 for the projection of points and variables
+
+# dir.axis.2 = -1 to revert axis 2 for the projection of points and variables
+
+#
+
+#            Pierre Legendre, November 2008
+
+#
+
+{
+
+n = nrow(Y)
+
+p = ncol(Y)
+
+nn = nrow(as.matrix(D))
+
+if(nn != n) stop("Different numbers of objects in Y and D")
+
+
+
+# Principal coordinate analysis (PCoA)
+
+k = min(p,(n-1))
+
+pcoa.res = cmdscale(D, k=k, eig=TRUE)
+
+size = length(pcoa.res$eig)
+
+
+
+# Centre the Y data by columns
+
+Y.c = apply(as.matrix(Y),2,scale,center=TRUE,scale=FALSE)
+
+# Y.stand = apply(as.matrix(Y),2,scale,center=TRUE,scale=TRUE)
+
+
+
+# Classical method to find position of variables for biplot:
+
+# construct U from covariance matrix between Y and standardized points
+
+# (equivalent to PCA scaling 1, since PCoA preserve distances among objects)
+
+points.stand = apply(pcoa.res$points,2,scale,center=TRUE,scale=TRUE)
+
+S = cov(Y, points.stand)
+
+U = S %*% diag((pcoa.res$eig/(n-1))^(-0.5))
+
+
+
+rownames(U) = rownames(Y[1:size,])
+
+colnames(U) = colnames(U, do.NULL = FALSE, prefix = "Axis.")
+
+rownames(pcoa.res$points) = rownames(Y)
+
+colnames(pcoa.res$points) = colnames(pcoa.res$points, do.NULL = FALSE,
+prefix = "Axis.")
+
+
+
+diag.dir = diag(c(dir.axis.1,dir.axis.2))
+
+pcoa.res$points[,1:2] = pcoa.res$points[,1:2] %*% diag.dir
+
+U[,1:2] = U[,1:2] %*% diag.dir
+
+biplot(pcoa.res$points, U, xlab="PCoA axis 1", ylab="PCoA axis 2")
+
+title(main = c("PCoA biplot","Variables projected as in PCA","with
+scaling type 1"), family="serif", line=4)
+
+
+
+out = list(eig=pcoa.res$eig, points=pcoa.res$points, U=U, S=S)
+
+out
+
+}
+
+
+
+# --------
+
+
+
+# Test, comparison PCA - PCoA
+
+# Source the functions PCA.R (Lab's Web page) and pcoa.bip.R (this one)
+
+
+
+# par(mfrow=c(1,2))
+
+# mat20 = matrix(rnorm(100),20,5)
+
+# mat20.D = dist(mat20)
+
+
+
+# mat20.PCA = PCA(mat20)
+
+# biplot(mat20.PCA)
+
+
+
+# mat20.PCoA.2 = pcoa.biplot(mat20, mat20.D)
+
+
+
+# --------
+
+
+
+# Does this method work when p > n ?
+
+
+
+# mat20.t.D = dist(t(mat20))
+
+
+
+# mat20.t.PCA = PCA(t(mat20))
+
+# biplot(mat20.t.PCA)
+
+
+
+# mat20.t.pcoa.2 = pcoa.biplot(t(mat20), mat20.t.D)  # Works fine
+
+
+
+# --------
+
+--
+Etienne Lalibert?
+================================
+Rural Ecology Research Group
+School of Forestry
+University of Canterbury
+Private Bag 4800
+Christchurch 8140, New Zealand
+Phone: +64 3 366 7001 ext. 8365
+Fax: +64 3 364 2124
+www.elaliberte.info
+
+
+From jari.oksanen at oulu.fi  Tue Oct 20 22:40:04 2009
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Tue, 20 Oct 2009 23:40:04 +0300
+Subject: [R-sig-eco] Rotations for PCoA?
+In-Reply-To: <554cd6450910200319l7528f406i76703ab0d4904d99@mail.gmail.com>
+Message-ID: <C703FAD4.4585%jari.oksanen@oulu.fi>
+
+
+
+
+On 20/10/09 13:19 PM, "Etienne Lalibert?" <etiennelaliberte at gmail.com>
+wrote:
+
+>> Date: Mon, 19 Oct 2009 13:44:57 +0200
+>> From: Jan Hanspach <jan.hanspach at ufz.de>
+>> Subject: [R-sig-eco] Rotations for PCoA?
+>> To: r-sig-ecology at r-project.org
+>> Message-ID: <4ADC5139.9000707 at ufz.de>
+>> Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+>> 
+>> 
+>> 
+>> Now, I want to know if ?it is possible to get rotations for my traits,
+>> like it is calculated for a PCA? So that I can plot my traits within the
+>> ordinations space (or give the values in a table).
+>> Thanks!
+>> Jan
+> 
+> Pierre Legendre recently emailed me one function which does exactly
+> that. I haven't found it on his website so I assume it's not
+> "official" yet. In any case, I'm sure he wouldn't mind me sharing it
+> and it can certainly give you some good ideas on how to represent the
+> original variables in a PCoA biplot. Here's the code. Enjoy.
+> 
+> 
+Howdy Folks,
+
+Actually, it is "trivial" to have rotation scores for continuous variables:
+it is nothing but matrix multiplication. The problem here is that the
+original analysis used Gower distance for mixed metrics, and we should map
+the factor variables onto continuous variables in the same way as the Gower
+distance does. After that it is "easy" to find the "rotation" scores (but
+see below on metrics). While this can be done, this probably is not wanted
+since the interpretation of "rotation" for factors is non-intuitive, to put
+it mildly. Gower distance handles factors in a special way, and they are not
+the simple factor contrasts you get in standard R functions. How they are
+actually handled can be seen in the Fortran code for daisy or in Gower's
+paper. An extra complication is that Gower distance uses Manhattan metric.
+Therefore it is not possible to just transform data matrix into a form that
+would give the rotation scores in Euclidean PCoA.
+
+The standard way (that is not used in Gower distance) to transform factors
+into continuous data is to use
+
+ mm <- model.matrix(~ ., mydatawithfactors)
+
+Which gives you a model matrix where factors are broken into continuous
+contrast variables. You can get "rotation", biplot scores or what ever you
+call for these contrasts, but that is only the beginning of the problems --
+what are you going to do with those scores?
+
+Perhaps you can try vegan function envfit which finds the "rotation" scores
+for continuous variables and class centroids for factor variables. They are
+not the same as the strict rotation scores for factors in Gower metric (but
+should be the same as the Legendre scores for continuous variables), but may
+be more intuitive. 
+
+Cheers, jari oksanen
+
+
+From jan.hanspach at ufz.de  Wed Oct 21 13:21:02 2009
+From: jan.hanspach at ufz.de (Jan Hanspach)
+Date: Wed, 21 Oct 2009 13:21:02 +0200
+Subject: [R-sig-eco] Rotations for PCoA?
+In-Reply-To: <C703FAD4.4585%jari.oksanen@oulu.fi>
+References: <C703FAD4.4585%jari.oksanen@oulu.fi>
+Message-ID: <4ADEEE9E.8050607@ufz.de>
+
+Dear Jari and all others, thanks for your responses!
+> Howdy Folks,
+>
+> Actually, it is "trivial" to have rotation scores for continuous variables:
+> it is nothing but matrix multiplication. The problem here is that the
+> original analysis used Gower distance for mixed metrics, and we should map
+> the factor variables onto continuous variables in the same way as the Gower
+> distance does. After that it is "easy" to find the "rotation" scores (but
+> see below on metrics). While this can be done, this probably is not wanted
+> since the interpretation of "rotation" for factors is non-intuitive, to put
+> it mildly. Gower distance handles factors in a special way, and they are not
+> the simple factor contrasts you get in standard R functions. How they are
+> actually handled can be seen in the Fortran code for daisy or in Gower's
+> paper. An extra complication is that Gower distance uses Manhattan metric.
+> Therefore it is not possible to just transform data matrix into a form that
+> would give the rotation scores in Euclidean PCoA.
+>
+> The standard way (that is not used in Gower distance) to transform factors
+> into continuous data is to use
+>
+>  mm <- model.matrix(~ ., mydatawithfactors)
+>   
+That would have be my alternative when the envfit method (see below) was 
+not appropriate.
+> Which gives you a model matrix where factors are broken into continuous
+> contrast variables. You can get "rotation", biplot scores or what ever you
+> call for these contrasts, but that is only the beginning of the problems --
+> what are you going to do with those scores?
+>   
+I want to present the scores in table (or possibly a biplot) to 
+illustrate interrelatedness of variables. I want to use the variables 
+(not the scores) later in a multi-variable regression and want to give 
+the reader an idea of the data structure. I don't need the scores for 
+further analysis/calculations. So they do not have to be precise in a 
+strict sense, but at least the method should be justified and not 
+completely wrong.
+
+> Perhaps you can try vegan function envfit which finds the "rotation" scores
+> for continuous variables and class centroids for factor variables. They are
+> not the same as the strict rotation scores for factors in Gower metric (but
+> should be the same as the Legendre scores for continuous variables), but may
+> be more intuitive. 
+>   
+O.k., I'll keep it in mind, that envfit scores do not equal "Gower-PCoA-scores", but they are some kind of easily obtainable substitute and I hope they represent the true scores sufficiently well for my illustrative purposes.
+
+Thanks again for your advice
+Best
+Jan
+
+
+From rebecca.ross at plants.ox.ac.uk  Sat Oct 24 00:15:02 2009
+From: rebecca.ross at plants.ox.ac.uk (Rebecca Ross)
+Date: Fri, 23 Oct 2009 23:15:02 +0100
+Subject: [R-sig-eco] survival analysis: flowering time
+Message-ID: <756B64E07365AF43BE945A734A85E44528C36B0A54@EXMBX03.ad.oak.ox.ac.uk>
+
+Dear All,
+
+I am using survival analysis to compare flowering time between different populations in a field experiment. I have 3 possible outcomes:
+a) flowered during experiment
+b) had not flowered and were alive at harvest
+c) had not flowered and were dead at harvest
+
+Clearly, b) are right censored. But I am unsure what to do for c) as they were not censored (event will never happen), but equally I do not have a 'time to event' for them. To make things more complicated, dying before harvest is not independent of flowering time as being on the verge of death would make them also less able to flower, therefore recording them as being censored might be misleading.
+
+Apologies if this is a naive question, it is my first time with survival analysis!
+
+Any thoughts much appreciated!
+
+Rebecca
+
+From cmgast at gmail.com  Sat Oct 24 01:50:12 2009
+From: cmgast at gmail.com (Chris Gast)
+Date: Fri, 23 Oct 2009 23:50:12 +0000 (UTC)
+Subject: [R-sig-eco] survival analysis: flowering time
+References: <756B64E07365AF43BE945A734A85E44528C36B0A54@EXMBX03.ad.oak.ox.ac.uk>
+Message-ID: <loom.20091024T014956-165@post.gmane.org>
+
+Hi Rebecca,
+
+I am reminded of a statistical technique from preclinical biostatistics
+(carcinogenicity) called the Peto prevalence-mortality test.  Essentially, it is
+a method for assessing time to tumor development, when tumor development and
+mortality are related.  I wonder if this, or some similar method can be adapted
+to your situation, wherein tumor development is akin to flowering....?
+
+
+
+Chris
+
+
+From mick.wu at mail.mcgill.ca  Sat Oct 24 22:27:19 2009
+From: mick.wu at mail.mcgill.ca (Gi-Mick Wu)
+Date: Sat, 24 Oct 2009 16:27:19 -0400
+Subject: [R-sig-eco] survival analysis: flowering time (Rebecca Ross)
+Message-ID: <B89AE5DF4F2A964FB322E3F53F02EE0D41648BA422@EXMBXVS4A.campus.mcgill.ca>
+
+Hi Rebecca,
+
+Could it fall in the framework of survival analysis with "competing events" or "competing risks".
+In the medical field (not mine) it can be used to predict healing vs death, dying from disease A or B, etc. As far as I know, it assumes that the risk of competing events are independent.
+
+I have not gone far enough to code it in R, but you can read on it in:
+Kleinbaum DG, Klein M (2005) Survival Analysis, A Self-Learning Text, 2nd edn. Springer, London (and many other texts I'm sure)
+
+Good luck!
+Mick
+
+PhD candidate
+Natural Resource Sciences
+McGill University, Canada
+
+________________________________________
+From: r-sig-ecology-bounces at r-project.org [r-sig-ecology-bounces at r-project.org] On Behalf Of r-sig-ecology-request at r-project.org [r-sig-ecology-request at r-project.org]
+Sent: October 24, 2009 6:00 AM
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 19, Issue 15
+
+Send R-sig-ecology mailing list submissions to
+        r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+        https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+        r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+        r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific
+than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. survival analysis: flowering time (Rebecca Ross)
+   2. Re: survival analysis: flowering time (Chris Gast)
+
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Fri, 23 Oct 2009 23:15:02 +0100
+From: Rebecca Ross <rebecca.ross at plants.ox.ac.uk>
+Subject: [R-sig-eco] survival analysis: flowering time
+To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Message-ID:
+        <756B64E07365AF43BE945A734A85E44528C36B0A54 at EXMBX03.ad.oak.ox.ac.uk>
+Content-Type: text/plain; charset="us-ascii"
+
+Dear All,
+
+I am using survival analysis to compare flowering time between different populations in a field experiment. I have 3 possible outcomes:
+a) flowered during experiment
+b) had not flowered and were alive at harvest
+c) had not flowered and were dead at harvest
+
+Clearly, b) are right censored. But I am unsure what to do for c) as they were not censored (event will never happen), but equally I do not have a 'time to event' for them. To make things more complicated, dying before harvest is not independent of flowering time as being on the verge of death would make them also less able to flower, therefore recording them as being censored might be misleading.
+
+Apologies if this is a naive question, it is my first time with survival analysis!
+
+Any thoughts much appreciated!
+
+Rebecca
+
+
+------------------------------
+
+Message: 2
+Date: Fri, 23 Oct 2009 23:50:12 +0000 (UTC)
+From: Chris Gast <cmgast at gmail.com>
+Subject: Re: [R-sig-eco] survival analysis: flowering time
+To: r-sig-ecology at r-project.org
+Message-ID: <loom.20091024T014956-165 at post.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+
+Hi Rebecca,
+
+I am reminded of a statistical technique from preclinical biostatistics
+(carcinogenicity) called the Peto prevalence-mortality test.  Essentially, it is
+a method for assessing time to tumor development, when tumor development and
+mortality are related.  I wonder if this, or some similar method can be adapted
+to your situation, wherein tumor development is akin to flowering....?
+
+
+
+Chris
+
+
+
+------------------------------
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+End of R-sig-ecology Digest, Vol 19, Issue 15
+
+
+From abarberan at ceab.csic.es  Tue Oct 27 11:42:01 2009
+From: abarberan at ceab.csic.es (=?iso-8859-1?Q?Albert_Barber=E1n_Torrents?=)
+Date: Tue, 27 Oct 2009 11:42:01 +0100
+Subject: [R-sig-eco] rarefy problem (vegan)
+Message-ID: <21DF88E3-E5AF-44B1-9A05-B09ADB0F7FF6@ceab.csic.es>
+
+Hi all,
+I have been using the rarefy function of vegan but it looks that  
+something's wrong with my dataset. The first dataframe (func) works  
+perfectly:
+ > pdf("commAT_rare_func.pdf")
+ > par(mfrow=c(3,3))
+ > for (i in 1:9) {	
++ 	N<-colSums(func[i,])
++ 	sub<-c(seq(0,sum(N), by=500), sum(N))
++ 	rar<-rarefy(N, sample=sub, se=T, MARG=2)
++ 	plot(sub, rar[1,], ylab="Richness", xlab="Number of individuals",  
+main=row.names(func[i,]), type="l", lwd=3)
++ 	lines(sub, rar[1,]+rar[2,], lty=3)
++ 	lines(sub, rar[1,]-rar[2,], lty=3)
++ 	}
+ > dev.off()
+but the second one (clust, which is bigger but exactly the same  
+structure):
+ > pdf("commAT_rare_clust.pdf")
+ > par(mfrow=c(3,3))
+ > for (i in 1:9) {	
++ 	N<-colSums(clust[i,])
++ 	sub<-c(seq(0,sum(N), by=500), sum(N))
++ 	rar<-rarefy(N, sample=sub, se=T, MARG=2)
++ 	plot(sub, rar[1,], ylab="Richness", xlab="Number of individuals",  
+main=row.names(clust[i,]), type="l", lwd=3)
++ 	lines(sub, rar[1,]+rar[2,], lty=3)
++ 	lines(sub, rar[1,]-rar[2,], lty=3)
++ 	}
+Error in outer(x, x, "+") : negative length vectors are not allowed
+Calls: rarefy -> sapply -> lapply -> FUN -> apply -> FUN -> outer
+Execution halted
+I don not know what is happening because I calculated other diversity  
+metrics with both datasets and it worked fine. Any ideas?
+_________________________________
+Albert Barberan
+
+CEAB-CSIC
+Acces Cala St. Francesc, 14
+17300 Blanes, SPAIN
+Tel +34 972 33 6101 Fax +34 972 33 7806
+http://nodens.ceab.csic.es/ecogenomics
+e-mail abarberan at ceab.csic.es
+
+
+From oldeland at gmx.de  Fri Oct 30 09:31:01 2009
+From: oldeland at gmx.de (Jens Oldeland)
+Date: Fri, 30 Oct 2009 09:31:01 +0100
+Subject: [R-sig-eco] Fit of ordination axes always given?
+Message-ID: <4AEAA445.8000108@gmx.de>
+
+Dear group,
+
+I have used the as.mlm.cca(vegan) function to derive statistical 
+measures for the goodness of fit of my environmental variables and the 
+ordination axes of an RDA.
+I prepared a manuscript in which I used spectral indices (NDVI etc.) as 
+environmental variables in a RDAand have now received answers from a 
+reviewer in which he/she states that:
+
+
+/'Ordination axes that show a good statistical fit with the spectral 
+indices' - all ordination axes are linearly related to the predictors - 
+this is forced by the CCA or RDA method itself (see l. 203 ff). Thus, 
+statistical fit is always given. /
+
+
+I agree that all ordination axes are linearly related to the predictors, 
+but I refuse to believe that therefore a good (!) 'statistical fit is 
+always given'. It might be also pretty poor, in my opinion.
+
+Am I wrong?
+
+
+I would be very grateful if someone could comment on that,
+thank you in advance,
+Jens
+//
+
+-- 
++++++++++++++++++++++++++++++++++++++++++
+Dipl.Biol. Jens Oldeland
+University of Hamburg
+Biocentre Klein Flottbek and Botanical Garden
+Ohnhorststr. 18
+22609 Hamburg,
+Germany
+
+Tel:    0049-(0)40-42816-407
+Fax:    0049-(0)40-42816-543
+Mail: 	Oldeland at botanik.uni-hamburg.de
+        Jens.Oldeland at DLR.de  (for attachments > 2mb!!)
+http://www.biologie.uni-hamburg.de/bzf/fbda005/fbda005.htm
++++++++++++++++++++++++++++++++++++++++++
+
+

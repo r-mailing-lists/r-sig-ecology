@@ -1,0 +1,616 @@
+From rowan.brookes at sci.monash.edu.au  Tue Aug  5 11:47:21 2008
+From: rowan.brookes at sci.monash.edu.au (Rowan Brookes)
+Date: Tue, 05 Aug 2008 19:47:21 +1000
+Subject: [R-sig-eco] unplanned contrasts with categorical and continuous
+	variables
+Message-ID: <489821A9.8020109@sci.monash.edu.au>
+
+Hi,
+
+I have conducted a general linear model with a mixture of continuous 
+(POSITION; flower position on a raceme) and categorical (POLLEN and 
+RESOURCE) variables.
+
+The model looks like this: 
+seedset.glm<-glm(MNSEED~POSITION*POLLEN*RESOURCE, family = gaussian, 
+data = PR)
+
+I have a significant interaction between position, pollen and resource 
+but am unsure of how I should be doing an unplanned comparison when I 
+have both categorical and continuous variables.  Can anybody direct me 
+in the right direction?
+
+I had initially turned flower position into a categorical variable, but 
+had some opposition to this from reviewers.
+
+Thanks very, very much,
+
+Rowan
+
+From Griffith.Michael at epamail.epa.gov  Wed Aug  6 19:51:25 2008
+From: Griffith.Michael at epamail.epa.gov (Griffith.Michael at epamail.epa.gov)
+Date: Wed, 6 Aug 2008 13:51:25 -0400
+Subject: [R-sig-eco] handling ca
+Message-ID: <OFDE8ED761.6EA2468F-ON8525749D.0059846C-8525749D.006216CF@epamail.epa.gov>
+
+
+In trying to use randomForest, I got the following error message:
+
+Error in data.matrix(x) : non-numeric data type in frame
+
+Am I correct that this means that randomForest  has not be written in R
+to handle categorical predictor variables?  Is there a way around this?
+I am working with two categorical variables (out of 4 predictor
+variables) with more than 2 levels that do not have any particular order
+to them.  The instructions for the original random forest program by
+Brieman indicates that it handles categorical predictor variables, so I
+am surprised that the R version does not.
+
+Michael
+
+Michael B. Griffith, Ph.D.
+Research Ecologist
+
+USEPA, NCEA (MS A-110)
+26 W. Martin Luther King Dr.
+Cincinnati, OH  45268
+
+telephone:  513 569-7034
+e-mail:  griffith.michael at epa.gov
+
+
+From gavin.simpson at ucl.ac.uk  Thu Aug  7 11:23:03 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Thu, 07 Aug 2008 10:23:03 +0100
+Subject: [R-sig-eco] handling ca
+In-Reply-To: <OFDE8ED761.6EA2468F-ON8525749D.0059846C-8525749D.006216CF@epamail.epa.gov>
+References: <OFDE8ED761.6EA2468F-ON8525749D.0059846C-8525749D.006216CF@epamail.epa.gov>
+Message-ID: <1218100983.2970.5.camel@prometheus.geog.ucl.ac.uk>
+
+On Wed, 2008-08-06 at 13:51 -0400, Griffith.Michael at epamail.epa.gov
+wrote:
+> In trying to use randomForest, I got the following error message:
+> 
+> Error in data.matrix(x) : non-numeric data type in frame
+> 
+> Am I correct that this means that randomForest  has not be written in R
+> to handle categorical predictor variables?  Is there a way around this?
+> I am working with two categorical variables (out of 4 predictor
+> variables) with more than 2 levels that do not have any particular order
+> to them.  The instructions for the original random forest program by
+> Brieman indicates that it handles categorical predictor variables, so I
+> am surprised that the R version does not.
+
+No, randomForest handles factors, as this simple example shows:
+
+> dat <- data.frame(matrix(rnorm(1000), ncol = 10))
+> dat$fac <- gl(4,25)
+> head(dat)
+           X1         X2         X3         X4          X5         X6
+1 -0.15048037  1.2497460 -0.7728316 -0.3286552  1.59056488 -1.2579715
+2 -0.67688208 -2.0189794 -0.3154595  0.5998583 -1.89438803 -0.9737503
+3  1.02637837  0.3724476 -0.3145720  1.4510331  1.78757305  0.4365752
+4  0.08031081  0.6534088 -0.6211070  0.1432012 -0.51041876 -1.0198103
+5  0.09208803  0.6273971  0.7333440  0.4362220 -0.03848859  0.6260701
+6 -1.41415813 -1.1515418 -0.7457416  1.5853533 -1.17111942  2.5486069
+          X7         X8         X9        X10 fac
+1  0.7698208 -1.8697214 -1.1568065  0.8459625   1
+2 -0.2782257  0.1361337 -1.1308822  0.6001056   1
+3 -1.0053869  0.5940746 -0.1833341  2.0251286   1
+4 -0.9806460 -1.5225105 -1.8038346  0.2879445   1
+5 -0.3767947 -1.8172355  1.1956810  1.2158483   1
+6 -0.9316282  2.1180183 -0.6357269 -1.3134966   1
+> dat$fac
+  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2
+ [38] 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ [75] 3 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4
+Levels: 1 2 3 4
+> dat$resp <- rpois(100, 2)
+> dat$resp <- rnorm(100, 2)
+> forest <- randomForest(resp ~ ., data = dat)
+>
+
+As all you give is an error message we have very little to go on, but
+the first thing I would check is that your data is as you think it
+should be. factors can be converted to characters upon reading in data
+to R, so that'd be my first port of call. What does:
+
+str(mydata)
+
+return, where mydata is the object that is your data.
+
+Note the error comes from data.matrix. If you consult the help page for
+that function you would see that this is the preferred way of converting
+from a data frame to a matrix which preserves the numeric representation
+of factors. Clearly there is something that is not a factor or numeric
+in your data otherwise this standard R function would not have been
+giving and error.
+
+HTH
+
+G
+
+> 
+> Michael
+> 
+> Michael B. Griffith, Ph.D.
+> Research Ecologist
+> 
+> USEPA, NCEA (MS A-110)
+> 26 W. Martin Luther King Dr.
+> Cincinnati, OH  45268
+> 
+> telephone:  513 569-7034
+> e-mail:  griffith.michael at epa.gov
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From ssefick at gmail.com  Fri Aug  8 19:07:22 2008
+From: ssefick at gmail.com (stephen sefick)
+Date: Fri, 8 Aug 2008 13:07:22 -0400
+Subject: [R-sig-eco] StreamMetabolism
+Message-ID: <c502a9e10808081007m6ef299d8y385be9e556ba52f9@mail.gmail.com>
+
+StreamMetabolism has just been released on CRAN.  It is a package for
+the calculation of stream metabolism based on the single station
+method from diurnal oxygen curves.  It will probably undergo
+significant upgrades as the need arises.  I would greatly appreciate
+Comments, Suggestions, and help in improving upon this package.
+Enjoy
+
+Stephen Sefick
+
+-- 
+Let's not spend our time and resources thinking about things that are
+so little or so large that all they really do for us is puff us up and
+make us feel like gods. We are mammals, and have not exhausted the
+annoying little problems of being mammals.
+
+	-K. Mullis
+
+
+From l.li at fisheries.ubc.ca  Fri Aug 15 06:30:10 2008
+From: l.li at fisheries.ubc.ca (Lingbo Li)
+Date: Thu, 14 Aug 2008 21:30:10 -0700
+Subject: [R-sig-eco] quadratic factor
+Message-ID: <D284D0EE4E564E2EA62DFFB6F9D97FDC@tjpfc01>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080814/f98223db/attachment.pl>
+
+From s.blomberg1 at uq.edu.au  Fri Aug 15 07:12:27 2008
+From: s.blomberg1 at uq.edu.au (Simon Blomberg)
+Date: Fri, 15 Aug 2008 15:12:27 +1000
+Subject: [R-sig-eco] quadratic factor
+In-Reply-To: <D284D0EE4E564E2EA62DFFB6F9D97FDC@tjpfc01>
+References: <D284D0EE4E564E2EA62DFFB6F9D97FDC@tjpfc01>
+Message-ID: <1218777147.5101.20.camel@sib-sblomber01d.sib.uq.edu.au>
+
+To include a quadratic term, use I(Dor^2) instead of Dor^2. The problem
+is that R interprets Dor^2 as a formula term ie the main effect as well
+as the second-order interaction of Dor with itself (which is just Dor).
+Using the I() construct tells R to treat the enclosed expression as a
+mathematical expression.
+
+Cheers,
+
+Simon.
+
+On Thu, 2008-08-14 at 21:30 -0700, Lingbo Li wrote:
+> Hello R expert,
+> 
+> I have fish length and corresponding otolith size at six times for 30 fish. Firstly, I use a linear mixed effect model to correlate the fish length (L) with otolith size in dorsal radius (Dor). Since the residuals are domeshaped, I then tried to add a quadratic factor. However, as the summary shown below, the quadratic factor was missing in the analysis. WHY?
+> 
+> Thank you very much.
+> 
+> Lingbo
+> 
+> 
+> > back<-read.table("back.r", header=T)
+> 
+> > attach(back)
+> 
+> > names(back)
+> 
+> [1] "Fish"  "Treat" "Mark"  "L"     "Dor"   "Dis"   "Ven"   "Width"
+> 
+> > library(nlme)
+> 
+> > ldor.lme=lme(L~Dor, random=~1|Fish)
+> 
+> > ldor11.lme=lme(L~Dor+Dor^2, random=~1|Fish)
+> 
+> > summary(ldor11.lme)
+> 
+> Linear mixed-effects model fit by REML
+> 
+>  Data: NULL 
+> 
+>        AIC      BIC    logLik
+> 
+>   1539.336 1552.063 -765.6682
+> 
+>  
+> 
+> Random effects:
+> 
+>  Formula: ~1 | Fish
+> 
+>         (Intercept) Residual
+> 
+> StdDev:    31.90245 13.00981
+> 
+>  
+> 
+> Fixed effects: L ~ Dor + Dor^2 
+> 
+>                 Value Std.Error  DF  t-value p-value
+> 
+> (Intercept) -30.74635  9.775326 149 -3.14530   0.002
+> 
+> Dor         157.14556  3.157083 149 49.77556   0.000
+> 
+>  Correlation: 
+> 
+>     (Intr)
+> 
+> Dor -0.797
+> 
+>  
+> 
+> Standardized Within-Group Residuals:
+> 
+>         Min          Q1         Med          Q3         Max 
+> 
+> -2.47279716 -0.59191227 -0.09822955  0.49939862  3.12757256 
+> 
+>  
+> 
+> Number of Observations: 180 
+> 
+> Number of Groups: 30 
+> 
+> 
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+Simon Blomberg, BSc (Hons), PhD, MAppStat. 
+Lecturer and Consultant Statistician 
+Faculty of Biological and Chemical Sciences 
+The University of Queensland 
+St. Lucia Queensland 4072 
+Australia
+Room 320 Goddard Building (8)
+T: +61 7 3365 2506
+http://www.uq.edu.au/~uqsblomb
+email: S.Blomberg1_at_uq.edu.au
+
+Policies:
+1.  I will NOT analyse your data for you.
+2.  Your deadline is your problem.
+
+The combination of some data and an aching desire for 
+an answer does not ensure that a reasonable answer can 
+be extracted from a given body of data. - John Tukey.
+
+
+From dynbiosys at verizon.net  Sat Aug 16 19:36:14 2008
+From: dynbiosys at verizon.net (Louis Macovsky)
+Date: Sat, 16 Aug 2008 10:36:14 -0700
+Subject: [R-sig-eco] Time series modeling and simulation
+Message-ID: <006b01c8ffc6$950db490$0201a8c0@dynbiosys>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080816/5d2b4422/attachment.pl>
+
+From pturk at stat.wvu.edu  Sun Aug 17 15:55:33 2008
+From: pturk at stat.wvu.edu (Phil Turk)
+Date: Sun, 17 Aug 2008 09:55:33 -0400
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 5, Issue 5
+In-Reply-To: <mailman.1.1218967201.25967.r-sig-ecology@r-project.org>
+References: <mailman.1.1218967201.25967.r-sig-ecology@r-project.org>
+Message-ID: <48A82DD5.2040506@stat.wvu.edu>
+
+Louis:
+
+R has many options for time series analysis.  Google "R time series".
+
+A couple of good books to get you started are 1.) Time Series Analysis: 
+With Applications in R by Cryer and Chan and 2.) Time Series Analysis 
+and Its Applications: With R Examples by Shumway and Stoffer.
+
+-- Phil 
+
+r-sig-ecology-request at r-project.org wrote:
+> Send R-sig-ecology mailing list submissions to
+> 	r-sig-ecology at r-project.org
+>
+> To subscribe or unsubscribe via the World Wide Web, visit
+> 	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> or, via email, send a message with subject or body 'help' to
+> 	r-sig-ecology-request at r-project.org
+>
+> You can reach the person managing the list at
+> 	r-sig-ecology-owner at r-project.org
+>
+> When replying, please edit your Subject line so it is more specific
+> than "Re: Contents of R-sig-ecology digest..."
+>
+>
+> Today's Topics:
+>
+>    1. Time series modeling and simulation (Louis Macovsky)
+>
+>
+> ----------------------------------------------------------------------
+>
+> Message: 1
+> Date: Sat, 16 Aug 2008 10:36:14 -0700
+> From: "Louis Macovsky" <dynbiosys at verizon.net>
+> Subject: [R-sig-eco] Time series modeling and simulation
+> To: <r-sig-ecology at r-project.org>
+> Message-ID: <006b01c8ffc6$950db490$0201a8c0 at dynbiosys>
+> Content-Type: text/plain
+>
+> Hello,
+>
+> I am new to R and this list.
+>
+> The rule is never apologize before asking your question.  So let me break this rule.  First I am not a statistician and I have always struggled with the subject so please forgive me if I mangle terms and at times seem naive.
+>
+> The objective of my models and simulations is to reproduce observed time series data with tools that allow multiple parameter assumptions and then try to predict future behavior of the modeled system.  Presently my only computer tool for curve fitting is least squares.
+>
+> As I add each parameter to my models, I attempt to throughly explore their effect on model behavior.
+>
+> I would like to explore what I can do with R.  For now curve fitting and describe confidence limits of simulated time series data.
+>
+> I can export simulation results into excel for use by R.
+>
+> Assuming my very brief description of my objectives is clear enough, please give me suggestions of references and other reading sources that might help me explore what I can do with time series data in R.  Is there anyone on this list doing the same?
+>
+> Thanks,
+> Lou
+> 	[[alternative HTML version deleted]]
+>
+>
+>
+> ------------------------------
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+> End of R-sig-ecology Digest, Vol 5, Issue 5
+> *******************************************
+>   
+
+
+-- 
+Philip Turk
+Assistant Professor of Statistics
+Department of Statistics
+410 Hodges Hall, PO Box 6330
+West Virginia University
+Morgantown, WV 26506
+Phone: 304-293-3607 x1058
+Fax: 304-293-2272
+E-mail: pturk at stat.wvu.edu 
+URL: http://www.stat.wvu.edu/Faculty/pturk.html
+
+
+From dynbiosys at verizon.net  Mon Aug 18 05:40:53 2008
+From: dynbiosys at verizon.net (Louis Macovsky)
+Date: Sun, 17 Aug 2008 20:40:53 -0700
+Subject: [R-sig-eco] time series modeling and simulation
+References: <mailman.1.1218967201.25967.r-sig-ecology@r-project.org>
+	<48A82DD5.2040506@stat.wvu.edu>
+Message-ID: <004401c900e4$37cee820$0201a8c0@dynbiosys>
+
+To all who have replied to my query,
+Thanks.
+
+Lou
+
+
+From mspinola at una.ac.cr  Tue Aug 19 18:30:52 2008
+From: mspinola at una.ac.cr (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Tue, 19 Aug 2008 10:30:52 -0600
+Subject: [R-sig-eco] t-test with inverse variance weighting in R
+Message-ID: <48AAF53C.30507@una.ac.cr>
+
+Dear list members,
+
+I have 4 estimates (each estimate have its se or variance), 2 from 
+treatment units and 2 from control units.  I want to do a t-test with 
+inverse variance weighting to compare treatment vs control units.
+Does anybody knows if there is an R function to do this type of analysis?
+I am trying to get the confidence interval of the difference (I am not 
+interested in the t and P values).
+Thank you very much in advance.
+Best,
+
+Manuel Sp?nola
+
+-- 
+Manuel Sp?nola, Ph.D.
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.ac.cr
+mspinola10 at gmail.com
+Tel?fono: 277-3598
+Fax: 237-7036
+
+
+From Roel.May at nina.no  Wed Aug 27 13:48:48 2008
+From: Roel.May at nina.no (May, Roel)
+Date: Wed, 27 Aug 2008 13:48:48 +0200
+Subject: [R-sig-eco] lme and confidence intervals
+Message-ID: <A2C6E53287774840B0A2CEF5AED14DD5019A114E@alm.nina.no>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080827/bf5260ab/attachment.pl>
+
+From artibeus at gmail.com  Wed Aug 27 18:36:22 2008
+From: artibeus at gmail.com (Josh Stumpf)
+Date: Wed, 27 Aug 2008 12:36:22 -0400
+Subject: [R-sig-eco] R 2.7.2 Issues
+Message-ID: <28bef6b80808270936n50ef943ep4a6e05bd112873b1@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080827/987bf28b/attachment.pl>
+
+From tyler.smith at mail.mcgill.ca  Wed Aug 27 19:07:49 2008
+From: tyler.smith at mail.mcgill.ca (tyler)
+Date: Wed, 27 Aug 2008 14:07:49 -0300
+Subject: [R-sig-eco] R 2.7.2 Issues
+References: <28bef6b80808270936n50ef943ep4a6e05bd112873b1@mail.gmail.com>
+Message-ID: <87fxoqv122.fsf@blackbart.sedgenet>
+
+"Josh Stumpf" <artibeus at gmail.com> writes:
+
+> I'm not sure if this question is more appropriate here or in the Ubuntu
+> forums, but I'm willing to try anything at this point.
+
+Anything to do with R and Ubuntu (which is a derivative of Debian) is
+most appropriately dealt with on the r-sig-debian mailing list:
+
+https://stat.ethz.ch/mailman/listinfo/r-sig-debian
+
+The package maintainers read that list and usually respond very promptly
+when issues arise.
+
+Cheers,
+
+Tyler
+
+> This morning I upgraded to 2.7.2 via the Ubuntu package repository, and now
+> when I go to run R via the command line it fails to start, giving the
+> following error:
+>
+> Error in dyn.load(file, DLLpath = DLLpath, ...) :
+>   unable to load shared library
+> '/home/jstumpf/R/i486-pc-linux-gnu-library/2.7/kernlab/libs/kernlab.so':
+>   libRlapack.so: cannot open shared object file: No such file or directory
+> Fatal error: unable to restore saved data in .RData
+>
+> Has anyone else encountered this? Any solutions?
+>
+> 	[[alternative HTML version deleted]]
+
+-- 
+The purpose of models is not to fit the data but to sharpen the questions.
+                                       --Samuel Karlin
+
+
+From gavin.simpson at ucl.ac.uk  Wed Aug 27 19:14:33 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 27 Aug 2008 18:14:33 +0100
+Subject: [R-sig-eco] R 2.7.2 Issues
+In-Reply-To: <28bef6b80808270936n50ef943ep4a6e05bd112873b1@mail.gmail.com>
+References: <28bef6b80808270936n50ef943ep4a6e05bd112873b1@mail.gmail.com>
+Message-ID: <1219857273.2771.35.camel@desktop.localhost>
+
+On Wed, 2008-08-27 at 12:36 -0400, Josh Stumpf wrote:
+> I'm not sure if this question is more appropriate here or in the Ubuntu
+> forums, but I'm willing to try anything at this point.
+> This morning I upgraded to 2.7.2 via the Ubuntu package repository, and now
+> when I go to run R via the command line it fails to start, giving the
+> following error:
+> 
+> Error in dyn.load(file, DLLpath = DLLpath, ...) :
+>   unable to load shared library
+> '/home/jstumpf/R/i486-pc-linux-gnu-library/2.7/kernlab/libs/kernlab.so':
+>   libRlapack.so: cannot open shared object file: No such file or directory
+> Fatal error: unable to restore saved data in .RData
+> 
+> Has anyone else encountered this? Any solutions?
+
+Hmm,
+
+Kernlab is not a recommended package in R, so I suspect R is loading a
+previously saved workspace that contains an object or environment that
+requires kernlab and that has gotten broken since you updated.
+
+Does entering the following at the console start R:
+
+R --vanilla 
+
+If so, at least you can get R working. Even if this works, follow
+Tyler's advice and ask on the debian SIG for R as I suspect you'll want
+to solve the kernlab issue.
+
+HTH
+
+G
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From albertromeropuente at ub.edu  Sun Aug 31 18:00:12 2008
+From: albertromeropuente at ub.edu (Albert Romero)
+Date: Sun, 31 Aug 2008 18:00:12 +0200
+Subject: [R-sig-eco] glmer ,
+	quasipoisson and standard errors of the coefficients
+Message-ID: <48BAC00C.2010205@ub.edu>
+
+Hello,
+I am trying to simplify backwards a mixed effects model, using lmer 
+function from lme4 package. As my data are species numbers and there 
+exists overdisperison, I think appropriate to use glmer function with 
+error family quasipoisson. I compare one model with its simplification 
+through log-likelihood ratio tests.
+Nevertheless, once I have selected a simplified model, I find in the 
+summary of this 'significant' model that estimated coefficients  are  
+associated  to  very big  standard errors, to the point that no one of 
+the coefficients seem to be significantly different from zero.
+
+Here come my questions:
+Can anybody explain this contradiction among standard errors of the 
+estimated coefficients and the significance of the model?
+Is unappropriated to use Log-likelihood backwards simplification with 
+quasipoisson errors?
+
+Thank you in advance!
+
+-- 
+Albert Romero Puente
+Departament de Biologia Vegetal-Bot?nica
+Universitat de Barcelona
+Facultat de Biologia
+3a Planta
+Av. Diagonal, 645. (08028) Barcelona
+Tel. 0034 93 402 14 71
+
+

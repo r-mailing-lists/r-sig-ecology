@@ -1,0 +1,2484 @@
+From lawrence.david at duke.edu  Mon Mar  2 21:45:10 2015
+From: lawrence.david at duke.edu (Lawrence David)
+Date: Mon, 2 Mar 2015 20:45:10 +0000
+Subject: [R-sig-eco] Appropriate adonis call for time-series data?
+Message-ID: <A2C2304D-2010-4B87-B3F2-EC24DDF00366@dm.duke.edu>
+
+Hi everyone,
+
+I?m hoping some of you may be able to clarify how to use adonis to analyze time-series data of microbial communities.
+
+I?ve collected community data from different individuals after the same perturbation.
+
+I?d like to determine whether individual identity and/or time have effects on the sampled communities.
+
+My plan for analyzing these data is to consider ?time? a fixed effect and ?individual? a random effect.
+
+If this sounds reasonable, what might be the preferred approach for implementing this model in adonis? I am considering the following model, based on reading the vegan FAQ and these forums: adonis(dist_matrix ~ Individual + Time, strata=Individual)
+
+I should mention that I?ve already tried this and found some curious things. First, I?ve run:
+
+????????
+adonis(formula = vegdist(data,method="bray") ~ Individual+Time, permutations=10000, strata=Individual)
+Terms added sequentially (first to last)
+                        Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Individual            12    4.5076 0.37563  1.2296 0.36641  2e-04 ***
+Time  1    1.6845 1.68446  5.5139 0.13693  2e-04 ***
+Residuals               20    6.1099 0.30549         0.49666
+Total                   33   12.3019                 1.00000
+????????
+
+This seems surprising, as should I be able to detect a significant association with Individual, given that I?ve stratified on that variable?
+
+I?ve also tried running adonis on just Individual alone: adonis(formula = vegdist(data, method = "bray") ~ Individual, permutations=10000, strata=Individual)
+
+This is also a bit puzzling, as I get different results on my two workstations. According to my workstation install (R version 3.1.2 (2014-10-31); vegan 2.2-1), I get:
+
+????????
+Call:
+adonis(formula = vegdist(data, method="bray") ~ Individual, permutations=10000, strata=Individual)
+
+Blocks:  strata
+Permutation: free
+Number of permutations: 10000
+
+Terms added sequentially (first to last)
+
+            Df SumsOfSqs MeanSqs F.Model      R2    Pr(>F)
+Individual   12    4.5076 0.37563  1.0121 0.36641 9.999e-05 ***
+Residuals    21    7.7943 0.37116         0.63359
+Total        33   12.3019                 1.00000
+????????
+
+But, on my laptop (R version 3.0.3 (2014-03-06); vegan 2.0-9), the same call gives nearly the same results, but with different significance: Pr(>F)=1. Is strata not restricting permutations the way I want it to in the newer version of vegan?
+
+So, to summarize, my questions are:
+
+1) Am I using the right model design to test for an impact of time on a community sampled over time in subjects (i.e. adonis(dist_matrix ~Individual+Time,strata=Individual)
+2) Is this a valid test for whether ?Individual? contributes to community structure?
+3) Why might I be getting different results for running ?Individual' as a single factor and a stratifying variable at the same time?
+
+Thank you in advance for any help you can lend!
+
+- Lawrence David
+
+
+From christoph.redwitz at uni-rostock.de  Thu Mar  5 14:29:40 2015
+From: christoph.redwitz at uni-rostock.de (Christoph Eberhard Freiherr von Redwitz)
+Date: Thu, 5 Mar 2015 13:29:40 +0000
+Subject: [R-sig-eco] vegan: goodness() and pRDA
+Message-ID: <CD3BA13216175B4190B57B8CC02C42040107B65035@mbx3.uni-rostock.de>
+
+Hi all!
+I am using rda() in vegan and goodness() as a diagnostic tool. I want to know how good the species fit to the first two ordination axes.
+But I got problems combining partial RDA and goodness(). The species sum of CA and CCA don't add up to 1 (as it does in RDA without Condition term). Furthermore, I get warnings when only one axis is left over in the result of goodness.
+Here an example:
+
+
+#########----------------------------------------------#############
+data(dune)
+data(dune.env)
+
+mod1 <- rda(dune~A1 + Moisture + Management, data=dune.env)
+mod2  <- rda(dune~ Manure + Condition(A1 + Moisture + Management), data=dune.env)
+mod3 <- rda(dune~A1 + Condition(Manure + Moisture + Management), data=dune.env)
+
+goodness(mod1, mod= "CA ",sum=T) + goodness(mod1, mod= "CCA ",sum=T)#result as expected
+goodness(mod2, mod= "CA ",sum=T) + goodness(mod2, mod= "CCA ",sum=T)#only 4 RDA axes left over, they don't end up with 1
+
+#here comes the warning:
+goodness(mod3,mod= "CA ",sum=T)#works
+goodness(mod3,mod= "CCA",sum=T) #only 1 RDA axis left. Warning messages. The "sum" option seems to be affected.
+#########----------------------------------------------#############
+
+Two questions:
+Is the warning because of wrong usage of the method? Can I use goodness with partial RDA?
+1 - goodness(mod3,mod= "CA ",sum=T) should do it in this case?
+
+I hope the mail is clear and not an old story.
+
+Greetings!
+Christoph
+
+
+	[[alternative HTML version deleted]]
+
+
+From jari.oksanen at oulu.fi  Fri Mar  6 13:49:16 2015
+From: jari.oksanen at oulu.fi (Jari Oksanen)
+Date: Fri, 6 Mar 2015 12:49:16 +0000
+Subject: [R-sig-eco] vegan: goodness() and pRDA
+In-Reply-To: <CD3BA13216175B4190B57B8CC02C42040107B65035@mbx3.uni-rostock.de>
+References: <CD3BA13216175B4190B57B8CC02C42040107B65035@mbx3.uni-rostock.de>
+Message-ID: <144c7145474d4acdae83eebbe129c38a@nippu11.univ.yo.oulu.fi>
+
+This seems to be a bug in vegan. In fact, there are both bugs and bad design decisions.
+
+I have pushed a pull request to https://github.com/vegandevs/vegan which fixes the issues in this message plus a couple of other quirks. I'll test that fix a bit, and if everything looks OK, it will be merged and included in the next vegan release.
+
+Thanks for reporting this.
+
+Best wishes, Jari Oksanen
+________________________________________
+From: R-sig-ecology <r-sig-ecology-bounces at r-project.org> on behalf of Christoph Eberhard Freiherr von Redwitz <christoph.redwitz at uni-rostock.de>
+Sent: 05 March 2015 15:29
+To: R-sig-ecology at r-project.org
+Subject: [R-sig-eco] vegan: goodness() and pRDA
+
+Hi all!
+I am using rda() in vegan and goodness() as a diagnostic tool. I want to know how good the species fit to the first two ordination axes.
+But I got problems combining partial RDA and goodness(). The species sum of CA and CCA don't add up to 1 (as it does in RDA without Condition term). Furthermore, I get warnings when only one axis is left over in the result of goodness.
+Here an example:
+
+
+#########----------------------------------------------#############
+data(dune)
+data(dune.env)
+
+mod1 <- rda(dune~A1 + Moisture + Management, data=dune.env)
+mod2  <- rda(dune~ Manure + Condition(A1 + Moisture + Management), data=dune.env)
+mod3 <- rda(dune~A1 + Condition(Manure + Moisture + Management), data=dune.env)
+
+goodness(mod1, mod= "CA ",sum=T) + goodness(mod1, mod= "CCA ",sum=T)#result as expected
+goodness(mod2, mod= "CA ",sum=T) + goodness(mod2, mod= "CCA ",sum=T)#only 4 RDA axes left over, they don't end up with 1
+
+#here comes the warning:
+goodness(mod3,mod= "CA ",sum=T)#works
+goodness(mod3,mod= "CCA",sum=T) #only 1 RDA axis left. Warning messages. The "sum" option seems to be affected.
+#########----------------------------------------------#############
+
+Two questions:
+Is the warning because of wrong usage of the method? Can I use goodness with partial RDA?
+1 - goodness(mod3,mod= "CA ",sum=T) should do it in this case?
+
+I hope the mail is clear and not an old story.
+
+Greetings!
+Christoph
+
+
+        [[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From highstat at highstat.com  Mon Mar  9 18:03:15 2015
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Mon, 09 Mar 2015 19:03:15 +0200
+Subject: [R-sig-eco] Book: Beginner's Guide to Data Exploration and
+ Visualisation with R.
+Message-ID: <54FDD253.9010403@highstat.com>
+
+
+We are please to announce the following book:
+
+Title: Beginner's Guide to Data Exploration and Visualisation with R.
+Authors: Ieno & Zuur
+
+
+Book website: http://www.highstat.com/BGDEV.htm
+
+Paperback or EBook can be order (exclusively) from:
+http://www.highstat.com/bookorder.htm
+
+TOC: http://www.highstat.com/BGS/DV/TOC_Online.pdf
+Price: 29 GBP
+
+
+Outline:
+In 2010 we published a paper in the journal Methods in Ecology and Evolution entitled ?A protocol for data exploration to avoid common statistical problems?. Little did we know at the time that this paper would become one of the journal?s all-time top papers, both top downloaded and top cited papers, with 22,472 downloads between 2010 and 2014.
+
+Based on this success we decided to extend the material in the paper into a book. It is part of our 'Beginner?s Guide to ...' book series. We tried to write this book in such a way that the statistical knowledge level is as low as possible. A knowledge of linear regression is all that you need.
+
+
+Keywords:
+Outliers, normality, homogeneity, collinearity, relationships, confounding. Case studies
+
+
+
+Kind regards,
+
+Alain Zuur
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From marika.galanidi at gmail.com  Thu Mar 12 15:29:29 2015
+From: marika.galanidi at gmail.com (Marika Galanidi)
+Date: Thu, 12 Mar 2015 07:29:29 -0700 (MST)
+Subject: [R-sig-eco] ordiR2step error
+Message-ID: <1426170569417-7579341.post@n2.nabble.com>
+
+Dear list,
+
+I want to run a db-RDA with "capscale" to analyse community data (a distance
+matrix created with "betadiv") against pcnm vectors (it will be followed by
+db-RDA against environmental variables and eventually variance
+partitioning). 
+However, when I try to forward select PCNM vectors with the function
+"ordiR2step" I get an error
+
+More specifically: 
+
+>dat.comm<-betadiver(species, method=22, order=FALSE, help=FALSE)
+>pcnm72<-pcnm(dist(xycart))
+>dat.pcnm<-as.data.frame(scores(pcnm72))
+
+Following the example of ordiR2step with direction = "forward"
+
+> mod0.pcnm<-capscale(dat.comm~1, dat.pcnm)
+> mod1.pcnm<-capscale(dat.comm~., dat.pcnm)
+> mod.step.pcnm<-ordiR2step(mod0.pcnm,scope=formula(mod1.pcnm),direction="forward",perm.max=200)
+
+I get the following error
+
+Error in ordiR2step(mod0.pcnm, scope = formula(mod1.pcnm), direction =
+"forward",  : 
+  the upper scope cannot be fitted (too many terms?)
+
+I would really appreciate it if someone could tell me what this error means
+and how to avoid it
+
+Many thanks,
+Marika
+
+Marika Galanidi
+Post-doctoral Researcher
+DEU, Izmir, Turkey
+
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ordiR2step-error-tp7579341.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From marika.galanidi at gmail.com  Mon Mar 16 13:53:33 2015
+From: marika.galanidi at gmail.com (Marika Galanidi)
+Date: Mon, 16 Mar 2015 05:53:33 -0700 (MST)
+Subject: [R-sig-eco] ordiR2step error
+In-Reply-To: <1426170569417-7579341.post@n2.nabble.com>
+References: <1426170569417-7579341.post@n2.nabble.com>
+Message-ID: <1426510413946-7579342.post@n2.nabble.com>
+
+Dear all,
+
+after reading the Legendre & Anderson (1999) paper again I realised I had
+not included a correction for negative eigenvalues in my models. Square root
+transformation of the distances did not eliminate negative eigenvalues but
+adding a constant did the trick. Apologies for rushing to resort to the
+forum, I should have done my homework better...
+
+Regards,
+Marika
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/ordiR2step-error-tp7579341p7579342.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From ludovicofrate at hotmail.it  Mon Mar 16 18:07:52 2015
+From: ludovicofrate at hotmail.it (Ludovico Frate)
+Date: Mon, 16 Mar 2015 18:07:52 +0100
+Subject: [R-sig-eco] life forms spectrum analysis
+Message-ID: <DUB126-W43A19890F5B0FFECD4D594D6020@phx.gbl>
+
+Dear List,
+I would like to analyse the differences  in life form (Raunki?r) composition between two populations. The two populations (plant communities) were sampled randomly and the presence of plant species were recorded. So for each plot I have the frequency of each life form. First, I  thought to a chi square or binomial test. However, I am worried about the applicability because both tests require that the frequency of life forms observed vs expected is grater than 0% (i.e., when a given life form is present in all the plot of both populations - observed = 100% expected = 0%) and less than 100% (better between 20 and 80%).
+Pop1, Pop2
+present, 70, 56
+absent, 0, 0
+
+I have tried also a simple Mann whitney test but it doesn't work well for count data. In addition for uncommon life forms I have a lot of zero counts in my data!
+
+
+Do you have any ideas about analysing differences in life forms?
+Best,
+Ludovico
+
+
+
+                                                                                                                                
+Dott. For. Ludovico
+Frate, Ph.D.
+University of Molise - Italy
+Environmetrics Lab
+http://www.distat.unimol.it/STAT/environmetrica/organico/collaboratori/ludovico-frate-1
+Department of Biosciences and Territory - DiBT
+Universit? del Molise.
+Contrada Fonte
+Lappone, 
+86090 -  Pesche (IS)
+ITALIA.
+Cel: ++39
+3333767557
+Fax: ++39 (0874) 404123
+E-mail ludovico.frate at unimol.it
+ludovicofrate at hotmail.it
+https://www.researchgate.net/profile/Ludovico_Frate
+ 		 	   		  
+	[[alternative HTML version deleted]]
+
+
+From rshepard at appl-ecosys.com  Mon Mar 16 18:26:56 2015
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 16 Mar 2015 10:26:56 -0700 (PDT)
+Subject: [R-sig-eco] life forms spectrum analysis
+In-Reply-To: <DUB126-W43A19890F5B0FFECD4D594D6020@phx.gbl>
+References: <DUB126-W43A19890F5B0FFECD4D594D6020@phx.gbl>
+Message-ID: <alpine.LNX.2.11.1503161017560.21313@localhost>
+
+On Mon, 16 Mar 2015, Ludovico Frate wrote:
+
+> I would like to analyse the differences  in life form (Raunki??)
+> composition between two populations. The two populations (plant
+> communities) were sampled randomly and the presence of plant species were
+> recorded. So for each plot I have the frequency of each life form. First,
+> I thought to a chi square or binomial test. However, I am worried about
+> the applicability because both tests require that the frequency of life
+> forms observed vs expected is grater than 0% (i.e., when a given life form
+> is present in all the plot of both populations - observed = 100% expected
+> = 0%) and less than 100% (better between 20 and 80%).
+
+> Pop1, Pop2
+> present, 70, 56
+> absent, 0, 0
+
+> Do you have any ideas about analysing differences in life forms?
+
+Ludovico,
+
+   Let me paraphrase what you wrote to see if I understand. You have a number
+of plots each populated with a variety of plant species, and you are
+interested in only two of those species. You ask if there are meaningful
+differences in the relative abundances of each of your two species of
+interest in the plots.
+
+   If this is correct (or close to correct), I suggest that you look at these
+as compositions (the packages compositions, robCompositions, and
+zCompositions each offer useful functions). The number (or percent ground
+cover) of the species other than your two are immaterial. Assuming that the
+relative proportions of each of your two species are the response
+(dependent) variables, and you have potential explanatory (independent,
+predictor) variables, then you can perform regression analyses on the
+compositions.
+
+Hope this helps,
+
+Rich
+
+
+From ludovicofrate at hotmail.it  Mon Mar 16 22:32:08 2015
+From: ludovicofrate at hotmail.it (Ludovico Frate)
+Date: Mon, 16 Mar 2015 22:32:08 +0100
+Subject: [R-sig-eco] life forms spectrum analysis
+Message-ID: <DUB402-EAS29907FE9D6A79175E79FE47D6020@phx.gbl>
+
+"Let me paraphrase what you wrote to see if I understand. You have a number
+of plots each populated with a variety of plant species"
+
+OK,
+
+
+"and you are
+interested in only two of those species."
+
+No, I'm interested in the whole plot composition! I would like to understand if there are differences in terms of life forms composition beteween two groups of plots (each group has 70 plots). A simple t-test or other non parametric tests do not work fine with count data, as in my case. In addittion some life forms are uncommon so I have a lot of zero count in my data!
+
+
+You ask if there are meaningful
+ in the relative abundances of each of your two species of
+interest in the plots.
+
+
+
+Inviata dal mio Windows Phone
+	[[alternative HTML version deleted]]
+
+
+From rshepard at appl-ecosys.com  Mon Mar 16 23:12:51 2015
+From: rshepard at appl-ecosys.com (Rich Shepard)
+Date: Mon, 16 Mar 2015 15:12:51 -0700 (PDT)
+Subject: [R-sig-eco] life forms spectrum analysis
+In-Reply-To: <DUB402-EAS29907FE9D6A79175E79FE47D6020@phx.gbl>
+References: <DUB402-EAS29907FE9D6A79175E79FE47D6020@phx.gbl>
+Message-ID: <alpine.LNX.2.11.1503161506250.21313@localhost>
+
+On Mon, 16 Mar 2015, Ludovico Frate wrote:
+
+> No, I'm interested in the whole plot composition! I would like to
+> understand if there are differences in terms of life forms composition
+> beteween two groups of plots (each group has 70 plots). A simple t-test or
+> other non parametric tests do not work fine with count data, as in my
+> case. In addittion some life forms are uncommon so I have a lot of zero
+> count in my data!
+
+Ludovico,
+
+   Then you definitely should look at CoDA because, as you write above, you
+are looking to see if there are differences betwee the compositions of the
+two groups, and there will be compositional differences within each group
+that need to be distinguished from the between-group compositions.
+
+   ven den Boogaart and Tolosana-Delgado's book, "Analyzing Compositional
+Data with R" is highly recommended. There are also abundant references on
+the Web, such as Pawlowsky-Glahn, Egozcue, and Tolosana-Delgado. 2007.
+Lecture Notes on Compositional Data Analysis.
+
+HTH,
+
+Rich
+
+
+From aitor.gaston at upm.es  Mon Mar 16 23:59:26 2015
+From: aitor.gaston at upm.es (=?UTF-8?Q?Aitor_Gast=C3=B3n?=)
+Date: Mon, 16 Mar 2015 23:59:26 +0100
+Subject: [R-sig-eco] life forms spectrum analysis
+In-Reply-To: <DUB126-W43A19890F5B0FFECD4D594D6020@phx.gbl>
+References: <DUB126-W43A19890F5B0FFECD4D594D6020@phx.gbl>
+Message-ID: <D311529E169C48A78064EB3D6621476A@botanica1>
+
+Hi Ludovico,
+
+You can compare the proportion of each life form using logistc regression, 
+an example with simulated data for 20 plots:
+
+set.seed(100)
+n<-20
+population<-sample(c("A","B"),n,replace=T)
+lifeform1count<-round(runif(n,0,100),0)
+otherlifeformscount<-round(runif(n,0,100),0)
+f<-glm(cbind(lifeform1count,otherlifeformscount)~population,family=binomial)
+summary(f)#significant difference between populations p=0.01137
+plogis(coef(f)[1])#mean proportion of life form 1 in population A
+plogis(coef(f)[1]+coef(f)[2]) #mean proportion of life form 1 in population 
+B
+
+You can run one model for each life form, but maybe multinomial regression 
+is more correct (never tried)
+
+Aitor
+
+-----Mensaje original----- 
+From: Ludovico Frate
+Sent: Monday, March 16, 2015 6:07 PM
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] life forms spectrum analysis
+
+Dear List,
+I would like to analyse the differences  in life form (Raunki?r) composition 
+between two populations. The two populations (plant communities) were 
+sampled randomly and the presence of plant species were recorded. So for 
+each plot I have the frequency of each life form. First, I  thought to a chi 
+square or binomial test. However, I am worried about the applicability 
+because both tests require that the frequency of life forms observed vs 
+expected is grater than 0% (i.e., when a given life form is present in all 
+the plot of both populations - observed = 100% expected = 0%) and less than 
+100% (better between 20 and 80%).
+Pop1, Pop2
+present, 70, 56
+absent, 0, 0
+
+I have tried also a simple Mann whitney test but it doesn't work well for 
+count data. In addition for uncommon life forms I have a lot of zero counts 
+in my data!
+
+
+Do you have any ideas about analysing differences in life forms?
+Best,
+Ludovico
+
+
+
+
+Dott. For. Ludovico
+Frate, Ph.D.
+University of Molise - Italy
+Environmetrics Lab
+http://www.distat.unimol.it/STAT/environmetrica/organico/collaboratori/ludovico-frate-1
+Department of Biosciences and Territory - DiBT
+Universit? del Molise.
+Contrada Fonte
+Lappone,
+86090 -  Pesche (IS)
+ITALIA.
+Cel: ++39
+3333767557
+Fax: ++39 (0874) 404123
+E-mail ludovico.frate at unimol.it
+ludovicofrate at hotmail.it
+https://www.researchgate.net/profile/Ludovico_Frate
+
+[[alternative HTML version deleted]]
+
+
+
+
+
+
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From david.warton at unsw.edu.au  Tue Mar 17 03:28:42 2015
+From: david.warton at unsw.edu.au (David Warton)
+Date: Tue, 17 Mar 2015 02:28:42 +0000
+Subject: [R-sig-eco] interpreting 0s and 1s from manyglm from mvabund
+In-Reply-To: <81BBAE3F09DD6941BC5CA30567F78375CB45BDB4@INFPWXM007.ad.unsw.edu.au>
+References: <81BBAE3F09DD6941BC5CA30567F78375CB45BDB4@INFPWXM007.ad.unsw.edu.au>
+Message-ID: <81BBAE3F09DD6941BC5CA30567F78375CB48013F@INFPWXM008.ad.unsw.edu.au>
+
+Dear R-sig-eco list,
+I promised you a follow-up on Beth's problem from a few weeks ago with test statistics identically equal to zero.
+
+The issue was that a count model (negative binomial) was being fitted to data that were not counts, in fact they were proportions that typically took values less than 0.01.  manyglm is quite aggressive with its rounding and in effect it treated most of these values as zero.  The solution is to use a different model - for biomass data, for example, a better option would be the tweedie distribution, via the manyany function (but get mvabund from R-Forge for this one).
+
+On the other hand if you want to model relative abundance (hence the proportions) you could include a row effect in the model (an option in manyany, but super-slow), or as a quick-and-dirty approximation I've often found an offset equal to log(row-sum) does the trick.
+
+All the best
+David
+
+?
+David Warton
+Professor and Australian Research Council Future Fellow
+School of Mathematics and Statistics and the Evolution & Ecology Research Centre
+The University of New South Wales NSW 2052 AUSTRALIA
+phone (61)(2) 9385-7031
+fax (61)(2) 9385-7123
+?
+http://www.eco-stats.unsw.edu.au/ecostats15.html
+
+
+
+-----Original Message-----
+From: David Warton 
+Sent: Friday, 27 February 2015 12:29 PM
+To: r-sig-ecology at r-project.org
+Subject: RE: [R-sig-eco] interpreting 0s and 1s from manyglm from mvabund
+
+
+Hi Elizabeth,
+Wow, that's weird - could you send me the data/code (and R/mvabund version you used)?  I'll see if I can reproduce the problem.  My best guess at this stage is that there was something in the data that it didn't like and returned NaN's for everything (which were misleadingly translated into 0's and 1's in the anova table) 
+
+Maybe we could sort it out communicating directly then get back to the mailing list with a report on how things went afterwards? (I assume that's the protocol?) All the best David
+
+
+Date: Wed, 25 Feb 2015 13:43:40 -0500
+From: Elizabeth Pringle <epringle at umich.edu>
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] interpreting 0s and 1s from manyglm from mvabund
+Message-ID:
+	<CAB6Dt_7Ka8cbVf6y6pEK=YZMyaPFPjh9uSx=BsBORdg3---xOg at mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+
+Hi,
+
+I am using code that worked beautifully to analyze a previous dataset using manyglm in mvabund on a new dataset, and I am consistently getting results of Dev = 0 and Pr(>Dev)=1 for both multivariate and univariate tests. My plots do not indicate any particularly strong pattern in the data, so I am tempted to interpret this as a non-significant result...but I wanted to make sure it doesn't just indicate that I've somehow input the data incorrectly. Especially since I get a bunch of NAs and NaNs farther down the line if I go through my whole pipeline.
+
+Code follows:
+>glm.sug<-manyglm(dat~trtment,family="negative.binomial")
+>results<-anova(glm.sug,resamp="pit.trap",p.uni="adjusted")
+>results (here's where I see 0s and 1s)
+>results$table
+                 Res.Df Df.diff Dev Pr(>Dev)
+(Intercept)          15      NA  NA       NA
+trtment               14       1   0        1
+> s=sort(results$uni.test[2,],index.return=T,decreasing=T)
+> s$x[1:3]/sum(s$x)
+        X..1          X.2        X..3
+       NaN        NaN        NaN
+
+Many thanks,
+Beth
+
+--
+****************************************************
+Elizabeth G. Pringle
+Michigan Society of Fellows
+****************************************************
+
+	[[alternative HTML version deleted]]
+
+
+From luysgarcia at gmail.com  Tue Mar 17 05:38:08 2015
+From: luysgarcia at gmail.com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Tue, 17 Mar 2015 01:38:08 -0300
+Subject: [R-sig-eco] Ancova Plot R
+Message-ID: <CANxP2S4itxTnDoZGKgE=vVB9aajzwz1tP1O35PiOgMii2nX4tQ@mail.gmail.com>
+
+Dear R users.
+
+I have an urgent question to make you, hopefully you can help me.
+
+This is my first time making an ancova test in R. I have finished the model
+design and now I need to plot it. I have found several online sources where
+the mechanics for plotting data is explained, nevertheless all of these
+explain the mechanics for plotting the data when there is no interacion
+which is not my case. I was thinking to subset the data following this
+example (
+http://r-eco-evo.blogspot.com/2011/08/comparing-two-regression-slopes-by.html),
+but I do not know if it will be the best choice.
+
+If some of you could suggest me a document which explains this in detail or
+may be help me with the data set,
+
+> a<-read.table ("test1ancova.txt", header=T)
+> attach(a)
+> names(a)
+> fit3<-lm(log(Peso) ~ especie * Radio)
+> summary(fit2)
+
+Call:
+lm(formula = log(Peso) ~ especie * Radio)
+
+Residuals:
+     Min       1Q   Median       3Q      Max
+-1.15349 -0.29033  0.04444  0.39277  1.41267
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)
+(Intercept)         2.0610     0.2050  10.054 5.84e-11 ***
+especieNops         1.8253     0.3002   6.080 1.28e-06 ***
+Radio               0.3827     0.1414   2.707   0.0113 *
+especieNops:Radio  -0.3749     0.1438  -2.608   0.0142 *
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+
+Residual standard error: 0.5418 on 29 degrees of freedom
+Multiple R-squared:  0.7005,    Adjusted R-squared:  0.6695
+F-statistic: 22.61 on 3 and 29 DF,  p-value: 9.578e-08
+
+
+>  plot(a$Radio,a$Peso, type="n",xlab="Ratio", ylab="Weight")
+>  points(a$Radio[1:15], a$Peso[1:15], col="red")
+>  points(a$Radio[16:30], a$Peso[16:30], col="blue")
+
+Any help will be really appreciated!
+
+Thanks in advance
+-------------- next part --------------
+Radio	especie	Peso
+0.33	Harpactea	3.51
+0.30	Harpactea	9.20
+0.32	Harpactea	6.64
+0.23	Harpactea	8.32
+0.31	Harpactea	10.03
+0.36	Harpactea	13.35
+2.23	Harpactea	7.11
+0.32	Harpactea	6.69
+2.04	Harpactea	17.26
+1.32	Harpactea	22.75
+1.85	Harpactea	20.70
+2.58	Harpactea	14.55
+3.11	Harpactea	42.42
+0.47	Harpactea	38.61
+0.13	Harpactea	5.32
+19.67	Nops	87.11
+1.56	Nops	71.40
+5.14	Nops	54.58
+5.16	Nops	78.01
+3.00	Nops	44.80
+4.84	Nops	53.62
+2.71	Nops	64.95
+3.34	Nops	83.07
+3.38	Nops	76.73
+5.76	Nops	47.52
+7.63	Nops	16.31
+14.82	Nops	81.82
+3.20	Nops	36.67
+10.77	Nops	26.14
+10.15	Nops	41.05
+3.05	Nops	52.16
+4.65	Nops	30.74
+13.43	Nops	58.62
+
+From tom_philippi at nps.gov  Tue Mar 17 06:37:43 2015
+From: tom_philippi at nps.gov (Philippi, Tom)
+Date: Mon, 16 Mar 2015 22:37:43 -0700
+Subject: [R-sig-eco] Ancova Plot R
+In-Reply-To: <CANxP2S4itxTnDoZGKgE=vVB9aajzwz1tP1O35PiOgMii2nX4tQ@mail.gmail.com>
+References: <CANxP2S4itxTnDoZGKgE=vVB9aajzwz1tP1O35PiOgMii2nX4tQ@mail.gmail.com>
+Message-ID: <CAM9kYqhhi7yd8Xg5pRA1k3-eCsFL9NdaL6wCkp7876vugH1phg@mail.gmail.com>
+
+Luis--
+I assume that especie is a factor, else it would be multiple regression.
+You do not give much information on what you want your graph to look like.
+If you want the linear regression line for each especie, with confidence
+bands around those lines, you can use ggplot2 (untested code):
+library(ggplot2)
+a$lPeso <- log(Peso)
+p <- gplot(a,aes(x=Radio,y=lPeso)) + geom_point(aes(color=especie))
+p + geom_smooth(aes(group=especie),method='lm')
+
+I hope that this gets you started in the right direction.
+
+Tom 2
+
+On Mon, Mar 16, 2015 at 9:38 PM, Luis Fernando Garc?a <luysgarcia at gmail.com>
+wrote:
+
+> Dear R users.
+>
+> I have an urgent question to make you, hopefully you can help me.
+>
+> This is my first time making an ancova test in R. I have finished the model
+> design and now I need to plot it. I have found several online sources where
+> the mechanics for plotting data is explained, nevertheless all of these
+> explain the mechanics for plotting the data when there is no interacion
+> which is not my case. I was thinking to subset the data following this
+> example (
+>
+> http://r-eco-evo.blogspot.com/2011/08/comparing-two-regression-slopes-by.html
+> ),
+> but I do not know if it will be the best choice.
+>
+> If some of you could suggest me a document which explains this in detail or
+> may be help me with the data set,
+>
+> > a<-read.table ("test1ancova.txt", header=T)
+> > attach(a)
+> > names(a)
+> > fit3<-lm(log(Peso) ~ especie * Radio)
+> > summary(fit2)
+>
+> Call:
+> lm(formula = log(Peso) ~ especie * Radio)
+>
+> Residuals:
+>      Min       1Q   Median       3Q      Max
+> -1.15349 -0.29033  0.04444  0.39277  1.41267
+>
+> Coefficients:
+>                   Estimate Std. Error t value Pr(>|t|)
+> (Intercept)         2.0610     0.2050  10.054 5.84e-11 ***
+> especieNops         1.8253     0.3002   6.080 1.28e-06 ***
+> Radio               0.3827     0.1414   2.707   0.0113 *
+> especieNops:Radio  -0.3749     0.1438  -2.608   0.0142 *
+> ---
+> Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+>
+> Residual standard error: 0.5418 on 29 degrees of freedom
+> Multiple R-squared:  0.7005,    Adjusted R-squared:  0.6695
+> F-statistic: 22.61 on 3 and 29 DF,  p-value: 9.578e-08
+>
+>
+> >  plot(a$Radio,a$Peso, type="n",xlab="Ratio", ylab="Weight")
+> >  points(a$Radio[1:15], a$Peso[1:15], col="red")
+> >  points(a$Radio[16:30], a$Peso[16:30], col="blue")
+>
+> Any help will be really appreciated!
+>
+> Thanks in advance
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From bub14 at psu.edu  Tue Mar 17 16:23:16 2015
+From: bub14 at psu.edu (Barbara Baraibar Padro)
+Date: Tue, 17 Mar 2015 11:23:16 -0400 (EDT)
+Subject: [R-sig-eco] Plot NMDS with size of the points related to abundance
+In-Reply-To: <1484939836.2875120.1426604896665.JavaMail.zimbra@psu.edu>
+Message-ID: <136800069.2924947.1426605796652.JavaMail.zimbra@psu.edu>
+
+Hello list, 
+I am analyzing species composition of weeds in 12 cover crop treatments and a fallow plot. I have been using nmds and got good results and no problems with it (although after some fighting!). My data is a matrix of biomass values sorted by species. Now I'd like to know which of my species are contributing with more biomass to the community in each treatment, that is, I'd like to create a graph such as the one that you get from the option "plot (nmds_model,  type="t", display=c("species")) but instead of getting just the names of the species, I'd like to see dots of different sizes that would refer to the abundance of each of the species, is that possible at all? I know you can do it with CANOCO but wanted to ask if there is a way to do it in R.
+
+I have searched the internet and found something that looks like what I want to do (enclosed to the mail) but haven't found the way to do it. 
+
+I have already done an Indicator Species Analysis with the multipatt function. That gives me information about the species that are related to some treatments but here I'm just looking for the species with more and less biomass in each treatment.
+
+Thank you very much!!
+Barbara
+
+
+
+-- 
+Barbara Baraibar
+Post-doctoral scholar - Weed and Applied Plant Ecology
+Plant Sciences Department
+Penn State University
+University Park, Pennsylvania 16802
+
+web-site:http://www.weedecologypsu.com
+
+
+From sarah.goslee at gmail.com  Tue Mar 17 16:32:47 2015
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Tue, 17 Mar 2015 11:32:47 -0400
+Subject: [R-sig-eco] Plot NMDS with size of the points related to
+	abundance
+In-Reply-To: <136800069.2924947.1426605796652.JavaMail.zimbra@psu.edu>
+References: <1484939836.2875120.1426604896665.JavaMail.zimbra@psu.edu>
+	<136800069.2924947.1426605796652.JavaMail.zimbra@psu.edu>
+Message-ID: <CAM_vjumv6hUXhPC6MDLn159faih1-fk62=pk4HhnnU4ZUS7jhg@mail.gmail.com>
+
+Hi Barbara,
+
+You don't provide a reproducible example or even tell us what
+package/function you used to create your NMDS ordination, but you can
+extract the coordinates, and use them plus your cover values to create
+a bubble plot in several different ways, including symbols(), the pch
+argument to base plotting functions, and ggplot().
+
+There's a nice tutorial for one method here:
+http://flowingdata.com/2010/11/23/how-to-make-bubble-charts/
+but searching for "bubble plot in R" will get you many more options.
+
+Sarah
+
+On Tue, Mar 17, 2015 at 11:23 AM, Barbara Baraibar Padro <bub14 at psu.edu> wrote:
+> Hello list,
+> I am analyzing species composition of weeds in 12 cover crop treatments and a fallow plot. I have been using nmds and got good results and no problems with it (although after some fighting!). My data is a matrix of biomass values sorted by species. Now I'd like to know which of my species are contributing with more biomass to the community in each treatment, that is, I'd like to create a graph such as the one that you get from the option "plot (nmds_model,  type="t", display=c("species")) but instead of getting just the names of the species, I'd like to see dots of different sizes that would refer to the abundance of each of the species, is that possible at all? I know you can do it with CANOCO but wanted to ask if there is a way to do it in R.
+>
+> I have searched the internet and found something that looks like what I want to do (enclosed to the mail) but haven't found the way to do it.
+>
+> I have already done an Indicator Species Analysis with the multipatt function. That gives me information about the species that are related to some treatments but here I'm just looking for the species with more and less biomass in each treatment.
+>
+> Thank you very much!!
+> Barbara
+>
+>
+
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From roman.lustrik at gmail.com  Tue Mar 17 16:39:05 2015
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Tue, 17 Mar 2015 16:39:05 +0100
+Subject: [R-sig-eco] Plot NMDS with size of the points related to
+	abundance
+In-Reply-To: <136800069.2924947.1426605796652.JavaMail.zimbra@psu.edu>
+References: <1484939836.2875120.1426604896665.JavaMail.zimbra@psu.edu>
+	<136800069.2924947.1426605796652.JavaMail.zimbra@psu.edu>
+Message-ID: <CAHT1vpgiSLf=kTuu-C4ZeanfeJGCcitrkoDg50f+C9AL2AeJMg@mail.gmail.com>
+
+Assuming you're working with metaMDS from vegan, it's trivial to extract
+NMDS scores, add some variable and plot the data. The following code would
+be easy to translate into a generic function.
+
+library(vegan)
+
+data(dune)
+sol <- metaMDS(dune)
+
+# add some variable that will correspond to size of points
+spc <- as.data.frame(cbind(sol$species, mysize = runif(nrow(sol$species))))
+pts <- as.data.frame(sol$points)
+
+library(ggplot2)
+
+ggplot(spc, aes(x = MDS1, y = MDS2)) +
+  theme_bw() +
+  geom_point(aes(size = mysize), pch = 1) +
+  geom_point(data = pts, color = "red")
+
+
+Cheers,
+Roman
+
+
+On Tue, Mar 17, 2015 at 4:23 PM, Barbara Baraibar Padro <bub14 at psu.edu>
+wrote:
+
+> Hello list,
+> I am analyzing species composition of weeds in 12 cover crop treatments
+> and a fallow plot. I have been using nmds and got good results and no
+> problems with it (although after some fighting!). My data is a matrix of
+> biomass values sorted by species. Now I'd like to know which of my species
+> are contributing with more biomass to the community in each treatment, that
+> is, I'd like to create a graph such as the one that you get from the option
+> "plot (nmds_model,  type="t", display=c("species")) but instead of getting
+> just the names of the species, I'd like to see dots of different sizes that
+> would refer to the abundance of each of the species, is that possible at
+> all? I know you can do it with CANOCO but wanted to ask if there is a way
+> to do it in R.
+>
+> I have searched the internet and found something that looks like what I
+> want to do (enclosed to the mail) but haven't found the way to do it.
+>
+> I have already done an Indicator Species Analysis with the multipatt
+> function. That gives me information about the species that are related to
+> some treatments but here I'm just looking for the species with more and
+> less biomass in each treatment.
+>
+> Thank you very much!!
+> Barbara
+>
+>
+>
+> --
+> Barbara Baraibar
+> Post-doctoral scholar - Weed and Applied Plant Ecology
+> Plant Sciences Department
+> Penn State University
+> University Park, Pennsylvania 16802
+>
+> web-site:http://www.weedecologypsu.com
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+In God we trust, all others bring data.
+
+	[[alternative HTML version deleted]]
+
+
+From roman.lustrik at gmail.com  Tue Mar 17 16:42:31 2015
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Tue, 17 Mar 2015 16:42:31 +0100
+Subject: [R-sig-eco] Plot NMDS with size of the points related to
+	abundance
+In-Reply-To: <CAHT1vpgiSLf=kTuu-C4ZeanfeJGCcitrkoDg50f+C9AL2AeJMg@mail.gmail.com>
+References: <1484939836.2875120.1426604896665.JavaMail.zimbra@psu.edu>
+	<136800069.2924947.1426605796652.JavaMail.zimbra@psu.edu>
+	<CAHT1vpgiSLf=kTuu-C4ZeanfeJGCcitrkoDg50f+C9AL2AeJMg@mail.gmail.com>
+Message-ID: <CAHT1vphVxVHFHp1ven5D_=OGka7UHPjY+8fL5NHwmz1r8EvY_A@mail.gmail.com>
+
+After clicking send I remembered that you might want to scale circle sizes
+according to their area, not radius (which is the default to draw). Then I
+went to see the link Sarah posted and it deals with this, too (great minds
+think alike? :) ).
+
+Cheers,
+Roman
+
+On Tue, Mar 17, 2015 at 4:39 PM, Roman Lu?trik <roman.lustrik at gmail.com>
+wrote:
+
+> Assuming you're working with metaMDS from vegan, it's trivial to extract
+> NMDS scores, add some variable and plot the data. The following code would
+> be easy to translate into a generic function.
+>
+> library(vegan)
+>
+> data(dune)
+> sol <- metaMDS(dune)
+>
+> # add some variable that will correspond to size of points
+> spc <- as.data.frame(cbind(sol$species, mysize = runif(nrow(sol$species))))
+> pts <- as.data.frame(sol$points)
+>
+> library(ggplot2)
+>
+> ggplot(spc, aes(x = MDS1, y = MDS2)) +
+>   theme_bw() +
+>   geom_point(aes(size = mysize), pch = 1) +
+>   geom_point(data = pts, color = "red")
+>
+>
+> Cheers,
+> Roman
+>
+>
+> On Tue, Mar 17, 2015 at 4:23 PM, Barbara Baraibar Padro <bub14 at psu.edu>
+> wrote:
+>
+>> Hello list,
+>> I am analyzing species composition of weeds in 12 cover crop treatments
+>> and a fallow plot. I have been using nmds and got good results and no
+>> problems with it (although after some fighting!). My data is a matrix of
+>> biomass values sorted by species. Now I'd like to know which of my species
+>> are contributing with more biomass to the community in each treatment, that
+>> is, I'd like to create a graph such as the one that you get from the option
+>> "plot (nmds_model,  type="t", display=c("species")) but instead of getting
+>> just the names of the species, I'd like to see dots of different sizes that
+>> would refer to the abundance of each of the species, is that possible at
+>> all? I know you can do it with CANOCO but wanted to ask if there is a way
+>> to do it in R.
+>>
+>> I have searched the internet and found something that looks like what I
+>> want to do (enclosed to the mail) but haven't found the way to do it.
+>>
+>> I have already done an Indicator Species Analysis with the multipatt
+>> function. That gives me information about the species that are related to
+>> some treatments but here I'm just looking for the species with more and
+>> less biomass in each treatment.
+>>
+>> Thank you very much!!
+>> Barbara
+>>
+>>
+>>
+>> --
+>> Barbara Baraibar
+>> Post-doctoral scholar - Weed and Applied Plant Ecology
+>> Plant Sciences Department
+>> Penn State University
+>> University Park, Pennsylvania 16802
+>>
+>> web-site:http://www.weedecologypsu.com
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+> --
+> In God we trust, all others bring data.
+>
+
+
+
+-- 
+In God we trust, all others bring data.
+
+	[[alternative HTML version deleted]]
+
+
+From bub14 at psu.edu  Tue Mar 17 18:32:34 2015
+From: bub14 at psu.edu (Barbara Baraibar Padro)
+Date: Tue, 17 Mar 2015 13:32:34 -0400 (EDT)
+Subject: [R-sig-eco] Plot NMDS with size of the points related to
+ abundance
+In-Reply-To: <CAHT1vphVxVHFHp1ven5D_=OGka7UHPjY+8fL5NHwmz1r8EvY_A@mail.gmail.com>
+References: <1484939836.2875120.1426604896665.JavaMail.zimbra@psu.edu>
+	<136800069.2924947.1426605796652.JavaMail.zimbra@psu.edu>
+	<CAHT1vpgiSLf=kTuu-C4ZeanfeJGCcitrkoDg50f+C9AL2AeJMg@mail.gmail.com>
+	<CAHT1vphVxVHFHp1ven5D_=OGka7UHPjY+8fL5NHwmz1r8EvY_A@mail.gmail.com>
+Message-ID: <165796768.3276948.1426613554424.JavaMail.zimbra@psu.edu>
+
+Dear Roman, Sara and Phil, 
+Thanks so much for your help!! After some playing around with your different options, I got the graph I was looking for (attached). 
+I wasn't using the right words to look for help. 
+Thanks a lot!! 
+Barbara 
+
+
+----- Original Message -----
+
+From: "Roman Lu?trik" <roman.lustrik at gmail.com> 
+To: "Barbara Baraibar Padro" <bub14 at psu.edu> 
+Cc: r-sig-ecology at r-project.org 
+Sent: Tuesday, March 17, 2015 11:42:31 AM 
+Subject: Re: [R-sig-eco] Plot NMDS with size of the points related to abundance 
+
+After clicking send I remembered that you might want to scale circle sizes according to their area, not radius (which is the default to draw). Then I went to see the link Sarah posted and it deals with this, too (great minds think alike? :) ). 
+
+Cheers, 
+Roman 
+
+On Tue, Mar 17, 2015 at 4:39 PM, Roman Lu?trik < roman.lustrik at gmail.com > wrote: 
+
+
+
+Assuming you're working with metaMDS from vegan, it's trivial to extract NMDS scores, add some variable and plot the data. The following code would be easy to translate into a generic function. 
+
+library(vegan) 
+
+data(dune) 
+sol <- metaMDS(dune) 
+
+# add some variable that will correspond to size of points 
+spc <- as.data.frame(cbind(sol$species, mysize = runif(nrow(sol$species)))) 
+pts <- as.data.frame(sol$points) 
+
+library(ggplot2) 
+
+ggplot(spc, aes(x = MDS1, y = MDS2)) + 
+theme_bw() + 
+geom_point(aes(size = mysize), pch = 1) + 
+geom_point(data = pts, color = "red") 
+
+
+Cheers, 
+Roman 
+
+
+On Tue, Mar 17, 2015 at 4:23 PM, Barbara Baraibar Padro < bub14 at psu.edu > wrote: 
+
+<blockquote>
+Hello list, 
+I am analyzing species composition of weeds in 12 cover crop treatments and a fallow plot. I have been using nmds and got good results and no problems with it (although after some fighting!). My data is a matrix of biomass values sorted by species. Now I'd like to know which of my species are contributing with more biomass to the community in each treatment, that is, I'd like to create a graph such as the one that you get from the option "plot (nmds_model, type="t", display=c("species")) but instead of getting just the names of the species, I'd like to see dots of different sizes that would refer to the abundance of each of the species, is that possible at all? I know you can do it with CANOCO but wanted to ask if there is a way to do it in R. 
+
+I have searched the internet and found something that looks like what I want to do (enclosed to the mail) but haven't found the way to do it. 
+
+I have already done an Indicator Species Analysis with the multipatt function. That gives me information about the species that are related to some treatments but here I'm just looking for the species with more and less biomass in each treatment. 
+
+Thank you very much!! 
+Barbara 
+
+
+
+-- 
+Barbara Baraibar 
+Post-doctoral scholar - Weed and Applied Plant Ecology 
+Plant Sciences Department 
+Penn State University 
+University Park, Pennsylvania 16802 
+
+web-site: http://www.weedecologypsu.com 
+
+_______________________________________________ 
+R-sig-ecology mailing list 
+R-sig-ecology at r-project.org 
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology 
+
+
+
+
+
+
+-- 
+In God we trust, all others bring data. 
+
+</blockquote>
+
+
+
+
+-- 
+In God we trust, all others bring data. 
+
+
+
+-- 
+Barbara Baraibar 
+Post-doctoral scholar - Weed and Applied Plant Ecology 
+Plant Sciences Department 
+Penn State University 
+University Park, Pennsylvania 16802 
+
+web-site:http://www.weedecologypsu.com 
+
+
+From moquin.paul at gmail.com  Tue Mar 17 19:50:30 2015
+From: moquin.paul at gmail.com (Paul Moquin)
+Date: Tue, 17 Mar 2015 11:50:30 -0700
+Subject: [R-sig-eco] Nested Permanova with repeated measures
+Message-ID: <CAJFbWOToDSqDbTb3bmkSaGHdVK58rzgRWkAfYtAE6WxXWOSExA@mail.gmail.com>
+
+Hi Stephen and all Permanoverts!
+
+Thank you for posting your thoughts about repeated measure Permanova. I am
+following your methods (From Feb 25 2013- posted below) where you use
+adonis for the time and time by treatment interaction and , in a seperate
+step, the BiodiversityR for the main effect. When I run nested.npmanova the
+p value I get for my treatment is 1.0 leading me to believe there is
+something wrong- there is of course the possibility that there really is
+nothing there but when I look at the plots there seems to be some kind of
+treatment effect at least for 5 of the 10 species....so if not significant
+at least not p=1! I will provide a glimpse into the design and data I have
+in the hopes of finding my issue.
+
+Melting permafrost which slumps into Arctic lakes has been associated with
+phisio-chemical and biological changes in these lakes. To replicate these
+slumps, I ran an experiment in an unslumped Arctic lake where I
+dosed mesocosms with melted permafrost soil. The experiment had three
+replicates of 3 treatment levels plus a control for a total of 12
+mesocosms. The experiment was set up in a randomized block design (ie 3
+blocks with 4 mesocosms each- one of each treatment). I have zooplankton
+community data for 11 time steps (weeks).
+
+For a number of other univariate parameters I have used a mixed effects
+model with mesocosm within block as my random terms and treatment and time
+and their interaction as my main effects. (though I am not really
+interested in the effect of time)
+
+But in multivariate space I think the best I can do is:
+to test time and its interaction with treatment I have
+
+*adonis(community~week*treatment, method="bray", perm=999,strata =
+enviro$mesocosm, data=enviro) *
+and to test the main effect:
+
+
+*library(BiodiversityR)*
+*nested.npmanova(community ~treatment + mesocosm, method="bray", data
+= enviro) *
+
+>
+>
+
+Does this seem right? I acknowledge that I loose the ability to use "block"
+here but not much I can do right?
+
+
+I get this as the result of the nested model in BiodiversityR:
+
+*Total sum of squares for non-parametric manova: 26.8071635047485 *
+
+*Nested anova for mc nested within t.level *
+
+*                  Df       SumsofSquares       F               N.Perm
+ Pr(>F)   *
+*treatment    3        1.4607                     0.1727      100
+ 1.000000   *
+*mesocosm  1        2.8188                     15.8910    100
+ 0.009901 ***
+*Residuals 127       22.5277                   0.1774                   *
+*---*
+*Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1*
+*> *
+
+Thank you very much
+
+Paul Moquin
+
+
+
+[R-sig-eco] Permanova with nested data*Steve Brewer* jbrewer at olemiss.edu
+<r-sig-ecology%40r-project.org?Subject=Re%3A%20%5BR-sig-eco%5D%20Permanova%20with%20nested%20data&In-Reply-To=%3CCD50D4BB.1E27D%25jbrewer%40olemiss.edu%3E>
+*Mon Feb 25 16:13:18 CET 2013*
+
+
+   - Previous message: [R-sig-eco] lme4 for pseudoreplication avoidance
+   <https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/003594.html>
+   - Next message: [R-sig-eco] Validation of linear regression
+   <https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/003597.html>
+   - *Messages sorted by:* [ date ]
+   <https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/date.html#3595>
+    [ thread ]
+   <https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/thread.html#3595>
+    [ subject ]
+   <https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/subject.html#3595>
+    [ author ]
+   <https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/author.html#3595>
+
+------------------------------
+
+Beth and others,
+
+Given several recent queries regarding how to analyze repeated-measures
+and split-plot perManova using adonis, I thought I would pass along what I
+think is a reasonable solution.
+
+I just saw the recent exchange over the use of BiodiversityR to do nested
+perMANOVA. I was unaware of this function until today.
+
+With that in mind, it is possible to do a simple repeated-measures
+permanova using two different analyses, one for the within-subjects
+effects and one for the between-subjects effects. The same approach
+applies to a simple split-plot analysis.
+
+For the within-subjects (or sub-plot) effects, you use adonis and the
+strata function. The model formula could look something like:
+
+Assume species responses are in "Speciesdata" and the treatment, time, and
+plot effects are in "envfactors"
+
+Adonis(Speciesdata ~ betweensubtrtmt * time + plot, data = envfactors,
+strata = plot)
+
+Where plot is nested within the betweensubtrtmnt
+
+Strata restricts the permutation, and the residual error term will give
+you the correct test for the time effect and the betweensubtrtmnt * time
+interaction, but the test for the betweensubtrmnt main effect will be
+wrong because plot, and not the residual error term, is the correct error
+term for testing it.
+
+To get a test for the betweensubtrtmnt main effect, load the BiodiversityR
+package (I use the 1.6 version, but see the recent discussion about this)
+and use the nested.npmanova function.
+
+nested.npmanova(speciesdata ~ betweensubtrtmnt + plot, data = envfactors)
+
+In this case, the betweensubtrtmnt is tested with plot; plot is tested
+with the residual error term but that latter test is not correct in this
+instance and is usually not of interest anyway.
+
+Note that the default distance is euclidean; you'll to use "method" to
+specify a different distance, e.g.,
+
+nested.npmanova(speciesdata ~ betweensubtrtmnt + plot, data = envfactors;
+method ="bray")
+
+
+The same principles apply to a simple split-plot design, except that the
+whole-plot treatment is treated like a between-subjects treatment and the
+sub-plot treatment is treated like the time effect.
+
+Hope this is of some help.
+
+Steve
+
+J. Stephen Brewer
+Professor
+Department of Biology
+PO Box 1848
+ University of Mississippi
+University, Mississippi 38677-1848
+ Brewer web page - http://home.olemiss.edu/~jbrewer/
+FAX - 662-915-5144
+Phone - 662-915-1077
+
+	[[alternative HTML version deleted]]
+
+
+From jbrewer at olemiss.edu  Tue Mar 17 21:05:44 2015
+From: jbrewer at olemiss.edu (Steve Brewer)
+Date: Tue, 17 Mar 2015 15:05:44 -0500
+Subject: [R-sig-eco] Nested Permanova with repeated measures
+In-Reply-To: <CAJFbWOSe+Hoj9+k+yP2gcKCBO+kg2-nRuBhv2jecJwWR9vVM_A@mail.gmail.com>
+Message-ID: <D12DE79A.35AAB%jbrewer@olemiss.edu>
+
+Paul,
+
+As I think you've figured out, you can't use nested permanova when you have
+blocks. It is not clear to me why you would have mesocosm included as an
+effect in the model. My understanding is that you have a randomized block
+design with no "repetitions" of treatment by block combinations. Hence,
+ignoring time and its interactions, the between-subjects effects are block
+and treatment, and the residual variation is the experimental error term
+(I.e., the block by treatment "interaction" term).
+
+The model for a given time (week) would simply be community~treatment +
+block
+
+The mesocosm is the experimental unit. So, you don't want to specify it in
+the model.
+
+If you want to include all weeks and examine the between-subjects effects,
+then you need to use betadisper() to get the centroid across all 11 weeks
+for each microcosm. Using a grouping variable (let's call it
+block.treatment.combo), you can get a new matrix made up of 12 centroids,
+one for each subject (mesocosm; let's call it
+community.centroids.among.weeks). Using this matrix of centroids, run the
+following model:
+
+Community.centroids.among.weeks ~ treatment + block
+
+You should get an anova table containing treatment (3 df), block (2 df), and
+residual error with (4-1)*(3-1) = 6 df. Total = 11 df.
+
+To analyze the within-subjects effects (which must be done in a separate
+analysis), you use the original matrix (not the matrix of centroids) and
+construct the following model
+
+Community ~ week + week:treatment + block.treatment.combo
+
+The block.treatment.combo is the grouping variable that you create from your
+factors that includes all block by treatment combinations (e.g., b1t1, b1t2,
+b1t3, b1c, b2t1, b2t2, etc). It will have 11 degrees of freedom (3 blocks x
+4 treatments) -1, the same total df for the between-subjects analysis. This
+factor will account for and remove the between-subjects variation from the
+residual error (ignore the result of the test of this factor).
+
+The resulting anova table should look like this:
+
+Block.treatment.combo (11 df; ignore test), time (10 df), time:treatment (30
+df), and residual error (80 df).
+
+Hope this helps.
+Steve
+
+
+J. Stephen Brewer 
+Professor 
+Department of Biology
+PO Box 1848
+ University of Mississippi
+University, Mississippi 38677-1848
+ Brewer web page - http://home.olemiss.edu/~jbrewer/
+FAX - 662-915-5144 Phone - 662-202-5877
+
+From:  Paul Moquin <moquin.paul at gmail.com>
+Date:  Tue, 17 Mar 2015 11:42:26 -0700
+To:  <r-sig-ecology at r-project.org>, Pyro Maniac <jbrewer at olemiss.edu>
+Subject:  Nested Permanova with repeated measures
+
+Hi Stephen and all Permanoverts!
+
+Thank you for posting your thoughts about repeated measure Permanova. I am
+following your methods (From Feb 25 2013- posted below) where you use adonis
+for the time and time by treatment interaction and , in a seperate step, the
+BiodiversityR for the main effect. When I run nested.npmanova the p value I
+get for my treatment is 1.0 leading me to believe there is something wrong-
+there is of course the possibility that there really is nothing there but
+when I look at the plots there seems to be some kind of treatment effect at
+least for 5 of the 10 species....so if not significant at least not p=1! I
+will provide a glimpse into the design and data I have in the hopes of
+finding my issue. 
+
+Melting permafrost which slumps into Arctic lakes has been associated with
+phisio-chemical and biological changes in these lakes. To replicate these
+slumps, I ran an experiment in an unslumped Arctic lake where I dosed
+mesocosms with melted permafrost soil. The experiment had three replicates
+of 3 treatment levels plus a control for a total of 12 mesocosms. The
+experiment was set up in a randomized block design (ie 3 blocks with 4
+mesocosms each- one of each treatment). I have zooplankton community data
+for 11 time steps (weeks).
+
+For a number of other univariate parameters I have used a mixed effects
+model with mesocosm within block as my random terms and treatment and time
+and their interaction as my main effects. (though I am not really interested
+in the effect of time)
+
+But in multivariate space I think the best I can do is:
+to test time and its interaction with treatment I have
+adonis(community~week*treatment, method="bray", perm=999,strata =
+enviro$mesocosm, data=enviro)
+
+and to test the main effect:
+
+library(BiodiversityR)
+nested.npmanova(community ~treatment + mesocosm, method="bray", data =
+enviro) 
+>  
+
+Does this seem right? I acknowledge that I loose the ability to use "block"
+here but not much I can do right?
+
+
+I get this as the result:
+
+Total sum of squares for non-parametric manova: 26.8071635047485
+
+Nested anova for mc nested within t.level
+
+                  Df       SumsofSquares       F               N.Perm
+Pr(>F)   
+treatment    3        1.4607                     0.1727      100
+1.000000   
+mesocosm  1        2.8188                     15.8910    100
+0.009901 **
+Residuals 127       22.5277                   0.1774
+---
+Signif. codes:  0 ?***? 0.001 ?**? 0.01 ?*? 0.05 ?.? 0.1 ? ? 1
+> 
+
+Thank you very much
+
+Paul Moquin
+ 
+
+
+[R-sig-eco] Permanova with nested data
+Steve Brewer jbrewer at olemiss.edu
+<mailto:r-sig-ecology%40r-project.org?Subject=Re%3A%20%5BR-sig-eco%5D%20Perm
+anova%20with%20nested%20data&In-Reply-To=%3CCD50D4BB.1E27D%25jbrewer%40olemi
+ss.edu%3E> 
+Mon Feb 25 16:13:18 CET 2013
+
+* Previous message: [R-sig-eco] lme4 for pseudoreplication avoidance
+<https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/003594.html>
+* Next message: [R-sig-eco] Validation of linear regression
+<https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/003597.html>
+* Messages sorted by: [ date ]
+<https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/date.html#3595>
+[ thread ] 
+<https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/thread.html#3595
+>  [ subject ] 
+<https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/subject.html#359
+5>  [ author ] 
+<https://stat.ethz.ch/pipermail/r-sig-ecology/2013-February/author.html#3595
+> 
+
+Beth and others,
+
+Given several recent queries regarding how to analyze repeated-measures
+and split-plot perManova using adonis, I thought I would pass along what I
+think is a reasonable solution.
+
+I just saw the recent exchange over the use of BiodiversityR to do nested
+perMANOVA. I was unaware of this function until today.
+
+With that in mind, it is possible to do a simple repeated-measures
+permanova using two different analyses, one for the within-subjects
+effects and one for the between-subjects effects. The same approach
+applies to a simple split-plot analysis.
+
+For the within-subjects (or sub-plot) effects, you use adonis and the
+strata function. The model formula could look something like:
+
+Assume species responses are in "Speciesdata" and the treatment, time, and
+plot effects are in "envfactors"
+
+Adonis(Speciesdata ~ betweensubtrtmt * time + plot, data = envfactors,
+strata = plot)
+
+Where plot is nested within the betweensubtrtmnt
+
+Strata restricts the permutation, and the residual error term will give
+you the correct test for the time effect and the betweensubtrtmnt * time
+interaction, but the test for the betweensubtrmnt main effect will be
+wrong because plot, and not the residual error term, is the correct error
+term for testing it.
+
+To get a test for the betweensubtrtmnt main effect, load the BiodiversityR
+package (I use the 1.6 version, but see the recent discussion about this)
+and use the nested.npmanova function.
+
+nested.npmanova(speciesdata ~ betweensubtrtmnt + plot, data = envfactors)
+
+In this case, the betweensubtrtmnt is tested with plot; plot is tested
+with the residual error term but that latter test is not correct in this
+instance and is usually not of interest anyway.
+
+Note that the default distance is euclidean; you'll to use "method" to
+specify a different distance, e.g.,
+
+nested.npmanova(speciesdata ~ betweensubtrtmnt + plot, data = envfactors;
+method ="bray")
+
+
+The same principles apply to a simple split-plot design, except that the
+whole-plot treatment is treated like a between-subjects treatment and the
+sub-plot treatment is treated like the time effect.
+
+Hope this is of some help.
+
+Steve
+
+J. Stephen Brewer 
+Professor 
+Department of Biology
+PO Box 1848
+ University of Mississippi
+University, Mississippi 38677-1848
+ Brewer web page - http://home.olemiss.edu/~jbrewer/
+FAX - 662-915-5144 <tel:662-915-5144>
+Phone - 662-915-1077 <tel:662-915-1077>
+
+
+
+	[[alternative HTML version deleted]]
+
+
+From moquin.paul at gmail.com  Tue Mar 17 22:59:27 2015
+From: moquin.paul at gmail.com (Paul Moquin)
+Date: Tue, 17 Mar 2015 14:59:27 -0700
+Subject: [R-sig-eco] Nested Permanova with repeated measures
+In-Reply-To: <D12DE79A.35AAB%jbrewer@olemiss.edu>
+References: <CAJFbWOSe+Hoj9+k+yP2gcKCBO+kg2-nRuBhv2jecJwWR9vVM_A@mail.gmail.com>
+	<D12DE79A.35AAB%jbrewer@olemiss.edu>
+Message-ID: <CAJFbWOTuZ+yqiKWV82siub2k_Z71vjZqT05uFCdiO3Zhg_02qA@mail.gmail.com>
+
+Wow- Thank you so much for this!!- I do however have a little confusion on
+this part- which is well ,most of it (-:
+
+
+"If you want to include all weeks and examine the between-subjects effects,
+then you need to use betadisper() to get the centroid across all 11 weeks
+for each microcosm. "
+
+I do indeed want to us all weeks so I did this to get the centroids for
+each mesocosm:
+
+*mc.centroids<-betadisper(vegdist(community, method="bray"),mesocosm) #get
+mesocosm centroids *
+*correct?  and now *you say "Using a grouping variable (let's call it
+block.treatment.combo), you can get a new matrix made up of 12 centroids,
+one for each subject (mesocosm; let's call it community.centroids.among.weeks).
+Using this matrix of centroids, run the following model:
+
+Community.centroids.among.weeks ~ treatment + block"
+
+I'm afraid I was not able to follow you here! Could you provide the code
+you would use there?
+
+	[[alternative HTML version deleted]]
+
+
+From highstat at highstat.com  Wed Mar 18 12:14:30 2015
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Wed, 18 Mar 2015 11:14:30 +0000
+Subject: [R-sig-eco] Bayesian course + GLMM course
+Message-ID: <55095E16.7070807@highstat.com>
+
+Apologies for cross-posting
+
+
+There are a few remaining seats on the following two (combined) courses:
+
+Course 1 (3 days): Introduction to Bayesian statistics and MCMC
+When: 8-10 April 2015
+Where: University of Southampton, Southampton, UK
+Course flyer: 
+http://www.highstat.com/Courses/Flyer2015_04Southampton_Course2.pdf
+URL: http://www.highstat.com/statscourse.htm
+
+
+Course 2 (5 days): Introduction to Linear Mixed Effects Models and GLMM 
+with R
+When: 13-17 April 2015
+Where: University of Southampton, Southampton, UK
+Course flyer: 
+http://www.highstat.com/Courses/Flyer2015_04Southampton_Course3.pdf
+URL: http://www.highstat.com/statscourse.htm
+
+
+
+Kind regards,
+
+Alain Zuur
+
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From alexsouza.cb.ufrn.br at gmail.com  Wed Mar 18 22:08:40 2015
+From: alexsouza.cb.ufrn.br at gmail.com (Alexandre F. Souza)
+Date: Wed, 18 Mar 2015 18:08:40 -0300
+Subject: [R-sig-eco] Problem with Capscale and Phylobetadiversity distance
+	matrix
+Message-ID: <CAFXQFgN8iVrRAYj5ThJ=9oDLEqtGn=BDNjz8q0LL3oh+uFb2yA@mail.gmail.com>
+
+Hello everyone,
+
+I have a problem trying to use vegan's capscale() on a phylobetadiversity
+distance matrix, reproduced below using the example:
+
+library(psych)  # For the PCA test involved
+
+# Opens a full matrix of 245 x 245 phylobetadiversity distances
+bnti.ses = read.csv(file.choose(), header = T, row.names=1);
+dim(bnti.ses); # this gives the dimensions
+bnti.ses[1:5,1:5]; # this gives a look at the first 5 rows and columns
+
+# Test PCA scores
+test = data.frame(replicate(10,sample(0:100,245,rep=TRUE)))
+test
+pca = principal(teste, nfactors = 3, covar = FALSE, scores = TRUE)
+meta.pca.scores = pca$scores
+rownames(meta.pca.scores)=rownames(bnti.ses)
+
+
+## dbRDA
+
+# betaNTI standard effect size
+
+
+bnti.ses = bnti.ses + abs(min(bnti.ses));
+
+bnti.ses = bnti.ses/max(bnti.ses);
+
+range(bnti.ses);
+
+
+identical(rownames(bnti.ses),colnames(bnti.ses)); # must be TRUE to proceed
+
+identical(rownames(bnti.ses),rownames(meta.pca.scores)); # must be TRUE to
+proceed
+
+
+# Here is where the error occurs
+bnti.ses.dbrda.int = capscale(as.dist(bnti.ses) ~ 1,data=meta.pca.scores);
+
+bnti.ses.dbrda.full = capscale(as.dist(bnti.ses) ~ .,data=meta.pca.scores);
+
+bnti.ses.select.rsq = ordiR2step(bnti.ses.dbrda.int, scope =
+formula(bnti.ses.dbrda.full),direction = "both",pstep=10000, perm.max =
+100000); bnti.ses.select.rsq;
+
+I get the message:
+
+Error in formula.default(object, env = baseenv()) : invalid formula
+
+
+I tried the same code using the varespec and varechem example files present
+in capscale's help and it worked. I checked the dimensions of the
+phylobetadiversity matrix and they are ok (245 x 245). I tried to omit the
+row names but the problem persists.
+
+For me the very last test that should have worked was
+
+bnti.ses = data.frame(replicate(245,sample(0:100,245,rep=TRUE)))
+
+rownames(bnti.ses)=rownames(meta.pca.scores)colnames(bnti.ses)=rownames(bnti.ses)
+
+
+and then working this artificial bnti.ses through the subsequent
+standardization and capscale steps. However, I got the same error mesage
+with this example.
+
+Am I missing something, or is there a workaround?
+
+Thanks,
+
+Alexandre
+-- 
+Dr. Alexandre F. Souza
+Professor Ajunto II
+Universidade Federal do Rio Grande do Norte
+CB, Departamento de Ecologia
+Campus Universit?rio - Lagoa Nova
+59072-970 - Natal, RN - Brasil
+lattes: lattes.cnpq.br/7844758818522706
+http://www.docente.ufrn.br/alexsouza
+
+
+
+-- 
+Dr. Alexandre F. Souza
+Professor Ajunto II
+Universidade Federal do Rio Grande do Norte
+CB, Departamento de Ecologia
+Campus Universit?rio - Lagoa Nova
+59072-970 - Natal, RN - Brasil
+lattes: lattes.cnpq.br/7844758818522706
+http://www.docente.ufrn.br/alexsouza
+
+	[[alternative HTML version deleted]]
+
+
+From frankberninger at gmail.com  Thu Mar 26 08:37:16 2015
+From: frankberninger at gmail.com (Frank Berninger)
+Date: Thu, 26 Mar 2015 09:37:16 +0200
+Subject: [R-sig-eco] MetaNmds and ordinal data
+Message-ID: <5513B72C.3010301@gmail.com>
+
+Hello,
+
+I intend to use MetaNMDS on ordinal data and was wondering if there are
+any guidelines and examples what to do (and especially what not to do).
+
+At the moment my design decisions are to use an Euclidian distance
+matrix (since I use already ordinal data anything more complecated seems
+to be inappropiate). I want to test dependencies on environmental
+factors post-hoc. Are there any thoughts, articles or anything else to
+help a newby in ordinations on that subject?
+
+Frank
+
+Frank Berninger
+Associate professor Forest Ecology
+Department of Forest Sciences
+POBOX 27
+00014 University of Helsinki
+
+
+From sarah.goslee at gmail.com  Fri Mar 27 15:25:02 2015
+From: sarah.goslee at gmail.com (Sarah Goslee)
+Date: Fri, 27 Mar 2015 10:25:02 -0400
+Subject: [R-sig-eco] MetaNmds and ordinal data
+In-Reply-To: <5513B72C.3010301@gmail.com>
+References: <5513B72C.3010301@gmail.com>
+Message-ID: <CAM_vjunnu+N9kVaaHQqQaCEXyyFmFj0nn0RVm58FKraoa-OQiw@mail.gmail.com>
+
+Hi Frank,
+
+On Thu, Mar 26, 2015 at 3:37 AM, Frank Berninger
+<frankberninger at gmail.com> wrote:
+> Hello,
+>
+> I intend to use MetaNMDS on ordinal data and was wondering if there are
+> any guidelines and examples what to do (and especially what not to do).
+>
+> At the moment my design decisions are to use an Euclidian distance
+> matrix (since I use already ordinal data anything more complecated seems
+> to be inappropiate). I want to test dependencies on environmental
+> factors post-hoc. Are there any thoughts, articles or anything else to
+> help a newby in ordinations on that subject?
+
+While it's common to treat ordinal data like interval data, that can
+be a problem for distance-based tests if the difference between 0 and
+1, for example, is substantially different than the difference between
+10 and 11: both will have the same Euclidean distance, even though
+they aren't equally dissimilar. There are various alternatives,
+including ranked distances, Gower dissimilarity, etc.
+
+Without knowing anything else about your data or hypotheses, it's
+impossible to give you advice beyond spending some time with the many
+journal articles in the Journal of Vegetation Science discussing
+multivariate analyses of ordinal data.
+
+Sarah
+
+-- 
+Sarah Goslee
+http://www.functionaldiversity.org
+
+
+From luysgarcia at gmail.com  Mon Mar 30 06:06:17 2015
+From: luysgarcia at gmail.com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Mon, 30 Mar 2015 01:06:17 -0300
+Subject: [R-sig-eco] Edit plot adehabitatHS
+Message-ID: <CANxP2S7ta2ejEaOcJrLVvQCqvpq+_fpqmZiH0X=u4Ur+WCxr2g@mail.gmail.com>
+
+Dear R experts,
+
+I am making a selectivity analysis using the  package. Nevertheless, I am
+having some troubles, and I would like to know if somebody know how to help
+me:
+
+1) When changing the x-axis labels. The programm uses the name habitat
+instead of the names specified in the file.
+
+2) Is it possible to edit this plot, #3 (bottom-left), for example is it
+possible to change the symbols style, the legend position or size? I do not
+know how to edit this kind of data, if somebody has an example using this
+package, I would really appreaciate it.
+
+Thanks!!
+
+Please find attached the plot, the script and the respective plot
+
+
+library(adehabitatHS)
+pse<-read.table("pseudos.txt", header=T)
+
+attach(pse)
+names(pse)
+head(pse)
+(wiRatio <- widesI(Diet, Dis))
+png(filename = "plotpseudos3.png", width = 500, height = 500)
+opar <- par(mfrow=c(2,2))
+plot(wiRatio)
+
+par(opar)
+dev.off()
+-------------- next part --------------
+MSp	Orden	Dis	Diet
+MSp52	Hemiptera	31	2
+MSp84	Hemiptera	2	1
+MSp92	Hymenoptera	47	2
+MSp100	Hymenoptera	19	1
+MSp101	Hymenoptera	31	28
+MSp102	Hymenoptera	83	15
+MSp104	Hymenoptera	77	40
+MSp105	Hymenoptera	110	9
+MSp106	Hymenoptera	41	3
+MSp107	Hymenoptera	1	3
+MSp108	Hymenoptera	1	2
+MSp109	Hymenoptera	1	1
+MSp110	Hymenoptera	1	1
+MSp143	Mantodea	1	1
+MSp164	Neuroptera	5	1
+MSp176	Araneae	6	1
+
+From ManuelEsteban.Lucas at uclm.es  Mon Mar 30 14:31:39 2015
+From: ManuelEsteban.Lucas at uclm.es (Manuel Esteban Lucas Borja)
+Date: Mon, 30 Mar 2015 14:31:39 +0200
+Subject: [R-sig-eco] Natural regeneration experiment using R
+Message-ID: <A66D790A-5D4C-47A5-BFD6-B613458435A4@uclm.es>
+
+Dear all,
+
+I am just starting with R program and I would be very grateful if you could help me about how to analyze the data.  I am involved in a Pinus nigra regeneration experiment in Cuenca Mountains (Spain).  The aim of the study is to evaluate the effect of fire, soil preparation (scalping) and control (without treatment) on seed emergence and seedling survival in two sites (pure and mixed pinus nigra stands). Also seed predation effect will be evaluated using traps to protect the seeds and seedlings.
+
+Different sowing points (subplots 25x25 cm) were sown using 6 pinus nigra seeds previously collected in the field. Variable response is seed emergence rate (%) and seedling survival rate (%) at the end of the experiment (1 year)
+
+The experimental design is as follow:
+
+- Three factors: Site, condition and seed protection.  
+
+- Levels of each factor:
+
+            - Two sites (a mixed stand and a pure stand)
+
+            - Three conditions (postfire, scalping and control)
+
+            - Protection of seeds (yes or not)
+
+Five plots were established at each condition and two subplots were established at each plot (A and B). Each subplot is considered as sowing points being one protected against predators and the other not.
+
+2 sites x 3 conditions x 2 seed protection x 5 plots x 2 sowing points= 120 (n=observations)
+
+Please see attached .xls file to explore the data.
+
+As far as I know, the experimental design can be considerer as nested since the factor ?condition? is nested in the site factor (control level is not the same for mixed stand or pure stand). All the factors are fixed.
+
+On these context my questions is how to analyze the data? And how to perform the analysis using the R program? I am thinking to use GML models but maybe using an ANOVA being condition factor nested in the site factor is easier.
+
+Thank you so much. Any help is more than welcome.
+
+Manuel
+
+---
+Manuel Esteban Lucas Borja
+Universidad de Castilla La Mancha
+Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes 
+Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+Campus Universitario s/n,
+C.P. 02071, Albacete (Spain)
+T?lf.; 967599200 ext. 2818
+Mail: ManuelEsteban.Lucas at uclm.es
+Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+
+From thierry.onkelinx at inbo.be  Mon Mar 30 14:57:31 2015
+From: thierry.onkelinx at inbo.be (Thierry Onkelinx)
+Date: Mon, 30 Mar 2015 14:57:31 +0200
+Subject: [R-sig-eco] Natural regeneration experiment using R
+In-Reply-To: <A66D790A-5D4C-47A5-BFD6-B613458435A4@uclm.es>
+References: <A66D790A-5D4C-47A5-BFD6-B613458435A4@uclm.es>
+Message-ID: <CAJuCY5waowW6P5Xgy7WsM8iqbfb63uwC6y7ZH8a7FR02+kHbvQ@mail.gmail.com>
+
+Dear Manuel,
+
+You can solves this with a mixed model. Something like
+
+library(lme4)
+model <- glmer(cbind(NSurvived, NDied) ~ Site * Condition * Protection +
+(1|Plot), data = your.dataset)
+
+Note that the list only allows several types of attachments. xls files are
+striped.
+
+You might want to do some reading (e.g. Zuur et al, 2009) or consult a
+local statistician.
+
+Best regards,
+
+ir. Thierry Onkelinx
+Instituut voor natuur- en bosonderzoek / Research Institute for Nature and
+Forest
+team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+Kliniekstraat 25
+1070 Anderlecht
+Belgium
+
+To call in the statistician after the experiment is done may be no more
+than asking him to perform a post-mortem examination: he may be able to say
+what the experiment died of. ~ Sir Ronald Aylmer Fisher
+The plural of anecdote is not data. ~ Roger Brinner
+The combination of some data and an aching desire for an answer does not
+ensure that a reasonable answer can be extracted from a given body of data.
+~ John Tukey
+
+2015-03-30 14:31 GMT+02:00 Manuel Esteban Lucas Borja <
+ManuelEsteban.Lucas at uclm.es>:
+
+> Dear all,
+>
+> I am just starting with R program and I would be very grateful if you
+> could help me about how to analyze the data.  I am involved in a Pinus
+> nigra regeneration experiment in Cuenca Mountains (Spain).  The aim of the
+> study is to evaluate the effect of fire, soil preparation (scalping) and
+> control (without treatment) on seed emergence and seedling survival in two
+> sites (pure and mixed pinus nigra stands). Also seed predation effect will
+> be evaluated using traps to protect the seeds and seedlings.
+>
+> Different sowing points (subplots 25x25 cm) were sown using 6 pinus nigra
+> seeds previously collected in the field. Variable response is seed
+> emergence rate (%) and seedling survival rate (%) at the end of the
+> experiment (1 year)
+>
+> The experimental design is as follow:
+>
+> - Three factors: Site, condition and seed protection.
+>
+> - Levels of each factor:
+>
+>             - Two sites (a mixed stand and a pure stand)
+>
+>             - Three conditions (postfire, scalping and control)
+>
+>             - Protection of seeds (yes or not)
+>
+> Five plots were established at each condition and two subplots were
+> established at each plot (A and B). Each subplot is considered as sowing
+> points being one protected against predators and the other not.
+>
+> 2 sites x 3 conditions x 2 seed protection x 5 plots x 2 sowing points=
+> 120 (n=observations)
+>
+> Please see attached .xls file to explore the data.
+>
+> As far as I know, the experimental design can be considerer as nested
+> since the factor ?condition? is nested in the site factor (control level is
+> not the same for mixed stand or pure stand). All the factors are fixed.
+>
+> On these context my questions is how to analyze the data? And how to
+> perform the analysis using the R program? I am thinking to use GML models
+> but maybe using an ANOVA being condition factor nested in the site factor
+> is easier.
+>
+> Thank you so much. Any help is more than welcome.
+>
+> Manuel
+>
+> ---
+> Manuel Esteban Lucas Borja
+> Universidad de Castilla La Mancha
+> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+> Campus Universitario s/n,
+> C.P. 02071, Albacete (Spain)
+> T?lf.; 967599200 ext. 2818
+> Mail: ManuelEsteban.Lucas at uclm.es
+> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From ManuelEsteban.Lucas at uclm.es  Mon Mar 30 15:09:47 2015
+From: ManuelEsteban.Lucas at uclm.es (Manuel Esteban Lucas Borja)
+Date: Mon, 30 Mar 2015 15:09:47 +0200
+Subject: [R-sig-eco] Natural regeneration experiment using R
+In-Reply-To: <CAJuCY5waowW6P5Xgy7WsM8iqbfb63uwC6y7ZH8a7FR02+kHbvQ@mail.gmail.com>
+References: <A66D790A-5D4C-47A5-BFD6-B613458435A4@uclm.es>
+	<CAJuCY5waowW6P5Xgy7WsM8iqbfb63uwC6y7ZH8a7FR02+kHbvQ@mail.gmail.com>
+Message-ID: <207DD021-222F-43DF-A5E9-52A7D36D6983@uclm.es>
+
+Dear Thierry, 
+
+Thank you so much. Please see in attachment the .txt file (sorry about the xls fiel).
+
+Following your recommendation, I have to use the number of seeds and not the percentage, true?
+
+Sincerely, 
+---
+Manuel Esteban Lucas Borja
+Universidad de Castilla La Mancha
+Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes 
+Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+Campus Universitario s/n,
+C.P. 02071, Albacete (Spain)
+T?lf.; 967599200 ext. 2818
+Mail: ManuelEsteban.Lucas at uclm.es
+Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+
+El 30/03/2015, a las 14:57, Thierry Onkelinx <thierry.onkelinx at inbo.be> escribi?:
+
+> Dear Manuel,
+> 
+> You can solves this with a mixed model. Something like 
+> 
+> library(lme4)
+> model <- glmer(cbind(NSurvived, NDied) ~ Site * Condition * Protection + (1|Plot), data = your.dataset)
+> 
+> Note that the list only allows several types of attachments. xls files are striped.
+> 
+> You might want to do some reading (e.g. Zuur et al, 2009) or consult a local statistician.
+> 
+> Best regards,
+> 
+> ir. Thierry Onkelinx
+> Instituut voor natuur- en bosonderzoek / Research Institute for Nature and Forest 
+> team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance 
+> Kliniekstraat 25
+> 1070 Anderlecht
+> Belgium
+> 
+> To call in the statistician after the experiment is done may be no more than asking him to perform a post-mortem examination: he may be able to say what the experiment died of. ~ Sir Ronald Aylmer Fisher
+> The plural of anecdote is not data. ~ Roger Brinner 
+> The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data. ~ John Tukey
+> 
+> 2015-03-30 14:31 GMT+02:00 Manuel Esteban Lucas Borja <ManuelEsteban.Lucas at uclm.es>:
+> Dear all,
+> 
+> I am just starting with R program and I would be very grateful if you could help me about how to analyze the data.  I am involved in a Pinus nigra regeneration experiment in Cuenca Mountains (Spain).  The aim of the study is to evaluate the effect of fire, soil preparation (scalping) and control (without treatment) on seed emergence and seedling survival in two sites (pure and mixed pinus nigra stands). Also seed predation effect will be evaluated using traps to protect the seeds and seedlings.
+> 
+> Different sowing points (subplots 25x25 cm) were sown using 6 pinus nigra seeds previously collected in the field. Variable response is seed emergence rate (%) and seedling survival rate (%) at the end of the experiment (1 year)
+> 
+> The experimental design is as follow:
+> 
+> - Three factors: Site, condition and seed protection.
+> 
+> - Levels of each factor:
+> 
+>             - Two sites (a mixed stand and a pure stand)
+> 
+>             - Three conditions (postfire, scalping and control)
+> 
+>             - Protection of seeds (yes or not)
+> 
+> Five plots were established at each condition and two subplots were established at each plot (A and B). Each subplot is considered as sowing points being one protected against predators and the other not.
+> 
+> 2 sites x 3 conditions x 2 seed protection x 5 plots x 2 sowing points= 120 (n=observations)
+> 
+> Please see attached .xls file to explore the data.
+> 
+> As far as I know, the experimental design can be considerer as nested since the factor ?condition? is nested in the site factor (control level is not the same for mixed stand or pure stand). All the factors are fixed.
+> 
+> On these context my questions is how to analyze the data? And how to perform the analysis using the R program? I am thinking to use GML models but maybe using an ANOVA being condition factor nested in the site factor is easier.
+> 
+> Thank you so much. Any help is more than welcome.
+> 
+> Manuel
+> 
+> ---
+> Manuel Esteban Lucas Borja
+> Universidad de Castilla La Mancha
+> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+> Campus Universitario s/n,
+> C.P. 02071, Albacete (Spain)
+> T?lf.; 967599200 ext. 2818
+> Mail: ManuelEsteban.Lucas at uclm.es
+> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+
+
+From thierry.onkelinx at inbo.be  Mon Mar 30 15:15:05 2015
+From: thierry.onkelinx at inbo.be (Thierry Onkelinx)
+Date: Mon, 30 Mar 2015 15:15:05 +0200
+Subject: [R-sig-eco] Natural regeneration experiment using R
+In-Reply-To: <207DD021-222F-43DF-A5E9-52A7D36D6983@uclm.es>
+References: <A66D790A-5D4C-47A5-BFD6-B613458435A4@uclm.es>
+	<CAJuCY5waowW6P5Xgy7WsM8iqbfb63uwC6y7ZH8a7FR02+kHbvQ@mail.gmail.com>
+	<207DD021-222F-43DF-A5E9-52A7D36D6983@uclm.es>
+Message-ID: <CAJuCY5w_9PRudYYmY_sBEjHWLAs+BMMXLhkRCDND9Bm8vjFePg@mail.gmail.com>
+
+Yes you need the number of seeds because the distribution is discrete. E.g.
+with 4 seeds only 0%, 25%, 50%, 75% or 100% can survive.
+
+I notice a typo in my code. You need to specify the distribution as well.
+
+library(lme4)
+model <- glmer(cbind(NSurvived, NDied) ~ Site * Condition * Protection +
+(1|Plot), data = your.dataset, family = binomial)
+
+
+ir. Thierry Onkelinx
+Instituut voor natuur- en bosonderzoek / Research Institute for Nature and
+Forest
+team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+Kliniekstraat 25
+1070 Anderlecht
+Belgium
+
+To call in the statistician after the experiment is done may be no more
+than asking him to perform a post-mortem examination: he may be able to say
+what the experiment died of. ~ Sir Ronald Aylmer Fisher
+The plural of anecdote is not data. ~ Roger Brinner
+The combination of some data and an aching desire for an answer does not
+ensure that a reasonable answer can be extracted from a given body of data.
+~ John Tukey
+
+2015-03-30 15:09 GMT+02:00 Manuel Esteban Lucas Borja <
+ManuelEsteban.Lucas at uclm.es>:
+
+> Dear Thierry,
+>
+> Thank you so much. Please see in attachment the .txt file (sorry about the
+> xls fiel).
+>
+> Following your recommendation, I have to use the number of seeds and not
+> the percentage, true?
+>
+> Sincerely,
+> ---
+> Manuel Esteban Lucas Borja
+> Universidad de Castilla La Mancha
+> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+> Campus Universitario s/n,
+> C.P. 02071, Albacete (Spain)
+> T?lf.; 967599200 ext. 2818
+> Mail: ManuelEsteban.Lucas at uclm.es
+> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+>
+>
+> El 30/03/2015, a las 14:57, Thierry Onkelinx <thierry.onkelinx at inbo.be>
+> escribi?:
+>
+> Dear Manuel,
+>
+> You can solves this with a mixed model. Something like
+>
+> library(lme4)
+> model <- glmer(cbind(NSurvived, NDied) ~ Site * Condition * Protection +
+> (1|Plot), data = your.dataset)
+>
+> Note that the list only allows several types of attachments. xls files are
+> striped.
+>
+> You might want to do some reading (e.g. Zuur et al, 2009) or consult a
+> local statistician.
+>
+> Best regards,
+>
+> ir. Thierry Onkelinx
+> Instituut voor natuur- en bosonderzoek / Research Institute for Nature and
+> Forest
+> team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance
+> Kliniekstraat 25
+> 1070 Anderlecht
+> Belgium
+>
+> To call in the statistician after the experiment is done may be no more
+> than asking him to perform a post-mortem examination: he may be able to say
+> what the experiment died of. ~ Sir Ronald Aylmer Fisher
+> The plural of anecdote is not data. ~ Roger Brinner
+> The combination of some data and an aching desire for an answer does not
+> ensure that a reasonable answer can be extracted from a given body of data.
+> ~ John Tukey
+>
+> 2015-03-30 14:31 GMT+02:00 Manuel Esteban Lucas Borja <
+> ManuelEsteban.Lucas at uclm.es>:
+>
+>> Dear all,
+>>
+>> I am just starting with R program and I would be very grateful if you
+>> could help me about how to analyze the data.  I am involved in a Pinus
+>> nigra regeneration experiment in Cuenca Mountains (Spain).  The aim of the
+>> study is to evaluate the effect of fire, soil preparation (scalping) and
+>> control (without treatment) on seed emergence and seedling survival in two
+>> sites (pure and mixed pinus nigra stands). Also seed predation effect will
+>> be evaluated using traps to protect the seeds and seedlings.
+>>
+>> Different sowing points (subplots 25x25 cm) were sown using 6 pinus nigra
+>> seeds previously collected in the field. Variable response is seed
+>> emergence rate (%) and seedling survival rate (%) at the end of the
+>> experiment (1 year)
+>>
+>> The experimental design is as follow:
+>>
+>> - Three factors: Site, condition and seed protection.
+>>
+>> - Levels of each factor:
+>>
+>>             - Two sites (a mixed stand and a pure stand)
+>>
+>>             - Three conditions (postfire, scalping and control)
+>>
+>>             - Protection of seeds (yes or not)
+>>
+>> Five plots were established at each condition and two subplots were
+>> established at each plot (A and B). Each subplot is considered as sowing
+>> points being one protected against predators and the other not.
+>>
+>> 2 sites x 3 conditions x 2 seed protection x 5 plots x 2 sowing points=
+>> 120 (n=observations)
+>>
+>> Please see attached .xls file to explore the data.
+>>
+>> As far as I know, the experimental design can be considerer as nested
+>> since the factor ?condition? is nested in the site factor (control level is
+>> not the same for mixed stand or pure stand). All the factors are fixed.
+>>
+>> On these context my questions is how to analyze the data? And how to
+>> perform the analysis using the R program? I am thinking to use GML models
+>> but maybe using an ANOVA being condition factor nested in the site factor
+>> is easier.
+>>
+>> Thank you so much. Any help is more than welcome.
+>>
+>> Manuel
+>>
+>> ---
+>> Manuel Esteban Lucas Borja
+>> Universidad de Castilla La Mancha
+>> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+>> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+>> Campus Universitario s/n,
+>> C.P. 02071, Albacete (Spain)
+>> T?lf.; 967599200 ext. 2818
+>> Mail: ManuelEsteban.Lucas at uclm.es
+>> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From ManuelEsteban.Lucas at uclm.es  Mon Mar 30 16:52:29 2015
+From: ManuelEsteban.Lucas at uclm.es (Manuel Esteban Lucas Borja)
+Date: Mon, 30 Mar 2015 16:52:29 +0200
+Subject: [R-sig-eco] Natural regeneration experiment using R
+In-Reply-To: <CAJuCY5w_9PRudYYmY_sBEjHWLAs+BMMXLhkRCDND9Bm8vjFePg@mail.gmail.com>
+References: <A66D790A-5D4C-47A5-BFD6-B613458435A4@uclm.es>
+	<CAJuCY5waowW6P5Xgy7WsM8iqbfb63uwC6y7ZH8a7FR02+kHbvQ@mail.gmail.com>
+	<207DD021-222F-43DF-A5E9-52A7D36D6983@uclm.es>
+	<CAJuCY5w_9PRudYYmY_sBEjHWLAs+BMMXLhkRCDND9Bm8vjFePg@mail.gmail.com>
+Message-ID: <8B5FD3CB-EDEF-4618-AB2A-19EC952B4157@uclm.es>
+
+Ok, perfect. 
+
+- In relation to NDied, I have to calculate the number of died seedlings as a new column since the model you proposed uses the number of survived and died seedlings, true?
+-  Do I have to use the same model to evaluate seed emergence?
+- Are you agree that this is a nested experiment design? 
+
+Thank you very much, 
+---
+Manuel Esteban Lucas Borja
+Universidad de Castilla La Mancha
+Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes 
+Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+Campus Universitario s/n,
+C.P. 02071, Albacete (Spain)
+T?lf.; 967599200 ext. 2818
+Mail: ManuelEsteban.Lucas at uclm.es
+Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+
+El 30/03/2015, a las 15:15, Thierry Onkelinx <thierry.onkelinx at inbo.be> escribi?:
+
+> Yes you need the number of seeds because the distribution is discrete. E.g. with 4 seeds only 0%, 25%, 50%, 75% or 100% can survive.
+> 
+> I notice a typo in my code. You need to specify the distribution as well. 
+>> library(lme4)
+>> model <- glmer(cbind(NSurvived, NDied) ~ Site * Condition * Protection + (1|Plot), data = your.dataset, family = binomial)
+> 
+> 
+> ir. Thierry Onkelinx
+> Instituut voor natuur- en bosonderzoek / Research Institute for Nature and Forest 
+> team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance 
+> Kliniekstraat 25
+> 1070 Anderlecht
+> Belgium
+> 
+> To call in the statistician after the experiment is done may be no more than asking him to perform a post-mortem examination: he may be able to say what the experiment died of. ~ Sir Ronald Aylmer Fisher
+> The plural of anecdote is not data. ~ Roger Brinner 
+> The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data. ~ John Tukey
+> 
+> 2015-03-30 15:09 GMT+02:00 Manuel Esteban Lucas Borja <ManuelEsteban.Lucas at uclm.es>:
+> Dear Thierry, 
+> 
+> Thank you so much. Please see in attachment the .txt file (sorry about the xls fiel).
+> 
+> Following your recommendation, I have to use the number of seeds and not the percentage, true?
+> 
+> Sincerely, 
+> ---
+> Manuel Esteban Lucas Borja
+> Universidad de Castilla La Mancha
+> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes 
+> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+> Campus Universitario s/n,
+> C.P. 02071, Albacete (Spain)
+> T?lf.; 967599200 ext. 2818
+> Mail: ManuelEsteban.Lucas at uclm.es
+> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+> 
+> 
+> El 30/03/2015, a las 14:57, Thierry Onkelinx <thierry.onkelinx at inbo.be> escribi?:
+> 
+>> Dear Manuel,
+>> 
+>> You can solves this with a mixed model. Something like 
+>> 
+>> library(lme4)
+>> model <- glmer(cbind(NSurvived, NDied) ~ Site * Condition * Protection + (1|Plot), data = your.dataset)
+>> 
+>> Note that the list only allows several types of attachments. xls files are striped.
+>> 
+>> You might want to do some reading (e.g. Zuur et al, 2009) or consult a local statistician.
+>> 
+>> Best regards,
+>> 
+>> ir. Thierry Onkelinx
+>> Instituut voor natuur- en bosonderzoek / Research Institute for Nature and Forest 
+>> team Biometrie & Kwaliteitszorg / team Biometrics & Quality Assurance 
+>> Kliniekstraat 25
+>> 1070 Anderlecht
+>> Belgium
+>> 
+>> To call in the statistician after the experiment is done may be no more than asking him to perform a post-mortem examination: he may be able to say what the experiment died of. ~ Sir Ronald Aylmer Fisher
+>> The plural of anecdote is not data. ~ Roger Brinner 
+>> The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data. ~ John Tukey
+>> 
+>> 2015-03-30 14:31 GMT+02:00 Manuel Esteban Lucas Borja <ManuelEsteban.Lucas at uclm.es>:
+>> Dear all,
+>> 
+>> I am just starting with R program and I would be very grateful if you could help me about how to analyze the data.  I am involved in a Pinus nigra regeneration experiment in Cuenca Mountains (Spain).  The aim of the study is to evaluate the effect of fire, soil preparation (scalping) and control (without treatment) on seed emergence and seedling survival in two sites (pure and mixed pinus nigra stands). Also seed predation effect will be evaluated using traps to protect the seeds and seedlings.
+>> 
+>> Different sowing points (subplots 25x25 cm) were sown using 6 pinus nigra seeds previously collected in the field. Variable response is seed emergence rate (%) and seedling survival rate (%) at the end of the experiment (1 year)
+>> 
+>> The experimental design is as follow:
+>> 
+>> - Three factors: Site, condition and seed protection.
+>> 
+>> - Levels of each factor:
+>> 
+>>             - Two sites (a mixed stand and a pure stand)
+>> 
+>>             - Three conditions (postfire, scalping and control)
+>> 
+>>             - Protection of seeds (yes or not)
+>> 
+>> Five plots were established at each condition and two subplots were established at each plot (A and B). Each subplot is considered as sowing points being one protected against predators and the other not.
+>> 
+>> 2 sites x 3 conditions x 2 seed protection x 5 plots x 2 sowing points= 120 (n=observations)
+>> 
+>> Please see attached .xls file to explore the data.
+>> 
+>> As far as I know, the experimental design can be considerer as nested since the factor ?condition? is nested in the site factor (control level is not the same for mixed stand or pure stand). All the factors are fixed.
+>> 
+>> On these context my questions is how to analyze the data? And how to perform the analysis using the R program? I am thinking to use GML models but maybe using an ANOVA being condition factor nested in the site factor is easier.
+>> 
+>> Thank you so much. Any help is more than welcome.
+>> 
+>> Manuel
+>> 
+>> ---
+>> Manuel Esteban Lucas Borja
+>> Universidad de Castilla La Mancha
+>> Escuela T?cnica Superior de Ingenieros Agr?nomos y de Montes
+>> Departamento de Ciencia y Tecnolog?a Agroforestal y Gen?tica
+>> Campus Universitario s/n,
+>> C.P. 02071, Albacete (Spain)
+>> T?lf.; 967599200 ext. 2818
+>> Mail: ManuelEsteban.Lucas at uclm.es
+>> Web:http://www.uclm.es/profesorado/manuelestebanlucas/
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>> 
+> 
+> 
+> 
+
+
+	[[alternative HTML version deleted]]
+
+

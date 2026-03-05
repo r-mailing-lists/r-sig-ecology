@@ -1,0 +1,147 @@
+From gu|||@ume@|mon@@2 @end|ng |rom gm@||@com  Tue Dec  1 15:06:40 2020
+From: gu|||@ume@|mon@@2 @end|ng |rom gm@||@com (Guillaume Adeux)
+Date: Tue, 1 Dec 2020 15:06:40 +0100
+Subject: [R-sig-eco] R: vegan/permute: additional level of nesting for
+ pseudoreplicates
+Message-ID: <CAENiVe-JsHbvU02pXyW+7wv0CevqqpRgnFB=nppZzpTMs8BRLQ@mail.gmail.com>
+
+Hi everyone,
+I am trying to investigate how to set up a permutation scheme for community
+data originating from a split plot experiment with pseudoreplicates at the
+lowest level.
+A theoretical design could be the following:
+4 blocks
+2 tillage strips nested within each block (main plot)
+2 cover crop species nested within tillage strips (subplot)
+2 pseudoreplicates at the subplot level
+
+I think I am able to do what I want with the R software if I average the
+two pseudoreplicates (so as to avoid the pseudoreplication level), as
+follows:
+
+require("vegan")
+require("permute")
+data(mite)
+
+*# tillage strip nested in blocks, cover crop nested within tillage strip,
+only one observation per combination of blcks:tillage:covcrop*
+trt=expand.grid(blcks=c("B1","B2","B3","B4"),tillage=c("CT","NT"),covcrop=c("C","VV"))
+com=mite[1:16,]
+dat=cbind(trt,com)
+h <- how(within = Within(type = "free"),plots = Plots(strata =
+interaction(dat$blcks,dat$tillage), type = "free"),blocks =
+dat$blcks,nperm=999)
+pcoa=capscale(com~tillage*covcrop+Condition(blcks),method="bray",data=dat)
+anova(pcoa,by="terms",perm=h)
+
+Now what I wish to do is to add an additional level of nesting so as to
+permute group of observations (pseudoreplicates: named quadrat_ID in the
+following script) at the lowest level:
+
+*# same design but pseudoreplication at the subplot level, i.e. two
+observations per combination of blcks:tillage:covcrop*
+trt2=expand.grid(blcks=c("B1","B2","B3","B4"),tillage=c("CT","NT"),covcrop=c("C","VV"),quadrat_ID=c(1,2))
+com2=mite[1:48,]
+dat2=cbind(trt2,com2)
+h <- ?????
+pcoa=capscale(com~tillage*covcrop+Condition(blcks),method="bray",data=dat)
+anova(pcoa,by="terms",perm=h)
+
+Thank you very much for your help.
+Best.
+Guillaume ADEUX
+
+	[[alternative HTML version deleted]]
+
+
+From bgunter@4567 @end|ng |rom gm@||@com  Wed Dec  9 21:39:41 2020
+From: bgunter@4567 @end|ng |rom gm@||@com (Bert Gunter)
+Date: Wed, 9 Dec 2020 12:39:41 -0800
+Subject: [R-sig-eco] Science article on reproducibility in ecology
+Message-ID: <CAGxFJbRj-btfae2Obx+nn9XOz+356UANfB2bbRefsURvoj9vOQ@mail.gmail.com>
+
+I thought that this article might be of interest to members of this list.
+My apologies if it is considered off-topic.
+
+https://www.sciencemag.org/news/2020/12/psychology-s-replication-crisis-inspires-ecologists-push-more-reliable-research
+
+Please respond to me personally if you wish to reply, as I do not monitor
+this list. Nor am I an ecologist, so don't ask for my opinion on these
+matters. This was just a FYI.
+
+Cheers,
+Bert Gunter
+
+"The trouble with having an open mind is that people keep coming along and
+sticking things into it."
+-- Opus (aka Berkeley Breathed in his "Bloom County" comic strip )
+
+	[[alternative HTML version deleted]]
+
+
+From |uy@g@rc|@ @end|ng |rom gm@||@com  Sat Dec 12 08:02:47 2020
+From: |uy@g@rc|@ @end|ng |rom gm@||@com (=?UTF-8?Q?Luis_Fernando_Garc=C3=ADa?=)
+Date: Sat, 12 Dec 2020 04:02:47 -0300
+Subject: [R-sig-eco] Question about Eveness value comparison
+Message-ID: <CANxP2S4oxLddvvMxr4tnMgk65hw6mdd4POKz+jC4UnteQ2VEWQ@mail.gmail.com>
+
+Dear all,
+
+I am wanting to compare the Eveness value in four localities. I found the
+sbdiv function in the simboot package which makes exactly what I need with
+Shannon index, with confidence intervals and p-values.  However the package
+has not the same function for eveness. Does any of you know a package which
+allows me to compare this parameter?
+
+Best regards!
+
+	[[alternative HTML version deleted]]
+
+
+From g|@n@benucc| @end|ng |rom gm@||@com  Mon Dec 14 15:35:41 2020
+From: g|@n@benucc| @end|ng |rom gm@||@com (=?UTF-8?Q?Gian_Maria_Niccol=C3=B2_Benucci?=)
+Date: Mon, 14 Dec 2020 09:35:41 -0500
+Subject: [R-sig-eco] Question about Eveness value comparison
+In-Reply-To: <CANxP2S4oxLddvvMxr4tnMgk65hw6mdd4POKz+jC4UnteQ2VEWQ@mail.gmail.com>
+References: <CANxP2S4oxLddvvMxr4tnMgk65hw6mdd4POKz+jC4UnteQ2VEWQ@mail.gmail.com>
+Message-ID: <CAPxEaESvgOjTOFeKD+LdV5xfMGFQbNiXtaAi_RtKjWoiB9xDSA@mail.gmail.com>
+
+Hello Luis,
+
+I suggest you to try the vegan and BiodiversityR packages.
+Best,
+
+Gian
+
+On Sat, 12 Dec 2020 at 02:03, Luis Fernando Garc?a <luysgarcia at gmail.com>
+wrote:
+
+> Dear all,
+>
+> I am wanting to compare the Eveness value in four localities. I found the
+> sbdiv function in the simboot package which makes exactly what I need with
+> Shannon index, with confidence intervals and p-values.  However the package
+> has not the same function for eveness. Does any of you know a package which
+> allows me to compare this parameter?
+>
+> Best regards!
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+-- 
+---
+Gian
+
+*----- Do not print this email unless you really need to. *
+*Save paper and protect the environment! -----*
+
+	[[alternative HTML version deleted]]
+
+

@@ -1,0 +1,3418 @@
+From d@vid@w@rton @ending from un@w@edu@@u  Mon Dec  3 01:08:58 2018
+From: d@vid@w@rton @ending from un@w@edu@@u (David Warton)
+Date: Mon, 3 Dec 2018 00:08:58 +0000
+Subject: [R-sig-eco] 
+ mvabund: difference between 'glm1path' and 'manyglm'
+In-Reply-To: <CAJakBjBYg6uiFSJ=ZbWvZOA0ZfbvxAHEBPowFg3bpxjhmwTLTA@mail.gmail.com>
+References: <CAJakBjBYg6uiFSJ=ZbWvZOA0ZfbvxAHEBPowFg3bpxjhmwTLTA@mail.gmail.com>
+Message-ID: <MEXPR01MB05661C71DBB104B84457286FC4AE0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+
+Hi Jo,
+Thanks for the e-mail, always good to see statistical modelling questions on this list!
+
+In the mvabund package, you can fit trait models using different methods of estimation, method=?manyglm? will fit a GLM, ?glm1path? will fit a GLM with a LASSO penalty (chosen using BIC by default but there are other options).  The way we coded LASSO negative binomial regression was to update estimates of the overdispersion parameter as the slope parameters update.  Because the LASSO fit gives different slope parameters, it will also have a different overdispersion parameter.  It probably has a larger overdispersion parameter, because the LASSO pushes slope parameters away from the best (in-sample) fit hence there is more unexplained variation in the LASSO model.
+
+All the best
+David
+
+Professor David Warton
+School of Mathematics and Statistics, Evolution & Ecology Research Centre, Centre for Ecosystem Science
+UNSW Sydney
+NSW 2052 AUSTRALIA
+phone +61(2) 9385 7031
+fax +61(2) 9385 7123
+
+http://www.eco-stats.unsw.edu.au<http://www.eco-stats.unsw.edu.au/>
+
+
+
+From: Joanne Potts <joanne at theanalyticaledge.com>
+Sent: Friday, 30 November 2018 1:51 AM
+To: r-sig-ecology at r-project.org
+Cc: David Warton <david.warton at unsw.edu.au>
+Subject: mvabund: difference between 'glm1path' and 'manyglm'
+
+
+Hi David and list,
+
+Can someone please help me understand why, when changing the 'method=manyglm' argument to 'method=glm1path' under default settings (negative binomial) the estimates of theta change in the 'trait.glm' function?
+
+I have provided example code below us the antTraits data set. And you should see the plots for ft and ft3 are similar, yet ft2 is quite different, so I think I am missing something (no doubt, probably very obvious!).
+
+Advice appreciated, thank you.
+
+Jo
+
+
+
+data(antTraits)
+
+ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
+ft$phi
+ft$theta
+qqnorm(residuals(ft)); abline(c(0,1),col="red")
+
+ft2=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
+mean(ft2$phis)
+qqnorm(residuals(ft2)); abline(c(0,1),col="red")
+
+
+ft3=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path", negative.binomial(theta=1.641763))
+1/mean(ft3$phis)
+qqnorm(residuals(ft3)); abline(c(0,1),col="red")
+
+
+--
+
+Kind regards,
+
+Joanne Potts
+
+
+___________________
+Statistical Consultant
+theanalyticaledge.com<http://theanalyticaledge.com>
+
+	[[alternative HTML version deleted]]
+
+
+From rodgerjg @ending from gm@il@com  Tue Dec  4 09:13:29 2018
+From: rodgerjg @ending from gm@il@com (James Rodger)
+Date: Tue, 4 Dec 2018 10:13:29 +0200
+Subject: [R-sig-eco] 
+	=?utf-8?q?Fitting_a_GLMM_to_a_percent_cover_data_wit?=
+	=?utf-8?q?h_glmer_or_glmmTMB_=28Botta-Duk=C3=A1t_Zolt=C3=A1n=29?=
+Message-ID: <CAA=M4eXQNo-p_kdB5nVacqLdQciZa9==h3YizdFqufyLgRek0A@mail.gmail.com>
+
+ Hi Vasco,
+
+An approach called fractional outcome regression sounds like it might be
+suitable. It is advocated for variables in the range 0 to 1 (and including
+these endpoints)
+
+regards,
+
+James
+
+Message: 1
+Date: Thu, 29 Nov 2018 15:23:32 +0100
+From: =?UTF-8?Q?Botta-Duk=c3=a1t_Zolt=c3=a1n?=
+         <botta-dukat.zoltan at okologia.mta.hu>
+To: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco]  Fitting a GLMM to a percent cover data with
+        glmer or glmmTMB
+Message-ID: <f53d9582-73e4-0281-d32a-83d2c2264bae at okologia.mta.hu>
+Content-Type: text/plain; charset="iso-8859-2"; Format="flowed"
+
+Hi,
+
+I'm sure that binomial is unsuitable for relative cover. Binomial
+distribution are defined as number of successes in independent trials. I
+think this scheme cannot be applied to relative cover or visually
+estimated cover. It is important because both number of trials and
+probability of success influence mean and variance, thus both should
+have a meaning that correspond to terms in this scheme.
+
+Unfortunately, I have no experience with tweedie distribution. I am also
+interested in experience of others! In theory an alternative would be
+zero-inflated beta distribution (after rescaling percentage between zero
+to one interval). Do some has an experience (including its availability
+in R) with it?
+
+Cheers
+
+Zoltan
+
+2018. 11. 28. 20:47 keltez?ssel, Vasco Silva ?rta:
+> Hi,
+>
+> I am trying to fit a GLMM on percent cover for each species using glmer:
+>
+>> str(cover)
+> 'data.frame': 102 obs. of  114 variables:
+> $ Plot : Factor w/ 10 levels "P1","P10","P2",..: 1 1 1 1 1 3 3 ...
+> $ Sub.plot: Factor w/ 5 levels "S1","S2","S3",..: 1 2 3 4 5 1 2 ...
+> $ Grazing : Factor w/ 2 levels "Fenced","Unfenced": 1 1 1 1 1 1 1  ...
+> $ sp1 : int  0 0 0 1 0 0 1 ...
+> $ sp2 : int  0 0 0 0 0 3 3 ...
+> $ sp3 : int  0 1 0 0 1 3 3 ...
+> $ sp4 : int  1 3 13 3 3 3 0 ...
+> $ sp6 : int  0 0 0 0 0 0 0 ...
+>   ...
+> $ tot  : int  93 65 120 80 138 113 ...
+>
+> sp1.glmm <- glmer (cbind (sp1, tot- sp1) ~ Grazing + (1|Plot), data=cover,
+> family=binomial (link ="logit"))
+>
+> However, I wonder if binomial distribution can be used (proportion of
+> species cover from a total cover) or if I should  fitted the GLMM with
+> glmmTMB (tweedie distribution)?
+>
+> I would greatly appreciate it if someone could help me.
+>
+> Cheers.
+>
+> Vasco Silva
+>
+>       [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+	[[alternative HTML version deleted]]
+
+
+From genovev@@gonz@lez-mireli@ @ending from hi@no  Tue Dec  4 15:52:37 2018
+From: genovev@@gonz@lez-mireli@ @ending from hi@no (Gonzalez-Mirelis, Genoveva)
+Date: Tue, 4 Dec 2018 14:52:37 +0000
+Subject: [R-sig-eco] raster::predict example doesn't work?
+Message-ID: <b0da65baed4a49eba15be8ad15b8a53d@hi.no>
+
+Dear list,
+
+I posted this question recently on another list so I apologize for any cross-posting. Still no solution.
+
+
+I would like to use the 'predict' function in the 'raster' package in an implementation of species distribution modelling with a couple of factor variables. Furthermore, I would like to set this up exactly as the cforest example listed in the help file. Unfortunately, I cannot get the example to work!
+
+
+
+# create a RasterStack or RasterBrick with with a set of predictor layers
+
+
+
+logo <- brick(system.file("external/rlogo.grd", package="raster"))
+
+names(logo)
+
+
+
+# known presence and absence points
+
+p <- matrix(c(48, 48, 48, 53, 50, 46, 54, 70, 84, 85, 74, 84, 95, 85,
+
+              66, 42, 26, 4, 19, 17, 7, 14, 26, 29, 39, 45, 51, 56, 46, 38, 31,
+
+              22, 34, 60, 70, 73, 63, 46, 43, 28), ncol=2)
+
+
+
+a <- matrix(c(22, 33, 64, 85, 92, 94, 59, 27, 30, 64, 60, 33, 31, 9,
+
+              99, 67, 15, 5, 4, 30, 8, 37, 42, 27, 19, 69, 60, 73, 3, 5, 21,
+
+              37, 52, 70, 74, 9, 13, 4, 17, 47), ncol=2)
+
+
+
+# extract values for points
+
+xy <- rbind(cbind(1, p), cbind(0, a))
+
+v <- data.frame(cbind(pa=xy[,1], extract(logo, xy[,2:3])))
+
+
+
+# cforest (other Random Forest implementation) example with factors argument
+
+
+
+v$red <- as.factor(round(v$red/100))
+
+logo$red <- round(logo[[1]]/100)
+
+
+
+library(party)
+
+m <- cforest(pa~., control=cforest_unbiased(mtry=3), data=v) f <- list(levels(v$red))
+
+names(f) <- 'red'
+
+pc <- predict(logo, m, OOB=TRUE, factors=f)
+
+
+
+# Error in v[cells, ] <- predv :
+
+# number of items to replace is not a multiple of replacement length
+
+
+
+# If you change the order of the first two arguments (I read this somewhere) then the error changes, like this:
+
+
+
+pc <- predict(m, logo, OOB=TRUE, factors=f)
+
+
+
+# Error in RET at prediction_weights(newdata = newdata, mincriterion = mincriterion,  :
+
+# unused argument (factors = f)
+
+
+
+# Lastly, if I run the line without the 'factors' argument
+
+pc <- predict(m, logo, OOB=TRUE)
+
+
+
+# Then I get no errors, but I don't understand the result. It's a vector of 40 values (predictions?)
+
+
+
+I am using Package 'raster' version 2.6-7 in RStudio 1.1.453, running off a server. I have tried the on several other computers, though, and the error persisted.
+
+
+
+Many thanks for any help,
+
+
+
+Genoveva
+
+Genoveva Gonzalez Mirelis, Scientist
+Institute of Marine Research
+Nordnesgaten 50
+5005 Bergen, Norway
+Phone number +47 55238510
+
+
+Genoveva Gonzalez Mirelis, Scientist
+Institute of Marine Research
+Nordnesgaten 50
+5005 Bergen, Norway
+Phone number +47 55238510
+
+
+	[[alternative HTML version deleted]]
+
+
+From bf@levli@t @ending from gm@il@com  Tue Dec  4 16:50:29 2018
+From: bf@levli@t @ending from gm@il@com (=?UTF-8?Q?Bede-Fazekas_=c3=81kos?=)
+Date: Tue, 4 Dec 2018 16:50:29 +0100
+Subject: [R-sig-eco] raster::predict example doesn't work?
+In-Reply-To: <b0da65baed4a49eba15be8ad15b8a53d@hi.no>
+References: <b0da65baed4a49eba15be8ad15b8a53d@hi.no>
+Message-ID: <9b100def-346a-0562-d67c-ae70e99ba151@gmail.com>
+
+Dear Genoveva,
+
+All the examples in the help file of package 'party' 
+(https://cran.r-project.org/web/packages/party/party.pdf) use the 
+function predict() from package 'stats' instead of package 'raster'.
+But converting the RasterStack to data.frame, changing the column 'red' 
+from numeric to factor, using stats::predict(..., newdata), and create a 
+new layer of the RasterStack can solve the problem.
+logo_df <- as.data.frame(logo)
+logo_df$red <- factor(logo_df$red, levels = levels(v$red))
+pc <- stats::predict(m, OOB = TRUE, newdata = logo_df)
+logo$pc <- pc
+
+HTH,
+?kos Bede-Fazekas
+Hungarian Academy of Sciences
+
+
+2018.12.04. 15:52 keltez?ssel, Gonzalez-Mirelis, Genoveva ?rta:
+> Dear list,
+>
+> I posted this question recently on another list so I apologize for any cross-posting. Still no solution.
+>
+>
+> I would like to use the 'predict' function in the 'raster' package in an implementation of species distribution modelling with a couple of factor variables. Furthermore, I would like to set this up exactly as the cforest example listed in the help file. Unfortunately, I cannot get the example to work!
+>
+>
+>
+> # create a RasterStack or RasterBrick with with a set of predictor layers
+>
+>
+>
+> logo <- brick(system.file("external/rlogo.grd", package="raster"))
+>
+> names(logo)
+>
+>
+>
+> # known presence and absence points
+>
+> p <- matrix(c(48, 48, 48, 53, 50, 46, 54, 70, 84, 85, 74, 84, 95, 85,
+>
+>                66, 42, 26, 4, 19, 17, 7, 14, 26, 29, 39, 45, 51, 56, 46, 38, 31,
+>
+>                22, 34, 60, 70, 73, 63, 46, 43, 28), ncol=2)
+>
+>
+>
+> a <- matrix(c(22, 33, 64, 85, 92, 94, 59, 27, 30, 64, 60, 33, 31, 9,
+>
+>                99, 67, 15, 5, 4, 30, 8, 37, 42, 27, 19, 69, 60, 73, 3, 5, 21,
+>
+>                37, 52, 70, 74, 9, 13, 4, 17, 47), ncol=2)
+>
+>
+>
+> # extract values for points
+>
+> xy <- rbind(cbind(1, p), cbind(0, a))
+>
+> v <- data.frame(cbind(pa=xy[,1], extract(logo, xy[,2:3])))
+>
+>
+>
+> # cforest (other Random Forest implementation) example with factors argument
+>
+>
+>
+> v$red <- as.factor(round(v$red/100))
+>
+> logo$red <- round(logo[[1]]/100)
+>
+>
+>
+> library(party)
+>
+> m <- cforest(pa~., control=cforest_unbiased(mtry=3), data=v) f <- list(levels(v$red))
+>
+> names(f) <- 'red'
+>
+> pc <- predict(logo, m, OOB=TRUE, factors=f)
+>
+>
+>
+> # Error in v[cells, ] <- predv :
+>
+> # number of items to replace is not a multiple of replacement length
+>
+>
+>
+> # If you change the order of the first two arguments (I read this somewhere) then the error changes, like this:
+>
+>
+>
+> pc <- predict(m, logo, OOB=TRUE, factors=f)
+>
+>
+>
+> # Error in RET at prediction_weights(newdata = newdata, mincriterion = mincriterion,  :
+>
+> # unused argument (factors = f)
+>
+>
+>
+> # Lastly, if I run the line without the 'factors' argument
+>
+> pc <- predict(m, logo, OOB=TRUE)
+>
+>
+>
+> # Then I get no errors, but I don't understand the result. It's a vector of 40 values (predictions?)
+>
+>
+>
+> I am using Package 'raster' version 2.6-7 in RStudio 1.1.453, running off a server. I have tried the on several other computers, though, and the error persisted.
+>
+>
+>
+> Many thanks for any help,
+>
+>
+>
+> Genoveva
+>
+> Genoveva Gonzalez Mirelis, Scientist
+> Institute of Marine Research
+> Nordnesgaten 50
+> 5005 Bergen, Norway
+> Phone number +47 55238510
+>
+>
+> Genoveva Gonzalez Mirelis, Scientist
+> Institute of Marine Research
+> Nordnesgaten 50
+> 5005 Bergen, Norway
+> Phone number +47 55238510
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From jo@nne @ending from the@n@lytic@ledge@com  Tue Dec  4 23:49:19 2018
+From: jo@nne @ending from the@n@lytic@ledge@com (Joanne Potts)
+Date: Tue, 4 Dec 2018 22:49:19 +0000
+Subject: [R-sig-eco] 
+ mvabund: difference between 'glm1path' and 'manyglm'
+In-Reply-To: <MEXPR01MB05661C71DBB104B84457286FC4AE0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+References: <CAJakBjBYg6uiFSJ=ZbWvZOA0ZfbvxAHEBPowFg3bpxjhmwTLTA@mail.gmail.com>
+ <MEXPR01MB05661C71DBB104B84457286FC4AE0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+Message-ID: <CAJakBjDEO9LgFZ8LOmZotfMde-9iOkP2mz0okenqh-LpCZ10aA@mail.gmail.com>
+
+Thanks David for getting back to me.  I think I have followed your answer,
+thank you, and I get that when one specifies the theta value, all the
+ft3$phis are now constant for each lambda.
+
+Now I wonder if there is any value of ever specifying "
+negative.binomial(theta) " as I did below with ft3 (cf the ?glm1path helpfile)
+to improve the residuals, when using the LASSO? I guess I always thought
+the LASSO was a more robust way to select models but it seems the residuals
+of ft2 suggest otherwise.
+
+These questions are motivated for some over dispersed seal-fish data for a
+student in Sydney (as we've discussed off list) but I guess these questions
+are more of a theoretical nature. I over came my social phobia of posting
+on a list instead of hassling you privately(!), maybe someone else can
+value from this discussion too :)
+
+Thanks once again,
+
+Jo
+
+
+
+
+
+
+
+On Mon, Dec 3, 2018 at 12:10 AM David Warton <david.warton at unsw.edu.au>
+wrote:
+
+> Hi Jo,
+>
+> Thanks for the e-mail, always good to see statistical modelling questions
+> on this list!
+>
+>
+>
+> In the mvabund package, you can fit trait models using different methods
+> of estimation, method=?manyglm? will fit a GLM, ?glm1path? will fit a GLM
+> with a LASSO penalty (chosen using BIC by default but there are other
+> options).  The way we coded LASSO negative binomial regression was to
+> update estimates of the overdispersion parameter as the slope parameters
+> update.  Because the LASSO fit gives different slope parameters, it will
+> also have a different overdispersion parameter.  It probably has a larger
+> overdispersion parameter, because the LASSO pushes slope parameters away
+> from the best (in-sample) fit hence there is more unexplained variation in
+> the LASSO model.
+>
+>
+>
+> All the best
+>
+> David
+>
+>
+>
+> Professor David Warton
+>
+> School of Mathematics and Statistics, Evolution & Ecology Research Centre,
+> Centre for Ecosystem Science
+>
+> UNSW Sydney
+>
+> NSW 2052 AUSTRALIA
+>
+> phone +61(2) 9385 7031
+>
+> fax +61(2) 9385 7123
+>
+>
+>
+> http://www.eco-stats.unsw.edu.au
+>
+>
+>
+>
+>
+>
+>
+> *From:* Joanne Potts <joanne at theanalyticaledge.com>
+> *Sent:* Friday, 30 November 2018 1:51 AM
+> *To:* r-sig-ecology at r-project.org
+> *Cc:* David Warton <david.warton at unsw.edu.au>
+> *Subject:* mvabund: difference between 'glm1path' and 'manyglm'
+>
+>
+>
+>
+>
+> Hi David and list,
+>
+>
+>
+> Can someone please help me understand why, when changing the
+> 'method=manyglm' argument to 'method=glm1path' under default settings
+> (negative binomial) the estimates of theta change in the 'trait.glm'
+> function?
+>
+>
+>
+> I have provided example code below us the antTraits data set. And you
+> should see the plots for ft and ft3 are similar, yet ft2 is quite
+> different, so I think I am missing something (no doubt, probably very
+> obvious!).
+>
+>
+>
+> Advice appreciated, thank you.
+>
+>
+>
+> Jo
+>
+>
+>
+>
+>
+>
+>
+> data(antTraits)
+>
+>
+>
+>
+> ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
+>
+> ft$phi
+>
+> ft$theta
+>
+> qqnorm(residuals(ft)); abline(c(0,1),col="red")
+>
+>
+>
+>
+> ft2=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
+>
+> mean(ft2$phis)
+>
+> qqnorm(residuals(ft2)); abline(c(0,1),col="red")
+>
+>
+>
+>
+>
+> ft3=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path",
+> negative.binomial(theta=1.641763))
+>
+> 1/mean(ft3$phis)
+>
+> qqnorm(residuals(ft3)); abline(c(0,1),col="red")
+>
+>
+>
+>
+>
+> --
+>
+>
+>
+> Kind regards,
+>
+>
+>
+> Joanne Potts
+>
+>
+>
+>
+>
+> ___________________
+>
+> Statistical Consultant
+>
+> theanalyticaledge.com
+>
+
+
+-- 
+
+Kind regards,
+
+Joanne Potts
+
+
+___________________
+Statistical Consultant
+theanalyticaledge.com
+
+	[[alternative HTML version deleted]]
+
+
+From d@vid@w@rton @ending from un@w@edu@@u  Wed Dec  5 00:51:08 2018
+From: d@vid@w@rton @ending from un@w@edu@@u (David Warton)
+Date: Tue, 4 Dec 2018 23:51:08 +0000
+Subject: [R-sig-eco] 
+ mvabund: difference between 'glm1path' and 'manyglm'
+In-Reply-To: <CAJakBjDEO9LgFZ8LOmZotfMde-9iOkP2mz0okenqh-LpCZ10aA@mail.gmail.com>
+References: <CAJakBjBYg6uiFSJ=ZbWvZOA0ZfbvxAHEBPowFg3bpxjhmwTLTA@mail.gmail.com>
+ <MEXPR01MB05661C71DBB104B84457286FC4AE0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+ <CAJakBjDEO9LgFZ8LOmZotfMde-9iOkP2mz0okenqh-LpCZ10aA@mail.gmail.com>
+Message-ID: <MEXPR01MB0566AB48A7CDC0BBF0AA9C22C4AF0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+
+Hi Jo,
+OooooK, I see your point, sorry for slowness.  Yes the residuals look a bit wonky on your first glm1path plot (ft2).  I?ve dug into the reason and found a bug in the code for residual.glm1path nbinom fits, where it was using the wrong parameterisation of overdispersion in computing residuals.  Now fixed on github ?.
+All the best
+David
+
+
+
+From: Joanne Potts <joanne at theanalyticaledge.com>
+Sent: Wednesday, 5 December 2018 9:49 AM
+To: David Warton <david.warton at unsw.edu.au>
+Cc: r-sig-ecology at r-project.org
+Subject: Re: mvabund: difference between 'glm1path' and 'manyglm'
+
+Thanks David for getting back to me.  I think I have followed your answer, thank you, and I get that when one specifies the theta value, all the ft3$phis are now constant for each lambda.
+
+Now I wonder if there is any value of ever specifying "negative.binomial(theta) " as I did below with ft3 (cf the ?glm1path helpfile) to improve the residuals, when using the LASSO? I guess I always thought the LASSO was a more robust way to select models but it seems the residuals of ft2 suggest otherwise.
+
+These questions are motivated for some over dispersed seal-fish data for a student in Sydney (as we've discussed off list) but I guess these questions are more of a theoretical nature. I over came my social phobia of posting on a list instead of hassling you privately(!), maybe someone else can value from this discussion too :)
+
+Thanks once again,
+
+Jo
+
+
+
+
+
+
+
+On Mon, Dec 3, 2018 at 12:10 AM David Warton <david.warton at unsw.edu.au<mailto:david.warton at unsw.edu.au>> wrote:
+Hi Jo,
+Thanks for the e-mail, always good to see statistical modelling questions on this list!
+
+In the mvabund package, you can fit trait models using different methods of estimation, method=?manyglm? will fit a GLM, ?glm1path? will fit a GLM with a LASSO penalty (chosen using BIC by default but there are other options).  The way we coded LASSO negative binomial regression was to update estimates of the overdispersion parameter as the slope parameters update.  Because the LASSO fit gives different slope parameters, it will also have a different overdispersion parameter.  It probably has a larger overdispersion parameter, because the LASSO pushes slope parameters away from the best (in-sample) fit hence there is more unexplained variation in the LASSO model.
+
+All the best
+David
+
+Professor David Warton
+School of Mathematics and Statistics, Evolution & Ecology Research Centre, Centre for Ecosystem Science
+UNSW Sydney
+NSW 2052 AUSTRALIA
+phone +61(2) 9385 7031
+fax +61(2) 9385 7123
+
+http://www.eco-stats.unsw.edu.au<http://www.eco-stats.unsw.edu.au/>
+
+
+
+From: Joanne Potts <joanne at theanalyticaledge.com<mailto:joanne at theanalyticaledge.com>>
+Sent: Friday, 30 November 2018 1:51 AM
+To: r-sig-ecology at r-project.org<mailto:r-sig-ecology at r-project.org>
+Cc: David Warton <david.warton at unsw.edu.au<mailto:david.warton at unsw.edu.au>>
+Subject: mvabund: difference between 'glm1path' and 'manyglm'
+
+
+Hi David and list,
+
+Can someone please help me understand why, when changing the 'method=manyglm' argument to 'method=glm1path' under default settings (negative binomial) the estimates of theta change in the 'trait.glm' function?
+
+I have provided example code below us the antTraits data set. And you should see the plots for ft and ft3 are similar, yet ft2 is quite different, so I think I am missing something (no doubt, probably very obvious!).
+
+Advice appreciated, thank you.
+
+Jo
+
+
+
+data(antTraits)
+
+ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
+ft$phi
+ft$theta
+qqnorm(residuals(ft)); abline(c(0,1),col="red")
+
+ft2=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
+mean(ft2$phis)
+qqnorm(residuals(ft2)); abline(c(0,1),col="red")
+
+
+ft3=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path", negative.binomial(theta=1.641763))
+1/mean(ft3$phis)
+qqnorm(residuals(ft3)); abline(c(0,1),col="red")
+
+
+--
+
+Kind regards,
+
+Joanne Potts
+
+
+___________________
+Statistical Consultant
+theanalyticaledge.com<http://theanalyticaledge.com>
+
+
+--
+
+Kind regards,
+
+Joanne Potts
+
+
+___________________
+Statistical Consultant
+theanalyticaledge.com<http://theanalyticaledge.com>
+
+	[[alternative HTML version deleted]]
+
+
+From genovev@@gonz@lez-mireli@ @ending from hi@no  Wed Dec  5 10:06:29 2018
+From: genovev@@gonz@lez-mireli@ @ending from hi@no (Gonzalez-Mirelis, Genoveva)
+Date: Wed, 5 Dec 2018 09:06:29 +0000
+Subject: [R-sig-eco] raster::predict example doesn't work?
+In-Reply-To: <9b100def-346a-0562-d67c-ae70e99ba151@gmail.com>
+References: <b0da65baed4a49eba15be8ad15b8a53d@hi.no>
+ <9b100def-346a-0562-d67c-ae70e99ba151@gmail.com>
+Message-ID: <e6f6bae646a84cc2afdc91c9ed522bbb@hi.no>
+
+Thank you ?kos, your solution does work. One caveat, though: the 'predict' function from 'stats' returns a matrix, whereas that from the 'raster' package returns a raster object of identical extent and resolution as the supplied predictor stack, which is very handy. If no other solutions arise I will just convert that matrix to a raster as follows:
+
+r <- raster(ncol=ncol(logo), nrow=nrow(logo))
+extent(r) <- extent(logo)
+values(r) <- pc
+
+
+-----Original Message-----
+From: R-sig-ecology <r-sig-ecology-bounces at r-project.org> On Behalf Of Bede-Fazekas ?kos
+Sent: 4. desember 2018 16:50
+To: r-sig-ecology at r-project.org; R-sig-geo <r-sig-geo at r-project.org>
+Subject: Re: [R-sig-eco] raster::predict example doesn't work?
+
+Dear Genoveva,
+
+All the examples in the help file of package 'party' 
+(https://cran.r-project.org/web/packages/party/party.pdf) use the function predict() from package 'stats' instead of package 'raster'.
+But converting the RasterStack to data.frame, changing the column 'red' 
+from numeric to factor, using stats::predict(..., newdata), and create a new layer of the RasterStack can solve the problem.
+logo_df <- as.data.frame(logo)
+logo_df$red <- factor(logo_df$red, levels = levels(v$red)) pc <- stats::predict(m, OOB = TRUE, newdata = logo_df) logo$pc <- pc
+
+HTH,
+?kos Bede-Fazekas
+Hungarian Academy of Sciences
+
+
+2018.12.04. 15:52 keltez?ssel, Gonzalez-Mirelis, Genoveva ?rta:
+> Dear list,
+>
+> I posted this question recently on another list so I apologize for any cross-posting. Still no solution.
+>
+>
+> I would like to use the 'predict' function in the 'raster' package in an implementation of species distribution modelling with a couple of factor variables. Furthermore, I would like to set this up exactly as the cforest example listed in the help file. Unfortunately, I cannot get the example to work!
+>
+>
+>
+> # create a RasterStack or RasterBrick with with a set of predictor 
+> layers
+>
+>
+>
+> logo <- brick(system.file("external/rlogo.grd", package="raster"))
+>
+> names(logo)
+>
+>
+>
+> # known presence and absence points
+>
+> p <- matrix(c(48, 48, 48, 53, 50, 46, 54, 70, 84, 85, 74, 84, 95, 85,
+>
+>                66, 42, 26, 4, 19, 17, 7, 14, 26, 29, 39, 45, 51, 56, 
+> 46, 38, 31,
+>
+>                22, 34, 60, 70, 73, 63, 46, 43, 28), ncol=2)
+>
+>
+>
+> a <- matrix(c(22, 33, 64, 85, 92, 94, 59, 27, 30, 64, 60, 33, 31, 9,
+>
+>                99, 67, 15, 5, 4, 30, 8, 37, 42, 27, 19, 69, 60, 73, 3, 
+> 5, 21,
+>
+>                37, 52, 70, 74, 9, 13, 4, 17, 47), ncol=2)
+>
+>
+>
+> # extract values for points
+>
+> xy <- rbind(cbind(1, p), cbind(0, a))
+>
+> v <- data.frame(cbind(pa=xy[,1], extract(logo, xy[,2:3])))
+>
+>
+>
+> # cforest (other Random Forest implementation) example with factors 
+> argument
+>
+>
+>
+> v$red <- as.factor(round(v$red/100))
+>
+> logo$red <- round(logo[[1]]/100)
+>
+>
+>
+> library(party)
+>
+> m <- cforest(pa~., control=cforest_unbiased(mtry=3), data=v) f <- 
+> list(levels(v$red))
+>
+> names(f) <- 'red'
+>
+> pc <- predict(logo, m, OOB=TRUE, factors=f)
+>
+>
+>
+> # Error in v[cells, ] <- predv :
+>
+> # number of items to replace is not a multiple of replacement length
+>
+>
+>
+> # If you change the order of the first two arguments (I read this somewhere) then the error changes, like this:
+>
+>
+>
+> pc <- predict(m, logo, OOB=TRUE, factors=f)
+>
+>
+>
+> # Error in RET at prediction_weights(newdata = newdata, mincriterion = mincriterion,  :
+>
+> # unused argument (factors = f)
+>
+>
+>
+> # Lastly, if I run the line without the 'factors' argument
+>
+> pc <- predict(m, logo, OOB=TRUE)
+>
+>
+>
+> # Then I get no errors, but I don't understand the result. It's a 
+> vector of 40 values (predictions?)
+>
+>
+>
+> I am using Package 'raster' version 2.6-7 in RStudio 1.1.453, running off a server. I have tried the on several other computers, though, and the error persisted.
+>
+>
+>
+> Many thanks for any help,
+>
+>
+>
+> Genoveva
+>
+> Genoveva Gonzalez Mirelis, Scientist
+> Institute of Marine Research
+> Nordnesgaten 50
+> 5005 Bergen, Norway
+> Phone number +47 55238510
+>
+>
+> Genoveva Gonzalez Mirelis, Scientist
+> Institute of Marine Research
+> Nordnesgaten 50
+> 5005 Bergen, Norway
+> Phone number +47 55238510
+>
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From jo@nne @ending from the@n@lytic@ledge@com  Wed Dec  5 13:40:46 2018
+From: jo@nne @ending from the@n@lytic@ledge@com (Joanne Potts)
+Date: Wed, 5 Dec 2018 12:40:46 +0000
+Subject: [R-sig-eco] 
+ mvabund: difference between 'glm1path' and 'manyglm'
+In-Reply-To: <MEXPR01MB0566AB48A7CDC0BBF0AA9C22C4AF0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+References: <CAJakBjBYg6uiFSJ=ZbWvZOA0ZfbvxAHEBPowFg3bpxjhmwTLTA@mail.gmail.com>
+ <MEXPR01MB05661C71DBB104B84457286FC4AE0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+ <CAJakBjDEO9LgFZ8LOmZotfMde-9iOkP2mz0okenqh-LpCZ10aA@mail.gmail.com>
+ <MEXPR01MB0566AB48A7CDC0BBF0AA9C22C4AF0@MEXPR01MB0566.ausprd01.prod.outlook.com>
+Message-ID: <CAJakBjD+-fpX6S2DaagnPBZnn9emNHEHOjjfb6YH7O2gySUUVQ@mail.gmail.com>
+
+Ah ok thanks David! I downloaded from Github and all is making sense for me
+now.
+
+Most appreciated,
+
+Jo
+
+
+
+
+On Tue, Dec 4, 2018 at 11:51 PM David Warton <david.warton at unsw.edu.au>
+wrote:
+
+> Hi Jo,
+>
+> OooooK, I see your point, sorry for slowness.  Yes the residuals look a
+> bit wonky on your first glm1path plot (ft2).  I?ve dug into the reason and
+> found a bug in the code for residual.glm1path nbinom fits, where it was
+> using the wrong parameterisation of overdispersion in computing residuals.
+> Now fixed on github J.
+>
+> All the best
+>
+> David
+>
+>
+>
+>
+>
+>
+>
+> *From:* Joanne Potts <joanne at theanalyticaledge.com>
+> *Sent:* Wednesday, 5 December 2018 9:49 AM
+> *To:* David Warton <david.warton at unsw.edu.au>
+> *Cc:* r-sig-ecology at r-project.org
+> *Subject:* Re: mvabund: difference between 'glm1path' and 'manyglm'
+>
+>
+>
+> Thanks David for getting back to me.  I think I have followed your answer,
+> thank you, and I get that when one specifies the theta value, all the
+> ft3$phis are now constant for each lambda.
+>
+>
+>
+> Now I wonder if there is any value of ever specifying "
+> negative.binomial(theta) " as I did below with ft3 (cf the ?glm1path helpfile)
+> to improve the residuals, when using the LASSO? I guess I always thought
+> the LASSO was a more robust way to select models but it seems the residuals
+> of ft2 suggest otherwise.
+>
+>
+>
+> These questions are motivated for some over dispersed seal-fish data for a
+> student in Sydney (as we've discussed off list) but I guess these questions
+> are more of a theoretical nature. I over came my social phobia of posting
+> on a list instead of hassling you privately(!), maybe someone else can
+> value from this discussion too :)
+>
+>
+>
+> Thanks once again,
+>
+>
+>
+> Jo
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+> On Mon, Dec 3, 2018 at 12:10 AM David Warton <david.warton at unsw.edu.au>
+> wrote:
+>
+> Hi Jo,
+>
+> Thanks for the e-mail, always good to see statistical modelling questions
+> on this list!
+>
+>
+>
+> In the mvabund package, you can fit trait models using different methods
+> of estimation, method=?manyglm? will fit a GLM, ?glm1path? will fit a GLM
+> with a LASSO penalty (chosen using BIC by default but there are other
+> options).  The way we coded LASSO negative binomial regression was to
+> update estimates of the overdispersion parameter as the slope parameters
+> update.  Because the LASSO fit gives different slope parameters, it will
+> also have a different overdispersion parameter.  It probably has a larger
+> overdispersion parameter, because the LASSO pushes slope parameters away
+> from the best (in-sample) fit hence there is more unexplained variation in
+> the LASSO model.
+>
+>
+>
+> All the best
+>
+> David
+>
+>
+>
+> Professor David Warton
+>
+> School of Mathematics and Statistics, Evolution & Ecology Research Centre,
+> Centre for Ecosystem Science
+>
+> UNSW Sydney
+>
+> NSW 2052 AUSTRALIA
+>
+> phone +61(2) 9385 7031
+>
+> fax +61(2) 9385 7123
+>
+>
+>
+> http://www.eco-stats.unsw.edu.au
+>
+>
+>
+>
+>
+>
+>
+> *From:* Joanne Potts <joanne at theanalyticaledge.com>
+> *Sent:* Friday, 30 November 2018 1:51 AM
+> *To:* r-sig-ecology at r-project.org
+> *Cc:* David Warton <david.warton at unsw.edu.au>
+> *Subject:* mvabund: difference between 'glm1path' and 'manyglm'
+>
+>
+>
+>
+>
+> Hi David and list,
+>
+>
+>
+> Can someone please help me understand why, when changing the
+> 'method=manyglm' argument to 'method=glm1path' under default settings
+> (negative binomial) the estimates of theta change in the 'trait.glm'
+> function?
+>
+>
+>
+> I have provided example code below us the antTraits data set. And you
+> should see the plots for ft and ft3 are similar, yet ft2 is quite
+> different, so I think I am missing something (no doubt, probably very
+> obvious!).
+>
+>
+>
+> Advice appreciated, thank you.
+>
+>
+>
+> Jo
+>
+>
+>
+>
+>
+>
+>
+> data(antTraits)
+>
+>
+>
+>
+> ft=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="manyglm")
+>
+> ft$phi
+>
+> ft$theta
+>
+> qqnorm(residuals(ft)); abline(c(0,1),col="red")
+>
+>
+>
+>
+> ft2=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path")
+>
+> mean(ft2$phis)
+>
+> qqnorm(residuals(ft2)); abline(c(0,1),col="red")
+>
+>
+>
+>
+>
+> ft3=traitglm(antTraits$abund,antTraits$env,antTraits$traits,method="glm1path",
+> negative.binomial(theta=1.641763))
+>
+> 1/mean(ft3$phis)
+>
+> qqnorm(residuals(ft3)); abline(c(0,1),col="red")
+>
+>
+>
+>
+>
+> --
+>
+>
+>
+> Kind regards,
+>
+>
+>
+> Joanne Potts
+>
+>
+>
+>
+>
+> ___________________
+>
+> Statistical Consultant
+>
+> theanalyticaledge.com
+>
+>
+>
+>
+> --
+>
+>
+>
+> Kind regards,
+>
+>
+>
+> Joanne Potts
+>
+>
+>
+>
+>
+> ___________________
+>
+> Statistical Consultant
+>
+> theanalyticaledge.com
+>
+
+	[[alternative HTML version deleted]]
+
+
+From m@rcht@ylor @ending from gm@il@com  Fri Dec  7 07:30:49 2018
+From: m@rcht@ylor @ending from gm@il@com (Marc Taylor)
+Date: Fri, 7 Dec 2018 07:30:49 +0100
+Subject: [R-sig-eco] permutation test for CCA variables
+Message-ID: <CACg2Sf3ez0tUZ3oozHtE0_=-jq=onN3atYz-mzh5DaqWhoruKg@mail.gmail.com>
+
+Hi all,
+
+a quick question: Does anyone know what vegan function was called to
+produce the following permutation test in this slide of Jari's:
+http://cc.oulu.fi/~jarioksa/opetus/metodi/ordination101.html#44
+
+Cheers,
+Marc
+
+	[[alternative HTML version deleted]]
+
+
+From f@kr@h @ending from m@ilbox@org  Fri Dec  7 07:44:25 2018
+From: f@kr@h @ending from m@ilbox@org (Franz Krah)
+Date: Fri, 7 Dec 2018 07:44:25 +0100
+Subject: [R-sig-eco] permutation test for CCA variables
+In-Reply-To: <CACg2Sf3ez0tUZ3oozHtE0_=-jq=onN3atYz-mzh5DaqWhoruKg@mail.gmail.com>
+References: <CACg2Sf3ez0tUZ3oozHtE0_=-jq=onN3atYz-mzh5DaqWhoruKg@mail.gmail.com>
+Message-ID: <C6E352B8-509E-4E5A-86F3-03A4FA64E08E@mailbox.org>
+
+Hi Marc,
+
+This is the example in the function envfit:
+
+library(vegan)
+data(varespec, varechem)
+library(MASS)
+ord <- metaMDS(varespec)
+(fit <- envfit(ord, varechem, perm = 999))
+scores(fit, "vectors")
+plot(ord)
+plot(fit)
+
+Cheers, Franz
+
+
+-----------------------------------------------------
+Franz-S. Krah (PhD student)
+Ecology and Evolution of mushroom-forming fungi
+
+RG Biodiversity of Plants
+Technical University of Munich (TUM)
+Mobile: 0170 5221189
+
+Website: mycolab.de <http://mycolab.de/>
+Mail: franz.krah at tum.de <mailto:franz.krah at tum.de>
+??????????????????????????
+
+> On 7. Dec 2018, at 07:30, Marc Taylor <marchtaylor at gmail.com> wrote:
+> 
+> Hi all,
+> 
+> a quick question: Does anyone know what vegan function was called to
+> produce the following permutation test in this slide of Jari's:
+> http://cc.oulu.fi/~jarioksa/opetus/metodi/ordination101.html#44
+> 
+> Cheers,
+> Marc
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From m@rcht@ylor @ending from gm@il@com  Fri Dec  7 08:34:06 2018
+From: m@rcht@ylor @ending from gm@il@com (Marc Taylor)
+Date: Fri, 7 Dec 2018 08:34:06 +0100
+Subject: [R-sig-eco] permutation test for CCA variables
+In-Reply-To: <C6E352B8-509E-4E5A-86F3-03A4FA64E08E@mailbox.org>
+References: <CACg2Sf3ez0tUZ3oozHtE0_=-jq=onN3atYz-mzh5DaqWhoruKg@mail.gmail.com>
+ <C6E352B8-509E-4E5A-86F3-03A4FA64E08E@mailbox.org>
+Message-ID: <CACg2Sf1YSHx5ep8VMqPDPHLsyF4N1Pd-rjNqYEvhFf4+5pD9yA@mail.gmail.com>
+
+Thanks Franz!
+cheers, Marc
+
+On Fri, Dec 7, 2018 at 7:44 AM Franz Krah <f.krah at mailbox.org> wrote:
+
+> Hi Marc,
+>
+> This is the example in the function envfit:
+>
+> library(vegan)
+> data(varespec, varechem)
+> library(MASS)
+> ord <- metaMDS(varespec)
+> (fit <- envfit(ord, varechem, perm = 999))
+> scores(fit, "vectors")
+> plot(ord)
+> plot(fit)
+>
+> Cheers, Franz
+>
+>
+> -----------------------------------------------------
+> Franz-S. Krah (PhD student)
+> Ecology and Evolution of mushroom-forming fungi
+>
+> RG Biodiversity of Plants
+> Technical University of Munich (TUM)
+> Mobile: 0170 5221189
+>
+> Website: mycolab.de
+> Mail: franz.krah at tum.de
+> ??????????????????????????
+>
+> On 7. Dec 2018, at 07:30, Marc Taylor <marchtaylor at gmail.com> wrote:
+>
+> Hi all,
+>
+> a quick question: Does anyone know what vegan function was called to
+> produce the following permutation test in this slide of Jari's:
+> http://cc.oulu.fi/~jarioksa/opetus/metodi/ordination101.html#44
+>
+> Cheers,
+> Marc
+>
+> [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From j@ri@ok@@nen @ending from oulu@fi  Fri Dec  7 12:28:09 2018
+From: j@ri@ok@@nen @ending from oulu@fi (Jari Oksanen)
+Date: Fri, 7 Dec 2018 11:28:09 +0000
+Subject: [R-sig-eco] permutation test for CCA variables
+In-Reply-To: <CACg2Sf1YSHx5ep8VMqPDPHLsyF4N1Pd-rjNqYEvhFf4+5pD9yA@mail.gmail.com>
+References: <CACg2Sf3ez0tUZ3oozHtE0_=-jq=onN3atYz-mzh5DaqWhoruKg@mail.gmail.com>
+ <C6E352B8-509E-4E5A-86F3-03A4FA64E08E@mailbox.org>
+ <CACg2Sf1YSHx5ep8VMqPDPHLsyF4N1Pd-rjNqYEvhFf4+5pD9yA@mail.gmail.com>
+Message-ID: <C9F439BE-86E2-40C9-BB0A-63471472B39D@oulu.fi>
+
+Marc, the source code of those slides is in https://github.com/jarioksa/ordination101/. Look at the source code to see how the slide was generated.
+
+cheers, Jari Oksanen
+
+On 7 Dec 2018, at 09:34, Marc Taylor <marchtaylor at gmail.com<mailto:marchtaylor at gmail.com>> wrote:
+
+Thanks Franz!
+cheers, Marc
+
+On Fri, Dec 7, 2018 at 7:44 AM Franz Krah <f.krah at mailbox.org<mailto:f.krah at mailbox.org>> wrote:
+
+Hi Marc,
+
+This is the example in the function envfit:
+
+library(vegan)
+data(varespec, varechem)
+library(MASS)
+ord <- metaMDS(varespec)
+(fit <- envfit(ord, varechem, perm = 999))
+scores(fit, "vectors")
+plot(ord)
+plot(fit)
+
+Cheers, Franz
+
+
+-----------------------------------------------------
+Franz-S. Krah (PhD student)
+Ecology and Evolution of mushroom-forming fungi
+
+RG Biodiversity of Plants
+Technical University of Munich (TUM)
+Mobile: 0170 5221189
+
+Website: mycolab.de<http://mycolab.de>
+Mail: franz.krah at tum.de<mailto:franz.krah at tum.de>
+??????????????????????????
+
+On 7. Dec 2018, at 07:30, Marc Taylor <marchtaylor at gmail.com<mailto:marchtaylor at gmail.com>> wrote:
+
+Hi all,
+
+a quick question: Does anyone know what vegan function was called to
+produce the following permutation test in this slide of Jari's:
+http://cc.oulu.fi/~jarioksa/opetus/metodi/ordination101.html#44
+
+Cheers,
+Marc
+
+[[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+
+
+[[alternative HTML version deleted]]
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+	[[alternative HTML version deleted]]
+
+
+From m@rcht@ylor @ending from gm@il@com  Fri Dec  7 13:49:52 2018
+From: m@rcht@ylor @ending from gm@il@com (Marc Taylor)
+Date: Fri, 7 Dec 2018 13:49:52 +0100
+Subject: [R-sig-eco] permutation test for CCA variables
+In-Reply-To: <C9F439BE-86E2-40C9-BB0A-63471472B39D@oulu.fi>
+References: <CACg2Sf3ez0tUZ3oozHtE0_=-jq=onN3atYz-mzh5DaqWhoruKg@mail.gmail.com>
+ <C6E352B8-509E-4E5A-86F3-03A4FA64E08E@mailbox.org>
+ <CACg2Sf1YSHx5ep8VMqPDPHLsyF4N1Pd-rjNqYEvhFf4+5pD9yA@mail.gmail.com>
+ <C9F439BE-86E2-40C9-BB0A-63471472B39D@oulu.fi>
+Message-ID: <CACg2Sf0k8skQsBKP0XUi8xyOgOuS9nef3O6Y4s0uTH4grptF1Q@mail.gmail.com>
+
+Many thanks Jari - I did see that afterwards and have already forked it :-)
+Thanks for the great resource.
+Cheers, Marc
+
+On Fri, Dec 7, 2018 at 12:28 PM Jari Oksanen <jari.oksanen at oulu.fi> wrote:
+
+> Marc, the source code of those slides is in
+> https://github.com/jarioksa/ordination101/. Look at the source code to
+> see how the slide was generated.
+>
+> cheers, Jari Oksanen
+>
+> On 7 Dec 2018, at 09:34, Marc Taylor <marchtaylor at gmail.com> wrote:
+>
+> Thanks Franz!
+> cheers, Marc
+>
+> On Fri, Dec 7, 2018 at 7:44 AM Franz Krah <f.krah at mailbox.org> wrote:
+>
+> Hi Marc,
+>
+> This is the example in the function envfit:
+>
+> library(vegan)
+> data(varespec, varechem)
+> library(MASS)
+> ord <- metaMDS(varespec)
+> (fit <- envfit(ord, varechem, perm = 999))
+> scores(fit, "vectors")
+> plot(ord)
+> plot(fit)
+>
+> Cheers, Franz
+>
+>
+> -----------------------------------------------------
+> Franz-S. Krah (PhD student)
+> Ecology and Evolution of mushroom-forming fungi
+>
+> RG Biodiversity of Plants
+> Technical University of Munich (TUM)
+> Mobile: 0170 5221189
+>
+> Website: mycolab.de
+> Mail: franz.krah at tum.de
+> ??????????????????????????
+>
+> On 7. Dec 2018, at 07:30, Marc Taylor <marchtaylor at gmail.com> wrote:
+>
+> Hi all,
+>
+> a quick question: Does anyone know what vegan function was called to
+> produce the following permutation test in this slide of Jari's:
+> http://cc.oulu.fi/~jarioksa/opetus/metodi/ordination101.html#44
+>
+> Cheers,
+> Marc
+>
+> [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+>
+> [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Thu Dec 13 21:20:41 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Thu, 13 Dec 2018 20:20:41 +0000
+Subject: [R-sig-eco] Individual based models using R (and netlogo) (IBMS01)
+Message-ID: <CAEsSYzzyF+x4c047CFN5t3RdKDy1jUxEysa991Nj03-KDeNj_w@mail.gmail.com>
+
+Individual based models using R (and netlogo) (IBMS01)
+
+https://www.prstatistics.com/course/individual-based-models-using-r-and-netlogo-ibms01/
+
+This course will be delivered by Dr Aristides (Aris) Moustakas from the
+1st - 5th April 2019 in Glasgow City Centre.
+
+Course Overview:
+This workshop will provide attendees with the opportunity to learn how (1)
+to understand; (2) run simulations of readily available Individual Based
+Models (IBMs); (3) analyze the outputs of IBMs; (4) parameterize IBMs, and
+(5) code relatively basic IBMs in R and NetLogo.
+Examples and applications will include cases from diverse domains and
+scientific disciplines such as social sciences, biology, and environmental
+sciences.
+
+Intended Audience:
+This workshop is ideal for any scientists seeking an introduction as well
+as functional use in terms of parameterizing, simulating, and analyzing
+outputs of IBMs; some moderate skills of programming and own coding will
+also be acquired.
+This course will suite attendees from a diverse range of scientific
+disciplines such as biology, ecology, psychology, economics, or education.
+No prior knowledge of programming in R or Netlogo are required. However
+basic to moderate prior R knowledge is required (loading data, loading R
+packages, basic R environment and basic R commands).
+
+Course Programme:
+Monday `1st ? Classes from 09:30 to 17:30
+Theory
+Differences between statistical modelling and process-based predictive
+models
+Introduction to cellular automata
+Introduction to Individual & Agent Based Models
+Practical
+Running simulations with readily coded IBMs in Netlogo
+Application of cellular automata: coding the game of life in R
+
+Tuesday 2nd ? Classes from 09:30 to 17:30
+Theory
+Introduction to scientific programming
+Introduction to Netlogo
+Practical
+Go through a coded IBM in NetLogo and understand the code
+Code IBMs in R (full code provided and explained)
+Run simulations of the IBM
+
+Wednesday 3rd ? Classes from 09:30 to 17:30
+Theory
+Complex vs. simple models
+How many processes & details to include
+Combining IBMs with statistical analysis
+Practical
+Running simple vs more complex coded IBMs
+Exporting outputs from IBMs
+Statistical analysis of IBM outputs
+
+Thursday 4th ? Classes from 09:00 to 17:00
+Theory
+Calibrating IBMs
+Validating IBMs
+Sensitivity of input parameters
+Practical
+Coding IBMs in R
+Analyzing IBM outputs of varying parameter inputs
+
+Friday 5th ? Classes from 09:30 to 16:00
+Theory
+Special topics:
+Examples of IBMs across disciplines
+IBMs providing new insights & ground-breaking results
+Practical
+Understanding the description, replicating and coding a journal-published
+IBM
+Discussions with the tutor and the group of own IBMs and coding
+
+Email oliverhooker at prstatistics.com
+Check out our sister sites,
+www.PRstatistics.com (Ecology and Life Sciences)
+www.PRinformatics.com (Bioinformatics and data science)
+www.PSstatistics.com (Behaviour and cognition)
+
+1. January 21st ? 25th 2019
+STATISTICAL MODELLING OF TIME-TO-EVENT DATA USING SURVIVAL ANALYSIS: AN
+INTRODUCTION FOR ANIMAL BEHAVIOURISTS, ECOLOGISTS AND EVOLUTIONARY
+BIOLOGISTS (TTED01)
+Glasgow, Scotland, Dr. Will Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+2. January 21st ? 25th 2019
+ADVANCING IN STATISTICAL MODELLING USING R (ADVR08)
+Glasgow, Scotland, Dr. Luc Bussiere, Dr. Tom Houslay
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr08/
+
+3. January 28th?  February 1st 2019
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+https://www.prstatistics.com/course/aquatic-acoustic-telemetry-data-analysis-atda01/
+
+4. February 4th ? 8th 2019
+DESIGNING RELIABLE AND EFFICIENT EXPERIMENTS FOR SOCIAL SCIENCES (DRES01)
+Glasgow, Scotland, Dr. Daniel Lakens
+https://www.psstatistics.com/course/designing-reliable-and-effecient-experiments-for-social-sciences-dres01/
+
+5. February 11th ? 15th 2019
+REPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS
+Glasgow, Scotland, Dr. Thibaut Jombart, Dr. Zhain Kamvar
+https://www.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg02/
+
+6. 25th February ? 1st March 2019
+MOVEMENT ECOLOGY (MOVE02)
+Margam Discovery Centre, Wales, Dr. Luca Borger, Prof. Ronny Wilson, Dr
+Jonathan Potts
+https://www.prstatistics.com/course/movement-ecology-move02/
+
+7. March 4th ? 8th 2019
+BIOACOUSTICS FOR ECOLOGISTS: HARDWARE, SURVEY DESIGN AND DATA ANALYSIS
+(BIAC01)
+Glasgow, Scotland, Dr. Paul Howden-Leach
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac01/
+
+8. March 11th ? 15th  2019
+ECOLOGICAL NICHE MODELLING USING R (ENMR03)
+Glasgow, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03/
+
+9. March 18th ? 22nd 2019
+INTRODUCTION TO STATISTICS AND R FOR EVERYONE (IRFE01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe01/
+
+10. March 25th ? 29th 2019
+LANDSCAPE GENETIC DATA ANALYSIS USING R (LNDG03)
+Glasgow, Scotland, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg03/
+
+11. April 1st ? 5th 2019
+INTRODUCTION TO STATISTICAL MODELLING FOR PSYCHOLOGISTS USING R (IPSY01)
+Glasgow, Scotland, Dr. Dale Barr, Dr Luc Bussierre
+http://www.psstatistics.com/course/introduction-to-statistics-using-r-for-psychologists-ipsy02/
+
+12. April 1st ? 5th 2019
+INDIVIDUAL BASED MODELS FOR ECOLOGSITS (IBME01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/individual-based-models-using-r-and-netlogo-ibms01/
+
+13. April 8th ? 12th 2019
+MACHINE LEARNING (MLUR01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/machine-learning-using-r-mlur01/
+
+14. April 15th ? 19th 2019
+INTRODUCTION TO Q GIS AND SPATIAL ANALYSIS WITH R (QGSE01)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/introduction-to-gis-and-spatial-analyses-with-r-gisr01/
+
+15. April 22nd ? 26th 2019
+GIS USING R (GISR)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/gis-using-r-gisr01/
+
+16. April 29th ? May 3rd 2019
+COMPARATIVE GENOMICS (CMGN01)
+Glasgow, Scotland, Dr. Fritz Sedlazeck, Dr. Matthias Weissensteiner
+https://www.prinformatics.com/course/comparative-genomics-cmgn01/
+
+17. May 6th ? 10th 2019
+INTRODUCTION TO MULTILEVEL MODELS (MIXED/HIERARCHICAL) FOR PSYCHOLOGISTS
+Myuna Bay, AUSTRALIA,  Dr. Sean Murphy
+https://www.psstatistics.com/course/an-exploration-of-r-for-psychologists-from-data-handling-to-multilevel-modelling-xplr01/
+
+18. May 16th ? 18th 2019 (please note this a 3-day course from Thursday to
+Saturday)
+AQUATIC MOVEMENT ECOLOGY USING R (AMER01)
+Myuna Bay, AUSTRALIA, Dr. Ross Dwyer, Dr. Vinay Udyawer
+Link to follow
+
+19. May 16th ? 19th 2019 (please note this a 4-day course from Thursday to
+Monday)
+INTRODUCTION TO R FOR EVERYONE (IRFE02)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe02/
+
+20. May 20th ? 24th 2019
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV03)
+Myuna Bay, AUSTRALIA, Prof. David Warton
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03/
+
+21. May 21st ? 24th 2019
+STATISTICAL TOOLKIT FOR ECOLOGISTS (STKE01)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/statistical-toolkit-for-ecologists-stke01/
+
+22. June 10th ? 14th 2019
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Glasgow, Scotland, Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+23. June 17th ? 21st 2019
+SPATIAL MODELLING AND ANALYSIS OF ADAPTIVE GENOMIC VARIATION (SPGN01)
+Glasgow, Dr. Matt Fitzpatrick
+https://www.prstatistics.com/course/spatial-modelling-and-analysis-of-adaptive-genomic-variation-spgn01/
+
+24. June 17th ? 21st 2019
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB06)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb06/
+
+25. June 24th ? 28th 2019
+ADVANCED PYTHON FOR BIOLOGISTS (APYB03)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb03/
+
+26. July 1st ? 5th 2019
+DATA VISUALISATION AND MANIPULATION USING PYTHON (DVMP01)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+27. July 29th ? August 2nd 2019
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISPE01)
+Glasgow, Scotland, Dr. Jakub Nowosad
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe01/
+
+28. September 16th ? 20th 2019
+R PACKAGE DESIGN AND DEVELOPMENT AND REPRODUCIBLE DATA SCIENCE FOR
+BIOLOGISTS (RPKG01)
+Glasgow, Scotland, Dr. Cory Merow, Dr. Andy Rominger
+https://www.prstatistics.com/course/r-package-design-and-development-and-reproducible-data-science-for-biologists-rpkg01/
+
+29. September 30th ? October 4th 2019
+GEOMETRIC MORPHOMETRICS USING R (GMMR02)
+Glasgow, Scotland, Prof. Dean Adams, Prof. Michael Collyer, Dr. Antigoni
+Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr02/
+
+30. October 7th ? 11th 2019
+CONSERVATION PLANNING USING PRIORITIZR : FROM THEORY TO PRACTICE (PRTZ01)
+Crete, GREECE, Dr Richard Schuster and Nina Morell
+https://www.prstatistics.com/course/conservation-planning-using-prioritizr-from-theory-to-practice-prtz01/
+
+31. October 21st ? 25th 2019
+A COMPLETE GUIDE TO MIXED MODELS (INCLUDING TEMPORAL AND SPATIAL
+AUTOCORRELATION) (MMTS01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/a-complete-guide-to-mixed-models-including-temporal-and-spatial-autocorrelation-mmts01/
+
+32. November 18th ? 22nd 2019
+INTRODUCTION TO STRUCTURED POPULATION MODELS AND DEMOGRAPHIC DISTRIBUTION
+MODELS (IIPM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/introduction-to-structured-population-models-and-demographic-distribution-models-iipm01/
+
+33. November 25th ? 29th 2019
+ADVANCED RANGE, NICHE, AND DISTRIBUTION MODELING (ASDM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/advanced-range-niche-and-distribution-modeling-asdm01/
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+Alternative routes to piscivory: Contrasting growth trajectories in brown
+trout (Salmo trutta) ecotypes exhibiting contrasting life history
+strategies. Ecology of Freshwater Fish.
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine brown
+trout, Salmo trutta. Biological Journal of the Linnean Society. DOI
+10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
++44 (0) 7966500340
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Thu Dec 13 21:25:38 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Thu, 13 Dec 2018 20:25:38 +0000
+Subject: [R-sig-eco] Machine learning using R (MLUR01)
+Message-ID: <CAEsSYzx2q-U1xhMMOfc_sakVg58eviycjRBjMsF5b3veAe8jzg@mail.gmail.com>
+
+Machine learning using R (MLUR01)
+
+https://www.prstatistics.com/course/machine-learning-using-r-mlur01/
+
+This course will be delivered by Dr Aristides (Aris) Moustakas from the
+8th - 12th April 2019 in Glasgow City Centre.
+
+Course Overview:
+his workshop will provide attendees with the opportunity to learn how to
+use machine learning to analyze data coming from diverse data domains and
+scientific disciplines and without necessarily prior knowledge of the
+scientific discipline where the data are coming from. Attendees will learn
+how to use R and several R packages including classification and regression
+trees, ensembles and bagging, random forests, neural networks, and boosting
+(learning from mistakes). These techniques will be used for data
+classification, determining goodness-of-fit, predictive modelling (using
+explanatory variables to predict a variable of interest), and ultimately
+quantify results, errors, and uncertainty. Attendees will also learn how to
+produce high quality graphs and figures using R.
+
+Intended Audience:
+This workshop is ideal for any scientists seeking an introduction to
+quantitative data analysis using machine learning coming from diverse
+scientific disciplines such as biology, ecology, medicine, psychology,
+economics, or education. No prior knowledge of machine learning ir
+required. However basic prior R knowledge is required (loading data,
+loading R packages, basic R environment and basic R commands).
+
+Course Programme:
+Monday 8th ? Classes from 09:30 to 17:30
+Day 1
+Theory
+Revision: linear regression analysis, classification and regression trees,
+assumptions, and limitations
+Introduction to artificial intelligence
+Introduction to machine learning, assumptions, advantages, over-fitting
+Practical
+Data analysis with Generalized linear models
+Data analysis with classification and regression trees
+Analysis of own data
+
+Tuesday 9th ? Classes from 09:30 to 17:30
+Day 2
+Theory
+Ensembles and bagging
+Random forests
+Learning from mistakes
+Practical
+Analysis of data with Random Forests:
+Supervised learning, training assessing predictive accuracy
+Applications with data from social sciences, economics, and biology
+
+Wednesday 10th ? Classes from 09:30 to 17:30
+Day 3
+Theory
+Artificial Neural Networks
+Support Vector Machines
+Practical
+Classification and regression with ANN and SVM
+ROC Curves
+Variable importance
+
+Thursday 11th ? Classes from 09:30 to 17:30
+Day 4
+Theory
+Special topics:
+Spatial data, spatial analysis, spatial autocorrelation
+Spatial analysis with machine learning
+Dealing with factors and binary data
+Factor analysis with machine learning
+Practical
+Spatial analysis with machine learning
+Factor analysis with machine learning
+
+Friday 12th ? Classes from 09:30 to 16:00
+Day 5
+Theory
+Special topics:
+Time replicated data, time series, and temporal autocorrelation
+Temporal analysis with machine learning
+Comparing statistical methods (etc GLM, GAM) with machine learning methods
+Parameter tuning
+Practical
+Temporal analysis with machine learning
+Parameter tuning
+Comparing methods
+Discussions with the tutor and the group regarding own datasets
+
+Email oliverhooker at prstatistics.com
+
+Check out our sister sites,
+www.PRstatistics.com (Ecology and Life Sciences)
+www.PRinformatics.com (Bioinformatics and data science)
+www.PSstatistics.com (Behaviour and cognition)
+
+1. January 21st ? 25th 2019
+STATISTICAL MODELLING OF TIME-TO-EVENT DATA USING SURVIVAL ANALYSIS: AN
+INTRODUCTION FOR ANIMAL BEHAVIOURISTS, ECOLOGISTS AND EVOLUTIONARY
+BIOLOGISTS (TTED01)
+Glasgow, Scotland, Dr. Will Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+2. January 21st ? 25th 2019
+ADVANCING IN STATISTICAL MODELLING USING R (ADVR08)
+Glasgow, Scotland, Dr. Luc Bussiere, Dr. Tom Houslay
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr08/
+
+3. January 28th?  February 1st 2019
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+https://www.prstatistics.com/course/aquatic-acoustic-telemetry-data-analysis-atda01/
+
+4. February 4th ? 8th 2019
+DESIGNING RELIABLE AND EFFICIENT EXPERIMENTS FOR SOCIAL SCIENCES (DRES01)
+Glasgow, Scotland, Dr. Daniel Lakens
+https://www.psstatistics.com/course/designing-reliable-and-effecient-experiments-for-social-sciences-dres01/
+
+5. February 11th ? 15th 2019
+REPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS
+Glasgow, Scotland, Dr. Thibaut Jombart, Dr. Zhain Kamvar
+https://www.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg02/
+
+6. 25th February ? 1st March 2019
+MOVEMENT ECOLOGY (MOVE02)
+Margam Discovery Centre, Wales, Dr. Luca Borger, Prof. Ronny Wilson, Dr
+Jonathan Potts
+https://www.prstatistics.com/course/movement-ecology-move02/
+
+7. March 4th ? 8th 2019
+BIOACOUSTICS FOR ECOLOGISTS: HARDWARE, SURVEY DESIGN AND DATA ANALYSIS
+(BIAC01)
+Glasgow, Scotland, Dr. Paul Howden-Leach
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac01/
+
+8. March 11th ? 15th  2019
+ECOLOGICAL NICHE MODELLING USING R (ENMR03)
+Glasgow, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03/
+
+9. March 18th ? 22nd 2019
+INTRODUCTION TO STATISTICS AND R FOR EVERYONE (IRFE01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe01/
+
+10. March 25th ? 29th 2019
+LANDSCAPE GENETIC DATA ANALYSIS USING R (LNDG03)
+Glasgow, Scotland, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg03/
+
+11. April 1st ? 5th 2019
+INTRODUCTION TO STATISTICAL MODELLING FOR PSYCHOLOGISTS USING R (IPSY01)
+Glasgow, Scotland, Dr. Dale Barr, Dr Luc Bussierre
+http://www.psstatistics.com/course/introduction-to-statistics-using-r-for-psychologists-ipsy02/
+
+12. April 1st ? 5th 2019
+INDIVIDUAL BASED MODELS FOR ECOLOGSITS (IBME01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/individual-based-models-using-r-and-netlogo-ibms01/
+
+13. April 8th ? 12th 2019
+MACHINE LEARNING (MLUR01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/machine-learning-using-r-mlur01/
+
+14. April 15th ? 19th 2019
+INTRODUCTION TO Q GIS AND SPATIAL ANALYSIS WITH R (QGSE01)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/introduction-to-gis-and-spatial-analyses-with-r-gisr01/
+
+15. April 22nd ? 26th 2019
+GIS USING R (GISR)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/gis-using-r-gisr01/
+
+16. April 29th ? May 3rd 2019
+COMPARATIVE GENOMICS (CMGN01)
+Glasgow, Scotland, Dr. Fritz Sedlazeck, Dr. Matthias Weissensteiner
+https://www.prinformatics.com/course/comparative-genomics-cmgn01/
+
+17. May 6th ? 10th 2019
+INTRODUCTION TO MULTILEVEL MODELS (MIXED/HIERARCHICAL) FOR PSYCHOLOGISTS
+Myuna Bay, AUSTRALIA,  Dr. Sean Murphy
+https://www.psstatistics.com/course/an-exploration-of-r-for-psychologists-from-data-handling-to-multilevel-modelling-xplr01/
+
+18. May 16th ? 18th 2019 (please note this a 3-day course from Thursday to
+Saturday)
+AQUATIC MOVEMENT ECOLOGY USING R (AMER01)
+Myuna Bay, AUSTRALIA, Dr. Ross Dwyer, Dr. Vinay Udyawer
+Link to follow
+
+19. May 16th ? 19th 2019 (please note this a 4-day course from Thursday to
+Monday)
+INTRODUCTION TO R FOR EVERYONE (IRFE02)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe02/
+
+20. May 20th ? 24th 2019
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV03)
+Myuna Bay, AUSTRALIA, Prof. David Warton
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03/
+
+21. May 21st ? 24th 2019
+STATISTICAL TOOLKIT FOR ECOLOGISTS (STKE01)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/statistical-toolkit-for-ecologists-stke01/
+
+22. June 10th ? 14th 2019
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Glasgow, Scotland, Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+23. June 17th ? 21st 2019
+SPATIAL MODELLING AND ANALYSIS OF ADAPTIVE GENOMIC VARIATION (SPGN01)
+Glasgow, Dr. Matt Fitzpatrick
+https://www.prstatistics.com/course/spatial-modelling-and-analysis-of-adaptive-genomic-variation-spgn01/
+
+24. June 17th ? 21st 2019
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB06)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb06/
+
+25. June 24th ? 28th 2019
+ADVANCED PYTHON FOR BIOLOGISTS (APYB03)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb03/
+
+26. July 1st ? 5th 2019
+DATA VISUALISATION AND MANIPULATION USING PYTHON (DVMP01)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+27. July 29th ? August 2nd 2019
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISPE01)
+Glasgow, Scotland, Dr. Jakub Nowosad
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe01/
+
+28. September 16th ? 20th 2019
+R PACKAGE DESIGN AND DEVELOPMENT AND REPRODUCIBLE DATA SCIENCE FOR
+BIOLOGISTS (RPKG01)
+Glasgow, Scotland, Dr. Cory Merow, Dr. Andy Rominger
+https://www.prstatistics.com/course/r-package-design-and-development-and-reproducible-data-science-for-biologists-rpkg01/
+
+29. September 30th ? October 4th 2019
+GEOMETRIC MORPHOMETRICS USING R (GMMR02)
+Glasgow, Scotland, Prof. Dean Adams, Prof. Michael Collyer, Dr. Antigoni
+Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr02/
+
+30. October 7th ? 11th 2019
+CONSERVATION PLANNING USING PRIORITIZR : FROM THEORY TO PRACTICE (PRTZ01)
+Crete, GREECE, Dr Richard Schuster and Nina Morell
+https://www.prstatistics.com/course/conservation-planning-using-prioritizr-from-theory-to-practice-prtz01/
+
+31. October 21st ? 25th 2019
+A COMPLETE GUIDE TO MIXED MODELS (INCLUDING TEMPORAL AND SPATIAL
+AUTOCORRELATION) (MMTS01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/a-complete-guide-to-mixed-models-including-temporal-and-spatial-autocorrelation-mmts01/
+
+32. November 18th ? 22nd 2019
+INTRODUCTION TO STRUCTURED POPULATION MODELS AND DEMOGRAPHIC DISTRIBUTION
+MODELS (IIPM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/introduction-to-structured-population-models-and-demographic-distribution-models-iipm01/
+
+33. November 25th ? 29th 2019
+ADVANCED RANGE, NICHE, AND DISTRIBUTION MODELING (ASDM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/advanced-range-niche-and-distribution-modeling-asdm01/
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+Alternative routes to piscivory: Contrasting growth trajectories in brown
+trout (Salmo trutta) ecotypes exhibiting contrasting life history
+strategies. Ecology of Freshwater Fish.
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine brown
+trout, Salmo trutta. Biological Journal of the Linnean Society. DOI
+10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
++44 (0) 7966500340
+
+	[[alternative HTML version deleted]]
+
+
+From @lex@ouz@@cb@ufrn@br @ending from gm@il@com  Fri Dec 14 17:37:29 2018
+From: @lex@ouz@@cb@ufrn@br @ending from gm@il@com (Alexandre F. Souza)
+Date: Fri, 14 Dec 2018 14:37:29 -0200
+Subject: [R-sig-eco] Error in Kriging Procedure
+Message-ID: <CAFXQFgMRjbOMJuD1B=R-U31=o1eevknKMnkqJh7T_ZAn+UvkXA@mail.gmail.com>
+
+Hello,
+
+I am new to interpolating techiques, and I am getting a persistent erro
+message I have not been able to resolve. I am trying to krig spatialized
+ordination scores into a raster of the Brazilian Atlantic Forest, as you
+can see below. I previously run a NMDS with 5 dimensions on species
+presence-absence data and saved the nmds scores. I send in attachment the
+atlantic forest shapefile and the nmds scores, to make the code more
+reproducible.
+
+# Convert NMDS-scores to SpatialPoints objects
+coords = as.data.frame(coords)
+names(coords) = c("longitude","latitude")
+nmds_scores<-cbind(coords, nmds_scores)
+coordinates(nmds_scores)<-~longitude+latitude # Convert 'nmds_scores'
+dataframe to SpatialPointsDataframe
+wgs84<-"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #
+WGS84 Coordinate Reference System (CRS)
+crs(nmds_scores)<-wgs84 # Set the original CRS (WGS84)
+new_crs<-"+proj=robin +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m
++no_defs" # Transform CRS to Robinson projection (it is necessary to have
+projected data for interpolation)
+nmds_scores<-spTransform(nmds_scores, new_crs)
+
+
+# Read the shapefile of Brazilian Atlantic Forest (BAF) and rasterize it
+BAF_limit<-readOGR("C:/Users/Augusto/Documents/MESTRADO/Projeto
+CAATINGA/Analise k-means/shapecaa")
+BAF_limit<-spTransform(BAF_limit, wgs84) # Change the CRS from SIRGAS2000
+to WGS84
+r_ext<-extent(BAF_limit)
+r<-raster() # Create a empty raster to receive data
+res(r)<-0.04166667 # Define raster resolution in decimal degrees (= 10
+arc-min)
+r<-crop(r, r_ext) # Define spatial extent of the raster (same as BAF)
+BAF_raster<-rasterize(BAF_limit, r, field=1, background=NA)
+
+# Get the spatial coordinates of BAF pixels
+get_coords<-rasterToPoints(BAF_raster)
+get_coords<-as.data.frame(get_coords[, c(1:2)])
+get_coords<-cbind(get_coords, NA, NA, NA)
+names(get_coords)<-c("longitude", "latitude", "NMDS1", "NMDS2", "NMDS3")
+coordinates(get_coords)<-~longitude+latitude # Convert 'get_coords'
+dataframe to SpatialPointsDataframe
+crs(get_coords)<-wgs84 # Set the original CRS (WGS84)
+get_coords<-spTransform(get_coords, new_crs) # Transform CRS to Robinson
+projection
+
+gModel_ok <- gstat(NULL, id='NMDS1_kri',
+                   formula= NMDS1 ~ 1,
+                   locations=coords, model=data.fit)
+
+G0y_ok <- interpolate(BAF_raster, gModel_ok, xyOnly=FALSE)
+
+Error in as(data, "data.frame") :
+  no method or default for coercing ?NULL? to ?data.frame?
+
+
+Do anyone has any idea of what may be wrong? I tried to empty the raster
+changing all vaues to zero but did not work.
+
+Thanks a log in advance,
+
+Alexandre
+-- 
+Dr. Alexandre F. Souza
+Professor Adjunto IV
+Chefe do Departamento de Ecologia
+Universidade Federal do Rio Grande do Norte
+CB, Departamento de Ecologia
+Campus Universit?rio - Lagoa Nova
+59072-970 - Natal, RN - Brasil
+lattes: lattes.cnpq.br/7844758818522706
+http://www.esferacientifica.com.br
+http://www.docente.ufrn.br/alexsouza
+orcid.org/0000-0001-7468-3631 <http://www.docente.ufrn.br/alexsouza>
+
+From tor@ten@h@uffe @ending from gm@il@com  Fri Dec 14 17:50:44 2018
+From: tor@ten@h@uffe @ending from gm@il@com (Torsten Hauffe)
+Date: Fri, 14 Dec 2018 17:50:44 +0100
+Subject: [R-sig-eco] Error in Kriging Procedure
+In-Reply-To: <CAFXQFgMRjbOMJuD1B=R-U31=o1eevknKMnkqJh7T_ZAn+UvkXA@mail.gmail.com>
+References: <CAFXQFgMRjbOMJuD1B=R-U31=o1eevknKMnkqJh7T_ZAn+UvkXA@mail.gmail.com>
+Message-ID: <CAGCrCxaxb05wo4+o_i=CFwCCpEBXKm0fmkbP=r=20OZbTxYnng@mail.gmail.com>
+
+Hi Alexandre,
+
+looks like you are trying to apply inverse distance weighting with gstat.
+
+For that your command should be something like this:
+
+Model_ok  <- gstat( id='NMDS1_kri',  formula= NMDS1 ~ 1 , data = X)
+
+Where X is a data.frame of your coordinates with NMDS scores or a spatial
+object like your nmds_scores.
+
+HTH,
+Torsten
+
+On Fri, 14 Dec 2018 at 17:38, Alexandre F. Souza <
+alexsouza.cb.ufrn.br at gmail.com> wrote:
+
+> Hello,
+>
+> I am new to interpolating techiques, and I am getting a persistent erro
+> message I have not been able to resolve. I am trying to krig spatialized
+> ordination scores into a raster of the Brazilian Atlantic Forest, as you
+> can see below. I previously run a NMDS with 5 dimensions on species
+> presence-absence data and saved the nmds scores. I send in attachment the
+> atlantic forest shapefile and the nmds scores, to make the code more
+> reproducible.
+>
+> # Convert NMDS-scores to SpatialPoints objects
+> coords = as.data.frame(coords)
+> names(coords) = c("longitude","latitude")
+> nmds_scores<-cbind(coords, nmds_scores)
+> coordinates(nmds_scores)<-~longitude+latitude # Convert 'nmds_scores'
+> dataframe to SpatialPointsDataframe
+> wgs84<-"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #
+> WGS84 Coordinate Reference System (CRS)
+> crs(nmds_scores)<-wgs84 # Set the original CRS (WGS84)
+> new_crs<-"+proj=robin +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m
+> +no_defs" # Transform CRS to Robinson projection (it is necessary to have
+> projected data for interpolation)
+> nmds_scores<-spTransform(nmds_scores, new_crs)
+>
+>
+> # Read the shapefile of Brazilian Atlantic Forest (BAF) and rasterize it
+> BAF_limit<-readOGR("C:/Users/Augusto/Documents/MESTRADO/Projeto
+> CAATINGA/Analise k-means/shapecaa")
+> BAF_limit<-spTransform(BAF_limit, wgs84) # Change the CRS from SIRGAS2000
+> to WGS84
+> r_ext<-extent(BAF_limit)
+> r<-raster() # Create a empty raster to receive data
+> res(r)<-0.04166667 # Define raster resolution in decimal degrees (= 10
+> arc-min)
+> r<-crop(r, r_ext) # Define spatial extent of the raster (same as BAF)
+> BAF_raster<-rasterize(BAF_limit, r, field=1, background=NA)
+>
+> # Get the spatial coordinates of BAF pixels
+> get_coords<-rasterToPoints(BAF_raster)
+> get_coords<-as.data.frame(get_coords[, c(1:2)])
+> get_coords<-cbind(get_coords, NA, NA, NA)
+> names(get_coords)<-c("longitude", "latitude", "NMDS1", "NMDS2", "NMDS3")
+> coordinates(get_coords)<-~longitude+latitude # Convert 'get_coords'
+> dataframe to SpatialPointsDataframe
+> crs(get_coords)<-wgs84 # Set the original CRS (WGS84)
+> get_coords<-spTransform(get_coords, new_crs) # Transform CRS to Robinson
+> projection
+>
+> gModel_ok <- gstat(NULL, id='NMDS1_kri',
+>                    formula= NMDS1 ~ 1,
+>                    locations=coords, model=data.fit)
+>
+> G0y_ok <- interpolate(BAF_raster, gModel_ok, xyOnly=FALSE)
+>
+> Error in as(data, "data.frame") :
+>   no method or default for coercing ?NULL? to ?data.frame?
+>
+>
+> Do anyone has any idea of what may be wrong? I tried to empty the raster
+> changing all vaues to zero but did not work.
+>
+> Thanks a log in advance,
+>
+> Alexandre
+> --
+> Dr. Alexandre F. Souza
+> Professor Adjunto IV
+> Chefe do Departamento de Ecologia
+> Universidade Federal do Rio Grande do Norte
+> CB, Departamento de Ecologia
+> Campus Universit?rio - Lagoa Nova
+> 59072-970 - Natal, RN - Brasil
+> lattes: lattes.cnpq.br/7844758818522706
+> http://www.esferacientifica.com.br
+> http://www.docente.ufrn.br/alexsouza
+> orcid.org/0000-0001-7468-3631 <http://www.docente.ufrn.br/alexsouza>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From oliverhooker @ending from pr@t@ti@tic@@com  Fri Dec 14 19:44:59 2018
+From: oliverhooker @ending from pr@t@ti@tic@@com (Oliver Hooker)
+Date: Fri, 14 Dec 2018 18:44:59 +0000
+Subject: [R-sig-eco] Introduction to GIS and spatial analysis with R (GISR01)
+Message-ID: <CAEsSYzw9KWrW6SS6Xs4nume5qQwh+jMrRd9WJAHOiVsSE+Z3Gw@mail.gmail.com>
+
+Introduction to GIS and spatial analysis with R (GISR01)
+
+https://www.prstatistics.com/course/introduction-to-gis-and-spatial-analysis-with-r-gisr01/
+
+This course will be delivered by Luca Nelli form the 22nd - 26th April 2019
+in Glasgow City Centre.
+
+Course overview:
+This course aims at providing audience with the essential tools for working
+with spatially explicit data within the statistical environment R, with
+particular reference to ecological applications (e.g. species distribution
+models, resources and habitat selection, home range analyses?). Practical
+sessions will primarily use the free statistical software, R ? prior
+experience (even if some practice before you come) will be useful. Example
+data will be provided but participants may also bring their own data.
+
+Intended Audience:
+This workshop is aimed at students and researchers who already have a basic
+knowledge of R and want to explore its GIS potential for ecological
+application. The skills learnt can also be applied by management and
+environmental professionals in government and industry.
+
+Course Programme:
+Monday 22nd ? Classes from 09:30 to 17:30
+Introduction to GIS: overview of main softwares.
+File formats.
+Coordinate reference systems.
+Types and structure of spatial objects in R
+Generating and manipulating spatial objects, projections and
+transformations.
+Overview of main libraries for spatial objects: sp, sf, rgeos, rgdal,
+leaflet, mapview, raster.
+
+Tuesday 23rd ? Classes from 09:30 to 17:30
+Introduction to raster data.
+Plot and visualisation of raster.
+Informative and non-informative rasters.
+Terrain tools.
+RasterStack.
+Operations with raster.
+
+Wednesday 24th ? Classes from 09:30 to 17:30
+Vector data: from simple points to SpatialPointsDataFrame (and
+SpatialLinesDataFrame and SpatialPolygonsDataFrame).
+How to import and manipulate vector data.
+Plot and visualisation of vectors.
+Geoprocessing tools.
+Overlay, clip, intersection, union, difference.
+Proximity analyses.
+Conversion tools (vector to raster and viceversa).
+
+Thursday 25th ? Classes from 09:30 to 17:30
+More advanced GIS analyses in R: How to interact vector and raster.
+Cropping and masking spatial objects.
+Zonal statistics and landscape metrics.
+Extracting covariate data and other simple GIS operations in R.
+
+Friday 26th ? Classes from 09:30 to 16:00
+Combining QGIS and R.
+Plotting interactive maps with leaflet and mapview.Email
+oliverhooker at prstatistics.com
+Check out our sister sites,
+www.PRstatistics.com <http://www.prstatistics.com/> (Ecology and Life
+Sciences)
+www.PRinformatics.com <http://www.prinformatics.com/> (Bioinformatics and
+data science)
+www.PSstatistics.com <http://www.psstatistics.com/> (Behaviour and
+cognition)
+
+1.      January 21st ? 25th 2019
+STATISTICAL MODELLING OF TIME-TO-EVENT DATA USING SURVIVAL ANALYSIS: AN
+INTRODUCTION FOR ANIMAL BEHAVIOURISTS, ECOLOGISTS AND EVOLUTIONARY
+BIOLOGISTS (TTED01)
+Glasgow, Scotland, Dr. Will Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+2.      January 21st ? 25th 2019
+ADVANCING IN STATISTICAL MODELLING USING R (ADVR08)
+Glasgow, Scotland, Dr. Luc Bussiere, Dr. Tom Houslay
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr08/
+
+3.      January 28th?  February 1st 2019
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+https://www.prstatistics.com/course/aquatic-acoustic-telemetry-data-analysis-atda01/
+
+4.      February 4th ? 8th 2019
+DESIGNING RELIABLE AND EFFICIENT EXPERIMENTS FOR SOCIAL SCIENCES (DRES01)
+Glasgow, Scotland, Dr. Daniel Lakens
+https://www.psstatistics.com/course/designing-reliable-and-effecient-experiments-for-social-sciences-dres01/
+
+5.      February 11th ? 15th 2019
+REPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS
+Glasgow, Scotland, Dr. Thibaut Jombart, Dr. Zhain Kamvar
+https://www.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg02/
+
+6.      25th February ? 1st March 2019
+MOVEMENT ECOLOGY (MOVE02)
+Margam Discovery Centre, Wales, Dr. Luca Borger, Prof. Ronny Wilson, Dr
+Jonathan Potts
+https://www.prstatistics.com/course/movement-ecology-move02/
+
+7.      March 4th ? 8th 2019
+BIOACOUSTICS FOR ECOLOGISTS: HARDWARE, SURVEY DESIGN AND DATA ANALYSIS
+(BIAC01)
+Glasgow, Scotland, Dr. Paul Howden-Leach
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac01/
+
+8.      March 11th ? 15th  2019
+ECOLOGICAL NICHE MODELLING USING R (ENMR03)
+Glasgow, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03/
+
+9.      March 18th ? 22nd 2019
+INTRODUCTION TO STATISTICS AND R FOR EVERYONE (IRFE01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe01/
+
+10.     March 25th ? 29th 2019
+LANDSCAPE GENETIC DATA ANALYSIS USING R (LNDG03)
+Glasgow, Scotland, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg03/
+
+11.     April 1st ? 5th 2019
+INTRODUCTION TO STATISTICAL MODELLING FOR PSYCHOLOGISTS USING R (IPSY01)
+Glasgow, Scotland, Dr. Dale Barr, Dr Luc Bussierre
+http://www.psstatistics.com/course/introduction-to-statistics-using-r-for-psychologists-ipsy02/
+
+12.     April 1st ? 5th 2019
+INDIVIDUAL BASED MODELS FOR ECOLOGSITS (IBME01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+
+https://www.prstatistics.com/course/individual-based-models-using-r-and-netlogo-ibms01/
+
+13.     April 8th ? 12th 2019
+MACHINE LEARNING (MLUR01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/machine-learning-using-r-mlur01/
+
+14.     April 15th ? 19th 2019
+INTRODUCTION TO Q GIS AND SPATIAL ANALYSIS WITH R (QGSE01)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/introduction-to-gis-and-spatial-analyses-with-r-gisr01/
+
+15.     April 22nd ? 26th 2019
+GIS USING R (GISR)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/gis-using-r-gisr01/
+
+16.     April 29th ? May 3rd 2019
+COMPARATIVE GENOMICS (CMGN01)
+Glasgow, Scotland, Dr. Fritz Sedlazeck, Dr. Matthias Weissensteiner
+https://www.prinformatics.com/course/comparative-genomics-cmgn01/
+
+17.     May 6th ? 10th 2019
+INTRODUCTION TO MULTILEVEL MODELS (MIXED/HIERARCHICAL) FOR PSYCHOLOGISTS
+Myuna Bay, AUSTRALIA,  Dr. Sean Murphy
+https://www.psstatistics.com/course/an-exploration-of-r-for-psychologists-from-data-handling-to-multilevel-modelling-xplr01/
+
+18.     May 16th ? 18th 2019 (please note this a 3-day course from Thursday
+to Saturday)
+AQUATIC MOVEMENT ECOLOGY USING R (AMER01)
+Myuna Bay, AUSTRALIA, Dr. Ross Dwyer, Dr. Vinay Udyawer
+Link to follow
+
+19.     May 16th ? 19th 2019 (please note this a 4-day course from Thursday
+to Monday)
+INTRODUCTION TO R FOR EVERYONE (IRFE02)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe02/
+
+20.     May 20th ? 24th 2019
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV03)
+Myuna Bay, AUSTRALIA, Prof. David Warton
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03/
+
+21.     May 21st ? 24th 2019
+STATISTICAL TOOLKIT FOR ECOLOGISTS (STKE01)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/statistical-toolkit-for-ecologists-stke01/
+
+22.     June 10th ? 14th 2019
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Glasgow, Scotland, Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+23.     June 17th ? 21st 2019
+SPATIAL MODELLING AND ANALYSIS OF ADAPTIVE GENOMIC VARIATION (SPGN01)
+Glasgow, Dr. Matt Fitzpatrick
+https://www.prstatistics.com/course/spatial-modelling-and-analysis-of-adaptive-genomic-variation-spgn01/
+
+24.     June 17th ? 21st 2019
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB06)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb06/
+
+25.     June 24th ? 28th 2019
+ADVANCED PYTHON FOR BIOLOGISTS (APYB03)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb03/
+
+26.     July 1st ? 5th 2019
+DATA VISUALISATION AND MANIPULATION USING PYTHON (DVMP01)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+27.     July 29th ? August 2nd 2019
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISPE01)
+Glasgow, Scotland, Dr. Jakub Nowosad
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe01/
+
+28.     September 16th ? 20th 2019
+R PACKAGE DESIGN AND DEVELOPMENT AND REPRODUCIBLE DATA SCIENCE FOR
+BIOLOGISTS (RPKG01)
+Glasgow, Scotland, Dr. Cory Merow, Dr. Andy Rominger
+https://www.prstatistics.com/course/r-package-design-and-development-and-reproducible-data-science-for-biologists-rpkg01/
+
+29.     September 30th ? October 4th 2019
+GEOMETRIC MORPHOMETRICS USING R (GMMR02)
+Glasgow, Scotland, Prof. Dean Adams, Prof. Michael Collyer, Dr. Antigoni
+Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr02/
+
+30.     October 7th ? 11th 2019
+CONSERVATION PLANNING USING PRIORITIZR : FROM THEORY TO PRACTICE (PRTZ01)
+Crete, GREECE, Dr Richard Schuster and Nina Morell
+https://www.prstatistics.com/course/conservation-planning-using-prioritizr-from-theory-to-practice-prtz01/
+
+31.     October 21st ? 25th 2019
+A COMPLETE GUIDE TO MIXED MODELS (INCLUDING TEMPORAL AND SPATIAL
+AUTOCORRELATION) (MMTS01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/a-complete-guide-to-mixed-models-including-temporal-and-spatial-autocorrelation-mmts01/
+
+32.     November 18th ? 22nd 2019
+INTRODUCTION TO STRUCTURED POPULATION MODELS AND DEMOGRAPHIC DISTRIBUTION
+MODELS (IIPM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/introduction-to-structured-population-models-and-demographic-distribution-models-iipm01/
+
+33.     November 25th ? 29th 2019
+ADVANCED RANGE, NICHE, AND DISTRIBUTION MODELING (ASDM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/advanced-range-niche-and-distribution-modeling-asdm01/
+
+
+
+---------- Forwarded message ----------
+From: Oliver Hooker <oliverhooker at prstatistics.com>
+To: ECOLOG-L at listserv.umd.edu
+Cc:
+Bcc:
+Date: Fri, 14 Dec 2018 13:35:10 -0500
+Subject: Introduction to GIS and spatial analysis with R (GISR01)
+Introduction to GIS and spatial analysis with R (GISR01)
+
+https://www.prstatistics.com/course/introduction-to-gis-and-spatial-analysis-with-r-gisr01/
+
+This course will be delivered by Luca Nelli form the 22nd - 26th April 2019
+in Glasgow City Centre.
+
+Course overview:
+This course aims at providing audience with the essential tools for working
+with spatially explicit data within the statistical environment R, with
+particular reference to ecological applications (e.g. species distribution
+models, resources and habitat selection, home range analyses?). Practical
+sessions will primarily use the free statistical software, R ? prior
+experience (even if some practice before you come) will be useful. Example
+data will be provided but participants may also bring their own data.
+
+Intended Audience:
+This workshop is aimed at students and researchers who already have a basic
+knowledge of R and want to explore its GIS potential for ecological
+application. The skills learnt can also be applied by management and
+environmental professionals in government and industry.
+
+Course Programme:
+Monday 22nd ? Classes from 09:30 to 17:30
+Introduction to GIS: overview of main softwares.
+File formats.
+Coordinate reference systems.
+Types and structure of spatial objects in R
+Generating and manipulating spatial objects, projections and
+transformations.
+Overview of main libraries for spatial objects: sp, sf, rgeos, rgdal,
+leaflet, mapview, raster.
+
+Tuesday 23rd ? Classes from 09:00 to 17:00
+Introduction to raster data.
+Plot and visualisation of raster.
+Informative and non-informative rasters.
+Terrain tools.
+RasterStack.
+Operations with raster.
+
+Wednesday 24th ? Classes from 09:30 to 17:30
+Vector data: from simple points to SpatialPointsDataFrame (and
+SpatialLinesDataFrame and SpatialPolygonsDataFrame).
+How to import and manipulate vector data.
+Plot and visualisation of vectors.
+Geoprocessing tools.
+Overlay, clip, intersection, union, difference.
+Proximity analyses.
+Conversion tools (vector to raster and viceversa).
+
+Thursday 25th ? Classes from 09:30 to 17:30
+More advanced GIS analyses in R: How to interact vector and raster.
+Cropping and masking spatial objects.
+Zonal statistics and landscape metrics.
+Extracting covariate data and other simple GIS operations in R.
+
+Friday 26th ? Classes from 09:30 to 16:00
+Combining QGIS and R.
+Plotting interactive maps with leaflet and mapview.Email
+oliverhooker at prstatistics.com
+Check out our sister sites,
+www.PRstatistics.com <http://www.prstatistics.com/> (Ecology and Life
+Sciences)
+www.PRinformatics.com <http://www.prinformatics.com/> (Bioinformatics and
+data science)
+www.PSstatistics.com <http://www.psstatistics.com/> (Behaviour and
+cognition)
+
+1.      January 21st ? 25th 2019
+STATISTICAL MODELLING OF TIME-TO-EVENT DATA USING SURVIVAL ANALYSIS: AN
+INTRODUCTION FOR ANIMAL BEHAVIOURISTS, ECOLOGISTS AND EVOLUTIONARY
+BIOLOGISTS (TTED01)
+Glasgow, Scotland, Dr. Will Hoppitt
+https://www.psstatistics.com/course/statistical-modelling-of-time-to-event-data-using-survival-analysis-tted01/
+
+2.      January 21st ? 25th 2019
+ADVANCING IN STATISTICAL MODELLING USING R (ADVR08)
+Glasgow, Scotland, Dr. Luc Bussiere, Dr. Tom Houslay
+http://www.prstatistics.com/course/advancing-statistical-modelling-using-r-advr08/
+
+3.      January 28th?  February 1st 2019
+AQUATIC ACOUSTIC TELEMETRY DATA ANALYSIS AND SURVEY DESIGN
+Glasgow, Scotland, VEMCO staff and affiliates
+https://www.prstatistics.com/course/aquatic-acoustic-telemetry-data-analysis-atda01/
+
+4.      February 4th ? 8th 2019
+DESIGNING RELIABLE AND EFFICIENT EXPERIMENTS FOR SOCIAL SCIENCES (DRES01)
+Glasgow, Scotland, Dr. Daniel Lakens
+https://www.psstatistics.com/course/designing-reliable-and-effecient-experiments-for-social-sciences-dres01/
+
+5.      February 11th ? 15th 2019
+REPRODUCIBLE DATA SCIENCE FOR POPULATION GENETICS
+Glasgow, Scotland, Dr. Thibaut Jombart, Dr. Zhain Kamvar
+https://www.prstatistics.com/course/reproducible-data-science-for-population-genetics-rdpg02/
+
+6.      25th February ? 1st March 2019
+MOVEMENT ECOLOGY (MOVE02)
+Margam Discovery Centre, Wales, Dr. Luca Borger, Prof. Ronny Wilson, Dr
+Jonathan Potts
+https://www.prstatistics.com/course/movement-ecology-move02/
+
+7.      March 4th ? 8th 2019
+BIOACOUSTICS FOR ECOLOGISTS: HARDWARE, SURVEY DESIGN AND DATA ANALYSIS
+(BIAC01)
+Glasgow, Scotland, Dr. Paul Howden-Leach
+https://www.prstatistics.com/course/bioacoustics-for-ecologists-hardware-survey-design-and-data-analysis-biac01/
+
+8.      March 11th ? 15th  2019
+ECOLOGICAL NICHE MODELLING USING R (ENMR03)
+Glasgow, Scotland, Dr. Neftali Sillero
+http://www.prstatistics.com/course/ecological-niche-modelling-using-r-enmr03/
+
+9.      March 18th ? 22nd 2019
+INTRODUCTION TO STATISTICS AND R FOR EVERYONE (IRFE01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe01/
+
+10.     March 25th ? 29th 2019
+LANDSCAPE GENETIC DATA ANALYSIS USING R (LNDG03)
+Glasgow, Scotland, Prof. Rodney Dyer
+http://www.prstatistics.com/course/landscape-genetic-data-analysis-using-r-lndg03/
+
+11.     April 1st ? 5th 2019
+INTRODUCTION TO STATISTICAL MODELLING FOR PSYCHOLOGISTS USING R (IPSY01)
+Glasgow, Scotland, Dr. Dale Barr, Dr Luc Bussierre
+http://www.psstatistics.com/course/introduction-to-statistics-using-r-for-psychologists-ipsy02/
+
+12.     April 1st ? 5th 2019
+INDIVIDUAL BASED MODELS FOR ECOLOGSITS (IBME01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+
+https://www.prstatistics.com/course/individual-based-models-using-r-and-netlogo-ibms01/
+
+13.     April 8th ? 12th 2019
+MACHINE LEARNING (MLUR01)
+Glasgow, Scotland, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/machine-learning-using-r-mlur01/
+
+14.     April 15th ? 19th 2019
+INTRODUCTION TO Q GIS AND SPATIAL ANALYSIS WITH R (QGSE01)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/introduction-to-gis-and-spatial-analyses-with-r-gisr01/
+
+15.     April 22nd ? 26th 2019
+GIS USING R (GISR)
+Glasgow, Scotland, Dr Luca Nelli
+https://www.prstatistics.com/course/gis-using-r-gisr01/
+
+16.     April 29th ? May 3rd 2019
+COMPARATIVE GENOMICS (CMGN01)
+Glasgow, Scotland, Dr. Fritz Sedlazeck, Dr. Matthias Weissensteiner
+https://www.prinformatics.com/course/comparative-genomics-cmgn01/
+
+17.     May 6th ? 10th 2019
+INTRODUCTION TO MULTILEVEL MODELS (MIXED/HIERARCHICAL) FOR PSYCHOLOGISTS
+Myuna Bay, AUSTRALIA,  Dr. Sean Murphy
+https://www.psstatistics.com/course/an-exploration-of-r-for-psychologists-from-data-handling-to-multilevel-modelling-xplr01/
+
+18.     May 16th ? 18th 2019 (please note this a 3-day course from Thursday
+to Saturday)
+AQUATIC MOVEMENT ECOLOGY USING R (AMER01)
+Myuna Bay, AUSTRALIA, Dr. Ross Dwyer, Dr. Vinay Udyawer
+Link to follow
+
+19.     May 16th ? 19th 2019 (please note this a 4-day course from Thursday
+to Monday)
+INTRODUCTION TO R FOR EVERYONE (IRFE02)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/introduction-to-statistics-and-r-for-anyone-irfe02/
+
+20.     May 20th ? 24th 2019
+MODEL BASE MULTIVARIATE ANALYSIS OF ABUNDANCE DATA USING R (MBMV03)
+Myuna Bay, AUSTRALIA, Prof. David Warton
+https://www.prstatistics.com/course/model-based-multivariate-analysis-of-abundance-data-using-r-mbmv03/
+
+21.     May 21st ? 24th 2019
+STATISTICAL TOOLKIT FOR ECOLOGISTS (STKE01)
+Myuna Bay, AUSTRALIA, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/statistical-toolkit-for-ecologists-stke01/
+
+22.     June 10th ? 14th 2019
+STABLE ISOTOPE MIXING MODELS USING SIAR, SIBER AND MIXSIAR (SIMM04)
+Glasgow, Scotland, Dr. Andrew Parnell, Dr. Andrew Jackson
+www.prstatistics.com/course/stable-isotope-mixing-models-using-r-simm04/
+
+23.     June 17th ? 21st 2019
+SPATIAL MODELLING AND ANALYSIS OF ADAPTIVE GENOMIC VARIATION (SPGN01)
+Glasgow, Dr. Matt Fitzpatrick
+https://www.prstatistics.com/course/spatial-modelling-and-analysis-of-adaptive-genomic-variation-spgn01/
+
+24.     June 17th ? 21st 2019
+INTRODUCTION TO PYTHON FOR BIOLOGISTS (IPYB06)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/introduction-to-python-for-biologists-ipyb06/
+
+25.     June 24th ? 28th 2019
+ADVANCED PYTHON FOR BIOLOGISTS (APYB03)
+Glasgow, Scotland, Dr. Martin Jones
+www.prinformatics.com/course/advanced-python-biologists-apyb03/
+
+26.     July 1st ? 5th 2019
+DATA VISUALISATION AND MANIPULATION USING PYTHON (DVMP01)
+Glasgow, Scotland, Dr. Martin Jones
+http://www.prinformatics.com/course/data-visualisation-and-manipulation-using-python-dvmp01/
+
+27.     July 29th ? August 2nd 2019
+INTRODUCTION TO SPATIAL ANALYSIS OF ECOLOGICAL DATA USING R (ISPE01)
+Glasgow, Scotland, Dr. Jakub Nowosad
+https://www.prstatistics.com/course/introduction-to-spatial-analysis-of-ecological-data-using-r-ispe01/
+
+28.     September 16th ? 20th 2019
+R PACKAGE DESIGN AND DEVELOPMENT AND REPRODUCIBLE DATA SCIENCE FOR
+BIOLOGISTS (RPKG01)
+Glasgow, Scotland, Dr. Cory Merow, Dr. Andy Rominger
+https://www.prstatistics.com/course/r-package-design-and-development-and-reproducible-data-science-for-biologists-rpkg01/
+
+29.     September 30th ? October 4th 2019
+GEOMETRIC MORPHOMETRICS USING R (GMMR02)
+Glasgow, Scotland, Prof. Dean Adams, Prof. Michael Collyer, Dr. Antigoni
+Kaliontzopoulou
+http://www.prstatistics.com/course/geometric-morphometrics-using-r-gmmr02/
+
+30.     October 7th ? 11th 2019
+CONSERVATION PLANNING USING PRIORITIZR : FROM THEORY TO PRACTICE (PRTZ01)
+Crete, GREECE, Dr Richard Schuster and Nina Morell
+https://www.prstatistics.com/course/conservation-planning-using-prioritizr-from-theory-to-practice-prtz01/
+
+31.     October 21st ? 25th 2019
+A COMPLETE GUIDE TO MIXED MODELS (INCLUDING TEMPORAL AND SPATIAL
+AUTOCORRELATION) (MMTS01)
+Crete, GREECE, Dr Aristides (Aris) Moustakas
+https://www.prstatistics.com/course/a-complete-guide-to-mixed-models-including-temporal-and-spatial-autocorrelation-mmts01/
+
+32.     November 18th ? 22nd 2019
+INTRODUCTION TO STRUCTURED POPULATION MODELS AND DEMOGRAPHIC DISTRIBUTION
+MODELS (IIPM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/introduction-to-structured-population-models-and-demographic-distribution-models-iipm01/
+
+33.     November 25th ? 29th 2019
+ADVANCED RANGE, NICHE, AND DISTRIBUTION MODELING (ASDM01)
+Crete, GREECE, Dr Cory Merow
+https://www.prstatistics.com/course/advanced-range-niche-and-distribution-modeling-asdm01/
+
+-- 
+Oliver Hooker PhD.
+PR statistics
+
+2018 publications -
+Alternative routes to piscivory: Contrasting growth trajectories in brown
+trout (Salmo trutta) ecotypes exhibiting contrasting life history
+strategies. Ecology of Freshwater Fish.
+
+Phenotypic and resource use partitioning amongst sympatric lacustrine brown
+trout, Salmo trutta. Biological Journal of the Linnean Society. DOI
+10.1093/biolinnean/bly032
+
+prstatistics.com
+facebook.com/prstatistics/
+twitter.com/PRstatistics
+groups.google.com/d/forum/pr-statistics-post-course-forum
+prstatistics.com/organiser/oliver-hooker/
+
+6 Hope Park Crescent
+Edinburgh
+EH8 9NA
++44 (0) 7966500340
+
+	[[alternative HTML version deleted]]
+
+
+From ellen@p@pe @ending from gm@il@com  Mon Dec 17 17:13:57 2018
+From: ellen@p@pe @ending from gm@il@com (Ellen Pape)
+Date: Mon, 17 Dec 2018 17:13:57 +0100
+Subject: [R-sig-eco] (no subject)
+Message-ID: <CANW5OGCHmJRDhPQU-2TaVuXVVHi1ZBkHo0+fLWy_E4N_xBrMEQ@mail.gmail.com>
+
+Hi all,
+
+As I use ggplot2 for all my graphs, I would like to use ggplot2 to
+construct rarefaction curves as well (I also want to combine 2 rarefaction
+curves in 1 plot using cowplot which also vows for using ggplot2).
+
+I made these rarefaction curves using the rarecurve function in vegan, but
+I don't see how I can use these results and put these in ggplot2.
+
+I found the following website during my search:
+https://www.fromthebottomoftheheap.net/2015/04/16/drawing-rarefaction-curves-with-custom-colours/
+but it does not explain how to draw rarefaction curves with ggplot2.
+
+This website mentions - and this is what I would like to be able to do in
+ggplot2:
+
+"Where I do think this sort of approach might work is if the samples in the
+data set come from a few different groups and we want to colour the curves
+by group.
+
+col <- c("darkred", "forestgreen", "hotpink", "blue")set.seed(3)grp <-
+factor(sample(seq_along(col), nrow(BCI2), replace = TRUE))cols <-
+col[grp]
+
+The code above creates a grouping factor grp for illustration purposes; in
+real analyses you'd have this already as a factor variable in you data
+somewhere. We also have to expand the col vector because we are plotting
+each line in a loop. The plot code, reusing elements from the previous
+plot, is shown below:
+
+plot(c(1, max(Nmax)), c(1, max(Smax)), xlab = "Sample Size",
+     ylab = "Species", type = "n")abline(v = raremax)for (i in seq_along(out)) {
+    N <- attr(out[[i]], "Subsample")
+    lines(N, out[[i]], col = cols[i])}
+
+[image: An attempt at rarefaction curves output with custom colours per
+groups of curves.]An attempt at rarefaction curves output with custom
+colours per groups of curves.
+
+
+but I don't see how I adjust this code to make the same plot in ggplot2.
+
+
+
+Anyone?
+
+Thanks!
+Ellen
+
+	[[alternative HTML version deleted]]
+
+
+From @tyre2 @ending from unl@edu  Mon Dec 17 18:57:56 2018
+From: @tyre2 @ending from unl@edu (Drew Tyre)
+Date: Mon, 17 Dec 2018 17:57:56 +0000
+Subject: [R-sig-eco] Rarefaction curves in ggplot
+Message-ID: <115135E8-9720-4ABD-9D04-8391C4DD6637@unl.edu>
+
+Hi Ellen,
+
+I was curious about this because I will be using a lot of vegan functions in a spring class. Turns out not to be trivial - as with all ggplot problems the trick is to get the data into a dataframe. I tried several things, but ended up writing my own function:
+
+# rarefraction curves and ggplot
+library("tidyverse")
+library("vegan")
+data(BCI)
+out <- rarecurve(BCI, step = 10, sample = 400)
+names(out) <- 1:50
+
+as_tibble_rc <- function(x){
+  # convert rarecurve() output to data.frame
+  # bind_rows doesn't work because items are different lengths
+  # also need to extract sample sizes from attribute 
+  # Allocate result dataframe
+  nsamples <- map_int(x, length)
+  total_samples <- sum(nsamples)
+  if(!is.null(names(x))){
+    sites <- names(x)
+  } else {
+    sites <- as.character(1:length(nsamples))
+  }
+  result <- data_frame(Site = rep("", total_samples),
+                       Sample_size = rep(0, total_samples),
+                       Species = rep(0, total_samples))
+  start <- 1
+  for (i in 1:length(nsamples)){
+    result[start:(start + nsamples[i]-1), "Site"] <- sites[i]
+    result[start:(start + nsamples[i]-1), "Sample_size"] <- attr(x[[i]], "Subsample")
+    result[start:(start + nsamples[i]-1), "Species"] <- x[[i]]
+    start <- start + nsamples[i]
+  }
+  result
+}
+
+out <- as_tibble_rc(out)
+# add grouping variable
+sitedata <- data_frame(Site = as.character(1:50),
+                       Type = sample(LETTERS[1:2], 50, replace = TRUE))
+alldata <- left_join(out, sitedata, by = "Site")
+
+# and then it's trivial
+ggplot(data = alldata,
+       mapping = aes(x = Sample_size, y = Species, color = Type, group = Site)) + 
+  geom_line()
+
+hope that helps. 
+-- 
+Drew Tyre
+ 
+School of Natural Resources
+University of Nebraska-Lincoln
+416 Hardin Hall, East Campus
+3310 Holdrege Street
+Lincoln, NE 68583-0974
+ 
+phone: +1 402 472 4054
+fax: +1 402 472 2946
+email: atyre2 at unl.edu
+http://snr.unl.edu/tyre
+http://drewtyre.rbind.io
+    The point is that our true nature is not some ideal that we have to live up to. It?s who we are right now, and that?s what we can make friends with and celebrate. 
+Excerpted from: Awakening Loving-Kindness by Pema Ch?dr?n
+ 
+
+?On 12/17/18, 10:14 AM, "R-sig-ecology on behalf of Ellen Pape" <r-sig-ecology-bounces at r-project.org on behalf of ellen.pape at gmail.com> wrote:
+
+    Hi all,
+    
+    As I use ggplot2 for all my graphs, I would like to use ggplot2 to
+    construct rarefaction curves as well (I also want to combine 2 rarefaction
+    curves in 1 plot using cowplot which also vows for using ggplot2).
+    
+    I made these rarefaction curves using the rarecurve function in vegan, but
+    I don't see how I can use these results and put these in ggplot2.
+    
+    I found the following website during my search:
+    https://urldefense.proofpoint.com/v2/url?u=https-3A__www.fromthebottomoftheheap.net_2015_04_16_drawing-2Drarefaction-2Dcurves-2Dwith-2Dcustom-2Dcolours_&d=DwICAg&c=Cu5g146wZdoqVuKpTNsYHeFX_rg6kWhlkLF8Eft-wwo&r=aLEaSryyUcERVqcKVZl7lQ&m=ScKzUcnIZJ2da4_YAAzmizwFy-CbI90_F4SV_FKSLLc&s=-DiwE4s5JljqtJk5ZhKOE4Benr3yDXmDM19K7wNG3bI&e=
+    but it does not explain how to draw rarefaction curves with ggplot2.
+    
+    This website mentions - and this is what I would like to be able to do in
+    ggplot2:
+    
+    "Where I do think this sort of approach might work is if the samples in the
+    data set come from a few different groups and we want to colour the curves
+    by group.
+    
+    col <- c("darkred", "forestgreen", "hotpink", "blue")set.seed(3)grp <-
+    factor(sample(seq_along(col), nrow(BCI2), replace = TRUE))cols <-
+    col[grp]
+    
+    The code above creates a grouping factor grp for illustration purposes; in
+    real analyses you'd have this already as a factor variable in you data
+    somewhere. We also have to expand the col vector because we are plotting
+    each line in a loop. The plot code, reusing elements from the previous
+    plot, is shown below:
+    
+    plot(c(1, max(Nmax)), c(1, max(Smax)), xlab = "Sample Size",
+         ylab = "Species", type = "n")abline(v = raremax)for (i in seq_along(out)) {
+        N <- attr(out[[i]], "Subsample")
+        lines(N, out[[i]], col = cols[i])}
+    
+    [image: An attempt at rarefaction curves output with custom colours per
+    groups of curves.]An attempt at rarefaction curves output with custom
+    colours per groups of curves.
+    
+    
+    but I don't see how I adjust this code to make the same plot in ggplot2.
+    
+    
+    
+    Anyone?
+    
+    Thanks!
+    Ellen
+    
+    	[[alternative HTML version deleted]]
+    
+    _______________________________________________
+    R-sig-ecology mailing list
+    R-sig-ecology at r-project.org
+    https://urldefense.proofpoint.com/v2/url?u=https-3A__stat.ethz.ch_mailman_listinfo_r-2Dsig-2Decology&d=DwICAg&c=Cu5g146wZdoqVuKpTNsYHeFX_rg6kWhlkLF8Eft-wwo&r=aLEaSryyUcERVqcKVZl7lQ&m=ScKzUcnIZJ2da4_YAAzmizwFy-CbI90_F4SV_FKSLLc&s=w7PfOR1D2XX19m5JJqRubGPuMylTRoX3JYCpGkFoqnM&e=
+    
+
+
+From rom@n@lu@trik @ending from gm@il@com  Mon Dec 17 19:57:33 2018
+From: rom@n@lu@trik @ending from gm@il@com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Mon, 17 Dec 2018 19:57:33 +0100
+Subject: [R-sig-eco] Rarefaction curves in ggplot
+In-Reply-To: <115135E8-9720-4ABD-9D04-8391C4DD6637@unl.edu>
+References: <115135E8-9720-4ABD-9D04-8391C4DD6637@unl.edu>
+Message-ID: <CAHT1vphgzwpT8Q4A5JtsEKdHaEFJvKSdYimG=xo5UVQbkBxYuA@mail.gmail.com>
+
+I don't think it's that critical. It's just a matter of coercing the data
+into a long format. And loading the entire tidyverse isn't really necessary
+since we need one package from that bundle. I present a bonus feature using
+plotly (see at the bottom).
+
+library(vegan)
+library(ggplot2)
+library(plotly)
+
+data(BCI)
+out <- rarecurve(BCI, step = 10, sample = 400, label = FALSE)
+names(out) <- paste("species", 1:50, sep = "")
+
+# Coerce data into "long" form.
+protox <- mapply(FUN = function(x, y) {
+  mydf <- as.data.frame(x)
+  colnames(mydf) <- "value"
+  mydf$species <- y
+  mydf$subsample <- attr(x, "Subsample")
+  mydf
+}, x = out, y = as.list(names(out)), SIMPLIFY = FALSE)
+
+xy <- do.call(rbind, protox)
+rownames(xy) <- NULL  # pretty
+
+# Plot.
+ggplot(xy, aes(x = subsample, y = value, color = species)) +
+  theme_bw() +
+  scale_color_discrete(guide = FALSE) +  # turn legend on or off
+  geom_line()
+
+Since exploring this mikado of lines can be hard, we can make the plot
+interactive. Try hovering over the lines. Presto!
+
+ggplotly(
+  ggplot(xy, aes(x = subsample, y = value, color = species)) +
+    theme_bw() +
+    theme(legend.position = "none") +  # ggplotly doesn't respect scales?
+    geom_line()
+)
+
+Cheers,
+Roman
+
+On Mon, Dec 17, 2018 at 6:58 PM Drew Tyre <atyre2 at unl.edu> wrote:
+
+> Hi Ellen,
+>
+> I was curious about this because I will be using a lot of vegan functions
+> in a spring class. Turns out not to be trivial - as with all ggplot
+> problems the trick is to get the data into a dataframe. I tried several
+> things, but ended up writing my own function:
+>
+> # rarefraction curves and ggplot
+> library("tidyverse")
+> library("vegan")
+> data(BCI)
+> out <- rarecurve(BCI, step = 10, sample = 400)
+> names(out) <- 1:50
+>
+> as_tibble_rc <- function(x){
+>   # convert rarecurve() output to data.frame
+>   # bind_rows doesn't work because items are different lengths
+>   # also need to extract sample sizes from attribute
+>   # Allocate result dataframe
+>   nsamples <- map_int(x, length)
+>   total_samples <- sum(nsamples)
+>   if(!is.null(names(x))){
+>     sites <- names(x)
+>   } else {
+>     sites <- as.character(1:length(nsamples))
+>   }
+>   result <- data_frame(Site = rep("", total_samples),
+>                        Sample_size = rep(0, total_samples),
+>                        Species = rep(0, total_samples))
+>   start <- 1
+>   for (i in 1:length(nsamples)){
+>     result[start:(start + nsamples[i]-1), "Site"] <- sites[i]
+>     result[start:(start + nsamples[i]-1), "Sample_size"] <- attr(x[[i]],
+> "Subsample")
+>     result[start:(start + nsamples[i]-1), "Species"] <- x[[i]]
+>     start <- start + nsamples[i]
+>   }
+>   result
+> }
+>
+> out <- as_tibble_rc(out)
+> # add grouping variable
+> sitedata <- data_frame(Site = as.character(1:50),
+>                        Type = sample(LETTERS[1:2], 50, replace = TRUE))
+> alldata <- left_join(out, sitedata, by = "Site")
+>
+> # and then it's trivial
+> ggplot(data = alldata,
+>        mapping = aes(x = Sample_size, y = Species, color = Type, group =
+> Site)) +
+>   geom_line()
+>
+> hope that helps.
+> --
+> Drew Tyre
+>
+> School of Natural Resources
+> University of Nebraska-Lincoln
+> 416 Hardin Hall, East Campus
+> 3310 Holdrege Street
+> Lincoln, NE 68583-0974
+>
+> phone: +1 402 472 4054
+> fax: +1 402 472 2946
+> email: atyre2 at unl.edu
+> http://snr.unl.edu/tyre
+> http://drewtyre.rbind.io
+>     The point is that our true nature is not some ideal that we have to
+> live up to. It?s who we are right now, and that?s what we can make friends
+> with and celebrate.
+> Excerpted from: Awakening Loving-Kindness by Pema Ch?dr?n
+>
+>
+> ?On 12/17/18, 10:14 AM, "R-sig-ecology on behalf of Ellen Pape" <
+> r-sig-ecology-bounces at r-project.org on behalf of ellen.pape at gmail.com>
+> wrote:
+>
+>     Hi all,
+>
+>     As I use ggplot2 for all my graphs, I would like to use ggplot2 to
+>     construct rarefaction curves as well (I also want to combine 2
+> rarefaction
+>     curves in 1 plot using cowplot which also vows for using ggplot2).
+>
+>     I made these rarefaction curves using the rarecurve function in vegan,
+> but
+>     I don't see how I can use these results and put these in ggplot2.
+>
+>     I found the following website during my search:
+>
+> https://urldefense.proofpoint.com/v2/url?u=https-3A__www.fromthebottomoftheheap.net_2015_04_16_drawing-2Drarefaction-2Dcurves-2Dwith-2Dcustom-2Dcolours_&d=DwICAg&c=Cu5g146wZdoqVuKpTNsYHeFX_rg6kWhlkLF8Eft-wwo&r=aLEaSryyUcERVqcKVZl7lQ&m=ScKzUcnIZJ2da4_YAAzmizwFy-CbI90_F4SV_FKSLLc&s=-DiwE4s5JljqtJk5ZhKOE4Benr3yDXmDM19K7wNG3bI&e=
+>     but it does not explain how to draw rarefaction curves with ggplot2.
+>
+>     This website mentions - and this is what I would like to be able to do
+> in
+>     ggplot2:
+>
+>     "Where I do think this sort of approach might work is if the samples
+> in the
+>     data set come from a few different groups and we want to colour the
+> curves
+>     by group.
+>
+>     col <- c("darkred", "forestgreen", "hotpink", "blue")set.seed(3)grp <-
+>     factor(sample(seq_along(col), nrow(BCI2), replace = TRUE))cols <-
+>     col[grp]
+>
+>     The code above creates a grouping factor grp for illustration
+> purposes; in
+>     real analyses you'd have this already as a factor variable in you data
+>     somewhere. We also have to expand the col vector because we are
+> plotting
+>     each line in a loop. The plot code, reusing elements from the previous
+>     plot, is shown below:
+>
+>     plot(c(1, max(Nmax)), c(1, max(Smax)), xlab = "Sample Size",
+>          ylab = "Species", type = "n")abline(v = raremax)for (i in
+> seq_along(out)) {
+>         N <- attr(out[[i]], "Subsample")
+>         lines(N, out[[i]], col = cols[i])}
+>
+>     [image: An attempt at rarefaction curves output with custom colours per
+>     groups of curves.]An attempt at rarefaction curves output with custom
+>     colours per groups of curves.
+>
+>
+>     but I don't see how I adjust this code to make the same plot in
+> ggplot2.
+>
+>
+>
+>     Anyone?
+>
+>     Thanks!
+>     Ellen
+>
+>         [[alternative HTML version deleted]]
+>
+>     _______________________________________________
+>     R-sig-ecology mailing list
+>     R-sig-ecology at r-project.org
+>
+> https://urldefense.proofpoint.com/v2/url?u=https-3A__stat.ethz.ch_mailman_listinfo_r-2Dsig-2Decology&d=DwICAg&c=Cu5g146wZdoqVuKpTNsYHeFX_rg6kWhlkLF8Eft-wwo&r=aLEaSryyUcERVqcKVZl7lQ&m=ScKzUcnIZJ2da4_YAAzmizwFy-CbI90_F4SV_FKSLLc&s=w7PfOR1D2XX19m5JJqRubGPuMylTRoX3JYCpGkFoqnM&e=
+>
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+-- 
+In God we trust, all others bring data.
+
+	[[alternative HTML version deleted]]
+
+
+From ellen@p@pe @ending from gm@il@com  Tue Dec 18 09:23:18 2018
+From: ellen@p@pe @ending from gm@il@com (Ellen Pape)
+Date: Tue, 18 Dec 2018 09:23:18 +0100
+Subject: [R-sig-eco] Rarefaction curves in ggplot
+In-Reply-To: <115135E8-9720-4ABD-9D04-8391C4DD6637@unl.edu>
+References: <115135E8-9720-4ABD-9D04-8391C4DD6637@unl.edu>
+Message-ID: <CANW5OGAq9x0cAVSz8sX+XDmkD7kPvWS0r2Z6e19K3QegR1JbgA@mail.gmail.com>
+
+Thanks, Roman and Drew!! Both options work!
+
+cheers,
+ellen
+
+
+On Mon, 17 Dec 2018 at 18:58, Drew Tyre <atyre2 at unl.edu> wrote:
+
+> Hi Ellen,
+>
+> I was curious about this because I will be using a lot of vegan functions
+> in a spring class. Turns out not to be trivial - as with all ggplot
+> problems the trick is to get the data into a dataframe. I tried several
+> things, but ended up writing my own function:
+>
+> # rarefraction curves and ggplot
+> library("tidyverse")
+> library("vegan")
+> data(BCI)
+> out <- rarecurve(BCI, step = 10, sample = 400)
+> names(out) <- 1:50
+>
+> as_tibble_rc <- function(x){
+>   # convert rarecurve() output to data.frame
+>   # bind_rows doesn't work because items are different lengths
+>   # also need to extract sample sizes from attribute
+>   # Allocate result dataframe
+>   nsamples <- map_int(x, length)
+>   total_samples <- sum(nsamples)
+>   if(!is.null(names(x))){
+>     sites <- names(x)
+>   } else {
+>     sites <- as.character(1:length(nsamples))
+>   }
+>   result <- data_frame(Site = rep("", total_samples),
+>                        Sample_size = rep(0, total_samples),
+>                        Species = rep(0, total_samples))
+>   start <- 1
+>   for (i in 1:length(nsamples)){
+>     result[start:(start + nsamples[i]-1), "Site"] <- sites[i]
+>     result[start:(start + nsamples[i]-1), "Sample_size"] <- attr(x[[i]],
+> "Subsample")
+>     result[start:(start + nsamples[i]-1), "Species"] <- x[[i]]
+>     start <- start + nsamples[i]
+>   }
+>   result
+> }
+>
+> out <- as_tibble_rc(out)
+> # add grouping variable
+> sitedata <- data_frame(Site = as.character(1:50),
+>                        Type = sample(LETTERS[1:2], 50, replace = TRUE))
+> alldata <- left_join(out, sitedata, by = "Site")
+>
+> # and then it's trivial
+> ggplot(data = alldata,
+>        mapping = aes(x = Sample_size, y = Species, color = Type, group =
+> Site)) +
+>   geom_line()
+>
+> hope that helps.
+> --
+> Drew Tyre
+>
+> School of Natural Resources
+> University of Nebraska-Lincoln
+> 416 Hardin Hall, East Campus
+> 3310 Holdrege Street
+> Lincoln, NE 68583-0974
+>
+> phone: +1 402 472 4054
+> fax: +1 402 472 2946
+> email: atyre2 at unl.edu
+> http://snr.unl.edu/tyre
+> http://drewtyre.rbind.io
+>     The point is that our true nature is not some ideal that we have to
+> live up to. It?s who we are right now, and that?s what we can make friends
+> with and celebrate.
+> Excerpted from: Awakening Loving-Kindness by Pema Ch?dr?n
+>
+>
+> ?On 12/17/18, 10:14 AM, "R-sig-ecology on behalf of Ellen Pape" <
+> r-sig-ecology-bounces at r-project.org on behalf of ellen.pape at gmail.com>
+> wrote:
+>
+>     Hi all,
+>
+>     As I use ggplot2 for all my graphs, I would like to use ggplot2 to
+>     construct rarefaction curves as well (I also want to combine 2
+> rarefaction
+>     curves in 1 plot using cowplot which also vows for using ggplot2).
+>
+>     I made these rarefaction curves using the rarecurve function in vegan,
+> but
+>     I don't see how I can use these results and put these in ggplot2.
+>
+>     I found the following website during my search:
+>
+> https://urldefense.proofpoint.com/v2/url?u=https-3A__www.fromthebottomoftheheap.net_2015_04_16_drawing-2Drarefaction-2Dcurves-2Dwith-2Dcustom-2Dcolours_&d=DwICAg&c=Cu5g146wZdoqVuKpTNsYHeFX_rg6kWhlkLF8Eft-wwo&r=aLEaSryyUcERVqcKVZl7lQ&m=ScKzUcnIZJ2da4_YAAzmizwFy-CbI90_F4SV_FKSLLc&s=-DiwE4s5JljqtJk5ZhKOE4Benr3yDXmDM19K7wNG3bI&e=
+>     but it does not explain how to draw rarefaction curves with ggplot2.
+>
+>     This website mentions - and this is what I would like to be able to do
+> in
+>     ggplot2:
+>
+>     "Where I do think this sort of approach might work is if the samples
+> in the
+>     data set come from a few different groups and we want to colour the
+> curves
+>     by group.
+>
+>     col <- c("darkred", "forestgreen", "hotpink", "blue")set.seed(3)grp <-
+>     factor(sample(seq_along(col), nrow(BCI2), replace = TRUE))cols <-
+>     col[grp]
+>
+>     The code above creates a grouping factor grp for illustration
+> purposes; in
+>     real analyses you'd have this already as a factor variable in you data
+>     somewhere. We also have to expand the col vector because we are
+> plotting
+>     each line in a loop. The plot code, reusing elements from the previous
+>     plot, is shown below:
+>
+>     plot(c(1, max(Nmax)), c(1, max(Smax)), xlab = "Sample Size",
+>          ylab = "Species", type = "n")abline(v = raremax)for (i in
+> seq_along(out)) {
+>         N <- attr(out[[i]], "Subsample")
+>         lines(N, out[[i]], col = cols[i])}
+>
+>     [image: An attempt at rarefaction curves output with custom colours per
+>     groups of curves.]An attempt at rarefaction curves output with custom
+>     colours per groups of curves.
+>
+>
+>     but I don't see how I adjust this code to make the same plot in
+> ggplot2.
+>
+>
+>
+>     Anyone?
+>
+>     Thanks!
+>     Ellen
+>
+>         [[alternative HTML version deleted]]
+>
+>     _______________________________________________
+>     R-sig-ecology mailing list
+>     R-sig-ecology at r-project.org
+>
+> https://urldefense.proofpoint.com/v2/url?u=https-3A__stat.ethz.ch_mailman_listinfo_r-2Dsig-2Decology&d=DwICAg&c=Cu5g146wZdoqVuKpTNsYHeFX_rg6kWhlkLF8Eft-wwo&r=aLEaSryyUcERVqcKVZl7lQ&m=ScKzUcnIZJ2da4_YAAzmizwFy-CbI90_F4SV_FKSLLc&s=w7PfOR1D2XX19m5JJqRubGPuMylTRoX3JYCpGkFoqnM&e=
+>
+>
+>
+
+	[[alternative HTML version deleted]]
+
+

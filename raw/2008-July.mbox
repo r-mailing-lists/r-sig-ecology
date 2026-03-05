@@ -1,0 +1,3020 @@
+From j.gibbons at bangor.ac.uk  Tue Jul  1 17:32:56 2008
+From: j.gibbons at bangor.ac.uk (James Gibbons)
+Date: Tue, 01 Jul 2008 16:32:56 +0100
+Subject: [R-sig-eco] Model specification with RPy/vegan integration
+	(Gregory, Matthew)
+In-Reply-To: <mailman.1.1214906401.17879.r-sig-ecology@r-project.org>
+References: <mailman.1.1214906401.17879.r-sig-ecology@r-project.org>
+Message-ID: <486A4E28.8040402@bangor.ac.uk>
+
+> 
+> Hi all,
+> 
+> (This might be a bit tangetial and technical question for this
+> listserve.  Please advise if there is a more appropriate venue.)
+> 
+> I'm trying to call vegan 'cca' from Python using Rpy.  I read my species
+> and environmental data into R data frames without an issue and can even
+> run the 'full' cca model without a problem, e.g. 
+> 
+>   from rpy import *
+>   set_default_mode(NO_CONVERSION)
+> 
+>   # Import the vegan library
+>   r.library('vegan')
+> 
+>   # Open up the data files and read into data frames
+>   spp_file = r.read_csv('spp.csv', header=r.TRUE)
+>   env_file = r.read_csv('env.csv', header=r.TRUE)
+>   spp = r.data_frame(spp_file, row_names='FCID')
+>   env = r.data_frame(env_file, row_names='FCID')
+> 
+>   # Squareroot transform the species matrix
+>   spp = r.sqrt(spp)
+> 
+>   # Create the vegan CCA
+>   out_cca = r.cca(spp, env)
+> 
+> However, when I try to specify the model to only include a subset of the
+> environmental variables, e.g.
+> 
+>   # Create the vegan CCA
+>   model = r("spp ~ ANNPRE + ANNTMP + DEM + SLPPCT")
+
+I don't use RPy but I would guess this should be something like
+
+model = r.formula("spp ~ ANNPRE + ANNTMP + DEM + SLPPCT")
+
+
+>   out_cca = r.cca(model, env)
+> 
+> I get the error "Error in eval(expr, envir, enclos) : object "spp" not
+> found".  Note that running the subsetted model in the R console works
+> correctly as expected.  Furthermore, I can run example code from the RPy
+> pages which uses the '~' notation to specify models and it works
+> correctly as well.  I'm sure I have a silly little syntax error, but I'm
+> just not seeing it.
+> 
+> Thanks for help,
+> matt
+> 
+> 
+> 
+> ------------------------------
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> End of R-sig-ecology Digest, Vol 4, Issue 1
+> *******************************************
+
+
+-- 
+Gall y neges e-bost hon, ac unrhyw atodiadau a anfonwyd gyda hi,
+gynnwys deunydd cyfrinachol ac wedi eu bwriadu i'w defnyddio'n unig
+gan y sawl y cawsant eu cyfeirio ato (atynt). Os ydych wedi derbyn y
+neges e-bost hon trwy gamgymeriad, rhowch wybod i'r anfonwr ar
+unwaith a dil?wch y neges. Os na fwriadwyd anfon y neges atoch chi,
+rhaid i chi beidio ? defnyddio, cadw neu ddatgelu unrhyw wybodaeth a
+gynhwysir ynddi. Mae unrhyw farn neu safbwynt yn eiddo i'r sawl a'i
+hanfonodd yn unig  ac nid yw o anghenraid yn cynrychioli barn
+Prifysgol Bangor. Nid yw Prifysgol Bangor yn gwarantu
+bod y neges e-bost hon neu unrhyw atodiadau yn rhydd rhag firysau neu
+100% yn ddiogel. Oni bai fod hyn wedi ei ddatgan yn uniongyrchol yn
+nhestun yr e-bost, nid bwriad y neges e-bost hon yw ffurfio contract
+rhwymol - mae rhestr o lofnodwyr awdurdodedig ar gael o Swyddfa
+Cyllid Prifysgol Bangor.  www.bangor.ac.uk
+
+This email and any attachments may contain confidential ...{{dropped:14}}
+
+
+From matt.gregory at oregonstate.edu  Tue Jul  1 19:41:23 2008
+From: matt.gregory at oregonstate.edu (Gregory, Matthew)
+Date: Tue, 1 Jul 2008 10:41:23 -0700
+Subject: [R-sig-eco] Model specification with RPy/vegan
+	integration(Gregory, Matthew)
+In-Reply-To: <486A4E28.8040402@bangor.ac.uk>
+References: <mailman.1.1214906401.17879.r-sig-ecology@r-project.org>
+	<486A4E28.8040402@bangor.ac.uk>
+Message-ID: <451453C181B199458A55B2B1723FAC00014E0787@SAGE.forestry.oregonstate.edu>
+
+Hi James and all,
+
+James Gibbons wrote:
+> I don't use RPy but I would guess this should be something like
+> 
+> model = r.formula("spp ~ ANNPRE + ANNTMP + DEM + SLPPCT")
+
+Thanks to all (offline and online) for suggesting solutions for this
+problem.  My problem was that the names of my data frames (spp, env)
+were not being 'seen' by R as valid objects when using the formula
+version of cca (cca.formula).  Deep within this function, there is a
+call to eval.parent() and 'spp' was not being recognized as a valid
+name.
+
+Through some examples on the RPy wiki
+(http://rpy.wiki.sourceforge.net/Manual+-+Linear+modeling), it appears
+that it is sometimes necessary (especially with formulae?) to register a
+name with the object by using R's assign.  When I added the below code,
+everything worked spendidly.
+
+  r.assign('spp', spp)
+  r.assign('env', env)
+  model = r("spp ~ ANNPRE + ANNTMP + DEM + SLPPCT")
+  out_cca = r.cca(model, env)
+
+Again, thanks for the helpful suggestions for a newbie R user.
+
+matt
+
+
+From diego.fontaneto at unimi.it  Wed Jul  2 11:37:44 2008
+From: diego.fontaneto at unimi.it (Diego Fontaneto)
+Date: Wed, 02 Jul 2008 10:37:44 +0100
+Subject: [R-sig-eco] adonis/vegan
+Message-ID: <3.0.6.32.20080702103744.01451e70@mailserver.unimi.it>
+
+
+Why does order matter in specifying a model in adonis?
+
+Call:
+adonis(formula = presence ~ DO + ph + T + EC, data = presence.env,
+permutations = 1000, method = "jaccard") 
+
+                Df SumsOfSqs  MeanSqs  F.Model     R2 Pr(>F)  
+DO         1.00000   0.59095  0.59095  1.47514 0.0448  0.035 *
+ph         1.00000   0.59785  0.59785  1.49235 0.0453  0.855  
+T          1.00000   0.53954  0.53954  1.34681 0.0409  1.000  
+EC         1.00000   0.65139  0.65139  1.62601 0.0494  1.000  
+Residuals 27.00000  10.81641  0.40061          0.8197         
+Total     31.00000  13.19614                   1.0000         
+
+but changing order, both R2 and P change.
+
+Call:
+adonis(formula = presence ~ EC + DO + ph + T, data = presence.env,
+permutations = 1000, method = "jaccard") 
+
+                Df SumsOfSqs  MeanSqs  F.Model     R2 Pr(>F)   
+EC         1.00000   0.69313  0.69313  1.73019 0.0525  0.005 **
+DO         1.00000   0.51736  0.51736  1.29143 0.0392  0.958   
+ph         1.00000   0.50494  0.50494  1.26043 0.0383  1.000   
+T          1.00000   0.66431  0.66431  1.65826 0.0503  1.000   
+Residuals 27.00000  10.81641  0.40061          0.8197          
+Total     31.00000  13.19614                   1.0000          
+
+----------------------------------------------------------------
+
+Another question in adonis: is there a way to specify an error term, like
+adding "random=~1|locality" to the previous models?
+
+Thanks,
+Diego
+
+-------
+Diego Fontaneto
+Imperial College London
+Silwood Park Campus
+Ascot Berkshire SL57PY
+United Kingdom
+
+
+From gavin.simpson at ucl.ac.uk  Wed Jul  2 12:54:01 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Wed, 02 Jul 2008 11:54:01 +0100
+Subject: [R-sig-eco] adonis/vegan
+In-Reply-To: <3.0.6.32.20080702103744.01451e70@mailserver.unimi.it>
+References: <3.0.6.32.20080702103744.01451e70@mailserver.unimi.it>
+Message-ID: <1214996041.9044.26.camel@prometheus.geog.ucl.ac.uk>
+
+On Wed, 2008-07-02 at 10:37 +0100, Diego Fontaneto wrote:
+> Why does order matter in specifying a model in adonis?
+
+Because they are sequential sums of squares. See the Value section
+of ?adonis.
+
+<snip />
+        
+> 
+> ----------------------------------------------------------------
+> 
+> Another question in adonis: is there a way to specify an error term, like
+> adding "random=~1|locality" to the previous models?
+
+No, not with the current implementation.
+
+Do you want to do this to take account of group structure in your data?
+If so, the permutation test can be altered so that it doesn't permute
+freely but permutes within levels of 'locality' for example.
+
+I have added code to vegan to generate these restricted permutations
+(and for spatial grids and time series/transects, amongst others), in
+function permuted.index2. However the code is not quite finished and the
+API is still bedding down whilst I make the last few additions to the
+code. Once this is done, we vegan developers can begin moving functions
+that use permuted.index internally to use the new permutation code from
+permuted.index2. This isn't a minor job however so may take a little bit
+of time. 
+
+> Thanks,
+> Diego
+
+All the best,
+
+G
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From pdixon at iastate.edu  Wed Jul  2 14:18:06 2008
+From: pdixon at iastate.edu (Philip Dixon)
+Date: Wed, 02 Jul 2008 07:18:06 CDT
+Subject: [R-sig-eco] Why use Rpy?
+Message-ID: <200807021218.HAA03665@isua5.iastate.edu>
+
+What is the benefit of using Rpy?
+
+I'm familiar with Python as a high-level compiled language.  Python
+was very popular here (Iowa State, Statistics) a few years ago to
+vastly speed up S+ simulation studies.  One could recode into Python
+a lot more quickly than recoding into C++.  Both Python and C++ were
+much faster than S+; I don't know how Python compares with native R.
+
+Thanks,
+Philip Dixon
+
+
+From matt.gregory at oregonstate.edu  Wed Jul  2 19:31:59 2008
+From: matt.gregory at oregonstate.edu (Gregory, Matthew)
+Date: Wed, 2 Jul 2008 10:31:59 -0700
+Subject: [R-sig-eco] Why use Rpy?
+In-Reply-To: <200807021218.HAA03665@isua5.iastate.edu>
+References: <200807021218.HAA03665@isua5.iastate.edu>
+Message-ID: <451453C181B199458A55B2B1723FAC00014E0796@SAGE.forestry.oregonstate.edu>
+
+Philip Dixon wrote:
+> What is the benefit of using Rpy?
+> 
+> I'm familiar with Python as a high-level compiled language.  
+> Python was very popular here (Iowa State, Statistics) a few 
+> years ago to vastly speed up S+ simulation studies.  One 
+> could recode into Python a lot more quickly than recoding 
+> into C++.  Both Python and C++ were much faster than S+; I 
+> don't know how Python compares with native R.
+
+I guess since I think I was the one who brought it up, I should probably
+explain my rationale.  The really glib answer (for me) is that I know
+Python and wasn't willing to learn another programming language for the
+small bit that I needed from R (probably not a very popular opinion on
+an R listserve ...).  RPy provides that relatively seamless link into R
+and given that most of our codebase is in Python, this was the path of
+least resistance for me.  There is also the RSPython package which has
+similar functionality to RPy.  
+
+I can only speak to the benefits that I've found from Python, which
+isn't to say they don't exist in R - I'm just not fully aware of them.
+The main strength of Python for me is the vast array of amazing packages
+that are written for it.  This includes: 
+
+-  Numpy/Scipy/matplotlib for array handling, scientific computing and
+graphing
+-  bindings for GDAL for abstract spatial translation and projection
+support
+-  PIL for image processing
+-  numerous other packages that have nothing to do with statistical
+computing
+
+I realize that most of this functionality already exists in R, so
+probably not worth getting into Python if R fits your needs.  
+
+As for speed, I can't speak to the R vs. Python question, although
+colleagues that are R users do complain about memory limitations and
+speed when running large spatial models.  Python will be slower than
+C/C++, but the things that *need* to be fast can be coded in C/C++ and
+be bound to Python using SWIG.
+
+I'm sure that someone on this list probably has much more experience
+with both languages than I do and will provide a better answer.  
+
+Matt Gregory
+Faculty Research Assistant
+Department of Forest Science
+Oregon State University
+
+
+From lede0025 at umn.edu  Thu Jul  3 21:29:10 2008
+From: lede0025 at umn.edu (Olivia LeDee)
+Date: Thu, 3 Jul 2008 14:29:10 -0500
+Subject: [R-sig-eco] help with assignment
+Message-ID: <smtpd.6d7d.486d2885.12f63.1@mta-a2.tc.umn.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080703/b6652b62/attachment.pl>
+
+From nikko at hailmail.net  Fri Jul  4 00:11:38 2008
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Thu, 03 Jul 2008 15:11:38 -0700
+Subject: [R-sig-eco]  Why use Rpy?
+In-Reply-To: <mailman.1.1215079201.27429.r-sig-ecology@r-project.org>
+References: <mailman.1.1215079201.27429.r-sig-ecology@r-project.org>
+Message-ID: <1215123098.7953.1261770255@webmail.messagingengine.com>
+
+Hi Phil,
+The main reason would be for accessing R functionality in 
+broader applications. Python does use a more efficient
+memory model than R, however when using R functions
+through rpy, R will still make copies with assignment within
+called R functions, so I am not clear that there is any
+gain on that front. Python is a very structured
+language and is perhaps more consistent under the hood than
+R is with its many legacy hiccups due to the next letter in
+the alphabet. Also python has a cleaner object model than s4.
+
+So really it is a nice mechanism to access R functionality from python
+programs. So for creating plots in web applications using django,
+or using other python treats that are much further developed than in
+R.
+
+Hope this helps
+
+Nicholas 
+
+
+> ------------------------------
+> 
+> Message: 2
+> Date: Wed, 02 Jul 2008 07:18:06 CDT
+> From: Philip Dixon <pdixon at iastate.edu>
+> Subject: [R-sig-eco] Why use Rpy?
+> To: r-sig-ecology at r-project.org
+> Message-ID: <200807021218.HAA03665 at isua5.iastate.edu>
+> 
+> What is the benefit of using Rpy?
+> 
+> I'm familiar with Python as a high-level compiled language.  Python
+> was very popular here (Iowa State, Statistics) a few years ago to
+> vastly speed up S+ simulation studies.  One could recode into Python
+> a lot more quickly than recoding into C++.  Both Python and C++ were
+> much faster than S+; I don't know how Python compares with native R.
+> 
+> Thanks,
+> Philip Dixon
+> 
+> 
+> 
+> ------------------------------
+> 
+> Message: 3
+> Date: Wed, 2 Jul 2008 10:31:59 -0700
+> From: "Gregory, Matthew" <matt.gregory at oregonstate.edu>
+> Subject: Re: [R-sig-eco] Why use Rpy?
+> To: <r-sig-ecology at r-project.org>
+> Message-ID:
+> 	<451453C181B199458A55B2B1723FAC00014E0796 at SAGE.forestry.oregonstate.edu>
+> 	
+> Content-Type: text/plain;	charset="us-ascii"
+> 
+> Philip Dixon wrote:
+> > What is the benefit of using Rpy?
+> > 
+> > I'm familiar with Python as a high-level compiled language.  
+> > Python was very popular here (Iowa State, Statistics) a few 
+> > years ago to vastly speed up S+ simulation studies.  One 
+> > could recode into Python a lot more quickly than recoding 
+> > into C++.  Both Python and C++ were much faster than S+; I 
+> > don't know how Python compares with native R.
+> 
+> I guess since I think I was the one who brought it up, I should probably
+> explain my rationale.  The really glib answer (for me) is that I know
+> Python and wasn't willing to learn another programming language for the
+> small bit that I needed from R (probably not a very popular opinion on
+> an R listserve ...).  RPy provides that relatively seamless link into R
+> and given that most of our codebase is in Python, this was the path of
+> least resistance for me.  There is also the RSPython package which has
+> similar functionality to RPy.  
+> 
+> I can only speak to the benefits that I've found from Python, which
+> isn't to say they don't exist in R - I'm just not fully aware of them.
+> The main strength of Python for me is the vast array of amazing packages
+> that are written for it.  This includes: 
+> 
+> -  Numpy/Scipy/matplotlib for array handling, scientific computing and
+> graphing
+> -  bindings for GDAL for abstract spatial translation and projection
+> support
+> -  PIL for image processing
+> -  numerous other packages that have nothing to do with statistical
+> computing
+> 
+> I realize that most of this functionality already exists in R, so
+> probably not worth getting into Python if R fits your needs.  
+> 
+> As for speed, I can't speak to the R vs. Python question, although
+> colleagues that are R users do complain about memory limitations and
+> speed when running large spatial models.  Python will be slower than
+> C/C++, but the things that *need* to be fast can be coded in C/C++ and
+> be bound to Python using SWIG.
+> 
+> I'm sure that someone on this list probably has much more experience
+> with both languages than I do and will provide a better answer.  
+> 
+> Matt Gregory
+> Faculty Research Assistant
+> Department of Forest Science
+> Oregon State University
+> 
+> 
+> 
+> ------------------------------
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+> 
+> 
+> End of R-sig-ecology Digest, Vol 4, Issue 3
+> *******************************************
+
+
+From tyler.smith at mail.mcgill.ca  Fri Jul  4 01:11:12 2008
+From: tyler.smith at mail.mcgill.ca (tyler)
+Date: Thu, 03 Jul 2008 20:11:12 -0300
+Subject: [R-sig-eco] help with assignment
+References: <smtpd.6d7d.486d2885.12f63.1@mta-a2.tc.umn.edu>
+Message-ID: <87y74ik1gv.fsf@blackbart.sedgenet>
+
+"Olivia LeDee" <lede0025 at umn.edu> writes:
+
+> Would someone mind helping with the following code:
+>
+> 1) After attaching the primary dataset
+>
+> ambi1<-read.table("ambi.txt",header=TRUE,sep='\t')
+> attach(ambi1)
+
+> 2) I would like to change na's for variable (pwd) to 0
+> pwd[is.na(pwd)]<-0
+>
+> 3) Then, I need the results of the following based on all observations.
+> sqrt(area)
+> m1<-lm(prs~area+sqrt(area))
+> summary(m1)
+> residuals(m1)
+>
+> 3) Next, I would like to omit na's from the rest of the dataset. I need this
+> truncated dataset to include 0's for variable pwd.
+>
+> ambi2<-na.omit(ambi1)
+>
+> In this process, I am overwriting step 2. Can someone help (other than
+> omitting na's for each column)?
+>
+
+Hi Olivia,
+
+If I understand you correctly, the problem is that after this command:
+
+> ambi2<-na.omit(ambi1)
+
+you lose all the records that originally had NA values for the variable
+pwd, despite having already converted the NAs to 0 in step 2. The reason
+is that when you attach a dataset, you are actually making a copy. From
+?attach:
+
+     The database is not actually attached.  Rather, a new environment
+     is created on the search path and the elements of a list
+     (including columns of a data frame) or objects in a save file or
+     an environment are _copied_ into the new environment.  If you use
+     '<<-' or 'assign' to assign to an attached database, you only
+     alter the attached copy, not the original object. (Normal
+     assignment will place a modified version in the user's workspace:
+     see the examples.) For this reason 'attach' can lead to confusion.
+
+This has indeed lead to your confusion. In step 2 you altered the
+attached copy of your data.frame, not the original copy. Then in the
+last step you refer to the original copy, not the altered copy. Then you
+copied (and altered) the original copy when you created ambi2.
+
+If you work through the examples in ?attach this should (maybe) become a
+little clearer. The easiest solution may be to _not_ attach your primary
+dataset, which requires more typing but less thought about search paths
+and environments.
+
+Cheers,
+
+Tyler
+
+-- 
+Only YOU can stop forest fires.
+
+
+From mdu at ceh.ac.uk  Fri Jul  4 10:30:43 2008
+From: mdu at ceh.ac.uk (Mike Dunbar)
+Date: Fri, 04 Jul 2008 09:30:43 +0100
+Subject: [R-sig-eco] help with assignment
+Message-ID: <s86dede2.069@wpo.nerc.ac.uk>
+
+Exactly: STEER WELL CLEAR OF attach(). This is just the sort of problem you can get into.
+Mike
+
+
+>>> tyler <tyler.smith at mail.mcgill.ca> 04/07/2008 00:11 >>>
+"Olivia LeDee" <lede0025 at umn.edu> writes:
+
+> Would someone mind helping with the following code:
+>
+> 1) After attaching the primary dataset
+>
+> ambi1<-read.table("ambi.txt",header=TRUE,sep='\t')
+> attach(ambi1)
+
+> 2) I would like to change na's for variable (pwd) to 0
+> pwd[is.na(pwd)]<-0
+>
+> 3) Then, I need the results of the following based on all observations.
+> sqrt(area)
+> m1<-lm(prs~area+sqrt(area))
+> summary(m1)
+> residuals(m1)
+>
+> 3) Next, I would like to omit na's from the rest of the dataset. I need this
+> truncated dataset to include 0's for variable pwd.
+>
+> ambi2<-na.omit(ambi1)
+>
+> In this process, I am overwriting step 2. Can someone help (other than
+> omitting na's for each column)?
+>
+
+Hi Olivia,
+
+If I understand you correctly, the problem is that after this command:
+
+> ambi2<-na.omit(ambi1)
+
+you lose all the records that originally had NA values for the variable
+pwd, despite having already converted the NAs to 0 in step 2. The reason
+is that when you attach a dataset, you are actually making a copy. From
+?attach:
+
+     The database is not actually attached.  Rather, a new environment
+     is created on the search path and the elements of a list
+     (including columns of a data frame) or objects in a save file or
+     an environment are _copied_ into the new environment.  If you use
+     '<<-' or 'assign' to assign to an attached database, you only
+     alter the attached copy, not the original object. (Normal
+     assignment will place a modified version in the user's workspace:
+     see the examples.) For this reason 'attach' can lead to confusion.
+
+This has indeed lead to your confusion. In step 2 you altered the
+attached copy of your data.frame, not the original copy. Then in the
+last step you refer to the original copy, not the altered copy. Then you
+copied (and altered) the original copy when you created ambi2.
+
+If you work through the examples in ?attach this should (maybe) become a
+little clearer. The easiest solution may be to _not_ attach your primary
+dataset, which requires more typing but less thought about search paths
+and environments.
+
+Cheers,
+
+Tyler
+
+-- 
+Only YOU can stop forest fires.
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org 
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+-- 
+This message (and any attachments) is for the recipient ...{{dropped:6}}
+
+
+From megorust at yahoo.com  Fri Jul  4 19:00:41 2008
+From: megorust at yahoo.com (Megan O'Rourke)
+Date: Fri, 4 Jul 2008 10:00:41 -0700 (PDT)
+Subject: [R-sig-eco] auto graphics saving
+Message-ID: <76130.83270.qm@web50001.mail.re2.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080704/469b6740/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Fri Jul  4 19:45:56 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Fri, 04 Jul 2008 18:45:56 +0100
+Subject: [R-sig-eco] auto graphics saving
+In-Reply-To: <76130.83270.qm@web50001.mail.re2.yahoo.com>
+References: <76130.83270.qm@web50001.mail.re2.yahoo.com>
+Message-ID: <1215193556.11226.32.camel@prometheus.geog.ucl.ac.uk>
+
+On Fri, 2008-07-04 at 10:00 -0700, Megan O'Rourke wrote:
+> I am working on a spatial simulation in R and would like to present a
+> movie of my simulation within a ppt presentation.  With my current
+> knowledge, I can activate "history" in the graphic output during my
+> simulation loop and then manually save individual graphical frames of
+> the simulation as picture files that I import into a movie making
+> program.  Is there an easier way to save a movie in R?  
+>    
+>   Along that same line of questioning, is there any way to save
+> consecutive data files automatically from within a loop?  For example,
+> I am creating consecutive matrices in a loop that I store within a
+> three-dimensional array within the R program.  I would like to write a
+> line in my loop that I imagine would say something like:
+> write.table(X, "c:\\blah\\index.txt") and the loop would output
+> consecutive 2-dimensional layers of my array in separate files.  If I
+> add a line similar to above, R creates one file that it rewrites over
+> every step of the loop.  Is there a way to automate the data saving
+> process?
+
+Here is one way, that uses ImageMagick to produce the animated gif:
+
+## generate some random data
+set.seed(123)
+ydat <- matrix(runif(10000), ncol = 500)
+xdat <- matrix(runif(10000), ncol = 500)
+
+jpeg("myplot%03d.jpeg")
+for(i in seq_len(nrow(ydat))) 
+    plot(xdat[1:i,], ydat[1:i,], ylim = c(0,1), xlim = c(0,1))
+dev.off()
+
+This I think answers your 2nd question as well. Note the %03d bit in the
+file name. R will create plots with names myplotxxx.jpeg where xxx is
+incremented from 001 by 1 each time a plot is drawn on the device. We
+produce a loop and plot something, each call to plot gives a new figure.
+
+Then we need to animate the images: With ImageMagick installed and in
+your path:
+
+convert -delay 5 -loop 0 *.jpeg animation.gif
+
+will take the jpeg files and squash them into a animated gif of the
+given name. On my system the resulting GIF was 1.1MB in size.
+
+For this example, the output quality is not great when I loaded it into
+OpenOffice.org Impress (on Linux so no MS PPT here), but I didn't
+produce good quality jpegs nor tweak anything in the ImageMagick convert
+programme. That is left as an exercise for the reader ;-)
+
+If the quality isn't good enough, then at least the way I create the
+jpegs above will allow you to create the files automagically that you
+require for the movie making software you mention. This general approach
+works for the other graphics devices as well, like png if you prefer
+them.
+
+HTH
+
+G
+
+>    
+>   Thanks,
+>    
+>   Megan O'Rourke
+>   PhD student, Cornell University 
+> 
+>        
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From cparker at pdx.edu  Fri Jul  4 20:11:26 2008
+From: cparker at pdx.edu (Christian A. Parker)
+Date: Fri, 04 Jul 2008 11:11:26 -0700
+Subject: [R-sig-eco] auto graphics saving
+In-Reply-To: <76130.83270.qm@web50001.mail.re2.yahoo.com>
+References: <76130.83270.qm@web50001.mail.re2.yahoo.com>
+Message-ID: <486E67CE.1040101@pdx.edu>
+
+I am not sure about the movie question but for the write table you could 
+just generate a dynamic file name, for example
+
+for (i in 1:10)
+{
+X<-matrix(1:10,nrow=2)
+filepath<-paste("c:\\blah\\index",i,".txt",sep="")
+print(filepath)
+}
+
+-Chris
+
+
+
+Megan O'Rourke wrote:
+> I am working on a spatial simulation in R and would like to present a movie of my simulation within a ppt presentation.  With my current knowledge, I can activate "history" in the graphic output during my simulation loop and then manually save individual graphical frames of the simulation as picture files that I import into a movie making program.  Is there an easier way to save a movie in R?  
+>    
+>   Along that same line of questioning, is there any way to save consecutive data files automatically from within a loop?  For example, I am creating consecutive matrices in a loop that I store within a three-dimensional array within the R program.  I would like to write a line in my loop that I imagine would say something like: write.table(X, "c:\\blah\\index.txt") and the loop would output consecutive 2-dimensional layers of my array in separate files.  If I add a line similar to above, R creates one file that it rewrites over every step of the loop.  Is there a way to automate the data saving process?
+>    
+>   Thanks,
+>    
+>   Megan O'Rourke
+>   PhD student, Cornell University 
+>
+>        
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From gavin.simpson at ucl.ac.uk  Sat Jul  5 01:51:07 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Sat, 05 Jul 2008 00:51:07 +0100
+Subject: [R-sig-eco] auto graphics saving
+In-Reply-To: <1215193556.11226.32.camel@prometheus.geog.ucl.ac.uk>
+References: <76130.83270.qm@web50001.mail.re2.yahoo.com>
+	<1215193556.11226.32.camel@prometheus.geog.ucl.ac.uk>
+Message-ID: <1215215467.2668.10.camel@localhost.localdomain>
+
+On Fri, 2008-07-04 at 18:45 +0100, Gavin Simpson wrote:
+> On Fri, 2008-07-04 at 10:00 -0700, Megan O'Rourke wrote:
+> > I am working on a spatial simulation in R and would like to present a
+> > movie of my simulation within a ppt presentation.  With my current
+> > knowledge, I can activate "history" in the graphic output during my
+> > simulation loop and then manually save individual graphical frames of
+> > the simulation as picture files that I import into a movie making
+> > program.  Is there an easier way to save a movie in R?  
+> >    
+> >   Along that same line of questioning, is there any way to save
+> > consecutive data files automatically from within a loop?  For example,
+> > I am creating consecutive matrices in a loop that I store within a
+> > three-dimensional array within the R program.  I would like to write a
+> > line in my loop that I imagine would say something like:
+> > write.table(X, "c:\\blah\\index.txt") and the loop would output
+> > consecutive 2-dimensional layers of my array in separate files.  If I
+> > add a line similar to above, R creates one file that it rewrites over
+> > every step of the loop.  Is there a way to automate the data saving
+> > process?
+
+Sorry, completely misread your second question, nothing to do with
+multiple graphics files. Something like
+
+path.name <- "c:\\blah\\"
+for(i in 1:10) {
+  dat <- matrix(rnorm(20), ncol = 4)
+  ## some other code to do what you do
+  write.csv(dat, file = paste(path.name, "index_", i, ".txt", sep = ""))
+}
+
+Will do what you want. The key is building the file name up from the
+path to the directory where you want to write the files, then a file
+name containing an indicator, which above we take from the loop counter,
+i. paste() creates the filename from the various pieces specified.
+
+Here I use write.csv so I don't have to specify all the file parameters
+to load into Excel. But any of the write.table family of function can be
+used here.
+
+HTH
+
+G
+
+> 
+> Here is one way, that uses ImageMagick to produce the animated gif:
+> 
+> ## generate some random data
+> set.seed(123)
+> ydat <- matrix(runif(10000), ncol = 500)
+> xdat <- matrix(runif(10000), ncol = 500)
+> 
+> jpeg("myplot%03d.jpeg")
+> for(i in seq_len(nrow(ydat))) 
+>     plot(xdat[1:i,], ydat[1:i,], ylim = c(0,1), xlim = c(0,1))
+> dev.off()
+> 
+> This I think answers your 2nd question as well. Note the %03d bit in the
+> file name. R will create plots with names myplotxxx.jpeg where xxx is
+> incremented from 001 by 1 each time a plot is drawn on the device. We
+> produce a loop and plot something, each call to plot gives a new figure.
+> 
+> Then we need to animate the images: With ImageMagick installed and in
+> your path:
+> 
+> convert -delay 5 -loop 0 *.jpeg animation.gif
+> 
+> will take the jpeg files and squash them into a animated gif of the
+> given name. On my system the resulting GIF was 1.1MB in size.
+> 
+> For this example, the output quality is not great when I loaded it into
+> OpenOffice.org Impress (on Linux so no MS PPT here), but I didn't
+> produce good quality jpegs nor tweak anything in the ImageMagick convert
+> programme. That is left as an exercise for the reader ;-)
+> 
+> If the quality isn't good enough, then at least the way I create the
+> jpegs above will allow you to create the files automagically that you
+> require for the movie making software you mention. This general approach
+> works for the other graphics devices as well, like png if you prefer
+> them.
+> 
+> HTH
+> 
+> G
+> 
+> >    
+> >   Thanks,
+> >    
+> >   Megan O'Rourke
+> >   PhD student, Cornell University 
+> > 
+> >        
+> > 	[[alternative HTML version deleted]]
+> > 
+> > _______________________________________________
+> > R-sig-ecology mailing list
+> > R-sig-ecology at r-project.org
+> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From Griffith.Michael at epamail.epa.gov  Tue Jul  8 19:57:52 2008
+From: Griffith.Michael at epamail.epa.gov (Griffith.Michael at epamail.epa.gov)
+Date: Tue, 8 Jul 2008 13:57:52 -0400
+Subject: [R-sig-eco] Ordering of nominal or categorical variables in
+	randomForest?
+Message-ID: <OF22236F0D.8AC5B363-ON85257480.005D7657-85257480.0062AECF@epamail.epa.gov>
+
+
+I am attempting to use randomForest to do classification and regression
+tree analysis.  After importing the data set, I use the following
+statement:
+
+  tree <- randomForest(POET ~ DrainageArea + PctFines + L3_ER + ChanCon,
+data=data, ntree=500, mtry=2,
+              replace=TRUE, importance=TRUE, do.trace=TRUE,
+keep.forest=TRUE)
+
+The first two independent variables are continuous numerical variables,
+while the last two are categorical variables with more than two classes.
+The package seems to handle this mixture of numerical and categorical
+variables, but I am unclear how to interpret the splits for the
+categorical variables.
+
+The table describing the splits has a column, split point, which for
+numerical variables is the value of the indicated variable where the
+left daughter group is less than the value and the right daughter group
+is greater than the value.
+
+The documentation states that for categorical variables, split point is
+a integer, whose binary expansion identifies which categories go into
+the left and right daughter groups.  It gives an example of a variable
+with three classes and a split value of 5, which expands to 1 0 1.  In
+this case, the first and third classes go into the left daughter group
+and the second class goes into the right daughter group.
+
+My question now is:  How does the package order the classes of a
+categorical variable?  This is not clear in the documentation, and if
+this is something basic to R, I have not found it in the help files.  In
+my example, the variable, L3_ER, has five classes, DRAR, NCHF, NGPI,
+NoLF, and WCBP.  These levels are not ordered in any particular way in
+the data set.  I can think of two ways the package might order the
+classes:  1.  alphabetically or 2. in the order that the are first
+encountered in the data set.  Are either of these correct or might there
+be some other way of ordering the levels I have not thought of?
+
+A colleague suggested that I might use is.ordered(), but I get an error
+message, "Error in inherits(x, "factor") : object "L3_ER" not found."
+Any other suggestions are appreciated.  Thanks.
+
+Michael
+
+Michael B. Griffith, Ph.D.
+Research Ecologist
+
+USEPA, NCEA (MS A-110)
+26 W. Martin Luther King Dr.
+Cincinnati, OH  45268
+
+telephone:  513 569-7034
+e-mail:  griffith.michael at epa.gov
+
+
+From cottenie at uoguelph.ca  Tue Jul  8 20:18:02 2008
+From: cottenie at uoguelph.ca (Karl Cottenie)
+Date: Tue, 08 Jul 2008 14:18:02 -0400
+Subject: [R-sig-eco] Ordering of nominal or categorical variables
+	in	randomForest?
+In-Reply-To: <OF22236F0D.8AC5B363-ON85257480.005D7657-85257480.0062AECF@epamail.epa.gov>
+References: <OF22236F0D.8AC5B363-ON85257480.005D7657-85257480.0062AECF@epamail.epa.gov>
+Message-ID: <1215541082.19477.434.camel@cottenie-ubuntu>
+
+Michael,
+
+my guess is that the tree analysis uses the internal order of the factor
+levels. You can access this by printing the variable. If it is stored as
+a factor, it will first print all the individual factor values, followed
+by a line with x (in your case 5) levels: and the order in which the
+distinct levels are stored. You can also get this information with the
+"levels" function.
+
+See this example from ?factor
+
+
+> factor(letters[1:20], labels="letter")
+ [1] letter1  letter2  letter3  letter4  letter5  letter6  letter7
+letter8 
+ [9] letter9  letter10 letter11 letter12 letter13 letter14 letter15
+letter16
+[17] letter17 letter18 letter19 letter20
+20 Levels: letter1 letter2 letter3 letter4 letter5 letter6 letter7 ...
+letter20 ##This is the line you are interested in
+
+Karl
+
+On Tue, 2008-07-08 at 13:57 -0400, Griffith.Michael at epamail.epa.gov
+wrote:
+> I am attempting to use randomForest to do classification and regression
+> tree analysis.  After importing the data set, I use the following
+> statement:
+> 
+>   tree <- randomForest(POET ~ DrainageArea + PctFines + L3_ER + ChanCon,
+> data=data, ntree=500, mtry=2,
+>               replace=TRUE, importance=TRUE, do.trace=TRUE,
+> keep.forest=TRUE)
+> 
+> The first two independent variables are continuous numerical variables,
+> while the last two are categorical variables with more than two classes.
+> The package seems to handle this mixture of numerical and categorical
+> variables, but I am unclear how to interpret the splits for the
+> categorical variables.
+> 
+> The table describing the splits has a column, split point, which for
+> numerical variables is the value of the indicated variable where the
+> left daughter group is less than the value and the right daughter group
+> is greater than the value.
+> 
+> The documentation states that for categorical variables, split point is
+> a integer, whose binary expansion identifies which categories go into
+> the left and right daughter groups.  It gives an example of a variable
+> with three classes and a split value of 5, which expands to 1 0 1.  In
+> this case, the first and third classes go into the left daughter group
+> and the second class goes into the right daughter group.
+> 
+> My question now is:  How does the package order the classes of a
+> categorical variable?  This is not clear in the documentation, and if
+> this is something basic to R, I have not found it in the help files.  In
+> my example, the variable, L3_ER, has five classes, DRAR, NCHF, NGPI,
+> NoLF, and WCBP.  These levels are not ordered in any particular way in
+> the data set.  I can think of two ways the package might order the
+> classes:  1.  alphabetically or 2. in the order that the are first
+> encountered in the data set.  Are either of these correct or might there
+> be some other way of ordering the levels I have not thought of?
+> 
+> A colleague suggested that I might use is.ordered(), but I get an error
+> message, "Error in inherits(x, "factor") : object "L3_ER" not found."
+> Any other suggestions are appreciated.  Thanks.
+> 
+> Michael
+> 
+> Michael B. Griffith, Ph.D.
+> Research Ecologist
+> 
+> USEPA, NCEA (MS A-110)
+> 26 W. Martin Luther King Dr.
+> Cincinnati, OH  45268
+> 
+> telephone:  513 569-7034
+> e-mail:  griffith.michael at epa.gov
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From f.smith at utoronto.ca  Tue Jul  8 20:35:16 2008
+From: f.smith at utoronto.ca (Fraser Smith)
+Date: Tue, 8 Jul 2008 14:35:16 -0400
+Subject: [R-sig-eco] polar plot mappng
+Message-ID: <1E021577-479A-43F4-8095-4B9BB5D2B8D6@utoronto.ca>
+
+Dear list members,
+I am very new to R, so apologies for the broad nature of these  
+questions.
+
+I am currently attempting to run through some of my data from the  
+Yukon Territory analyzing spatial layout of live/dead trees and stumps  
+following partial stand harvesting.
+The surveying of these trees involved circular plots with a 20m fixed- 
+radius. Recordings for location involved a laser range-finder and  
+electronic compass, and therefore all records have distance- (0-20  
+from centre) and bearing- values (0-360 degrees) to pinpoint location.  
+In order to plot and analyze this data, I wish to use the distance and  
+bearing values as they are for a measurement from a center point,  
+instead of converting to an x-y coordinate system or transforming the  
+data into radians etc.
+I am wondering if anyone could recommend any resources, functions,  
+packages, search terms, etc. for effectively 'mapping' these stems?
+
+Also, while visualizing this data is a first step, I would like to  
+later incorporate rose diagrams/circular statistics for tree fall  
+direction, prevailing winds, slope, aspect, etc as an overlay or  
+direct comparison to these plot maps. Essentially, I suppose I want to  
+get R to think in polar plot coordinates instead of cartesian  
+coordinates for this data
+Any help with resources on these procedures specifically related to R  
+would be greatly appreciated.
+
+
+Fraser Smith
+
+MScF student
+Faculty of Forestry, University of Toronto
+f.smith at utoronto.ca
+
+
+From ahmreddy at yahoo.com  Wed Jul  9 08:00:30 2008
+From: ahmreddy at yahoo.com (Manjunatha Reddy)
+Date: Tue, 8 Jul 2008 23:00:30 -0700 (PDT)
+Subject: [R-sig-eco] Ordering of nominal or categorical variables in
+	randomForest?
+In-Reply-To: <1215541082.19477.434.camel@cottenie-ubuntu>
+Message-ID: <43749.56741.qm@web31811.mail.mud.yahoo.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080708/c51c23e9/attachment.pl>
+
+From nikko at hailmail.net  Wed Jul  9 17:27:08 2008
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Wed, 09 Jul 2008 08:27:08 -0700
+Subject: [R-sig-eco] Calculating EC50s
+In-Reply-To: <mailman.1.1215597602.23845.r-sig-ecology@r-project.org>
+References: <mailman.1.1215597602.23845.r-sig-ecology@r-project.org>
+Message-ID: <1215617228.7786.1262639531@webmail.messagingengine.com>
+
+Hi,
+Short answer: fit a 4 parameter logistic model using nls in base or use
+the
+package drm. The parameter names differ, but the third parameter is the
+ec50.
+
+Longer Answer: Need more information from you to give you a longer
+answer.
+
+Nicholas
+
+PS: I changed the title of this thread. Something informative is much
+more
+ likely to get you useful answers.
+
+> From: Manjunatha Reddy <ahmreddy at yahoo.com>
+> Subject: Re: [R-sig-eco] Ordering of nominal or categorical variables
+> 	in	randomForest?
+> To: Griffith.Michael at epamail.epa.gov, cottenie at uoguelph.ca
+> Cc: r-sig-ecology at r-project.org
+> Message-ID: <43749.56741.qm at web31811.mail.mud.yahoo.com>
+> Content-Type: text/plain
+> 
+> Dear R Group
+> I would like to know about EC50 and its calculation, kindly help me out
+> and if you have any information please pass it on to ahmreddy at
+> gmail.com, 
+> Thanking you with regards
+> 
+> Dr. A. H. Manjunatha Reddy
+> Lecturer, 
+> Department of Biotechnology
+> R V College of Engineering
+> Mysore Rd
+> Bangalore ??? 560 059
+> INDIA
+> Ph: +91 98445 73697
+> 
+> --- On Tue, 8/7/08, Karl Cottenie <cottenie at uoguelph.ca> wrote:
+> 
+> *******************************************
+
+
+From nikko at hailmail.net  Wed Jul  9 17:34:00 2008
+From: nikko at hailmail.net (Nicholas Lewin-Koh)
+Date: Wed, 09 Jul 2008 08:34:00 -0700
+Subject: [R-sig-eco]  polar plot mappng
+In-Reply-To: <mailman.1.1215597602.23845.r-sig-ecology@r-project.org>
+References: <mailman.1.1215597602.23845.r-sig-ecology@r-project.org>
+Message-ID: <1215617640.8991.1262640959@webmail.messagingengine.com>
+
+Hi Fraser,
+I believe the package plotrix has a polar plot
+function. For circular statistics there are the packages CircStats, and
+circular
+on CRAN. Those should have what you need.
+
+Nicholas
+> ------------------------------
+> 
+> Message: 3
+> Date: Tue, 8 Jul 2008 14:35:16 -0400
+> From: Fraser Smith <f.smith at utoronto.ca>
+> Subject: [R-sig-eco] polar plot mappng
+> To: r-sig-ecology at r-project.org
+> Message-ID: <1E021577-479A-43F4-8095-4B9BB5D2B8D6 at utoronto.ca>
+> Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+> 
+> Dear list members,
+> I am very new to R, so apologies for the broad nature of these  
+> questions.
+> 
+> I am currently attempting to run through some of my data from the  
+> Yukon Territory analyzing spatial layout of live/dead trees and stumps  
+> following partial stand harvesting.
+> The surveying of these trees involved circular plots with a 20m fixed- 
+> radius. Recordings for location involved a laser range-finder and  
+> electronic compass, and therefore all records have distance- (0-20  
+> from centre) and bearing- values (0-360 degrees) to pinpoint location.  
+> In order to plot and analyze this data, I wish to use the distance and  
+> bearing values as they are for a measurement from a center point,  
+> instead of converting to an x-y coordinate system or transforming the  
+> data into radians etc.
+> I am wondering if anyone could recommend any resources, functions,  
+> packages, search terms, etc. for effectively 'mapping' these stems?
+> 
+> Also, while visualizing this data is a first step, I would like to  
+> later incorporate rose diagrams/circular statistics for tree fall  
+> direction, prevailing winds, slope, aspect, etc as an overlay or  
+> direct comparison to these plot maps. Essentially, I suppose I want to  
+> get R to think in polar plot coordinates instead of cartesian  
+> coordinates for this data
+> Any help with resources on these procedures specifically related to R  
+> would be greatly appreciated.
+> 
+> 
+> Fraser Smith
+> 
+> MScF student
+> Faculty of Forestry, University of Toronto
+> f.smith at utoronto.ca
+> 
+>
+
+
+From mspinola at una.ac.cr  Thu Jul 10 18:26:36 2008
+From: mspinola at una.ac.cr (=?ISO-8859-1?Q?Manuel_Sp=EDnola?=)
+Date: Thu, 10 Jul 2008 10:26:36 -0600
+Subject: [R-sig-eco] Command pch in lattice package
+Message-ID: <4876383C.6040903@una.ac.cr>
+
+Dear list members,
+
+I am  elaborating a graphic with  the lattice package:
+
+library(lattice)
+data(barley)
+barley
+dotplot(variety ~ yield | site, data = barley, group = year, pch=c(1, 
+3), col=c("red", "blue"),
+
+
+Here are the 3 first and the 3 last rows for the data set:
+
+      yield               variety           year             site
+1   27.00000        Manchuria     1931    University Farm
+2   48.86667        Manchuria     1931                Waseca
+.
+.
+.
+.
+118 35.90000  Wisconsin No. 38  1932         Crookston
+119 20.66667  Wisconsin No. 38  1932    Grand Rapids
+120 29.33333  Wisconsin No. 38  1932               Duluth
+
+When I specify the pch=c(1, 3), which are a "dot" and a "+" character, 
+the "dot" is assigned to the year 1932 (that appear after year 1931) and 
+the "+" is assigned to the year 1931 (that appear first in the data 
+frame).  Why is that? I though R should assign the first character in 
+the vector (pch= c(1, 3)) to the first level in the grouping  variable 
+(year).
+Thank you very much in advance.
+Best,
+
+Manuel Sp?nola
+
+-- 
+Manuel Sp?nola, Ph.D.
+Instituto Internacional en Conservaci?n y Manejo de Vida Silvestre
+Universidad Nacional
+Apartado 1350-3000
+Heredia
+COSTA RICA
+mspinola at una.ac.cr
+mspinola10 at gmail.com
+Tel?fono: 277-3598
+Fax: 237-7036
+
+
+From tyler.smith at mail.mcgill.ca  Thu Jul 10 18:36:07 2008
+From: tyler.smith at mail.mcgill.ca (tyler)
+Date: Thu, 10 Jul 2008 13:36:07 -0300
+Subject: [R-sig-eco] Command pch in lattice package
+References: <4876383C.6040903@una.ac.cr>
+Message-ID: <87r6a1k87c.fsf@blackbart.sedgenet>
+
+Manuel Sp?nola <mspinola at una.ac.cr>
+writes:
+
+>
+> When I specify the pch=c(1, 3), which are a "dot" and a "+" character,
+> the "dot" is assigned to the year 1932 (that appear after year 1931)
+> and the "+" is assigned to the year 1931 (that appear first in the
+> data frame). Why is that? I though R should assign the first character
+> in the vector (pch= c(1, 3)) to the first level in the grouping
+> variable (year).
+
+It does. Looking at barley$year reveals that for some reason, 1932 is
+the first level, 1931 is the second in that dataset.
+
+Tyler
+
+
+From hpdutra at yahoo.com  Sun Jul 13 22:48:22 2008
+From: hpdutra at yahoo.com (Humberto Dutra)
+Date: Sun, 13 Jul 2008 13:48:22 -0700 (PDT)
+Subject: [R-sig-eco] multilevel mixed effects LME and LMER
+Message-ID: <391592.36978.qm@web82006.mail.mud.yahoo.com>
+
+First I would like to say thank you for taking the time to read it.
+
+Here is my problem.
+I did an experiment to access the impact of an invasive plant on mice behavior and abundacne. Basically  I  manipulated fruits and vegetation to two
+levels each(present and absent) on 12 experimental plots The design consisted of  12 plots,
+divided in 3 blocks.  So each block had 4 plots assigned to one of the
+following treatments. 
+Fruit intact and Vegetation intact 
+Fruit intact and Vegetation removed 
+Fruit removed and Vegetation intact 
+Fruit removed and Vegetation removed 
+Then I sampled mice activity by recording the presence or absence of paw prints on 16 track plates positioned on each plot. 
+I also measured the number of trees on each plot and got their diameter. I created an index for tree cover and I want to use it as covariate. 
+My goal is to determine how the interaction of fruits, vegetation, and time explain the mice behavior. 
+
+Because my data is binary and I have fixed (fruit, veget, time) and random effects (block, and trackID as repeated measures) I am trying to fit a model using lmer. 
+here is my first attempt
+model<-lmer(track~veget*fruit*time*(time|plate)*(1|block),family=binomial)
+ 
+My problem is that when I run this model I get more than 1000 degrees of freedom. Which does not make any sense, remember:
+16 plates
+2 levels for fruits
+2 levels for veget
+3 blocks
+7 months (time)
+so I don't know what it is going on. Should I group this by plot ID instead of plate?
+check a sample of the data on the end.
+
+Also, how do I fit a covariate in these model. Especially when it comes to data format. I have just one indez per plot, how do I add this to the model. Should I repeat the same value for all the 16 plates in that plot? 
+
+Thank  you very much for any comments. 
+
+  plate track time block   fruit   veget
+> 1        1     0    1     1  intact  intact
+> 2        2     1    1     1  intact  intact
+> 3        3     1    1     1  intact  intact
+> 4        4     0    1     1  intact  intact
+> 5        5     1    1     1  intact  intact
+> 6        6     1    1     1  intact  intact
+> 7        7     1    1     1  intact  intact
+> 8        8     1    1     1  intact  intact
+> 9        9     0    1     1  intact  intact
+> 10      10     1    1     1  intact  intact
+> 11      11     0    1     1  intact  intact
+> 12      12     1    1     1  intact  intact
+> 13      13     1    1     1  intact  intact
+> 14      14     1    1     1  intact  intact
+> 15      15     0    1     1  intact  intact
+> 16      16     0    1     1  intact  intact
+> 17      17     0    1     1  intact removed
+> 18      18     0    1     1  intact removedt
+> 19      19     1    1     1  intact removed
+> 20      20     1    1     1  intact removed
+> 21      21     0    1     1  intact removed
+> 22      22     0    1     1  intact removed
+> 23      23     1    1     1  intact removed
+> 24      24     1    1     1  intact removed
+> 25      25     0    1     1  intact removed
+> 26      26     1    1     1  intact removed
+> 27      27     0    1     1  intact removed
+> 28      28     0    1     1  intact removed
+> 29      29     0    1     1  intact removed
+> 30      30     1    1     1  intact removed
+> 31      31     0    1     1  intact removed
+> 32      32     0    1     1  intact removed
+> 33      33     0    1     1 removed  intact
+> 34      34     0    1     1 removed  intact
+> 35      35     0    1     1 removed  intact
+
+==========================================================
+'Discipline - Success doesn't just happen. You have to be intentional about it, and that takes discipline.' - John Maxwell
+
+
+From Roel.May at nina.no  Mon Jul 14 12:37:40 2008
+From: Roel.May at nina.no (May, Roel)
+Date: Mon, 14 Jul 2008 12:37:40 +0200
+Subject: [R-sig-eco] multilevel mixed effects LME and LMER (Humberto
+	Dutra)
+In-Reply-To: <mailman.1.1216029602.15460.r-sig-ecology@r-project.org>
+References: <mailman.1.1216029602.15460.r-sig-ecology@r-project.org>
+Message-ID: <A2C6E53287774840B0A2CEF5AED14DD50184662E@alm.nina.no>
+
+Dear Humberto,
+
+I don't know why you included interaction terms between the random and
+the fixed effects?
+Maybe you meant to analyze the following model? That would make more
+sense to me.
+
+model<-lmer(track~veget*fruit*time+(time|plate)+(1|block),family=binomia
+l)
+
+I hope this helps.
+
+Cheers Roel
+
+________________________________________________________________
+
+Roel May
+Research Ecologist PhD
+
+Norwegian Institute for Nature Research - NINA
+Postal address: NO-7485 Trondheim, NORWAY
+Delivery/Visiting address: Tungasletta 2, NO-7047 Trondheim, NORWAY
+Phone: +47 73 80 14 65 * Cell: +47 957 85 995 * Fax: +47 73 80 14 01 *
+www.nina.no
+
+
+From jebyrnes at ucdavis.edu  Tue Jul 15 07:20:05 2008
+From: jebyrnes at ucdavis.edu (Jarrett Byrnes)
+Date: Mon, 14 Jul 2008 22:20:05 -0700
+Subject: [R-sig-eco] posthoc tests beyond Tukey's HSD
+Message-ID: <04756FA2-9C4C-4513-A746-96FEAD216506@ucdavis.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080714/fc1fa4be/attachment.pl>
+
+From s.blomberg1 at uq.edu.au  Tue Jul 15 08:44:18 2008
+From: s.blomberg1 at uq.edu.au (Simon Blomberg)
+Date: Tue, 15 Jul 2008 16:44:18 +1000
+Subject: [R-sig-eco] posthoc tests beyond Tukey's HSD
+In-Reply-To: <04756FA2-9C4C-4513-A746-96FEAD216506@ucdavis.edu>
+References: <04756FA2-9C4C-4513-A746-96FEAD216506@ucdavis.edu>
+Message-ID: <1216104258.11309.69.camel@sib-sblomber01d.sib.uq.edu.au>
+
+On Mon, 2008-07-14 at 22:20 -0700, Jarrett Byrnes wrote:
+> I'm currently in a bit of a quandry.  While I feel I've got a good  
+> feel for using the multcomp package for posthoc tests, I've been left  
+> with two questions - mainly by colleagues who read my results (and, I  
+> fear, reviewers in the future, as the results from glht are not  
+> something typically repoprted in many journals).
+> 
+> To whit, I have two questions
+> 
+> 1) How do _you_ report results from the multcomp package?  Do you have  
+> a favorite adjustments to use (I've become rather fond of the False  
+> Discovery Rate after reading several recent papers about it, as well  
+> as it's cousin, the sharpened False Discovery rate, for which I've  
+> whipped up some code if anyone would like it)?   What would you find  
+> acceptable and understandable as a reviewer?
+
+Report what test you used, and your justification for using it. Also try
+to provide confidence intervals for effects, not just hypothesis tests.
+They are of more use in the long run.
+
+Multiple comparisons procedures have to be some of the most abused
+statistical methods. I avoid them wherever possible. The problem is that
+scientists often carry out a well-designed experiment to test some
+well-defined a priori hypotheses. Then they ignore the logical structure
+of the experiment and use an MCP to conduct tests that should have been
+defined a priori, and usually also a set of other comparisons that are
+not even interesting. The Neyman-Pearson theory works perfectly fine for
+a small set of a priori hypotheses. You don't have to correct for
+multiple comparisons in this case, and you will get more power if you
+don't. I wish scientists would have the courage of their convictions and
+defend (and only test) their a priori hypotheses. John Nelder has some
+provocative views on this and other subjects (with which I agree!) See:
+The Statistician (1999) 48(2): 257-269.
+
+Having said that, there is a limited use for MCPs, in the context of
+looking at the data and then deciding which tests might be interesting
+(ie fishing expeditions). The use of FDR methods also makes sense for
+example with microarray data where there are thousands of tests and no
+clearly defined hypotheses, other than "we think there should be
+differences for some subset of genes, somewhere."
+
+> 
+> 2) But, sometimes, you want your old Dunnett's test and Ryan's Q - or,  
+> really, any of the tests from the wonderful Day and Quinn 1989  
+> Ecological Monographs paper.  I've not had much luck looking beyond  
+> Tukey's HSD.  Has anyone found any good code for some of these other  
+> common posthocs?  I admit, I might just be missing some crucial  
+> package, although I've looked around a good bit.
+> 
+
+There are two issues: 1. What kind of contrasts do you want to make? and
+2. What kind of adjustment do you want to do? You can get a variety of
+contrasts by using the type= argument to mcp(), which then passes it
+along to contrMat (see ?contrMat). You can get different sorts of
+adjustment by using the test=adjusted() argument to summary.glht.
+See ?adjusted. adjusted also accepts as arguments the values in
+p.adjust.methods. See ?p.adjust.methods.
+
+The documentation for the multcomp package is really very good. There
+are a couple of pdf documents in the multcomp directory that are very
+much worth reading.
+
+Cheers,
+
+Simon.
+
+> 
+> Thanks, and I look forward to your answers!
+> 
+> -Jarrett
+> 
+> 
+> 
+> 
+> ----------------------------------------
+> Jarrett Byrnes
+> Postdoctoral Associate, Santa Barbara Coastal LTER
+> Marine Science Institute
+> University of California Santa Barbara
+> Santa Barbara, CA 93106-6150
+> 
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+Simon Blomberg, BSc (Hons), PhD, MAppStat. 
+Lecturer and Consultant Statistician 
+Faculty of Biological and Chemical Sciences 
+The University of Queensland 
+St. Lucia Queensland 4072 
+Australia
+Room 320 Goddard Building (8)
+T: +61 7 3365 2506
+http://www.uq.edu.au/~uqsblomb
+email: S.Blomberg1_at_uq.edu.au
+
+Policies:
+1.  I will NOT analyse your data for you.
+2.  Your deadline is your problem.
+
+The combination of some data and an aching desire for 
+an answer does not ensure that a reasonable answer can 
+be extracted from a given body of data. - John Tukey.
+
+
+From ssefick at gmail.com  Tue Jul 15 14:21:29 2008
+From: ssefick at gmail.com (stephen sefick)
+Date: Tue, 15 Jul 2008 08:21:29 -0400
+Subject: [R-sig-eco] stream metabolism
+Message-ID: <c502a9e10807150521o2426c127t43e20570351fbe19@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080715/e7230cf1/attachment.pl>
+
+From artibeus at gmail.com  Tue Jul 15 21:27:40 2008
+From: artibeus at gmail.com (Josh Stumpf)
+Date: Tue, 15 Jul 2008 15:27:40 -0400
+Subject: [R-sig-eco] Ordiplot Figure Legends
+Message-ID: <28bef6b80807151227v388247ceq5eaa9241f8a45f1@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080715/c634ddc3/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Tue Jul 15 22:19:11 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Tue, 15 Jul 2008 21:19:11 +0100
+Subject: [R-sig-eco] Ordiplot Figure Legends
+In-Reply-To: <28bef6b80807151227v388247ceq5eaa9241f8a45f1@mail.gmail.com>
+References: <28bef6b80807151227v388247ceq5eaa9241f8a45f1@mail.gmail.com>
+Message-ID: <1216153151.2658.4.camel@localhost.localdomain>
+
+On Tue, 2008-07-15 at 15:27 -0400, Josh Stumpf wrote:
+> I have been searching Manual pages for hours and am obviously looking in the
+> wrong places. Can anyone direct me to instructions relating to adding
+> legends to ordiplot objects in vegan?
+
+ordiplot objects/plots are normal R plots. So just use legend() with
+appropriate x,y coordinates:
+
+example(plot.cca)
+legend("bottomleft", legend = c("Group 1","Group 2"), pch = 1:2,
+col = c("red","blue"))
+
+Does this suffice?
+
+G
+
+> 
+> Joshua Stumpf
+> 
+> Eastern Michigan University
+> 
+> 	[[alternative HTML version deleted]]
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From james.milks at wright.edu  Thu Jul 17 01:26:39 2008
+From: james.milks at wright.edu (James Milks)
+Date: Wed, 16 Jul 2008 19:26:39 -0400
+Subject: [R-sig-eco] Is there a package that does a G test?
+Message-ID: <B29B41AD-0EDF-44A5-8C19-E784F0614D1C@wright.edu>
+
+I have data with the following structure:
+
+Site  Species  #Vines  DBH
+1		1		0	12.3
+1		1		4	17
+1		2		12	48
+1		3		1	24
+1		3		0	19
+2		1		2	15.8
+2		2		4	20
+2		3		3	30
+2		2		9	60
+3		3		13	23
+3		2		2	44
+3		1		0	13
+
+I'm interested in doing a G test to test for differences between  
+sites, species, and species within sites using (#Vines / DBH) as the  
+dependent variable.  Are there any packages that perform a G test on  
+that sort of data?
+
+Thanks in advance.
+
+Jim Milks
+
+Degree Candidate
+Environmental Sciences Ph.D. Program
+Wright State University
+Dayton, OH 45435
+
+
+From glaporta at freeweb.org  Thu Jul 17 08:20:56 2008
+From: glaporta at freeweb.org (Gianandrea La Porta)
+Date: Thu, 17 Jul 2008 06:20:56 +0000 (UTC)
+Subject: [R-sig-eco] Is there a package that does a G test?
+References: <B29B41AD-0EDF-44A5-8C19-E784F0614D1C@wright.edu>
+Message-ID: <loom.20080717T061206-822@post.gmane.org>
+
+James Milks <james.milks at ...> writes:
+
+> 
+> I have data with the following structure:
+> 
+> Site  Species  #Vines  DBH
+> 1		1		0	12.3
+> 1		1		4	17
+> 1		2		12	48
+> 1		3		1	24
+> 1		3		0	19
+> 2		1		2	15.8
+> 2		2		4	20
+> 2		3		3	30
+> 2		2		9	60
+> 3		3		13	23
+> 3		2		2	44
+> 3		1		0	13
+> 
+> I'm interested in doing a G test to test for differences between  
+> sites, species, and species within sites using (#Vines / DBH) as the  
+> dependent variable.  Are there any packages that perform a G test on  
+> that sort of data?
+> 
+> Thanks in advance.
+> 
+> Jim Milks
+> 
+> Degree Candidate
+> Environmental Sciences Ph.D. Program
+> Wright State University
+> Dayton, OH 45435
+> 
+
+Dear James,
+I had the same necessity and I found a solution using this code.
+I hope this helps. Cheers,
+Gianandrea La Porta
+
+Dr. Gianandrea La Porta
+Dip. Biologia Cellulare e Ambientale
+Universit? degli Studi di Perugia
+via Pascoli, 06123 Perugia
+tel. 075.5855711
+web: www.bio.unipg.it/staff/gianandrea.htm
+Server gpg hkp://subkeys.pgp.net
+------
+
+# CODE g.test
+# Log-likelihood tests of independence & goodness of fit
+# Does Williams' and Yates' correction
+# does Monte Carlo simulation of p-values, via gtestsim.c
+#
+# G & q calculation from Sokal & Rohlf (1995) Biometry 3rd ed.
+# TOI Yates' correction taken from Mike Camann's 2x2 G-test fn.
+# GOF Yates' correction as described in Zar (2000)
+# more stuff taken from ctest's chisq.test()
+#
+# ToDo:
+# 1) Beautify
+# 2) Add warnings for violations
+# 3) Make appropriate corrections happen by default
+#
+# V3.3 Pete Hurd Sept 29 2001. phurd at ualberta.ca
+
+g.test <- function(x, y = NULL, correct="none",
+  p = rep(1/length(x), length(x)), simulate.p.value = FALSE, B = 2000)
+{
+  DNAME <- deparse(substitute(x))
+  if (is.data.frame(x)) x <- as.matrix(x)
+  if (is.matrix(x)) {
+    if (min(dim(x)) == 1) 
+      x <- as.vector(x)
+  }
+  if (!is.matrix(x) && !is.null(y)) {
+    if (length(x) != length(y)) 
+      stop("x and y must have the same length")
+    DNAME <- paste(DNAME, "and", deparse(substitute(y)))
+    OK <- complete.cases(x, y)
+    x <- as.factor(x[OK])
+    y <- as.factor(y[OK])
+    if ((nlevels(x) < 2) || (nlevels(y) < 2)) 
+      stop("x and y must have at least 2 levels")
+    x <- table(x, y)
+  }
+  if (any(x < 0) || any(is.na(x))) 
+    stop("all entries of x must be nonnegative and finite")
+  if ((n <- sum(x)) == 0) 
+    stop("at least one entry of x must be positive")
+  #If x is matrix, do test of independence
+  if (is.matrix(x)) {
+    #Test of Independence
+    nrows<-nrow(x)
+    ncols<-ncol(x)
+    if (correct=="yates"){ # Do Yates' correction?
+      if(dim(x)[1]!=2 || dim(x)[2]!=2) # check for 2x2 matrix
+        stop("Yates' correction requires a 2 x 2 matrix")
+      if((x[1,1]*x[2,2])-(x[1,2]*x[2,1]) > 0)
+        {
+          x[1,1] <- x[1,1] - 0.5
+          x[2,2] <- x[2,2] - 0.5
+          x[1,2] <- x[1,2] + 0.5
+          x[2,1] <- x[2,1] + 0.5
+        }
+      else
+        {
+          x[1,1] <- x[1,1] + 0.5
+          x[2,2] <- x[2,2] + 0.5
+          x[1,2] <- x[1,2] - 0.5
+          x[2,1] <- x[2,1] - 0.5
+        }
+    }
+
+    sr <- apply(x,1,sum)
+    sc <- apply(x,2,sum)
+    E <- outer(sr,sc, "*")/n
+    # are we doing a monte-carlo?
+    # no monte carlo GOF?
+    if (simulate.p.value){
+      METHOD <- paste("Log likelihood ratio (G-test) test of independence\n\t
+with simulated p-value based on", B, "replicates")
+      tmp <- .C("gtestsim", as.integer(nrows), as.integer(ncols),
+                as.integer(sr), as.integer(sc), as.integer(n), as.integer(B),
+                as.double(E), integer(nrows * ncols), double(n+1),
+                integer(ncols), results=double(B), PACKAGE= "ctest")
+      g <- 0
+      for (i in 1:nrows){
+        for (j in 1:ncols){
+          if (x[i,j] != 0) g <- g + x[i,j] * log(x[i,j]/E[i,j])
+        }
+      }
+      STATISTIC <- G <- 2 * g
+      PARAMETER <- NA
+      PVAL <- sum(tmp$results >= STATISTIC)/B
+    }
+    else {
+      # no monte-carlo
+      # calculate G
+      g <- 0
+      for (i in 1:nrows){
+        for (j in 1:ncols){
+          if (x[i,j] != 0) g <- g + x[i,j] * log(x[i,j]/E[i,j])
+        }
+      }
+      q <- 1
+      if (correct=="williams"){ # Do Williams' correction
+        row.tot <- col.tot <- 0    
+        for (i in 1:nrows){ row.tot <- row.tot + 1/(sum(x[i,])) }
+        for (j in 1:ncols){ col.tot <- col.tot + 1/(sum(x[,j])) }
+        q <- 1+ ((n*row.tot-1)*(n*col.tot-1))/(6*n*(ncols-1)*(nrows-1))
+      }
+      STATISTIC <- G <- 2 * g / q
+      PARAMETER <- (nrow(x)-1)*(ncol(x)-1)
+      PVAL <- 1-pchisq(STATISTIC,df=PARAMETER)
+      if(correct=="none")
+        METHOD <- "Log likelihood ratio (G-test) test of independence without
+correction"
+      if(correct=="williams")
+        METHOD <- "Log likelihood ratio (G-test) test of independence with
+Williams' correction"
+      if(correct=="yates")
+        METHOD <- "Log likelihood ratio (G-test) test of independence with
+Yates' correction"
+    }
+  }
+  else {
+    # x is not a matrix, so we do Goodness of Fit
+    METHOD <- "Log likelihood ratio (G-test) goodness of fit test"
+    if (length(x) == 1) 
+      stop("x must at least have 2 elements")
+    if (length(x) != length(p)) 
+      stop("x and p must have the same number of elements")
+    E <- n * p
+    
+    if (correct=="yates"){ # Do Yates' correction
+      if(length(x)!=2)
+        stop("Yates' correction requires 2 data values")
+      if ( (x[1]-E[1]) > 0.25) {
+        x[1] <- x[1]-0.5
+        x[2] <- x[2]+0.5
+      }
+      else if ( (E[1]-x[1]) > 0.25){
+        x[1] <- x[1]+0.5
+        x[2] <- x[2]-0.5
+      }
+    }
+    names(E) <- names(x)
+    g <- 0
+    for (i in 1:length(x)){
+      if (x[i] != 0) g <- g + x[i] * log(x[i]/E[i])
+    }
+    q <- 1
+    if (correct=="williams"){ # Do Williams' correction
+      q <- 1+(length(x)+1)/(6*n)
+    }
+    STATISTIC <- G <- 2*g/q
+    PARAMETER <- length(x) - 1
+    PVAL <- pchisq(STATISTIC, PARAMETER, lower = FALSE)
+  }
+  names(STATISTIC) <- "Log likelihood ratio statistic (G)"
+  names(PARAMETER) <- "X-squared df"
+  names(PVAL) <- "p.value"
+  structure(list(statistic=STATISTIC,parameter=PARAMETER,p.value=PVAL,
+            method=METHOD,data.name=DNAME, observed=x, expected=E),
+            class="htest")
+}
+
+
+From pseudobombax at yahoo.co.uk  Thu Jul 17 12:50:47 2008
+From: pseudobombax at yahoo.co.uk (Reynaldo Linares-Palomino)
+Date: Thu, 17 Jul 2008 10:50:47 +0000 (GMT)
+Subject: [R-sig-eco] Is there a package that does a G test?
+Message-ID: <550424.7460.qm@web27908.mail.ukl.yahoo.com>
+
+Hi Jim, there is code, with examples, on Peter Hurd's webpage that does what you want:
+
+http://www.psych.ualberta.ca/~phurd/cruft/
+
+
+Cheers,
+
+Reynaldo
+ ---------------------------------------------------
+Reynaldo Linares-Palomino
+Albrecht-von-Haller-Institute for Plant Sciences
+Department of Systematic Botany
+University of G?ttingen
+Untere Karsp?le 2, 37073-G?ttingen, Germany
+
+
+Bosques Estacionalmente Secos del Neotropico
+http://www.geocities.com/bosquesecos/
+http://rbg-web2.rbge.org.uk/dryforest/database.htm
+
+
+
+----- Original Message ----
+Date: Wed, 16 Jul 2008 19:26:39 -0400
+From: James Milks <james.milks at wright.edu>
+Subject: [R-sig-eco] Is there a package that does a G test?
+To: r-sig-ecology at r-project.org
+Message-ID: <B29B41AD-0EDF-44A5-8C19-E784F0614D1C at wright.edu>
+Content-Type: text/plain; delsp=yes; format=flowed; charset=US-ASCII
+
+I have data with the following structure:
+
+Site  Species  #Vines  DBH
+1        1        0    12.3
+1        1        4    17
+1        2        12    48
+1        3        1    24
+1        3        0    19
+2        1        2    15.8
+2        2        4    20
+2        3        3    30
+2        2        9    60
+3        3        13    23
+3        2        2    44
+3        1        0    13
+
+I'm interested in doing a G test to test for differences between  
+sites, species, and species within sites using (#Vines / DBH) as the  
+dependent variable.  Are there any packages that perform a G test on  
+that sort of data?
+
+Thanks in advance.
+
+Jim Milks
+
+Degree Candidate
+Environmental Sciences Ph.D. Program
+Wright State University
+Dayton, OH 45435
+
+
+      __________________________________________________________
+Not happy with your email address?.
+Get the one you really want - millions of new email addresses available now at Yahoo! http://uk.docs.yahoo.com/ymail/new.html
+
+
+From chizi001 at umn.edu  Thu Jul 17 15:29:07 2008
+From: chizi001 at umn.edu (Christopher Chizinski)
+Date: Thu, 17 Jul 2008 08:29:07 -0500
+Subject: [R-sig-eco] co-correspondence package
+Message-ID: <487F4923.1030704@umn.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080717/91d3c492/attachment.pl>
+
+From gavin.simpson at ucl.ac.uk  Thu Jul 17 16:30:01 2008
+From: gavin.simpson at ucl.ac.uk (Gavin Simpson)
+Date: Thu, 17 Jul 2008 15:30:01 +0100
+Subject: [R-sig-eco] co-correspondence package
+In-Reply-To: <487F4923.1030704@umn.edu>
+References: <487F4923.1030704@umn.edu>
+Message-ID: <1216305001.25869.34.camel@prometheus.geog.ucl.ac.uk>
+
+On Thu, 2008-07-17 at 08:29 -0500, Christopher Chizinski wrote:
+> Dear List:
+>     I am trying to run co-correspondence analysis using the package 
+> cocorresp.  Everything works correctly but I was curious if anyone knew 
+> if there was an R analog of the program for the predictive 
+> correspondence analysis and cross valuation that is in the Matlab 
+> toolbox "cocorresp"?  Everything runs in the Matlab toolbox but the 
+> program relies on PLS toolbox that must be purchased (and I am almost 
+> finished with my demo trial).  Also, if there was anyone that might be 
+> able to give me some direction on how to write a program to test the 
+> significance of the different models as mentioned in Schaffers et al. 
+> (2008). "Arthropod assemblages are best predicted by plant species 
+> composition" on p. 787.  Any pointers would be greatly appreciated. 
+> 
+> Sincerely,
+> Chris
+
+Hi Chris [Apologies for not responding sooner to your private email to
+me, I've been out of the office on fieldwork and then catching up with
+the email and work backlog]
+
+Steve Juggins sent me code that implemented the crossval routine for
+CCA-PLS. I started adding this to my local cocorresp source tree, but
+didn't get round to completely getting everything working with the
+package just yet. I should be able to take another look at this at the
+weekend. Will let you know how I get on.
+
+I have had another cocorresp user interested in the permutation t-test
+you mention. I said I'd take a look at this (and I did - honest!) and it
+seemed feasible, but it is field season and I have been away quite a bit
+the past few months. It is on the radar, but won't happen for the next
+couple of weeks as I have several papers that the boss is awaiting...
+
+G
+
+-- 
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+ Dr. Gavin Simpson             [t] +44 (0)20 7679 0522
+ ECRC, UCL Geography,          [f] +44 (0)20 7679 0565
+ Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk
+ Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/
+ UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk
+%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%
+
+
+From ammuir at purdue.edu  Thu Jul 17 17:27:35 2008
+From: ammuir at purdue.edu (Andrew Muir)
+Date: Thu, 17 Jul 2008 11:27:35 -0400
+Subject: [R-sig-eco] offset in Logistic regression
+References: <487F4923.1030704@umn.edu>
+	<1216305001.25869.34.camel@prometheus.geog.ucl.ac.uk>
+Message-ID: <000501c8e821$a3fb9d80$6500a8c0@Muir>
+
+Dear list,
+
+I am attempting to include an offset variable (Julian Day) in a series of 
+logistic models using the glm() function in R.
+I want to account for Juliann day of sampling in each of these models 
+because sample collection was temporally stratified across the entire year.
+The models work fine without the offset variable, but when I include it I 
+get the following error messages.
+
+> #Full model (Global hypothesis)
+> M1= glm(Presence~Lat + Depth + Cliff + Temp_var + offset(J_Day), 
+> family=binomial(link=logit))
+Warning messages:
+1: In glm.fit(x = X, y = Y, weights = weights, start = start, etastart = 
+etastart,  :
+  algorithm did not converge
+2: In glm.fit(x = X, y = Y, weights = weights, start = start, etastart = 
+etastart,  :
+  fitted probabilities numerically 0 or 1 occurred
+3: In glm.fit(x = X[, "(Intercept)", drop = FALSE], y = Y, weights = 
+weights,  :
+  fitted probabilities numerically 0 or 1 occurred
+> summary (M1)
+
+Warning messages:
+1: In method(x = x[, varseq <= i, drop = FALSE], y = object$y, weights = 
+object$prior.weights,  :
+  algorithm did not converge
+2: In method(x = x[, varseq <= i, drop = FALSE], y = object$y, weights = 
+object$prior.weights,  :
+  fitted probabilities numerically 0 or 1 occurred
+3: In method(x = x[, varseq <= i, drop = FALSE], y = object$y, weights = 
+object$prior.weights,  :
+  fitted probabilities numerically 0 or 1 occurred
+4: In method(x = x[, varseq <= i, drop = FALSE], y = object$y, weights = 
+object$prior.weights,  :
+  fitted probabilities numerically 0 or 1 occurred
+>
+
+
+I spent considerable time on the internet trying to figure out what the 
+problem is and I came across the following bug report from 2002:
+
+[Rd] glm start/offset bugs (PR#1422)
+
+presnell at stat.ufl.edu presnell at stat.ufl.edu
+Fri, 29 Mar 2002 04:04:03 +0100 (MET)
+
+  a.. Previous message: [Rd] pos argument to library
+  b.. Next message: [Rd] glm start/offset bugs (PR#1422)
+  c.. Messages sorted by: [ date ] [ thread ] [ subject ] [ author ]
+
+--------------------------------------------------------------------------------
+
+--fupGvOGOQM
+
+Content-Type: text/plain; charset=us-ascii
+
+Content-Description: message body and .signature
+
+Content-Transfer-Encoding: 7bit
+
+
+
+
+
+There's a simple bug in the handling of the start and offset arguments
+
+in glm and glm.fit.  The bug exists in the latest development version
+
+of R (version information below), but it appears that glm.R has not
+
+been touched much lately, so the bug affects at least the most recent
+
+stable release of R.
+
+
+
+Here is a simple example:
+
+
+
+> data(ships, package=MASS)
+
+> ships.glm <- glm(incidents ~ type + year + period + offset(log(service)),
+
++                family=poisson, data=ships, subset=service != 0)
+
+> glm(incidents ~ type + year + period + offset(log(service)),
+
++     family=poisson, data=ships, subset=service != 0, 
+start=coef(ships.glm))
+
+
+
+or more simply
+
+
+
+> update(ships.glm, start=coef(ships.glm))
+
+
+
+The problem is caused by a bad initialization of etastart in glm.fit()
+
+when an offset is present.  Fixing this and retrying the example above
+
+then reveals another bug, this time in glm(), that is tickled only
+
+when non-NULL values are given to both the offset and start arguments.
+
+
+
+I've attached to the bottom of this message a simple patch to
+
+src/library/base/R/glm.R that I believe correctly repairs these bugs.
+
+
+
+Essentially the same change is needed in Berwin Turlach's Wed, 27 Feb
+
+2002 version of glm.fit() reported on the R bug tracking site as
+
+"Models/1331".  (The change to glm() is still required as well of
+
+course.)  As an aside, I'm wondering if there has been any thought
+
+given to adopting Berwin's patches.  Though I must admit that I
+
+haven't taken the time to check carefully through his changes, I know
+
+Berwin to be a very careful and skillful programmer, and I suspect
+
+that he is the only person to have looked very closely at those
+
+particular details of glm.fit in recent months (years?).  Also, some
+
+of the simpler changes that he made seem to be needed just to cleanup
+
+the code.  Would it be useful if a number of us began using his
+
+version as an informal test?  After discovering this bug earlier
+
+today, I have already begun to do so and so far have not encountered
+
+any problems.
+
+
+
+
+I sent an e-mail to Dr. Presnell (the person that wrote the bug report), but 
+to-date I have not received a response from him.
+So, my questions to the list are:
+1. does anyone know if this bug has been fixed in R 2.6.1? (Dr. Presnell 
+included a patch for this problem in his bug report, but I don't know if I 
+should try to install the patch)
+2. perhaps my problem is not with the glm.fit function, but a problem with 
+the structure of my data or with my use of the offset command, if so, can 
+anyone provide suggestions?
+
+Thanks in advance,
+
+AMM.
+
+Andrew M. Muir
+Purdue University,
+Department of Forestry and Natural Resources,
+Pfendler Hall of Agriculture, Rm G004
+715 W. State St.
+West Lafayette, IN  47907
+Voice: 765-494-9597
+FAX: 765-496-2422
+email: ammuir at purdue.edu
+
+
+From chizi001 at umn.edu  Thu Jul 17 18:07:10 2008
+From: chizi001 at umn.edu (Christopher Chizinski)
+Date: Thu, 17 Jul 2008 11:07:10 -0500
+Subject: [R-sig-eco] co-correspondence package
+In-Reply-To: <1216305001.25869.34.camel@prometheus.geog.ucl.ac.uk>
+References: <487F4923.1030704@umn.edu>
+	<1216305001.25869.34.camel@prometheus.geog.ucl.ac.uk>
+Message-ID: <487F6E2E.90903@umn.edu>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080717/ab2c352f/attachment.pl>
+
+From queirozrafaelmv at yahoo.com.br  Thu Jul 17 22:29:59 2008
+From: queirozrafaelmv at yahoo.com.br (Rafael Maia)
+Date: Thu, 17 Jul 2008 17:29:59 -0300
+Subject: [R-sig-eco] "random" lme syntax
+In-Reply-To: <391592.36978.qm@web82006.mail.mud.yahoo.com>
+References: <391592.36978.qm@web82006.mail.mud.yahoo.com>
+Message-ID: <487FABC7.6050009@yahoo.com.br>
+
+Hello everyone!
+
+I am helping a friend analyze her data on the effect of helpers-at-nest 
+on feeding rates ("feeding") in a species of bird. Her data is as follows:
+
+- two groups ("helpers"; helpers/no helpers)
+- observations conducted at several development stages of the nestlings 
+("age"; repeated measures at each nest, days 1, 6 and 12)
+- during 2 years ("year"; 2006/2007, as a covariate; each couple and 
+nest only observed during one of these years)
+
+She's also interested in the interaction between helpers and age of the 
+nest Intuitively, using lme, I'd guess the formula should be:
+
+lme(feeding~helpers*age+year, random=~1|nest_id, data=tanagers)
+
+However, in Michael Crawley's "The R Book" example of "Mixed-Effects 
+models with Temporal Pseudoreplication", page 642, the explanation goes 
+as follows:
+
+"Because we have a continuous random effect (weeks) we write ~week in 
+the random-effects formula rather than the ~1 that we used with 
+categorical random effects (above)."
+
+It may be because I am not so familiarized with lme models, but this 
+didn't make much sense to me... Only due to the repeated measures being 
+continuous or categorical, I should change the syntax of which portion 
+of my model has random effects? If I'm measuring the same individual 
+through time, shouldn't that be specified on the model as an 
+hierarchical design (say, random=~1|nest_id/age) rather than earlier?
+
+This got me quite confused, so any comments would be greatly appreciated...
+
+Best,
+Rafael Maia
+---
+"A little learning is a dangerous thing; drink deep, or taste not the 
+Pierian spring." (A. Pope)
+M.Sc. Student
+Animal Behavior Lab - Dept. of Zoology
+Universidade de Brasilia, Brazil
+http://www.unb.br/ib/zoo/rhmacedo/
+
+
+From kingsfordjones at gmail.com  Fri Jul 18 00:22:08 2008
+From: kingsfordjones at gmail.com (Kingsford Jones)
+Date: Thu, 17 Jul 2008 15:22:08 -0700
+Subject: [R-sig-eco] "random" lme syntax
+In-Reply-To: <487FABC7.6050009@yahoo.com.br>
+References: <391592.36978.qm@web82006.mail.mud.yahoo.com>
+	<487FABC7.6050009@yahoo.com.br>
+Message-ID: <2ad0cc110807171522y1bd351b0vea515c840366ddd8@mail.gmail.com>
+
+Hi Rafael,
+
+Rather than thinking about continuous vs categorical random effects I
+think it's better to think about predicting random effects (which are
+specified by the left-hand side of the "|" in the random argument) for
+each level of the factor specified by the right-hand side of the "|".
+Therefore if you use random = ~1|nest_id, you predict a random
+intercept for each nest, while random = ~age|nest_id (which is the
+same as writing random = ~1 + age|nest_id) specifies that random
+intercepts and slopes (for the age effect) are to be predicted for
+each nest.
+
+Lattice plots can be very helpful for visualizing what's going on --
+in this case creating a scatterplot for each level of nest_id, with
+age as the x-axis and feeding as the y-axis. Just by looking at the
+plot you'll have an idea if there is random variation in intercepts
+and/or slopes between nests.
+
+Now, think about the random argument you asked about: random =
+~1|nest_id/age.  The nest_id/age specifies which levels to predict
+random effects, and the 1 specifies which random effect to estimate.
+So you are asking lme to predict a random interecept for each level of
+a factor created by nest_id/age (i.e. each age within each nest).
+However, if I understand the study, there is only one feeding value
+for each age within each nest, and you therefore would not have
+degrees of freedom left for residual error, so that isn't a viable
+random argument.  You would also run into this problem if you tried
+random = ~ 1 + age + I(age^2)|nest_id because there are only 3 time
+points within each nest.
+
+Finally, you also have the problem that after fitting the fixed and
+random effects there may well be correlation in the residuals within
+nests due to the temporal structure of the measurements, and
+correlation between nests due to spatial proximity. The correlation
+argument to lme can help you model one of these issues, but not both
+simultaneously.  If you wanted to try to deal with the "temporal
+pseudoreplication" you could try to fit your fixed effects, then a
+random intercept for each nest (which induces a compound symmetric
+correlation structure for each nest, but not a temporal structure),
+then correlation = corAR1(form = ~age|nest_id) to model the temporal
+component with an AR(1) structure.  However 3 time points isn't very
+many for estimating an autoregressive correlation structure and you
+may be better off sticking with the compound symmetric correlation
+from random = ~1|nest_id or random = ~age|nest_id.
+
+Because of the inherent complexity of fitting mixed models I highly
+recommend Pinheiro and Bates 2000 as reading for anyone fitting mixed
+models in R/S.
+
+best of luck,
+
+Kingsford Jones
+
+
+
+On Thu, Jul 17, 2008 at 1:29 PM, Rafael Maia
+<queirozrafaelmv at yahoo.com.br> wrote:
+> Hello everyone!
+>
+> I am helping a friend analyze her data on the effect of helpers-at-nest on
+> feeding rates ("feeding") in a species of bird. Her data is as follows:
+>
+> - two groups ("helpers"; helpers/no helpers)
+> - observations conducted at several development stages of the nestlings
+> ("age"; repeated measures at each nest, days 1, 6 and 12)
+> - during 2 years ("year"; 2006/2007, as a covariate; each couple and nest
+> only observed during one of these years)
+>
+> She's also interested in the interaction between helpers and age of the nest
+> Intuitively, using lme, I'd guess the formula should be:
+>
+> lme(feeding~helpers*age+year, random=~1|nest_id, data=tanagers)
+>
+> However, in Michael Crawley's "The R Book" example of "Mixed-Effects models
+> with Temporal Pseudoreplication", page 642, the explanation goes as follows:
+>
+> "Because we have a continuous random effect (weeks) we write ~week in the
+> random-effects formula rather than the ~1 that we used with categorical
+> random effects (above)."
+>
+> It may be because I am not so familiarized with lme models, but this didn't
+> make much sense to me... Only due to the repeated measures being continuous
+> or categorical, I should change the syntax of which portion of my model has
+> random effects? If I'm measuring the same individual through time, shouldn't
+> that be specified on the model as an hierarchical design (say,
+> random=~1|nest_id/age) rather than earlier?
+>
+> This got me quite confused, so any comments would be greatly appreciated...
+>
+> Best,
+> Rafael Maia
+> ---
+> "A little learning is a dangerous thing; drink deep, or taste not the
+> Pierian spring." (A. Pope)
+> M.Sc. Student
+> Animal Behavior Lab - Dept. of Zoology
+> Universidade de Brasilia, Brazil
+> http://www.unb.br/ib/zoo/rhmacedo/
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From M.A.Versteegh at rug.nl  Mon Jul 21 11:36:09 2008
+From: M.A.Versteegh at rug.nl (Maaike A Versteegh)
+Date: Mon, 21 Jul 2008 11:36:09 +0200
+Subject: [R-sig-eco]  RE:"random" lme syntax; related problem
+Message-ID: <48845889.1060000@rug.nl>
+
+Dear Rafael and Kongston Jones (and others)
+
+I am also helping a colleague with quite similar data-set.
+
+He's interested in the effect of a lysozyme treatment on growth
+wing-lenght of chicks. He has has multiple chicks in nests but the
+treatment is on the nest level. So he has treated and untreated nests.
+He measured wing-length on day 2,4,8 and 15.
+He has a balanced design, with 40 treated and 40 untreated chicks, and
+10 treated and 10 untreated nests.
+
+So he has chicks (who get an unique id: nstchk) nested in nests,
+measured on 4 days
+We tried the method Kingston Jones suggest (wing<-treat,
+random=~day|nest/nstchk). If we do an lme with only the first two days
+(day 2 and day 4) it works fine. But if we try to run a lme on the data
+of all 4 days we get an error message. The error message is:
+
+Error in lme.formula(wing ~ treat, random = ~day | *nest/nstchk*, data =
+wdata) :
+  nlminb problem, convergence error code = 1
+  message = iteration limit reached without convergence (9)
+
+If he does not include nstchk (the unique id of the chicks) in the
+random part of the equation (so: random = ~day| nest), lme works fine
+with the data from all 4 days, but doesn't with just the data from day 2
+and day 4. It gives the same error message as above
+
+Both of the methods work with day 4 and day 8. Day 2 and day 15 also
+works with both models.
+As you can see we tried a lot, and we don't understands what makes it
+sometimes give error message and sometimes not.
+
+Can anybody help? could the problem be that we have too little variation
+in winglength on day 2? or too little growth between day 2 and day 4?
+Ideally my colleague would like to include all the days.
+
+Any help would be appreciated
+
+Maaike
+
+The complete R-code:
+
+wdata=read.csv("f:\\r practice\\wingtest320.2.4.8.15.csv")
+attach(wdata)
+names(wdata)
+library(nlme)
+ 
+model.with.nstchk<-lme(wing~treat,random=~day|nest/nstchk, data=wdata);
+summary(model.with.nstchk);
+model.no.nstchk<-lme(wing~treat,random=~day|nest, data=wdata);
+summary(model.no.nstchk)
+ 
+
+(part of) the data-set:
+
+
+      treat     nest chick           nstchk day wing
+1   LYS      209ward      1 209ward-1          2  9.0
+2   LYS      209ward      1 209ward-1          4 13.5
+3   LYS      209ward      1 209ward-1          8 34.0
+4   LYS      209ward      1 209ward-1         15 64.0
+5   LYS      209ward      2 209ward-2          2  9.0
+6   LYS      209ward      2 209ward-2          4 13.0
+7   LYS      209ward      2 209ward-2          8 32.0
+8   LYS      209ward      2 209ward-2         15 63.0
+9   LYS      209ward      3 209ward-3          2  8.5
+10  LYS      209ward      3 209ward-3          4 13.5
+11  LYS      209ward      3 209ward-3          8 32.5
+12  LYS      209ward      3 209ward-3         15 63.0
+13  LYS      209ward      4 209ward-4          2  8.5
+14  LYS      209ward      4 209ward-4          4 12.5
+15  LYS      209ward      4 209ward-4          8 34.0
+16  LYS      209ward      4 209ward-4         15 61.0
+17  LYS      209ward      5 209ward-5          2  9.0
+18  LYS      209ward      5 209ward-5          4 13.0
+19  LYS      209ward      5 209ward-5          8 34.0
+20  LYS      209ward      5 209ward-5         15 62.5
+21  LYS      b13          1 b13-1              2  9.5
+22  LYS      b13          1 b13-1              4 14.0
+23  LYS      b13          1 b13-1              8 34.0
+24  LYS      b13          1 b13-1             15 65.0
+25  LYS      b13          2 b13-2              2  9.5
+26  LYS      b13          2 b13-2              4 14.5
+27  LYS      b13          2 b13-2              8 34.5
+28  LYS      b13          2 b13-2             15 64.0
+29  LYS      b40          1 b40-1              2 10.0
+30  LYS      b40          1 b40-1              4 13.5
+31  LYS      b40          1 b40-1              8 32.5
+32  LYS      b40          1 b40-1             15 65.5
+33  LYS      b40          2 b40-2              2 10.0
+34  LYS      b40          2 b40-2              4 14.5
+35  LYS      b40          2 b40-2              8 34.0
+36  LYS      b40          2 b40-2             15 66.0
+37  LYS      b40          3 b40-3              2  9.5
+38  LYS      b40          3 b40-3              4 14.0
+39  LYS      b40          3 b40-3              8 32.5
+40  LYS      b40          3 b40-3             15 64.5
+....
+161 PBS      b1           1 b1-1               2  9.0
+162 PBS      b1           1 b1-1               4 12.5
+163 PBS      b1           1 b1-1               8 30.0
+164 PBS      b1           1 b1-1              15 57.5
+165 PBS      b1           2 b1-2               2  9.0
+166 PBS      b1           2 b1-2               4 14.5
+167 PBS      b1           2 b1-2               8 33.0
+168 PBS      b1           2 b1-2              15 59.0
+169 PBS      b1           4 b1-4               2  9.5
+170 PBS      b1           4 b1-4               4 14.0
+171 PBS      b1           4 b1-4               8 30.5
+172 PBS      b1           4 b1-4              15 58.0
+173 PBS      b1           5 b1-5               2  8.5
+174 PBS      b1           5 b1-5               4 12.5
+175 PBS      b1           5 b1-5               8 23.5
+176 PBS      b1           5 b1-5              15 55.0
+177 PBS      b18          1 b18-1              2  8.5
+178 PBS      b18          1 b18-1              4 13.0
+179 PBS      b18          1 b18-1              8 30.0
+180 PBS      b18          1 b18-1             15 63.5
+181 PBS      b18          2 b18-2              2  8.5
+182 PBS      b18          2 b18-2              4 12.0
+183 PBS      b18          2 b18-2              8 28.0
+184 PBS      b18          2 b18-2             15 65.0
+185 PBS      b18          3 b18-3              2  8.5
+186 PBS      b18          3 b18-3              4 13.5
+187 PBS      b18          3 b18-3              8 30.0
+188 PBS      b18          3 b18-3             15 64.0
+189 PBS      b19          1 b19-1              2  8.5
+190 PBS      b19          1 b19-1              4 13.0
+191 PBS      b19          1 b19-1              8 32.5
+192 PBS      b19          1 b19-1             15 64.0
+193 PBS      b19          2 b19-2              2  9.5
+194 PBS      b19          2 b19-2              4 14.0
+195 PBS      b19          2 b19-2              8 33.0
+196 PBS      b19          2 b19-2             15 68.0
+197 PBS      b19          3 b19-3              2  9.5
+198 PBS      b19          3 b19-3              4 13.0
+199 PBS      b19          3 b19-3              8 30.5
+200 PBS      b19          3 b19-3             15 63.5
+201 PBS      b19          4 b19-4              2  8.5
+202 PBS      b19          4 b19-4              4 13.5
+203 PBS      b19          4 b19-4              8 32.0
+204 PBS      b19          4 b19-4             15 66.0
+205 PBS      b19          5 b19-5              2  8.5
+206 PBS      b19          5 b19-5              4 11.0
+207 PBS      b19          5 b19-5              8 29.0
+208 PBS      b19          5 b19-5             15 61.5
+209 PBS      b42          1 b42-1              2  8.0
+210 PBS      b42          1 b42-1              4 13.0
+211 PBS      b42          1 b42-1              8 29.0
+212 PBS      b42          1 b42-1             15 63.0
+213 PBS      b42          2 b42-2              2  7.5
+214 PBS      b42          2 b42-2              4 11.5
+215 PBS      b42          2 b42-2              8 26.0
+216 PBS      b42          2 b42-2             15 58.0
+217 PBS      b42          3 b42-3              2  9.5
+218 PBS      b42          3 b42-3              4 14.5
+219 PBS      b42          3 b42-3              8 31.0
+220 PBS      b42          3 b42-3             15 65.0
+221 PBS      b42          4 b42-4              2  8.0
+222 PBS      b42          4 b42-4              4 12.0
+223 PBS      b42          4 b42-4              8 27.0
+224 PBS      b42          4 b42-4             15 62.5
+225 PBS      b42          5 b42-5              2  8.0
+226 PBS      b42          5 b42-5              4 11.0
+227 PBS      b42          5 b42-5              8 27.5
+228 PBS      b42          5 b42-5             15 65.0
+
+
+
+
+
+
+-- Maaike Versteegh Animal Ecology Group University of Groningen PO Box
+14 9750 AA Haren The Netherlands phone +31 50 363 3408 fax +31 50 363
+5205 e-mail m.a.versteegh at rug.nl
+
+
+From queirozrafaelmv at yahoo.com.br  Tue Jul 22 00:39:54 2008
+From: queirozrafaelmv at yahoo.com.br (Rafael Maia)
+Date: Mon, 21 Jul 2008 19:39:54 -0300
+Subject: [R-sig-eco] "random" lme syntax; related problem
+In-Reply-To: <48845889.1060000@rug.nl>
+References: <48845889.1060000@rug.nl>
+Message-ID: <4885103A.1040308@yahoo.com.br>
+
+Dear Maaike,
+
+Again, I lack the mathematical foundations, but I'd try the following 
+syntax:
+
+lme(wing~treat,random=~1|nest/day/nstchk, data=wdata)
+
+which seems more logical to me... I believe you probably have random intercepts and fixed slopes (thus, the ~1 | ), but I'm not sure if it'd be day/nest/nstchk or nest/day/nstchk which will adequately represent your hierarchical structure.
+
+Let me know if it helps!
+
+Best,
+Rafael Maia
+
+
+
+
+Maaike A Versteegh wrote:
+> Dear Rafael and Kongston Jones (and others)
+>
+> I am also helping a colleague with quite similar data-set.
+>
+> He's interested in the effect of a lysozyme treatment on growth
+> wing-lenght of chicks. He has has multiple chicks in nests but the
+> treatment is on the nest level. So he has treated and untreated nests.
+> He measured wing-length on day 2,4,8 and 15.
+> He has a balanced design, with 40 treated and 40 untreated chicks, and
+> 10 treated and 10 untreated nests.
+>
+> So he has chicks (who get an unique id: nstchk) nested in nests,
+> measured on 4 days
+> We tried the method Kingston Jones suggest (wing<-treat,
+> random=~day|nest/nstchk). If we do an lme with only the first two days
+> (day 2 and day 4) it works fine. But if we try to run a lme on the data
+> of all 4 days we get an error message. The error message is:
+>
+> Error in lme.formula(wing ~ treat, random = ~day | *nest/nstchk*, data =
+> wdata) :
+>   nlminb problem, convergence error code = 1
+>   message = iteration limit reached without convergence (9)
+>
+> If he does not include nstchk (the unique id of the chicks) in the
+> random part of the equation (so: random = ~day| nest), lme works fine
+> with the data from all 4 days, but doesn't with just the data from day 2
+> and day 4. It gives the same error message as above
+>
+> Both of the methods work with day 4 and day 8. Day 2 and day 15 also
+> works with both models.
+> As you can see we tried a lot, and we don't understands what makes it
+> sometimes give error message and sometimes not.
+>
+> Can anybody help? could the problem be that we have too little variation
+> in winglength on day 2? or too little growth between day 2 and day 4?
+> Ideally my colleague would like to include all the days.
+>
+> Any help would be appreciated
+>
+> Maaike
+>
+> The complete R-code:
+>
+> wdata=read.csv("f:\\r practice\\wingtest320.2.4.8.15.csv")
+> attach(wdata)
+> names(wdata)
+> library(nlme)
+>  
+> model.with.nstchk<-lme(wing~treat,random=~day|nest/nstchk, data=wdata);
+> summary(model.with.nstchk);
+> model.no.nstchk<-lme(wing~treat,random=~day|nest, data=wdata);
+> summary(model.no.nstchk)
+>  
+>
+> (part of) the data-set:
+>
+>
+>       treat     nest chick           nstchk day wing
+> 1   LYS      209ward      1 209ward-1          2  9.0
+> 2   LYS      209ward      1 209ward-1          4 13.5
+> 3   LYS      209ward      1 209ward-1          8 34.0
+> 4   LYS      209ward      1 209ward-1         15 64.0
+> 5   LYS      209ward      2 209ward-2          2  9.0
+> 6   LYS      209ward      2 209ward-2          4 13.0
+> 7   LYS      209ward      2 209ward-2          8 32.0
+> 8   LYS      209ward      2 209ward-2         15 63.0
+> 9   LYS      209ward      3 209ward-3          2  8.5
+> 10  LYS      209ward      3 209ward-3          4 13.5
+> 11  LYS      209ward      3 209ward-3          8 32.5
+> 12  LYS      209ward      3 209ward-3         15 63.0
+> 13  LYS      209ward      4 209ward-4          2  8.5
+> 14  LYS      209ward      4 209ward-4          4 12.5
+> 15  LYS      209ward      4 209ward-4          8 34.0
+> 16  LYS      209ward      4 209ward-4         15 61.0
+> 17  LYS      209ward      5 209ward-5          2  9.0
+> 18  LYS      209ward      5 209ward-5          4 13.0
+> 19  LYS      209ward      5 209ward-5          8 34.0
+> 20  LYS      209ward      5 209ward-5         15 62.5
+> 21  LYS      b13          1 b13-1              2  9.5
+> 22  LYS      b13          1 b13-1              4 14.0
+> 23  LYS      b13          1 b13-1              8 34.0
+> 24  LYS      b13          1 b13-1             15 65.0
+> 25  LYS      b13          2 b13-2              2  9.5
+> 26  LYS      b13          2 b13-2              4 14.5
+> 27  LYS      b13          2 b13-2              8 34.5
+> 28  LYS      b13          2 b13-2             15 64.0
+> 29  LYS      b40          1 b40-1              2 10.0
+> 30  LYS      b40          1 b40-1              4 13.5
+> 31  LYS      b40          1 b40-1              8 32.5
+> 32  LYS      b40          1 b40-1             15 65.5
+> 33  LYS      b40          2 b40-2              2 10.0
+> 34  LYS      b40          2 b40-2              4 14.5
+> 35  LYS      b40          2 b40-2              8 34.0
+> 36  LYS      b40          2 b40-2             15 66.0
+> 37  LYS      b40          3 b40-3              2  9.5
+> 38  LYS      b40          3 b40-3              4 14.0
+> 39  LYS      b40          3 b40-3              8 32.5
+> 40  LYS      b40          3 b40-3             15 64.5
+> ....
+> 161 PBS      b1           1 b1-1               2  9.0
+> 162 PBS      b1           1 b1-1               4 12.5
+> 163 PBS      b1           1 b1-1               8 30.0
+> 164 PBS      b1           1 b1-1              15 57.5
+> 165 PBS      b1           2 b1-2               2  9.0
+> 166 PBS      b1           2 b1-2               4 14.5
+> 167 PBS      b1           2 b1-2               8 33.0
+> 168 PBS      b1           2 b1-2              15 59.0
+> 169 PBS      b1           4 b1-4               2  9.5
+> 170 PBS      b1           4 b1-4               4 14.0
+> 171 PBS      b1           4 b1-4               8 30.5
+> 172 PBS      b1           4 b1-4              15 58.0
+> 173 PBS      b1           5 b1-5               2  8.5
+> 174 PBS      b1           5 b1-5               4 12.5
+> 175 PBS      b1           5 b1-5               8 23.5
+> 176 PBS      b1           5 b1-5              15 55.0
+> 177 PBS      b18          1 b18-1              2  8.5
+> 178 PBS      b18          1 b18-1              4 13.0
+> 179 PBS      b18          1 b18-1              8 30.0
+> 180 PBS      b18          1 b18-1             15 63.5
+> 181 PBS      b18          2 b18-2              2  8.5
+> 182 PBS      b18          2 b18-2              4 12.0
+> 183 PBS      b18          2 b18-2              8 28.0
+> 184 PBS      b18          2 b18-2             15 65.0
+> 185 PBS      b18          3 b18-3              2  8.5
+> 186 PBS      b18          3 b18-3              4 13.5
+> 187 PBS      b18          3 b18-3              8 30.0
+> 188 PBS      b18          3 b18-3             15 64.0
+> 189 PBS      b19          1 b19-1              2  8.5
+> 190 PBS      b19          1 b19-1              4 13.0
+> 191 PBS      b19          1 b19-1              8 32.5
+> 192 PBS      b19          1 b19-1             15 64.0
+> 193 PBS      b19          2 b19-2              2  9.5
+> 194 PBS      b19          2 b19-2              4 14.0
+> 195 PBS      b19          2 b19-2              8 33.0
+> 196 PBS      b19          2 b19-2             15 68.0
+> 197 PBS      b19          3 b19-3              2  9.5
+> 198 PBS      b19          3 b19-3              4 13.0
+> 199 PBS      b19          3 b19-3              8 30.5
+> 200 PBS      b19          3 b19-3             15 63.5
+> 201 PBS      b19          4 b19-4              2  8.5
+> 202 PBS      b19          4 b19-4              4 13.5
+> 203 PBS      b19          4 b19-4              8 32.0
+> 204 PBS      b19          4 b19-4             15 66.0
+> 205 PBS      b19          5 b19-5              2  8.5
+> 206 PBS      b19          5 b19-5              4 11.0
+> 207 PBS      b19          5 b19-5              8 29.0
+> 208 PBS      b19          5 b19-5             15 61.5
+> 209 PBS      b42          1 b42-1              2  8.0
+> 210 PBS      b42          1 b42-1              4 13.0
+> 211 PBS      b42          1 b42-1              8 29.0
+> 212 PBS      b42          1 b42-1             15 63.0
+> 213 PBS      b42          2 b42-2              2  7.5
+> 214 PBS      b42          2 b42-2              4 11.5
+> 215 PBS      b42          2 b42-2              8 26.0
+> 216 PBS      b42          2 b42-2             15 58.0
+> 217 PBS      b42          3 b42-3              2  9.5
+> 218 PBS      b42          3 b42-3              4 14.5
+> 219 PBS      b42          3 b42-3              8 31.0
+> 220 PBS      b42          3 b42-3             15 65.0
+> 221 PBS      b42          4 b42-4              2  8.0
+> 222 PBS      b42          4 b42-4              4 12.0
+> 223 PBS      b42          4 b42-4              8 27.0
+> 224 PBS      b42          4 b42-4             15 62.5
+> 225 PBS      b42          5 b42-5              2  8.0
+> 226 PBS      b42          5 b42-5              4 11.0
+> 227 PBS      b42          5 b42-5              8 27.5
+> 228 PBS      b42          5 b42-5             15 65.0
+>
+>
+>
+>
+>
+>
+> -- Maaike Versteegh Animal Ecology Group University of Groningen PO Box
+> 14 9750 AA Haren The Netherlands phone +31 50 363 3408 fax +31 50 363
+> 5205 e-mail m.a.versteegh at rug.nl
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+>
+
+
+From atford at gmail.com  Tue Jul 22 15:08:07 2008
+From: atford at gmail.com (Adam T. Ford)
+Date: Tue, 22 Jul 2008 07:08:07 -0600
+Subject: [R-sig-eco] AHP in R?
+Message-ID: <e88783df0807220608w1583b3afp73418cf87b05f4a3@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080722/fbf0be84/attachment.pl>
+
+From patri at isa.utl.pt  Tue Jul 22 18:28:02 2008
+From: patri at isa.utl.pt (Patricia =?iso-8859-1?Q?Rodr=EDguez?= =?iso-8859-1?Q?_Gonz=E1lez?=)
+Date: Tue, 22 Jul 2008 17:28:02 +0100
+Subject: [R-sig-eco] Question about Multivariate Time Series Analysis
+Message-ID: <E1KLKiZ-00080A-6i@helix.isa.utl.pt>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080722/c536a2a8/attachment.pl>
+
+From ssefick at gmail.com  Tue Jul 22 19:03:17 2008
+From: ssefick at gmail.com (stephen sefick)
+Date: Tue, 22 Jul 2008 13:03:17 -0400
+Subject: [R-sig-eco] Question about Multivariate Time Series Analysis
+In-Reply-To: <E1KLKiZ-00080A-6i@helix.isa.utl.pt>
+References: <E1KLKiZ-00080A-6i@helix.isa.utl.pt>
+Message-ID: <c502a9e10807221003w3311dbfdm6d437fbc81baeb0a@mail.gmail.com>
+
+An embedded and charset-unspecified text was scrubbed...
+Name: not available
+URL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20080722/2f48c276/attachment.pl>
+
+From kingsfordjones at gmail.com  Tue Jul 22 21:06:48 2008
+From: kingsfordjones at gmail.com (Kingsford Jones)
+Date: Tue, 22 Jul 2008 12:06:48 -0700
+Subject: [R-sig-eco] "random" lme syntax; related problem
+In-Reply-To: <48845889.1060000@rug.nl>
+References: <48845889.1060000@rug.nl>
+Message-ID: <2ad0cc110807221206j3b298d52l4fa422205292ded8@mail.gmail.com>
+
+On Mon, Jul 21, 2008 at 2:36 AM, Maaike A Versteegh
+<M.A.Versteegh at rug.nl> wrote:
+> Dear Rafael and Kongston Jones (and others)
+>
+> I am also helping a colleague with quite similar data-set.
+>
+> He's interested in the effect of a lysozyme treatment on growth
+> wing-lenght of chicks. He has has multiple chicks in nests but the
+> treatment is on the nest level. So he has treated and untreated nests.
+> He measured wing-length on day 2,4,8 and 15.
+> He has a balanced design, with 40 treated and 40 untreated chicks, and
+> 10 treated and 10 untreated nests.
+>
+> So he has chicks (who get an unique id: nstchk) nested in nests,
+> measured on 4 days
+> We tried the method Kingston Jones suggest (wing<-treat,
+> random=~day|nest/nstchk).
+
+I don't recall making that suggestion.  If you plot the growth curves
+for each chick by treatment or nest you'll see that's not a likely
+model.  Look at the plots and think about how you would test for
+treatment effects using lm and it's associated assumptions (including
+linearity), then try something similar with lme, adding covariance
+structures for random effects and errors to produce more realistic
+estimates of standard errors (and betas).  You've got observations at
+days within chicks within nests and you want to account for probable
+correlations at each of those levels (noting you can't predict random
+effects for nest/nstchk/day because there is only one observation at
+that level, leaving no df for error).  The errors at the day level
+likely have temporal correlation with unequally spaced lags suggesting
+what type of correlation structure to try.  Also your variances are
+non-homogeneous (in the sample data you sent) and the diagonal of the
+error covariance matrix should be appropriately structured.  As far as
+the convergence issues the likely culprits are near singularities in
+model matrices or flat likelihood surfaces.  Following the suggestions
+above may help.
+
+If this advice is not readily clear I suggest consulting with a statistician.
+
+Kingsford Jones
+
+
+
+
+
+> If we do an lme with only the first two days
+> (day 2 and day 4) it works fine. But if we try to run a lme on the data
+> of all 4 days we get an error message. The error message is:
+>
+> Error in lme.formula(wing ~ treat, random = ~day | *nest/nstchk*, data =
+> wdata) :
+>  nlminb problem, convergence error code = 1
+>  message = iteration limit reached without convergence (9)
+>
+> If he does not include nstchk (the unique id of the chicks) in the
+> random part of the equation (so: random = ~day| nest), lme works fine
+> with the data from all 4 days, but doesn't with just the data from day 2
+> and day 4. It gives the same error message as above
+>
+> Both of the methods work with day 4 and day 8. Day 2 and day 15 also
+> works with both models.
+> As you can see we tried a lot, and we don't understands what makes it
+> sometimes give error message and sometimes not.
+>
+> Can anybody help? could the problem be that we have too little variation
+> in winglength on day 2? or too little growth between day 2 and day 4?
+> Ideally my colleague would like to include all the days.
+>
+> Any help would be appreciated
+>
+> Maaike
+>
+> The complete R-code:
+>
+> wdata=read.csv("f:\\r practice\\wingtest320.2.4.8.15.csv")
+> attach(wdata)
+> names(wdata)
+> library(nlme)
+>
+> model.with.nstchk<-lme(wing~treat,random=~day|nest/nstchk, data=wdata);
+> summary(model.with.nstchk);
+> model.no.nstchk<-lme(wing~treat,random=~day|nest, data=wdata);
+> summary(model.no.nstchk)
+>
+>
+> (part of) the data-set:
+>
+>
+>      treat     nest chick           nstchk day wing
+> 1   LYS      209ward      1 209ward-1          2  9.0
+> 2   LYS      209ward      1 209ward-1          4 13.5
+> 3   LYS      209ward      1 209ward-1          8 34.0
+> 4   LYS      209ward      1 209ward-1         15 64.0
+> 5   LYS      209ward      2 209ward-2          2  9.0
+> 6   LYS      209ward      2 209ward-2          4 13.0
+> 7   LYS      209ward      2 209ward-2          8 32.0
+> 8   LYS      209ward      2 209ward-2         15 63.0
+> 9   LYS      209ward      3 209ward-3          2  8.5
+> 10  LYS      209ward      3 209ward-3          4 13.5
+> 11  LYS      209ward      3 209ward-3          8 32.5
+> 12  LYS      209ward      3 209ward-3         15 63.0
+> 13  LYS      209ward      4 209ward-4          2  8.5
+> 14  LYS      209ward      4 209ward-4          4 12.5
+> 15  LYS      209ward      4 209ward-4          8 34.0
+> 16  LYS      209ward      4 209ward-4         15 61.0
+> 17  LYS      209ward      5 209ward-5          2  9.0
+> 18  LYS      209ward      5 209ward-5          4 13.0
+> 19  LYS      209ward      5 209ward-5          8 34.0
+> 20  LYS      209ward      5 209ward-5         15 62.5
+> 21  LYS      b13          1 b13-1              2  9.5
+> 22  LYS      b13          1 b13-1              4 14.0
+> 23  LYS      b13          1 b13-1              8 34.0
+> 24  LYS      b13          1 b13-1             15 65.0
+> 25  LYS      b13          2 b13-2              2  9.5
+> 26  LYS      b13          2 b13-2              4 14.5
+> 27  LYS      b13          2 b13-2              8 34.5
+> 28  LYS      b13          2 b13-2             15 64.0
+> 29  LYS      b40          1 b40-1              2 10.0
+> 30  LYS      b40          1 b40-1              4 13.5
+> 31  LYS      b40          1 b40-1              8 32.5
+> 32  LYS      b40          1 b40-1             15 65.5
+> 33  LYS      b40          2 b40-2              2 10.0
+> 34  LYS      b40          2 b40-2              4 14.5
+> 35  LYS      b40          2 b40-2              8 34.0
+> 36  LYS      b40          2 b40-2             15 66.0
+> 37  LYS      b40          3 b40-3              2  9.5
+> 38  LYS      b40          3 b40-3              4 14.0
+> 39  LYS      b40          3 b40-3              8 32.5
+> 40  LYS      b40          3 b40-3             15 64.5
+> ....
+> 161 PBS      b1           1 b1-1               2  9.0
+> 162 PBS      b1           1 b1-1               4 12.5
+> 163 PBS      b1           1 b1-1               8 30.0
+> 164 PBS      b1           1 b1-1              15 57.5
+> 165 PBS      b1           2 b1-2               2  9.0
+> 166 PBS      b1           2 b1-2               4 14.5
+> 167 PBS      b1           2 b1-2               8 33.0
+> 168 PBS      b1           2 b1-2              15 59.0
+> 169 PBS      b1           4 b1-4               2  9.5
+> 170 PBS      b1           4 b1-4               4 14.0
+> 171 PBS      b1           4 b1-4               8 30.5
+> 172 PBS      b1           4 b1-4              15 58.0
+> 173 PBS      b1           5 b1-5               2  8.5
+> 174 PBS      b1           5 b1-5               4 12.5
+> 175 PBS      b1           5 b1-5               8 23.5
+> 176 PBS      b1           5 b1-5              15 55.0
+> 177 PBS      b18          1 b18-1              2  8.5
+> 178 PBS      b18          1 b18-1              4 13.0
+> 179 PBS      b18          1 b18-1              8 30.0
+> 180 PBS      b18          1 b18-1             15 63.5
+> 181 PBS      b18          2 b18-2              2  8.5
+> 182 PBS      b18          2 b18-2              4 12.0
+> 183 PBS      b18          2 b18-2              8 28.0
+> 184 PBS      b18          2 b18-2             15 65.0
+> 185 PBS      b18          3 b18-3              2  8.5
+> 186 PBS      b18          3 b18-3              4 13.5
+> 187 PBS      b18          3 b18-3              8 30.0
+> 188 PBS      b18          3 b18-3             15 64.0
+> 189 PBS      b19          1 b19-1              2  8.5
+> 190 PBS      b19          1 b19-1              4 13.0
+> 191 PBS      b19          1 b19-1              8 32.5
+> 192 PBS      b19          1 b19-1             15 64.0
+> 193 PBS      b19          2 b19-2              2  9.5
+> 194 PBS      b19          2 b19-2              4 14.0
+> 195 PBS      b19          2 b19-2              8 33.0
+> 196 PBS      b19          2 b19-2             15 68.0
+> 197 PBS      b19          3 b19-3              2  9.5
+> 198 PBS      b19          3 b19-3              4 13.0
+> 199 PBS      b19          3 b19-3              8 30.5
+> 200 PBS      b19          3 b19-3             15 63.5
+> 201 PBS      b19          4 b19-4              2  8.5
+> 202 PBS      b19          4 b19-4              4 13.5
+> 203 PBS      b19          4 b19-4              8 32.0
+> 204 PBS      b19          4 b19-4             15 66.0
+> 205 PBS      b19          5 b19-5              2  8.5
+> 206 PBS      b19          5 b19-5              4 11.0
+> 207 PBS      b19          5 b19-5              8 29.0
+> 208 PBS      b19          5 b19-5             15 61.5
+> 209 PBS      b42          1 b42-1              2  8.0
+> 210 PBS      b42          1 b42-1              4 13.0
+> 211 PBS      b42          1 b42-1              8 29.0
+> 212 PBS      b42          1 b42-1             15 63.0
+> 213 PBS      b42          2 b42-2              2  7.5
+> 214 PBS      b42          2 b42-2              4 11.5
+> 215 PBS      b42          2 b42-2              8 26.0
+> 216 PBS      b42          2 b42-2             15 58.0
+> 217 PBS      b42          3 b42-3              2  9.5
+> 218 PBS      b42          3 b42-3              4 14.5
+> 219 PBS      b42          3 b42-3              8 31.0
+> 220 PBS      b42          3 b42-3             15 65.0
+> 221 PBS      b42          4 b42-4              2  8.0
+> 222 PBS      b42          4 b42-4              4 12.0
+> 223 PBS      b42          4 b42-4              8 27.0
+> 224 PBS      b42          4 b42-4             15 62.5
+> 225 PBS      b42          5 b42-5              2  8.0
+> 226 PBS      b42          5 b42-5              4 11.0
+> 227 PBS      b42          5 b42-5              8 27.5
+> 228 PBS      b42          5 b42-5             15 65.0
+>
+>
+>
+>
+>
+>
+> -- Maaike Versteegh Animal Ecology Group University of Groningen PO Box
+> 14 9750 AA Haren The Netherlands phone +31 50 363 3408 fax +31 50 363
+> 5205 e-mail m.a.versteegh at rug.nl
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+From pmahoney29 at gmail.com  Wed Jul 23 20:36:54 2008
+From: pmahoney29 at gmail.com (Peter Mahoney)
+Date: Wed, 23 Jul 2008 14:36:54 -0400
+Subject: [R-sig-eco] R-sig-ecology Digest, Vol 4, Issue 16
+Message-ID: <48877a3a.2204be0a.2cf0.2536@mx.google.com>
+
+Actually, I'm eyeing a few jobs and grad positions that I'll likely apply for...ones working with Lynx and/or coyotes in Newfoundland (grad position).  Out of the same lab that I worked in on the wolf project.  We'll see...
+
+Went fishin' today...caught several snook even with poor condiitions!
+
+P
+
+-----Original Message-----
+From: r-sig-ecology-request at r-project.org
+Sent: Wednesday, July 23, 2008 6:00 AM
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 4, Issue 16
+
+Send R-sig-ecology mailing list submissions to
+	r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+	r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+	r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific
+than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. AHP in R? (Adam T. Ford)
+   2. Question about Multivariate Time Series Analysis
+      (Patricia Rodr?guez Gonz?lez)
+   3. Re: Question about Multivariate Time Series Analysis
+      (stephen sefick)
+   4. Re: "random" lme syntax; related problem (Kingsford Jones)
+
+
+----------------------------------------------------------------------
+
+
+[The entire original message is not included]
+
+From chizi001 at umn.edu  Thu Jul 24 21:17:57 2008
+From: chizi001 at umn.edu (Christopher Chizinski)
+Date: Thu, 24 Jul 2008 14:17:57 -0500
+Subject: [R-sig-eco] Adonis vs anosim/mrpp  in vegan
+Message-ID: <4888D565.6050309@umn.edu>
+
+I am curious about the suggestion and warnings about using adonis 
+instead of the functions anosim and mrpp in the vegan package.  Is this 
+suggestion based on the fact that MANOVA using distance matrices is more 
+robust and powerful than anosim and mrpp statistically speaking and 
+should be used instead or is this a suggestion based on the R 
+implementation of these processes in the vegan package? Any insight 
+would be appreciated.
+
+--Chris
+
+

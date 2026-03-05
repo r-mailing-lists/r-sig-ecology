@@ -1,0 +1,1435 @@
+From katiemharding at yahoo.com  Sat Jan  3 01:50:23 2015
+From: katiemharding at yahoo.com (Katie Harding)
+Date: Sat, 3 Jan 2015 00:50:23 +0000 (UTC)
+Subject: [R-sig-eco] EC50 Calculations using Insect Size
+Message-ID: <740065677.2297721.1420246223481.JavaMail.yahoo@jws100183.mail.ne1.yahoo.com>
+
+I have insect size measurements that I fit to a Weibull curve to determine EC50. ?This is my model fit:model=nls(y~SSweibull(x,asym,drop,lrc,pwr))
+I need to use the untreated buffer samples as the maximum size (the left most asymptope). ?If I put the doses as 0,1,2,4,8,16,32,64,128 ppm, I get error messages indicating that 0 values for x are inappropriate. ?This is the error message:Error in qr.default(.swts * attr(rhs, "gradient")) :?? NA/NaN/Inf in foreign function call (arg 1)?
+I found that I get more consistent results when I put 0.01 for the dose of the untreated controls. ?I was wondering if there was a convention to follow when using untreated buffer samples in EC50 calculations. ?Cheers,Katie
+
+	[[alternative HTML version deleted]]
+
+
+From bbolker at gmail.com  Sat Jan  3 18:46:36 2015
+From: bbolker at gmail.com (Ben Bolker)
+Date: Sat, 3 Jan 2015 17:46:36 +0000 (UTC)
+Subject: [R-sig-eco] EC50 Calculations using Insect Size
+References: <740065677.2297721.1420246223481.JavaMail.yahoo@jws100183.mail.ne1.yahoo.com>
+Message-ID: <loom.20150103T184152-823@post.gmane.org>
+
+Katie Harding <katiemharding at ...> writes:
+
+> 
+> I have insect size measurements that I fit to a Weibull curve 
+> to determine EC50. ?This is my model 
+> fit:model=nls(y~SSweibull(x,asym,drop,lrc,pwr))
+> I need to use the untreated buffer samples as the maximum size 
+> (the left most asymptope). ?If I put the doses
+> as 0,1,2,4,8,16,32,64,128 ppm, 
+> I get error messages indicating that 0 values for x are inappropriate.
+> ?This is the error message:Error in qr.default(.swts * 
+> attr(rhs, "gradient")) :?? NA/NaN/Inf in
+> foreign function call (arg 1)?
+> I found that I get more consistent results when I put
+>  0.01 for the dose of the untreated controls. ?I was
+> wondering if there was a convention to follow when using 
+> untreated buffer samples in EC50 calculations. ?Cheers,Katie
+
+
+Are you measuring a mortality response?  If so, you should probably
+be allowing the responses to be binomial rather than using least-squares
+(as nls() does).
+
+ The drc package from CRAN might be helpful (it has a built-in
+weibull response function).
+
+  Can you be slightly more specific/give a reproducible example?
+
+
+From pdixon at iastate.edu  Sun Jan  4 13:55:53 2015
+From: pdixon at iastate.edu (Dixon, Philip M [STAT])
+Date: Sun, 4 Jan 2015 12:55:53 +0000
+Subject: [R-sig-eco] Fitting a Weibull with a 0 dose
+Message-ID: <BN3PR0401MB1169E3C89FAC9D19846EF796DB5B0@BN3PR0401MB1169.namprd04.prod.outlook.com>
+
+Katie,
+
+I second Ben's suggestion to use functions in the drc library, not nls().  Not only do those functions model binomial or overdispersed binomial data, but they provide estimates and confidence intervals for the EC50 and any other EC, e.g. EC10.
+
+However, neither handles x=0 very well.  The problem is the way the Weibull function is coded.  Instead of x^power, both use exp(power*log(x) ...).  The first is defined for x=0, the second is not.  
+
+A work around is to use a small positive value for x, e.g. 0.01, as you suggest.  If there is some background level of x, so experimental dose = 0  is really exposure to a small background concentration, that background concentration is an easily justified replacement for 0.  If not, I rerun the analysis with different choices of small positive value.  If the low dose asymptote is well determined by the data, you should get similar parameter values and estimated ECx's for any small positive value.  This is a robustness check to make sure that an arbitrary choice doesn't affect the results.
+
+Best wishes,
+Philip 
+
+
+From bbolker at gmail.com  Sun Jan  4 18:25:08 2015
+From: bbolker at gmail.com (Ben Bolker)
+Date: Sun, 4 Jan 2015 17:25:08 +0000 (UTC)
+Subject: [R-sig-eco] Fitting a Weibull with a 0 dose
+References: <BN3PR0401MB1169E3C89FAC9D19846EF796DB5B0@BN3PR0401MB1169.namprd04.prod.outlook.com>
+Message-ID: <loom.20150104T152617-220@post.gmane.org>
+
+Dixon, Philip M [STAT] <pdixon at ...> writes:
+
+>  Katie, I second Ben's suggestion to use functions in the drc
+> library, not nls().  Not only do those functions model binomial or
+> overdispersed binomial data, but they provide estimates and
+> confidence intervals for the EC50 and any other EC, e.g. EC10.
+ 
+> However, neither handles x=0 very well.  
+> The problem is the way the Weibull function is coded.  Instead of
+> x^power, both use exp(power*log(x) ...).  
+> The first is defined for x=0, the second is not.  
+ 
+> A work around is to use a small positive value for x, e.g. 0.01, as
+> you suggest.  If there is some background level of x, so
+> experimental dose = 0 is really exposure to a small background
+> concentration, that background concentration is an easily justified
+> replacement for 0.  If not, I rerun the analysis with different
+> choices of small positive value.  If the low dose asymptote is well
+> determined by the data, you should get similar parameter values and
+> estimated ECx's for any small positive value.  This is a robustness
+> check to make sure that an arbitrary choice doesn't affect the
+> results.  
+
+> Best wishes, Philip
+
+  I don't disagree with the workaround, but I wanted to point out that
+exp(power*log(x)) _does_ work in R when x=0, because log(x) -> -Inf,
+any positive number times -Inf is -Inf, and exp(-Inf) -> 0.  This is
+sloppy mathematically, but it's according to sensible and well-established
+IEEE conventions.  That doesn't mean there aren't other problems ...
+
+> x <- 0
+> power <- 0.25
+> x^power
+[1] 0
+> exp(power*log(x))
+[1] 0
+>
+
+
+From eva.amorim at gmail.com  Mon Jan  5 17:03:06 2015
+From: eva.amorim at gmail.com (Eva Amorim)
+Date: Mon, 5 Jan 2015 16:03:06 +0000
+Subject: [R-sig-eco] gbm.simplify Error (nTrain*bag.fraction)
+Message-ID: <CAM1zJFm72+5wuP9odkTUpBEM7mDjZ+LLhMyNUb+2xpRmPT0d-Q@mail.gmail.com>
+
+Dear all,
+
+
+I am trying to evaluate the influence of several oceanographic
+environmental parameters on the presence/absence of a fish species in an
+estuary using boosted regression trees. For that I tried the gbm.step
+function provided in the package dismo.
+
+Since I have many predictors, I used gbm.simplify to drop the
+non-informative predictors and improve the predictive performance of the
+models.
+
+But one of my datasets has a very small number of observations, n=44.
+Although the function gbm.step appears to run fine on this dataset, when I
+apply gbm.simplify to the model, I get the following error:
+
+
+
+*Error in gbm.fit(x, y, offset = offset, distribution = distribution, w =
+w,  : *
+
+*  The dataset size is too small or subsampling rate is too large:
+nTrain*bag.fraction <= n.minobsinnode*
+
+
+
+I provide an example using Anguilla_train the dataset:
+
+
+
+data(Anguilla_train)
+
+# reduce data set to 44 obs.
+
+Anguilla_train <- Anguilla_train[245:288,]
+
+# apply gbm.step with a bag.fraction=0.75
+
+model <- gbm.step(data=Anguilla_train, gbm.x = c("SegSumT", "SegTSeas",
+
+                      "SegLowFlow", "DSDist", "DSMaxSlope", "USAvgT",
+
+                       "USRainDays", "USSlope", "USNative",
+
+"DSDam", "Method", "LocSed"),
+
+                                    gbm.y = "Angaus", family = "bernoulli",
+tree.complexity = 1,
+
+                                    learning.rate = 0.001, bag.fraction =
+0.75, n.folds =5)
+
+
+
+#apply gbm.simplify to the model
+
+model.simp<- gbm.simplify(model, n.drops=3)
+
+
+
+
+
+When I check the components of my model object:
+
+model$nTrain
+
+#[1] 44
+
+model$bag.fraction
+
+#[1] 0.75
+
+model$n.minobsinnode
+
+# [1] 10
+
+
+
+So if I understand correctly, 44*0.75>10, which allowed the model to be
+built with the function gbm.step. I assume gbm.simplify would run based on
+the settings established previously for the model... So why does the error
+message only appear for this function and not for both?
+
+
+
+If I change the bag.fraction to 1, the same happens.
+
+I also tried to include a setting of n.minobsinnode=5 in the the gbm.step
+function, but the default remains the same (=10). I guess that happens
+because gbm.step function is an extension of the gbm functions in the gbm
+package...
+
+
+
+Any thoughts will be highly appreciated.
+
+
+Thanks in advance.
+
+
+Eva Amorim
+
+	[[alternative HTML version deleted]]
+
+
+From katiemharding at yahoo.com  Tue Jan  6 01:30:13 2015
+From: katiemharding at yahoo.com (Katie Harding)
+Date: Tue, 6 Jan 2015 00:30:13 +0000 (UTC)
+Subject: [R-sig-eco] Fitting a Weibull with a 0 dose
+Message-ID: <1799749815.2979705.1420504213602.JavaMail.yahoo@jws10053.mail.ne1.yahoo.com>
+
+Thank you for the help! ?My data is not binomial, so it is more like the ryegrass data from the drc library.?The model: ?ryegrass.m2 <- drm(rootl ~ conc, data = ryegrass, fct = W1.4())I think this will solve my problems!Katie?
+	[[alternative HTML version deleted]]
+
+
+From jrg123 at mail.com  Tue Jan  6 08:26:01 2015
+From: jrg123 at mail.com (Jeff)
+Date: Tue, 06 Jan 2015 09:26:01 +0200
+Subject: [R-sig-eco] Comparison and interpretation of results from envfit,
+ ordisurf and bioenv in the vegan package
+Message-ID: <54AB8E09.7080400@mail.com>
+
+Dear forum,
+
+My first time posting to this forum -- afraid I am going to start with a 
+somewhat conceptual/complicated question.
+
+My question concerns the analysis of environmental factors as predictors 
+of community (using vegan). Specifically I am trying to understand why 
+envit and ordisurf appear to be giving me a qualitatively different 
+picture of environmental correlations with my community matrix when 
+compared with the bioenv function/approach.
+
+Briefly:
+
+I am using NMDS to reduce dimensionality of a large dataset that of soil 
+microbes across broad geographic scale (there are over 250 sites and 60 
+species in the matrix). I got the metaMDS in vegan to converge on a 
+solution despite the high number of site pairs that shared no species 
+(~30%) by using the noshare=0.1 modifier.
+
+Call:
+metaMDS(comm = decostand(comm.matrix, "pa"), distance = "jaccard", k = 
+3, trymax = 150, engine = "monoMDS", noshare = 0.1, weakties = TRUE, 
+stress = 1, maxit = 500, scaling = TRUE, pc = TRUE, smin = 1e-04, 
+sfgrmin = 1e-07, sratmax = 0.99999, zerodist = "add")
+
+global Multidimensional Scaling using monoMDS
+
+Data: pa(comm.matrix)
+Distance: jaccard shortest
+
+Dimensions: 3
+Stress: 0.1598281
+Stress type 1, weak ties
+Two convergent solutions found after 34 tries
+Scaling: centring, PC rotation, halfchange scaling
+Species: expanded scores based on ?pa(comm.matrix)?
+
+Next I ran I envfit on a corresponding environmental matrix which 
+contained both continuous and categorical data.
+
+ef1 <- envfit(nmds_output, envir.matrix, permu = 999, na.rm=TRUE) #(very 
+long) output not shown
+
+This as I understand it assumes a linear relationship between the 
+continuous variables and the metaMDS axes. This didn't seem quite right 
+so I used gam via ordisurf to get a better estimate and visualization of 
+the relationships for all of the variables individually. There was 
+reasonable correspondence between estimates of the strengths of the 
+relationships using envfit and ordisurf.
+
+ordi<-list()
+for (i in 1:ncol(envir.matrix)){ ordi[[i]]<-ordisurf(nmds_final, 
+envir.matrix[,i], add=FALSE) } #output not shown
+
+
+Of course many of the environmental variables considered are highly 
+correlated and/or may have additive effects, so ideally I wanted to do 
+some sort of model comparison that would choose the most parsimonious 
+model that best describes the community using the optimal number of 
+predictors. A good option seemed to be bioenv. Having read the vegan 
+help and various tutorial as well as Clarke, K. R & Ainsworth, M. 1993 I 
+understand that bioenv uses a totally different approach, which as I 
+understand is based on the rank correlations between distance matrices 
+calculated from the (biotic) community data v. subsets of potential 
+predictors from an environmental matrix. (Hope I have that right).
+
+#bioenv.output<-bioenv(comm=vegdist(decostand(comm.matrix, "pa"), 
+"jaccard"),env=envir.matrix, metric="gower", upto=7) #yes, this took a 
+long time
+
+ > bioenv.output
+
+Call:
+bioenv(comm = vegdist(decostand(comm.matrix, "pa"), "jaccard"), env = 
+envir.matrix, upto = 7, metric = "gower")
+
+Subset of environmental variables with best correlation to community data.
+
+Correlations: spearman
+Dissimilarities: jaccard
+Metric: gower
+
+Best model has 4 parameters (max. 7 allowed):
+bio_1 bio_10 bio_19 Latitude
+with correlation 0.3217859
+
+Where I'm coming unstuck is that envfit and ordisurf give me an entirely 
+different picture of which variables are important when compared with 
+the bioenv function. For example, a variable called "Bioregion" is 
+highly significant with respect the to the prediction of axes 1 and 2 of 
+the NMDS using envfit, and based on an R-squared of 0.32 is the 
+strongest predictor of the lot. Alternatively, "Bioregion" never makes 
+the top models at all when I use the bioenv function. One could argue 
+that maybe "Bioregion" is correlated with other variables like latitude 
+and that these other variables are simply better, but actually Bioregion 
+alone is a terrible predictor based on bioenv. I know this since I can 
+force bioenv to choose Bioregion (by giving it only a subset of the 
+environmental matrix that I know to contain really poor predictors), and 
+when do this I get an r value of 0.05. This is only an example -- 
+several of the top performers according to envfit do not feature at all 
+using the bioenv model selection approach.
+
+So my question really is 'how do I interpret/deal with these 
+discrepancies?' I know that the r values from the two approaches mean 
+totally different things and can't be directly compared, but one 
+approach leads me to think that a certain subset of the environmental 
+variables might be important, and the other approach appears to be 
+telling me something different. I must admit this is making my brain 
+hurt as I would expect at least moderate correspondence or agreement 
+among methods. I like the bioenv function as it allows competing models 
+and the evaluation of combinations of variables, though I must admit 
+that envfit/ordisurf approach is a bit more intuitive to me.
+
+Has anyone else worked through similar issues? Am I missing something 
+obvious, and/or are there suggestions for a way forward?
+
+Thanks in advance for any help!
+
+Jeff
+
+
+From rodgerjg at gmail.com  Tue Jan  6 12:52:06 2015
+From: rodgerjg at gmail.com (James Rodger)
+Date: Tue, 6 Jan 2015 13:52:06 +0200
+Subject: [R-sig-eco] model selection with truncated poisson distribution
+Message-ID: <CAA=M4eVhB3Q9fCe+e=vosKK2KqYacJ5eOZyMi2YK-kpsruuNTg@mail.gmail.com>
+
+Hi,
+
+Can anyone advise me on model selection in glm with a  zero truncated
+poisson distribution?
+
+I have used a the command vglm in the vgam package to analyse the data with
+pospoisson specified as the family and I have evaluated alternative models
+with a log-likelihood test. I am not  sure if that the test statistic will
+follow the chi-squared distribution, however.
+
+My data is on seeds per fruit (minimum 1) in different experimental
+treatments and different densities of plants.
+
+Regards,
+
+James
+
+	[[alternative HTML version deleted]]
+
+
+From roman.lustrik at gmail.com  Tue Jan  6 13:00:01 2015
+From: roman.lustrik at gmail.com (=?UTF-8?Q?Roman_Lu=C5=A1trik?=)
+Date: Tue, 6 Jan 2015 13:00:01 +0100
+Subject: [R-sig-eco] model selection with truncated poisson distribution
+In-Reply-To: <CAA=M4eVhB3Q9fCe+e=vosKK2KqYacJ5eOZyMi2YK-kpsruuNTg@mail.gmail.com>
+References: <CAA=M4eVhB3Q9fCe+e=vosKK2KqYacJ5eOZyMi2YK-kpsruuNTg@mail.gmail.com>
+Message-ID: <CAHT1vphf8TmFfV+OYeurf-uN+eE5azTMU2M7cThX0sQB0CSGJw@mail.gmail.com>
+
+What kind of model selection are we talking about? The dredging part (a la
+step()) or a more fine tuned, such as information-theoretic approach
+advocated by (among others) Burnham and Anderson?
+
+I would suggest the latter. Pardon me if I'm presuming too much, but in a
+nutshell, this approach advocates formulating a set of plausible
+hypotheses, constructing models to reflect them, and then compare based on
+some criterion (like AIC). You can also use model averaging (using weights)
+to get a better sense of model estimates.
+
+Cheers,
+Roman
+
+On Tue, Jan 6, 2015 at 12:52 PM, James Rodger <rodgerjg at gmail.com> wrote:
+
+> Hi,
+>
+> Can anyone advise me on model selection in glm with a  zero truncated
+> poisson distribution?
+>
+> I have used a the command vglm in the vgam package to analyse the data with
+> pospoisson specified as the family and I have evaluated alternative models
+> with a log-likelihood test. I am not  sure if that the test statistic will
+> follow the chi-squared distribution, however.
+>
+> My data is on seeds per fruit (minimum 1) in different experimental
+> treatments and different densities of plants.
+>
+> Regards,
+>
+> James
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+In God we trust, all others bring data.
+
+	[[alternative HTML version deleted]]
+
+
+From rodgerjg at gmail.com  Tue Jan  6 13:32:39 2015
+From: rodgerjg at gmail.com (James Rodger)
+Date: Tue, 6 Jan 2015 14:32:39 +0200
+Subject: [R-sig-eco] model selection with truncated poisson distribution
+In-Reply-To: <CAHT1vphf8TmFfV+OYeurf-uN+eE5azTMU2M7cThX0sQB0CSGJw@mail.gmail.com>
+References: <CAA=M4eVhB3Q9fCe+e=vosKK2KqYacJ5eOZyMi2YK-kpsruuNTg@mail.gmail.com>
+	<CAHT1vphf8TmFfV+OYeurf-uN+eE5azTMU2M7cThX0sQB0CSGJw@mail.gmail.com>
+Message-ID: <CAA=M4eXo_fWGW9cX0-c-7iw=-2D7REBVbB1k0Y7xGoiMS8_KAg@mail.gmail.com>
+
+Hi Roman,
+
+thanks for your response. I admit I was thinking of the 'dredging' type at
+this stage. In this particular case, it probably won't make much difference
+as my data doesn't show much in the way of patterns. I am going through the
+model selection process to test for effects of treatment, plant density and
+the interaction
+
+cheers,
+
+James
+
+On Tue, Jan 6, 2015 at 2:00 PM, Roman Lu?trik <roman.lustrik at gmail.com>
+wrote:
+
+> What kind of model selection are we talking about? The dredging part (a la
+> step()) or a more fine tuned, such as information-theoretic approach
+> advocated by (among others) Burnham and Anderson?
+>
+> I would suggest the latter. Pardon me if I'm presuming too much, but in a
+> nutshell, this approach advocates formulating a set of plausible
+> hypotheses, constructing models to reflect them, and then compare based on
+> some criterion (like AIC). You can also use model averaging (using weights)
+> to get a better sense of model estimates.
+>
+> Cheers,
+> Roman
+>
+> On Tue, Jan 6, 2015 at 12:52 PM, James Rodger <rodgerjg at gmail.com> wrote:
+>
+>> Hi,
+>>
+>> Can anyone advise me on model selection in glm with a  zero truncated
+>> poisson distribution?
+>>
+>> I have used a the command vglm in the vgam package to analyse the data
+>> with
+>> pospoisson specified as the family and I have evaluated alternative models
+>> with a log-likelihood test. I am not  sure if that the test statistic will
+>> follow the chi-squared distribution, however.
+>>
+>> My data is on seeds per fruit (minimum 1) in different experimental
+>> treatments and different densities of plants.
+>>
+>> Regards,
+>>
+>> James
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+>
+>
+> --
+> In God we trust, all others bring data.
+>
+
+	[[alternative HTML version deleted]]
+
+
+From Javier.Atalah at cawthron.org.nz  Wed Jan  7 03:34:45 2015
+From: Javier.Atalah at cawthron.org.nz (Javier Atalah)
+Date: Wed, 7 Jan 2015 02:34:45 +0000
+Subject: [R-sig-eco] cloglog logistic regression interpretation
+Message-ID: <C21FD1E5422A1242B4594022DB0A3E193F6B41@ci011.cawthron.org.nz>
+
+Hi,
+
+Could someone advise me on how to interpret the estimates from a logistic regression using a cloglog link?
+
+I have fitted the following model in lme4:
+
+glm(cbind (dead, live) ~ time + factor(temp) * biomass, data=mussel, family='binomial' (link=cloglog))
+
+                                                Estimate              Std. Error             z value                  Pr(>|z|)
+(Intercept)                          -4.970                    0.428                     -11.61                    3.64E-31
+time                                       0.015                     0.001                     12.15                     5.81E-34
+temp19                                                2.845                     0.235                     12.1                        1.00E-33
+biomassL                             -0.654                    0.148                     -4.42                      9.73E-06
+temp19:biomassL            0.484                     0.194                     2.49                        1.27E-02
+
+Is it correct to say, for example, the estimate of time is 0.015
+Thus  1 - (EXP (-EXP (-0.015))) = 0.627
+
+That means the probability of mortality is increasing 62.7% per unit increase of time if all other variables were held constant?
+
+Many thanks in advance.
+
+Javier
+
+
+#####################################################################################
+
+Note:
+This message is for the named person's use only.  It may...{{dropped:18}}
+
+
+From bbolker at gmail.com  Thu Jan  8 18:02:56 2015
+From: bbolker at gmail.com (Ben Bolker)
+Date: Thu, 8 Jan 2015 17:02:56 +0000 (UTC)
+Subject: [R-sig-eco] cloglog logistic regression interpretation
+References: <C21FD1E5422A1242B4594022DB0A3E193F6B41@ci011.cawthron.org.nz>
+Message-ID: <loom.20150108T174732-802@post.gmane.org>
+
+Javier Atalah <Javier.Atalah at ...> writes:
+
+> 
+> Hi,
+> 
+> Could someone advise me on how to interpret the estimates from a 
+> logistic regression using a cloglog link?
+
+  Note that this question has been asked, and answered, on 
+Cross Validated ... if you're going to cross-post (which is generally
+discouraged), it's polite to mention that you're doing so (to save
+people the trouble of answering if the question has already been
+answered elsewhere).
+
+  cheers
+    Ben Bolker
+
+
+From cuca2305 at gmail.com  Fri Jan  9 13:12:19 2015
+From: cuca2305 at gmail.com (cuca smith)
+Date: Fri, 9 Jan 2015 13:12:19 +0100
+Subject: [R-sig-eco] Fwd: change dissimilarity index in custom function
+In-Reply-To: <CAN03bWLN7ctttRmc5TeswnEXVCxgbf23ej2EKDMztJoZPunovA@mail.gmail.com>
+References: <CAN03bWLN7ctttRmc5TeswnEXVCxgbf23ej2EKDMztJoZPunovA@mail.gmail.com>
+Message-ID: <CAN03bWJ3nfKP=Mj+p8QicMCupvOToD9F8_wO4oo=4_28x+_Jrw@mail.gmail.com>
+
+Dear all,
+
+I want to fit a GLM for a typical 'distance decay' pattern. I'm going to
+use the following custom function to obtain the model parameters through
+bootstrapping (Millar et al. 2011. Ecology), but I need to change the
+"binary" distance measure to other dissimilarity indices (Simpson and
+Sorensen, using e.g. betapart package). In my case, counts is a
+presence-absence matrix and gradient is an environmental variable.
+
+Bstrap=function(gradient,counts,nboots=1000,measure="binary",dist="dist",
+                like.pairs=T) {
+  dist=match.fun(dist)
+  if(length(gradient)!=nrow(as.matrix(counts)))
+    stop("\nDifferent number of sites detected in input data")
+  nsites=length(gradient)
+  Results=matrix(NA,nrow=nboots,ncol=2)
+  nPairs=rep(NA,nboots)
+  for(i in 1:nboots) {
+    indices=sample(1:nsites,replace=T)
+    d=as.vector(dist(gradient[indices],method="euclidean"))
+    s=as.vector(1-dist(counts[indices,],method=measure))
+    df=data.frame(d,s)
+    n=nrow(df)
+    #remove like site pairs (zero distance) if requested
+    if(!like.pairs) df=subset(df,subset=c(d>0))
+    n.used=nrow(df)
+    if(n.used<2) stop("Less than 2 site-pairs. Can not fit glm")
+    #log-binomial fit
+    g=glm(s~d,family=binomial(link=log),data=df)
+    Results[i,]=coef(g); nPairs[i]=n.used }
+  #Get parameters of interest
+  Results=cbind(Results[,1],-Results[,2],
+              exp(Results[,1]),-log(2)/Results[,2])
+  colnames(Results)=c("a","beta","s0","halfd")
+  if(!like.pairs) {
+   cat("\n",100*(n-mean(nPairs))/n,"% removed due to like pairs")
+   cat("\n Bstrap s.e.s have been corrected for the smaller no. of
+pairs\n\n") }
+  Variances=apply(Results,2,wt.var,w=nPairs/n)*mean(nPairs)/n
+  Summary=rbind(apply(Results,2,weighted.mean,w=nPairs/n),sqrt(Variances))
+  rownames(Summary)=c("Bstrap mean","Bstrap s.e.")
+  return(list(Fits=Results,Summary=Summary,
+               CtrlList=list(nboots=nboots,like.pairs=like.pairs)))
+}
+
+Any suggestion will be helpful!!
+
+Thanks in advance,
+Silvia
+
+	[[alternative HTML version deleted]]
+
+
+From v_coudrain at voila.fr  Fri Jan  9 15:05:33 2015
+From: v_coudrain at voila.fr (V. Coudrain)
+Date: Fri, 9 Jan 2015 15:05:33 +0100 (CET)
+Subject: [R-sig-eco] Designing null models to account for natural variation
+Message-ID: <480946009.66721420812333006.JavaMail.www@wwinf7128>
+
+Dear list members,
+
+I am performing a study in which I analyse species abundance and composition under four different treatments + 1 control, each replicated four times. In order to have an idea on baseline natural variation in species abundance and composition, I think about using null models based on the observations from the control. My idea was to use the mean and standard deviation to generate random replicates with which the observations from the different treatments would be compared and effect sizes measured. I like to perform similar analysis for the multivariate approach based on species composition, but I do not really figure out how to do this. 
+Do you think it is a reasonable approach and would you have some indications how to design these null models (possibly in R)?
+
+Thank you very much
+Valerie
+
+___________________________________________________________
+Mode, hifi, maison,? J'ach?te malin. Je compare les prix avec 
+	[[alternative HTML version deleted]]
+
+
+From weiser2 at natur.cuni.cz  Mon Jan 12 16:20:48 2015
+From: weiser2 at natur.cuni.cz (Martin Weiser)
+Date: Mon, 12 Jan 2015 16:20:48 +0100
+Subject: [R-sig-eco] cloglog logistic regression interpretation
+In-Reply-To: <loom.20150108T174732-802@post.gmane.org>
+References: <C21FD1E5422A1242B4594022DB0A3E193F6B41@ci011.cawthron.org.nz>
+	<loom.20150108T174732-802@post.gmane.org>
+Message-ID: <1421076048.3787.6.camel@zouzel.natur.cuni.cz>
+
+Ben Bolker p??e v ?t 08. 01. 2015 v 17:02 +0000:
+> Javier Atalah <Javier.Atalah at ...> writes:
+> 
+> > 
+> > Hi,
+> > 
+> > Could someone advise me on how to interpret the estimates from a 
+> > logistic regression using a cloglog link?
+> 
+>   Note that this question has been asked, and answered, on 
+> Cross Validated ... if you're going to cross-post (which is generally
+> discouraged), it's polite to mention that you're doing so (to save
+> people the trouble of answering if the question has already been
+> answered elsewhere).
+> 
+>   cheers
+>     Ben Bolker
+> 
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+Anyway, here is the link to the answer mentioned above (cross-linking as
+an answer to cross-posting):
+http://stats.stackexchange.com/questions/132627/interpreting-estimates-of-cloglog-logistic-regression
+
+Best,
+Martin Weiser
+
+
+-- 
+
+------------------------------
+Pokud je tento e-mail sou??st? obchodn?ho jedn?n?, P??rodov?deck? fakulta 
+Univerzity Karlovy v Praze:
+a) si vyhrazuje pr?vo jedn?n? kdykoliv ukon?it a to i bez uveden? d?vodu,
+b) stanovuje, ?e smlouva mus? m?t p?semnou formu,
+c) vylu?uje p?ijet? nab?dky s dodatkem ?i odchylkou,
+d) stanovuje, ?e smlouva je uzav?ena teprve v?slovn?m dosa?en?m shody na 
+v?ech n?le?itostech smlouvy.
+
+
+From highstat at highstat.com  Tue Jan 13 11:41:49 2015
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Tue, 13 Jan 2015 10:41:49 +0000
+Subject: [R-sig-eco] Two stats courses in Portugal
+Message-ID: <54B4F66D.4080506@highstat.com>
+
+Apologies for cross-posting
+
+There are 5 remaining seats available on each of the following two courses:
+
+Data exploration, regression, GLM & GAM with introduction to R.
+2 - 6 February 2015.  Coimbra, Portugal
+
+
+Introduction to Linear mixed effects models,  GLMM and MCMC with R
+9-13 February 2015. Lisbon, Portugal
+
+
+
+For registration, course flyers and further information: 
+http://www.highstat.com/statscourse.htm
+
+
+Kind regards,
+
+Alain
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From alexandresantosbr at yahoo.com.br  Mon Jan 19 19:42:24 2015
+From: alexandresantosbr at yahoo.com.br (ASANTOS)
+Date: Mon, 19 Jan 2015 15:42:24 -0300
+Subject: [R-sig-eco] Problem in matrix contrasts using adonis function in
+	vegan package
+Message-ID: <54BD5010.8030509@yahoo.com.br>
+
+Dear Members,
+
+        I would like to comparing the default aov-table using adonis 
+function in vegan package for the customized contrasts for can see what 
+the residual and the total sum of squares for different models. But I 
+maked any mistake when I create a design matrix of the contrasts for 
+"avaliacao" object in my example, any Member can help me, Thanks!!
+
+#Packages
+require(vegan)
+
+#Artificial data
+colony<-as.factor(sort(rep(c("colony1", "colony2","colony3"), 100)))
+y1 <- c(rnorm(100,1,0.1),rnorm(100,5,0.1),rnorm(100,3.5,0.1))
+y2 <- c(rnorm(100,10,0.3),rnorm(100,11,0.6),rnorm(100,5,0.6))
+y3 <- c(rnorm(100,10,2.3),rnorm(100,11,2.6),rnorm(100,11,2.5))
+y4 <- c(rnorm(100,5,0.5),rnorm(100,7,0.5),rnorm(100,22,0.5))
+y5 <- c(rnorm(100,11,0.1),rnorm(100,11,0.1),rnorm(100,11,0.1))
+
+
+#Data frame
+avaliacao <- as.factor(colony)
+espectro <- cbind(y1,y2,y3,y4,y5)
+dados <- data.frame(avaliacao = I(as.matrix(avaliacao)), bands = 
+I(as.matrix(espectro)))
+
+
+## Create a design matrix of the contrasts for "avaliacao"
+comb <- cbind(combn(unique(c(dados$avaliacao,dados$avaliacao)), 
+2)[2:1,])## Combina??o entre os n?veis
+comb
+coff.sig<-sapply(1:ncol(comb), function(x) with(dados,
+       2*( (dados$avaliacao==comb[1,x] & dados$avaliacao == comb[2,x]) | 
+(dados$avaliacao==comb[1,x] & dados$avaliacao == comb[2,x])) -
+        (dados$avaliacao == dados$avaliacao & dados$avaliacao %in% 
+comb[,x]) ) )
+coff<- sapply(1:ncol(comb), function(x) with(dados,
+       2*( (dados$avaliacao==comb[1,x] & dados$avaliacao == comb[2,x]) | 
+(dados$avaliacao==comb[1,x] & dados$avaliacao == comb[2,x])) -
+        (dados$avaliacao == dados$avaliacao & dados$avaliacao %in% 
+comb[,x]) ) )
+
+
+coff## Problem here!!!!!!!!!!
+
+
+## Create a factor for each of the orthogonal "avaliacao" contrasts
+col1vs2 <-  coff[, 1]
+col1vs3 <-  coff[, 2]
+col2vs3 <-  coff[, 3]
+
+## Do the pm-manova with the full model
+man.col<-adonis(bands ~ avaliacao, data=dados,permutations=99)
+man.col
+
+## Do the pm-manova with the orthogonal contrasts for "avaliacao"
+## and the interaction contrasts of interest
+man.col2 <- adonis(dados$bands ~ col1vs2 + col1vs3 + col2vs3, 
+permutations=99)
+man.col2
+#
+#
+#Better coefficients
+#
+man.col2$coefficients[3,abs(man.col2$coefficients[3,])>1]
+#
+#<END>--------------------------------------------------------------------------------------------------
+
+-- 
+======================================================================
+Alexandre dos Santos
+Forest Protection
+Federal Institute of Education, Science and Tecnology - IFMT
+Campus C?ceres
+Caixa Postal 244
+Avenida dos Ramires, s/n
+Bairro: Distrito Industrial
+C?ceres - MT - BRAZIL            ZIP-CODE: 78.200-000
+Tel: (+55) 65 8132-8112 (TIM)   (+55) 65 9686-6970 (VIVO)
+
+         alexandre.santos at cas.ifmt.edu.br
+Lattes: http://lattes.cnpq.br/1360403201088680
+======================================================================
+
+
+---
+Este email foi escaneado pelo Avast antiv?rus.
+http://www.avast.com
+
+
+From patrick.giraudoux at univ-fcomte.fr  Tue Jan 20 14:05:18 2015
+From: patrick.giraudoux at univ-fcomte.fr (Patrick Giraudoux)
+Date: Tue, 20 Jan 2015 14:05:18 +0100
+Subject: [R-sig-eco] readOGR and Multiple incompatible geometries in rgdal
+Message-ID: <54BE528E.8020607@univ-fcomte.fr>
+
+Dear all,
+
+I have to cope with a MapInfo file  (.TAB and associated files) with 
+obviously muliple geometries in (e.g. points and lines) and readOGR 
+(package: rgdal). When reading, I get the following error message:
+
+readOGR(".","PacoursIKA")
+Error in ogrInfo(dsn = dsn, layer = layer, encoding = encoding, use_iconv = use_iconv,  :
+   Multiple incompatible geometries: wkbPoint:wkbLineString
+
+Of course, the cause is obvious and I can manage reading the file from 
+e.g. QGIS (a dialog box permits to select one of the two geometries) and 
+then export to a single geometry shapefile. The latter can be read from 
+R using readOGR.
+
+However, I would like to know if there is a work around within rgdal (eg 
+an extra argument in readOGR) that could make the job done within an R 
+environment. The workhorse in QGIS is gdal as in rgdal, so suppose 
+something may be possible.
+
+Best,
+
+Patrick
+
+	[[alternative HTML version deleted]]
+
+
+From ubuntero.9161 at gmail.com  Wed Jan 21 07:43:10 2015
+From: ubuntero.9161 at gmail.com (Ivailo)
+Date: Wed, 21 Jan 2015 08:43:10 +0200
+Subject: [R-sig-eco] readOGR and Multiple incompatible geometries in
+	rgdal
+In-Reply-To: <54BE528E.8020607@univ-fcomte.fr>
+References: <54BE528E.8020607@univ-fcomte.fr>
+Message-ID: <CAAVnHssgKawkFn8k31qWaaL+rO9rrgapxukGYMq2PtS=_NZ4Yg@mail.gmail.com>
+
+On Tue, Jan 20, 2015 at 3:05 PM, Patrick Giraudoux
+<patrick.giraudoux at univ-fcomte.fr> wrote:
+> Dear all,
+>
+> I have to cope with a MapInfo file  (.TAB and associated files) with
+> obviously muliple geometries in (e.g. points and lines) and readOGR
+> (package: rgdal). When reading, I get the following error message:
+>
+> readOGR(".","PacoursIKA")
+> Error in ogrInfo(dsn = dsn, layer = layer, encoding = encoding, use_iconv = use_iconv,  :
+>    Multiple incompatible geometries: wkbPoint:wkbLineString
+>
+> Of course, the cause is obvious and I can manage reading the file from
+> e.g. QGIS (a dialog box permits to select one of the two geometries) and
+> then export to a single geometry shapefile. The latter can be read from
+> R using readOGR.
+>
+> However, I would like to know if there is a work around within rgdal (eg
+> an extra argument in readOGR) that could make the job done within an R
+> environment. The workhorse in QGIS is gdal as in rgdal, so suppose
+> something may be possible.
+>
+> Best,
+>
+> Patrick
+
+Patrick,
+
+I don't know the answer to your question but if you post it on the
+R-sig-Geo list (https://stat.ethz.ch/mailman/listinfo/r-sig-geo) you
+might get a satisfying answer faster.
+
+Cheers,
+Ivailo
+
+
+From samantha.cox at plymouth.ac.uk  Thu Jan 22 20:40:26 2015
+From: samantha.cox at plymouth.ac.uk (SamiC)
+Date: Thu, 22 Jan 2015 12:40:26 -0700 (MST)
+Subject: [R-sig-eco] GAM - Cyclic splines
+Message-ID: <1421955626287-7579269.post@n2.nabble.com>
+
+Hi,
+
+I am trying to use cyclic splines in gamm4 to model year day.  I have data
+running from say day 6 to day 300 but I want to specify the outer limits of
+the data are at 0 and 366.  I dont want to fix the inner position of the
+knots however (I allow for a total of 5 knots).  Is there a way to do this? 
+I also have other explanatory variables in the model that are not cyclic.
+
+Example:
+Model<-gamm4(Y~s(X1,fx=FALSE,k=5,bs="cc")+s(X2,fx=FALSE, k=5,
+bs='cr')+offset(log(X3)),random=~(1|X4),data=data,family=poisson)
+
+Finally when I try to plot the predictions on the response scale the values
+predicted at 0 and 366 are vastly different and do not match, as when
+outputs using plot(Model$gam,se=TRUE).
+
+Any help on this would be much appreciated.
+
+Cheers
+
+Sam
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/GAM-Cyclic-splines-tp7579269.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From ucfagls at gmail.com  Thu Jan 22 21:14:19 2015
+From: ucfagls at gmail.com (Gavin Simpson)
+Date: Thu, 22 Jan 2015 14:14:19 -0600
+Subject: [R-sig-eco] GAM - Cyclic splines
+In-Reply-To: <1421955626287-7579269.post@n2.nabble.com>
+References: <1421955626287-7579269.post@n2.nabble.com>
+Message-ID: <CAAHES9wWN5HUd_zMni3+vHQrCoeS2O=LzCGaa5G_3Q2vvcoRvg@mail.gmail.com>
+
+To the best of my knowledge this works as per mgcv::gam and mgcv::gamm (as
+the only code in **gamm4** is that to fit the GAMM via **lme4** and nothing
+else, so leveraging existing code in **mgcv**).
+
+Whilst it would help to give more informative names than X1 and X2, and so
+on to your variables, I think the following should work, for the `bs =
+"cc"` term:
+
+Model <- gamm4(Y ~ s(X1, k=5, bs="cc") + s(X2, bs="cr") + offset(log(X3)),
+              random = ~(1 | X4), data = data, family = poisson,
+              knots = list(X1 = c(1, 366)))
+
+Not sure why you want c(0, 366) as wouldn't that be 367 days?
+
+Anyway, you pass knots a list with components named as per the variables
+used in the smooth terms. If you don't supply knots for a smooth term, the
+default locations are used. In the case of cyclic cubic splines, one can
+simply get by with passing the end points of the knots as I did above, and
+the remaining knots (as determined by k) are distributed evenly across the
+interior of the stated two boundary knots.
+
+I don't see why, if suitably fitted, predictions for day 1 or day 366
+should differ markedly. Were you predicting at the same values of X2, X3,
+and X4 when you compared the outputs?
+
+HTH
+
+G
+
+On 22 January 2015 at 13:40, SamiC <samantha.cox at plymouth.ac.uk> wrote:
+
+> Hi,
+>
+> I am trying to use cyclic splines in gamm4 to model year day.  I have data
+> running from say day 6 to day 300 but I want to specify the outer limits of
+> the data are at 0 and 366.  I dont want to fix the inner position of the
+> knots however (I allow for a total of 5 knots).  Is there a way to do this?
+> I also have other explanatory variables in the model that are not cyclic.
+>
+> Example:
+> Model<-gamm4(Y~s(X1,fx=FALSE,k=5,bs="cc")+s(X2,fx=FALSE, k=5,
+> bs='cr')+offset(log(X3)),random=~(1|X4),data=data,family=poisson)
+>
+> Finally when I try to plot the predictions on the response scale the values
+> predicted at 0 and 366 are vastly different and do not match, as when
+> outputs using plot(Model$gam,se=TRUE).
+>
+> Any help on this would be much appreciated.
+>
+> Cheers
+>
+> Sam
+>
+>
+>
+> --
+> View this message in context:
+> http://r-sig-ecology.471788.n2.nabble.com/GAM-Cyclic-splines-tp7579269.html
+> Sent from the r-sig-ecology mailing list archive at Nabble.com.
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+
+
+-- 
+Gavin Simpson, PhD
+
+	[[alternative HTML version deleted]]
+
+
+From samantha.cox at plymouth.ac.uk  Fri Jan 23 12:44:46 2015
+From: samantha.cox at plymouth.ac.uk (SamiC)
+Date: Fri, 23 Jan 2015 04:44:46 -0700 (MST)
+Subject: [R-sig-eco] GAM - Cyclic splines
+In-Reply-To: <CAAHES9wWN5HUd_zMni3+vHQrCoeS2O=LzCGaa5G_3Q2vvcoRvg@mail.gmail.com>
+References: <1421955626287-7579269.post@n2.nabble.com>
+	<CAAHES9wWN5HUd_zMni3+vHQrCoeS2O=LzCGaa5G_3Q2vvcoRvg@mail.gmail.com>
+Message-ID: <1422013486047-7579271.post@n2.nabble.com>
+
+Perfect.  That does exactly as needed.  Thanks very much.  And yes my days
+should run from 0 to 365, just a typo.
+
+Regarding predictions, yes I just found an error and one of my variables
+(X2) was also varying.  I thought I had kept them all constant.  Sorry about
+that.
+
+
+
+--
+View this message in context: http://r-sig-ecology.471788.n2.nabble.com/GAM-Cyclic-splines-tp7579269p7579271.html
+Sent from the r-sig-ecology mailing list archive at Nabble.com.
+
+
+From patrick.giraudoux at univ-fcomte.fr  Sun Jan 25 09:27:03 2015
+From: patrick.giraudoux at univ-fcomte.fr (Patrick Giraudoux)
+Date: Sun, 25 Jan 2015 09:27:03 +0100
+Subject: [R-sig-eco] readOGR and Multiple incompatible geometries in
+	rgdal
+In-Reply-To: <54BE528E.8020607@univ-fcomte.fr>
+References: <54BE528E.8020607@univ-fcomte.fr>
+Message-ID: <54C4A8D6.40207@univ-fcomte.fr>
+
+Dear all,
+
+Roger Bivand has developped a beta-version of readOGR in rgdal adding an 
+argument 'require_geomType' taking multiple geometries into account.  
+This should solve the question, thanks to him. Source currently 
+available on R-Forge: svn checkout 
+svn://scm.r-forge.r-project.org/svnroot/rgdal/trunk, and windows binary  
+on http://win-builder.r-project.org/qYN2Fj33OV56
+
+Will soon be on CRAN.
+
+Best,
+
+Patrick
+
+
+From jbayat67 at yahoo.com  Tue Jan 27 04:34:14 2015
+From: jbayat67 at yahoo.com (javad bayat)
+Date: Tue, 27 Jan 2015 03:34:14 +0000 (UTC)
+Subject: [R-sig-eco] Eutrophication
+Message-ID: <316512195.1030144.1422329654665.JavaMail.yahoo@mail.yahoo.com>
+
+Dear all;I am the new userr of R. I have a question about prediction or simulation the Eutrophication in lake. 
+Is there any way to predict or simulate the Eutroph. by Neural network?If so what are the inputs?Regards.
+
+
+	[[alternative HTML version deleted]]
+
+
+From amellado at um.es  Tue Jan 27 09:23:12 2015
+From: amellado at um.es (Andres Mellado Diaz)
+Date: Tue, 27 Jan 2015 09:23:12 +0100
+Subject: [R-sig-eco] Eutrophication
+In-Reply-To: <316512195.1030144.1422329654665.JavaMail.yahoo@mail.yahoo.com>
+Message-ID: <20150127092312.Horde.WhLZxbf0uUSjBDmr_13i8w1@webmail.um.es>
+
+  Dear Javad,
+
+Of course there are ways to model eutrophycation using ANN. Take a look at
+this paper and references therein,
+
+Karul, C., Soyupak, S., ?ilesiz, A. F., Akbay, N., & Germen, E. (2000).
+CASE STUDIES ON THE USE OF NEURAL NETWORKS IN EUTROPHICATION MODELING.?
+/Ecological modelling/,?/134/(2), 145-152.
+
+Hope this helps,
+
+Andr?s
+
+PS: I can send you a pdf if you don't have online access to the journal
+
+javad bayat <jbayat67 at yahoo.com> escribi?:
+
+> Dear all;I am the new userr of R. I have a question about prediction or
+> simulation the Eutrophication in lake.
+> Is there any way to predict or simulate the Eutroph. by Neural
+> network?If so what are the inputs?Regards.
+>
+> ? ? ? ? [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+>
+R-sig-ecology at r-project.orghttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+-- 
+Andr?s Mellado D?az
+
+Centre for Hydrological Studies CEH-CEDEX
+Water Quality Department
+P? bajo de la Virgen del Puerto, 3
+28005, Madrid
+SPAIN
+
+
+	[[alternative HTML version deleted]]
+
+
+From highstat at highstat.com  Wed Jan 28 17:28:49 2015
+From: highstat at highstat.com (Highland Statistics Ltd)
+Date: Wed, 28 Jan 2015 16:28:49 +0000
+Subject: [R-sig-eco] Statistics courses in Australia
+Message-ID: <54C90E41.1040002@highstat.com>
+
+Hello,
+
+
+In July/August/September 2015 we will be running again a series of 
+statistics courses in Australia.
+
+Confirmed courses:
+
+1. Darwin: Data exploration, regression, GLM and GAM with introduction to R
+2. Sydney: Introduction to mixed modelling, GLMM and MCMC with R
+3. Canberra: Introduction to mixed modelling, GLMM and MCMC with R
+4. Phillip Island Nature Parks: Data exploration and visualisation with 
+R (with introduction to R)
+
+Dates & prices will be decided later. If you would like to participate 
+in one of these courses, or organise any of the following 9 courses at 
+your institute, please contact us for further information.
+
+1. Introduction to R
+2. Data exploration and visualisation with R (with introduction to R)
+3. Multivariate analysis with R
+4. Data exploration, regression, GLM and GAM with introduction to R
+5. Introduction mixed modelling and GLMM (either frequentist or 
+Bayesian+frequentist)
+6. Introduction to GAM and GAMM (either frequentist or Bayesian+frequentist)
+7. Introduction to Bayesian analysis and MCMC
+8. Introduction to zero inflated GLM and GLMM with R.
+9. Workshop using own data
+
+For flyers/prices/info of similar courses at other places see: 
+http://www.highstat.com/statscourse.htm
+
+
+Kind regards,
+
+Alain
+
+-- 
+Dr. Alain F. Zuur
+
+First author of:
+1. Beginner's Guide to GAMM with R (2014).
+2. Beginner's Guide to GLM and GLMM with R (2013).
+3. Beginner's Guide to GAM with R (2012).
+4. Zero Inflated Models and GLMM with R (2012).
+5. A Beginner's Guide to R (2009).
+6. Mixed effects models and extensions in ecology with R (2009).
+7. Analysing Ecological Data (2007).
+
+Highland Statistics Ltd.
+9 St Clair Wynd
+UK - AB41 6DZ Newburgh
+Tel:   0044 1358 788177
+Email: highstat at highstat.com
+URL:   www.highstat.com
+
+
+From chirleu at gmail.com  Thu Jan 29 14:56:27 2015
+From: chirleu at gmail.com (=?UTF-8?Q?David_Villegas_R=C3=ADos?=)
+Date: Thu, 29 Jan 2015 14:56:27 +0100
+Subject: [R-sig-eco] problem defining a grid in adehabitatHR (kernelUD)
+Message-ID: <CALC46t_=MSiA1wLwivok75iT8vdRa=E6H8tgoBmdSHwDG9zkUw@mail.gmail.com>
+
+Hi all,
+I'm trying to estimate a HR area for several individuals.
+My code is:
+
+   library(adehabitatHR)
+   kud=kernelUD(detections[,1],h=h,
+grid=grid,extent=extent,kern=c("bivnorm"))
+   area=kernel.area(kud,percent=95,unin ="m",unout="km2"))
+
+If I set for example grid=300 and extent=0.5, and same4all=TRUE, I get
+apparently correct values. If I modify extent/grid, the output is pretty
+much the same.
+
+However I want to manually construct my grid based on a polygon delimited
+by some coordinates that define the study area. Like this:
+
+   library(raster)
+
+   # define the coordinates (all the detections fall inside the polygon)
+   polyx<-c(495000,499000,499000,495000,495000)
+   polyy<-c(6494000,6494000,6498500,6498500,6494000)
+   loc=as.data.frame(cbind(polyx,polyy))
+   coordinates(loc)=c("polyx","polyy")
+   proj4string(loc) <- CRS("+proj=utm +zone=32")
+
+   # create the raster
+   loc4=raster(loc,nrows=1000,ncols=1000)
+
+   #transform to SpatialPixels class so it can be recognised by kernelUD()
+   loc5=as(loc4, "SpatialPixelsDataFrame")
+
+   grid=loc5
+   extent=0.5
+   kud=kernelUD(detections[,1],h=h,
+grid=grid,extent=extent,kern=c("bivnorm"))
+   area=kernel.area(kud,percent=95,unin ="m",unout="km2"))
+
+I get incorrect values (all individual the same incorrect HR), and the
+following warnings():
+
+   In kernel.area(j, percent, unin, unout) :
+   The grid is too small to allow the estimation of home-range
+   for the following value of percent: 95. You should rerun kernelUD with a
+larger extent parameter
+
+I tried different extent values up to 20 and still get the same warnings
+and erroneous values of HR...
+
+Any idea of what am I doing wrong?
+
+Thanks in advance,
+
+David
+
+	[[alternative HTML version deleted]]
+
+
+From pharriso at uwaterloo.ca  Fri Jan 30 20:37:35 2015
+From: pharriso at uwaterloo.ca (Philip Harrison)
+Date: Fri, 30 Jan 2015 14:37:35 -0500
+Subject: [R-sig-eco] modelling zero inflated continuous data using a two
+ stage model in glmmpql - question about implementing the delta method
+Message-ID: <20150130143735.51203gertxi6k0hr@www.nexusmail.uwaterloo.ca>
+
+Dear R-sig-ecology group,
+
+I have some telemetry data with a zero-inflated (semi-continuous)  
+response, which I modelled using a two stage process using  
+glmmpql/nmle. I chose nlme/glmmpql because a temporal correlation  
+structure is very important for my telemetry data and I can live with  
+pql estimation and no AICs if it means I can avoid winBUGS!.
+
+I am pretty happy with my models and I don?t want to use  
+ZIPglmms,ZINBglmms or ZAPglmms as the response is a pretty normal  
+continuous variable and not a count.
+
+So now, if possible I would like to combine the results of the two  
+models to make predictions about resource selection (with Confidence  
+intervals) for each of the levels of my fixed effects, using the  
+?delta? approach, mentioned a few times on r-sig-eco including here
+
+https://stat.ethz.ch/pipermail/r-sig-ecology/2011-May/002159.html
+
+I found quite a few papers about the delta approach (typically using  
+abundance estimates as the response), but I am having trouble  
+translating the method into code (I?ve added refs at the end of the  
+message). I have seen papers where they appear to just multiply the  
+predictions from the positive model by the probability from the first  
+model (although the papers in question use Bayesian techniques  
+multiplying the posterior modes) Can I do the same with the  
+predictions from my frequentist approach, somehow that seems over  
+simplistic?
+
+Also the response for the positive part of my model normalizes nicely  
+with a cube root transformation and many of the papers use log-normal  
+positive responses- I?m assuming this doesn?t make any difference as  
+long as I leave the back transformation until the very end?
+
+Any help would be much appreciated. See below for model details
+
+###############################################################################
+Models- First I model the probability of a non zero value, (i.e.  
+presence/absence) then model the continuous part i.e. the strength of  
+selection in the event of a positive selection event.  Sorry I don?t  
+have a real example dataset; however in this case I just need to find  
+out how to extract the relevant stuff from lme/glmmpql output.
+
+Wij ? this is my resource selection response variable  (Wij=  
+proportion of time spent in habitat/proportion of habitat available).  
+This response varies from 0 (i.e. habitat was available but not used)  
+continuously through 1 (neither selected nor avoided) and continuously  
+ >1 (positive selection) up to a theoretical infinity.
+
+Seas; a categorical 4 level variable
+Sequence; a variable created based on detection date used for the  
+correlation structure.
+Habitat: a categorical habitat variable
+
+Xdata$WijBin<-ifelse(Xdata$Wij>0,1,0)
+XdataUsed<- Xdata[Xdata$WijBIN0==1,]
+
+BinaryMod<-glmmpql(BinaryVariable~Seas+Habitat+Seas*Habitat,random=~1|FishID,cor=corCAR1(form=~Sequence),data=Xdata,family=?binomial?)
+
+PositiveModel <-lme((Wij)^(1/3)~  
+Seas+Habitat+Seas*Habitat,random=~1|FishID/TemperatureCategory,cor=corCAR1(form=~Sequence),data=XdataUsed)
+
+
+
+#########################
+Refs
+
+Pennington, Michael. "Efficient estimators of abundance, for fish and  
+plankton surveys." Biometrics (1983): 281-286.
+
+Stef?nsson, Gunnar. "Analysis of groundfish survey abundance data:  
+combining the GLM and delta approaches." ICES Journal of Marine  
+Science: Journal du Conseil 53.3 (1996): 577-588.
+
+Anlauf-Dunn, Kara J., et al. "Habitat connectivity, complexity, and  
+quality: predicting adult coho salmon occupancy and abundance."  
+Canadian Journal of Fisheries and Aquatic Sciences 71.12 (2014):  
+1864-1876.
+
+
+
+
+Phil Harrison
+PhD student (Fisheries Ecology)
+Department of Biology
+University of Waterloo
+200 University Avenue West
+Waterloo, Ontario, Canada
+N2L 3G1
+
+
+From jbayat67 at yahoo.com  Sat Jan 31 08:00:54 2015
+From: jbayat67 at yahoo.com (javad bayat)
+Date: Sat, 31 Jan 2015 07:00:54 +0000
+Subject: [R-sig-eco] Using the ANN in lake system
+Message-ID: <1422687654.21588.YahooMailBasic@web171905.mail.ir2.yahoo.com>
+
+ Dear all;
+ I am using the ANN to predict the concentration of DO in
+ a lake system but I do not know why all the predicted values are
+ similar? Here are my codes:
+ 
+ library(neuralnet)
+ library(nnet)
+ ## fit a simple model
+ fit? <- neuralnet(DO ~ Day,data = ss1)
+ ## create new data into the future
+ futuredata <- expand.grid(Day = 589:1000)
+ ## do predictions
+ predictions <- compute(fit, futuredata)
+ 
+ Here is my data: ss1: 
+station     Day     DO 
+kanal         1            8.3
+kanal         8          8.6
+kanal         14    8.4
+kanal         17    7.9
+kanal         28    7.1
+kanal         35    6.7
+kanal         47    6.5902
+kanal         54    6.8475
+kanal         63    6.5487
+kanal         70    6.2416
+......       ....          .....
+......       ....          .....
+......       ....          .....
+......       ....          .....
+kanal      475    6.8
+kanal            496    7.63
+kanal            510    7.39
+kanal            536    7.72
+kanal            567    8.53
+kanal             588    9.14
+
+
+
+Many thanks.
+Regards.
+
+

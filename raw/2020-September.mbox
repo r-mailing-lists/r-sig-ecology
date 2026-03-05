@@ -1,0 +1,661 @@
+From con@t@nze_keye @end|ng |rom hotm@||@com  Fri Sep 18 16:08:36 2020
+From: con@t@nze_keye @end|ng |rom hotm@||@com (Constanze Keye)
+Date: Fri, 18 Sep 2020 14:08:36 +0000
+Subject: [R-sig-eco] correct use of strata  in the adonis function
+Message-ID: <DB6PR05MB46142CB406D1280A6B8A4B25F73F0@DB6PR05MB4614.eurprd05.prod.outlook.com>
+
+Hi there,
+
+
+
+I'm having trouble with fitting a PERMANOVA (adonis) to my data and am actually not sure if it is possible at all.
+
+
+
+I have a pitfall arthropod data set for 5 research areas and 3 consecutive field seasons.
+
+
+
+I now want to investigate if the variability in species composition between research areas is larger than the variability between the field seasons of each area. The objective here is to investigate whether one year of sampling would be enough for the next monitoring period. I'm unsure how to correctly include that the plot data is not independent, as it has been recorded 3 times... In my species data set, I have 3 rows for each plot (a_1, a_2, a_3), reflecting the field seasons and in my environmental data set I included for each of these 3 rows the original plot ID (e.g. a).
+
+
+
+My code is:
+
+
+
+adonis.II(arthropods.wide.pa ~ research.area + field.season, method='mount'
+
+, data = arthropods.env, by = "terms", strata=arthropods.bo.env2$PlotID)
+
+
+
+I did the same thing, for each of the research areas individually (without using strata).
+
+adonis2(arthropods.wide.GZ ~ field.season, method='bray' ,   data =
+
+arthropods.env2, by = "terms").
+
+
+
+Is the first piece of code the right way to include the time structure - can it even be done? Or do you have any recommendations on what to use instead of a PERMANOVA?
+
+
+
+Cheers,
+
+Conny
+
+
+	[[alternative HTML version deleted]]
+
+
+From ky|e@ty|er @end|ng |rom cdu@edu@@u  Tue Sep 22 03:37:31 2020
+From: ky|e@ty|er @end|ng |rom cdu@edu@@u (Kyle Tyler)
+Date: Tue, 22 Sep 2020 01:37:31 +0000
+Subject: [R-sig-eco] Specifying contrasts for an interaction in
+ mvabund/manyglm
+Message-ID: <MEAPR01MB3832BD320B076C42C6988806AB3B0@MEAPR01MB3832.ausprd01.prod.outlook.com>
+
+Dear list;
+
+I am investigating how species assemblages of fish vary over space and time. I am performing a multivariate analysis using manyglm in mvabund, with the factors Site, Season and their interaction. Site has eight levels and Season 4. Each Site was sampled multiple times within each Season.
+
+My model is:
+
+full_mod <- manyglm(spp ~ Site + Season + Site:Season, offset=(log(Shot_L)), family="negative_binomial", data = Catch)
+
+The offset is due to the linear length of each sampled ?transect? varying between samples.
+
+Using ?anova.manyglm(full_mod, p.uni="adjusted"), I find that each factor, and the interaction, is highly significant. The next step is to then look at which pairs of factor levels differ. For the factors on their own, this is straightforward by again using ?anova.manyglm? again, but with the ?pairwise.comp =? specified for each factor.
+
+In the case of the interaction, I do this with:
+
+Catch$SiteSeason <- paste(Catch$SiteSeason, Catch$SiteSeason, sep=?_?)
+
+anova.manyglm(full_mod, p.uni="adjusted?, pairwise.comp = Catch$SiteSeason)
+
+However, for the interaction in my model, the number of comparisons really blows up and becomes impractical to manage, and even non-sensical in a lot of cases. This is because anova.manyglm will compare every possible combination, which in my case results in 496 comparisons for this interaction. This causes problems first due to so much multiple testing going on, but also because not all comparisons make sense, or at least I am not interested in them.
+
+Ideally, I would like to restrict the contrasts to be only between seasons within each site, and between sites within a season, as these are the comparisons I am interested in. I don?t really care to know if the assemblage at site 1 in season 1 is different from that at site 8 in season 4 etc. In mvabund, is there a way to specify/restrict the contrasts to only those that I am interested in?
+
+Thanks a lot for any help!
+Kyle
+
+Kyle J. Tyler
+PhD Candidate ? Aquatic Ecology
+Charles Darwin University, Australia
+
+	[[alternative HTML version deleted]]
+
+
+From |re@rojo @end|ng |rom gm@||@com  Tue Sep 22 10:07:45 2020
+From: |re@rojo @end|ng |rom gm@||@com (Irene Rojo)
+Date: Tue, 22 Sep 2020 10:07:45 +0200
+Subject: [R-sig-eco] Error in Maxent (dismo package)
+Message-ID: <CAGJ2grYCN0cPgEkkGoh-eMKJh0tKhbJd65xsERU2xZ7+wyLB+Q@mail.gmail.com>
+
+Dear all,
+
+I am fitting maxent models within the dismo package but I have some doubts
+regarding the number of categorical variables (factors) that I can include
+in the model. All my variables are raster (.asc).
+
+When I perform the model with just one factor (me <- maxent(predictors,
+occtrain, factors="bion")) it runs and everything works fine, but when I
+try to add more factors (me <- maxent(predictors, occtrain, factors="bion",
+"morfo", "sed")) I get the following error:
+
+Error in .getMatrix(a) :
+  data should be  a matrix, data.frame, or SpatialPoints* object
+
+When I just include one factor (whatever the variable is) it works, so I
+don't know if it is a syntax problem and I am not including the rest of the
+factors in a proper way (separated by commas), or if it is not possible to
+add more than one factor.
+
+Any advice will be much appreciated!
+
+Thanks in advance,
+
+Irene
+
+	[[alternative HTML version deleted]]
+
+
+From tor@ten@h@u||e @end|ng |rom gm@||@com  Tue Sep 22 10:14:14 2020
+From: tor@ten@h@u||e @end|ng |rom gm@||@com (Torsten Hauffe)
+Date: Tue, 22 Sep 2020 10:14:14 +0200
+Subject: [R-sig-eco] Error in Maxent (dismo package)
+In-Reply-To: <CAGJ2grYCN0cPgEkkGoh-eMKJh0tKhbJd65xsERU2xZ7+wyLB+Q@mail.gmail.com>
+References: <CAGJ2grYCN0cPgEkkGoh-eMKJh0tKhbJd65xsERU2xZ7+wyLB+Q@mail.gmail.com>
+Message-ID: <CAGCrCxZB9ZyeH-Ybb3BAFL12KP6qw2jKfmhpXDW79wqoFhC+TQ@mail.gmail.com>
+
+Hi,
+
+I can't try it but maybe you need a vector with all factorial predictors.
+Hence, put them all in c().
+
+me <- maxent(predictors, occtrain, factors=c("bion","morfo", "sed"))
+
+On Tue, Sep 22, 2020 at 10:08 AM Irene Rojo <ire.rojo at gmail.com> wrote:
+
+> Dear all,
+>
+> I am fitting maxent models within the dismo package but I have some doubts
+> regarding the number of categorical variables (factors) that I can include
+> in the model. All my variables are raster (.asc).
+>
+> When I perform the model with just one factor (me <- maxent(predictors,
+> occtrain, factors="bion")) it runs and everything works fine, but when I
+> try to add more factors (me <- maxent(predictors, occtrain, factors="bion",
+> "morfo", "sed")) I get the following error:
+>
+> Error in .getMatrix(a) :
+>   data should be  a matrix, data.frame, or SpatialPoints* object
+>
+> When I just include one factor (whatever the variable is) it works, so I
+> don't know if it is a syntax problem and I am not including the rest of the
+> factors in a proper way (separated by commas), or if it is not possible to
+> add more than one factor.
+>
+> Any advice will be much appreciated!
+>
+> Thanks in advance,
+>
+> Irene
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+From |re@rojo @end|ng |rom gm@||@com  Tue Sep 22 10:28:50 2020
+From: |re@rojo @end|ng |rom gm@||@com (Irene Rojo)
+Date: Tue, 22 Sep 2020 10:28:50 +0200
+Subject: [R-sig-eco] Error in Maxent (dismo package)
+In-Reply-To: <CAGCrCxZB9ZyeH-Ybb3BAFL12KP6qw2jKfmhpXDW79wqoFhC+TQ@mail.gmail.com>
+References: <CAGJ2grYCN0cPgEkkGoh-eMKJh0tKhbJd65xsERU2xZ7+wyLB+Q@mail.gmail.com>
+ <CAGCrCxZB9ZyeH-Ybb3BAFL12KP6qw2jKfmhpXDW79wqoFhC+TQ@mail.gmail.com>
+Message-ID: <CAGJ2grbPL_YjOC+5UMi4qEpTpJ4ibQ48A8+Vfgv+U3EY485Weg@mail.gmail.com>
+
+Dear Torsten,
+
+It works now, you were right. Thanks a lot!!
+
+Irene
+
+
+El mar., 22 sept. 2020 a las 10:14, Torsten Hauffe (<
+torsten.hauffe at gmail.com>) escribi?:
+
+> Hi,
+>
+> I can't try it but maybe you need a vector with all factorial predictors.
+> Hence, put them all in c().
+>
+> me <- maxent(predictors, occtrain, factors=c("bion","morfo", "sed"))
+>
+> On Tue, Sep 22, 2020 at 10:08 AM Irene Rojo <ire.rojo at gmail.com> wrote:
+>
+>> Dear all,
+>>
+>> I am fitting maxent models within the dismo package but I have some doubts
+>> regarding the number of categorical variables (factors) that I can include
+>> in the model. All my variables are raster (.asc).
+>>
+>> When I perform the model with just one factor (me <- maxent(predictors,
+>> occtrain, factors="bion")) it runs and everything works fine, but when I
+>> try to add more factors (me <- maxent(predictors, occtrain,
+>> factors="bion",
+>> "morfo", "sed")) I get the following error:
+>>
+>> Error in .getMatrix(a) :
+>>   data should be  a matrix, data.frame, or SpatialPoints* object
+>>
+>> When I just include one factor (whatever the variable is) it works, so I
+>> don't know if it is a syntax problem and I am not including the rest of
+>> the
+>> factors in a proper way (separated by commas), or if it is not possible to
+>> add more than one factor.
+>>
+>> Any advice will be much appreciated!
+>>
+>> Thanks in advance,
+>>
+>> Irene
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+
+	[[alternative HTML version deleted]]
+
+
+From dbprovete @end|ng |rom gm@||@com  Tue Sep 22 18:08:38 2020
+From: dbprovete @end|ng |rom gm@||@com (Diogo B. Provete)
+Date: Tue, 22 Sep 2020 12:08:38 -0400
+Subject: [R-sig-eco] Specifying contrasts for an interaction in
+ mvabund/manyglm
+In-Reply-To: <mailman.6196.11.1600768802.8346.r-sig-ecology@r-project.org>
+References: <mailman.6196.11.1600768802.8346.r-sig-ecology@r-project.org>
+Message-ID: <CALJB7JTy+uM8r9TXQo4W8z7nA=-uUN0wfnC9x=Ty4sDYJUOQXg@mail.gmail.com>
+
+Hi Kyle,
+from the bottom of your message it seems that what you have is a nested
+design, with Season nested within Site. If you specify your model with just
+the additive effect and the interaction it doesn't take that into account.
+I'm not sure if mvabund allows that kind of planned comparisons you want to
+conduct. I'd try the newer package gllvm that is much more flexible and can
+handle random factors.
+
+All the best
+Diogo
+
+	[[alternative HTML version deleted]]
+
+
+From ky|e@ty|er @end|ng |rom cdu@edu@@u  Wed Sep 23 02:42:45 2020
+From: ky|e@ty|er @end|ng |rom cdu@edu@@u (Kyle Tyler)
+Date: Wed, 23 Sep 2020 00:42:45 +0000
+Subject: [R-sig-eco] Specifying contrasts for an interaction in
+ mvabund/manyglm
+In-Reply-To: <CALJB7JTy+uM8r9TXQo4W8z7nA=-uUN0wfnC9x=Ty4sDYJUOQXg@mail.gmail.com>
+References: <mailman.6196.11.1600768802.8346.r-sig-ecology@r-project.org>,
+ <CALJB7JTy+uM8r9TXQo4W8z7nA=-uUN0wfnC9x=Ty4sDYJUOQXg@mail.gmail.com>
+Message-ID: <MEAPR01MB3832B5AAEFB108230257F3E7AB380@MEAPR01MB3832.ausprd01.prod.outlook.com>
+
+Hi Diogo,
+
+>From my joining of factors it appears that way, but this is just to identify which season and site combo the sample comes from for the post-hoc test to run on for the interaction. Season is otherwise orthogonal with Site.
+
+I will look at gllvm again, but I am not sure it can perform hypothesis testing, or if it uses likelihood ratios so that I can then also determine taxa contributions to model deviance; my other reasons for using mvabund.
+
+Cheers,
+Kyle
+
+Get Outlook for Android<https://aka.ms/ghei36>
+
+________________________________
+From: Diogo B. Provete <dbprovete at gmail.com>
+Sent: Wednesday, September 23, 2020 1:38:38 AM
+To: r-sig-ecology <r-sig-ecology at r-project.org>; Kyle Tyler <kyle.tyler at cdu.edu.au>
+Subject: Specifying contrasts for an interaction in mvabund/manyglm
+
+Hi Kyle,
+from the bottom of your message it seems that what you have is a nested design, with Season nested within Site. If you specify your model with just the additive effect and the interaction it doesn't take that into account.
+I'm not sure if mvabund allows that kind of planned comparisons you want to conduct. I'd try the newer package gllvm that is much more flexible and can handle random factors.
+
+All the best
+Diogo
+
+	[[alternative HTML version deleted]]
+
+
+From d@v|d@w@rton @end|ng |rom un@w@edu@@u  Wed Sep 23 02:49:24 2020
+From: d@v|d@w@rton @end|ng |rom un@w@edu@@u (David Warton)
+Date: Wed, 23 Sep 2020 00:49:24 +0000
+Subject: [R-sig-eco] Specifying contrasts for an interaction in
+ mvabund/manyglm
+Message-ID: <SY3PR01MB08601F461C50415284BB19B2C4380@SY3PR01MB0860.ausprd01.prod.outlook.com>
+
+Hi Kyle,
+Sorry there is no way in mvabund at the moment to do specific planned multiple comparisons.  As a workaround you could fit separate models for each season and do multiple comparisons for sites.  Assuming data are independent across seasons you could add a Bonferroni correction to this...
+
+On Diogo's comment, gllvm is great for ordination and predictive modelling but it looks like you are after multivariate significance testing, which is what mvabund was specifically designed for.
+
+All the best
+David
+
+
+
+-----Original Message-----
+From: R-sig-ecology <r-sig-ecology-bounces at r-project.org> On Behalf Of r-sig-ecology-request at r-project.org
+Sent: Tuesday, 22 September 2020 8:00 PM
+To: r-sig-ecology at r-project.org
+Subject: R-sig-ecology Digest, Vol 150, Issue 2
+
+Send R-sig-ecology mailing list submissions to
+	r-sig-ecology at r-project.org
+
+To subscribe or unsubscribe via the World Wide Web, visit
+	https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+or, via email, send a message with subject or body 'help' to
+	r-sig-ecology-request at r-project.org
+
+You can reach the person managing the list at
+	r-sig-ecology-owner at r-project.org
+
+When replying, please edit your Subject line so it is more specific than "Re: Contents of R-sig-ecology digest..."
+
+
+Today's Topics:
+
+   1. Specifying contrasts for an interaction in mvabund/manyglm
+      (Kyle Tyler)
+   2. Error in Maxent (dismo package) (Irene Rojo)
+   3. Re: Error in Maxent (dismo package) (Torsten Hauffe)
+   4. Re: Error in Maxent (dismo package) (Irene Rojo)
+
+----------------------------------------------------------------------
+
+Message: 1
+Date: Tue, 22 Sep 2020 01:37:31 +0000
+From: Kyle Tyler <kyle.tyler at cdu.edu.au>
+To: "r-sig-ecology at r-project.org" <r-sig-ecology at r-project.org>
+Subject: [R-sig-eco] Specifying contrasts for an interaction in
+	mvabund/manyglm
+Message-ID:
+	<MEAPR01MB3832BD320B076C42C6988806AB3B0 at MEAPR01MB3832.ausprd01.prod.outlook.com>
+	
+Content-Type: text/plain; charset="utf-8"
+
+Dear list;
+
+I am investigating how species assemblages of fish vary over space and time. I am performing a multivariate analysis using manyglm in mvabund, with the factors Site, Season and their interaction. Site has eight levels and Season 4. Each Site was sampled multiple times within each Season.
+
+My model is:
+
+full_mod <- manyglm(spp ~ Site + Season + Site:Season, offset=(log(Shot_L)), family="negative_binomial", data = Catch)
+
+The offset is due to the linear length of each sampled  transect  varying between samples.
+
+Using  anova.manyglm(full_mod, p.uni="adjusted"), I find that each factor, and the interaction, is highly significant. The next step is to then look at which pairs of factor levels differ. For the factors on their own, this is straightforward by again using  anova.manyglm  again, but with the  pairwise.comp =  specified for each factor.
+
+In the case of the interaction, I do this with:
+
+Catch$SiteSeason <- paste(Catch$SiteSeason, Catch$SiteSeason, sep= _ )
+
+anova.manyglm(full_mod, p.uni="adjusted , pairwise.comp = Catch$SiteSeason)
+
+However, for the interaction in my model, the number of comparisons really blows up and becomes impractical to manage, and even non-sensical in a lot of cases. This is because anova.manyglm will compare every possible combination, which in my case results in 496 comparisons for this interaction. This causes problems first due to so much multiple testing going on, but also because not all comparisons make sense, or at least I am not interested in them.
+
+Ideally, I would like to restrict the contrasts to be only between seasons within each site, and between sites within a season, as these are the comparisons I am interested in. I don t really care to know if the assemblage at site 1 in season 1 is different from that at site 8 in season 4 etc. In mvabund, is there a way to specify/restrict the contrasts to only those that I am interested in?
+
+Thanks a lot for any help!
+Kyle
+
+Kyle J. Tyler
+PhD Candidate   Aquatic Ecology
+Charles Darwin University, Australia
+
+	[[alternative HTML version deleted]]
+
+
+
+
+------------------------------
+
+Message: 2
+Date: Tue, 22 Sep 2020 10:07:45 +0200
+From: Irene Rojo <ire.rojo at gmail.com>
+To: r-sig-ecology at r-project.org
+Subject: [R-sig-eco] Error in Maxent (dismo package)
+Message-ID:
+	<CAGJ2grYCN0cPgEkkGoh-eMKJh0tKhbJd65xsERU2xZ7+wyLB+Q at mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+
+Dear all,
+
+I am fitting maxent models within the dismo package but I have some doubts regarding the number of categorical variables (factors) that I can include in the model. All my variables are raster (.asc).
+
+When I perform the model with just one factor (me <- maxent(predictors, occtrain, factors="bion")) it runs and everything works fine, but when I try to add more factors (me <- maxent(predictors, occtrain, factors="bion", "morfo", "sed")) I get the following error:
+
+Error in .getMatrix(a) :
+  data should be  a matrix, data.frame, or SpatialPoints* object
+
+When I just include one factor (whatever the variable is) it works, so I don't know if it is a syntax problem and I am not including the rest of the factors in a proper way (separated by commas), or if it is not possible to add more than one factor.
+
+Any advice will be much appreciated!
+
+Thanks in advance,
+
+Irene
+
+	[[alternative HTML version deleted]]
+
+
+
+
+------------------------------
+
+Message: 3
+Date: Tue, 22 Sep 2020 10:14:14 +0200
+From: Torsten Hauffe <torsten.hauffe at gmail.com>
+To: Irene Rojo <ire.rojo at gmail.com>
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Error in Maxent (dismo package)
+Message-ID:
+	<CAGCrCxZB9ZyeH-Ybb3BAFL12KP6qw2jKfmhpXDW79wqoFhC+TQ at mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+
+Hi,
+
+I can't try it but maybe you need a vector with all factorial predictors.
+Hence, put them all in c().
+
+me <- maxent(predictors, occtrain, factors=c("bion","morfo", "sed"))
+
+On Tue, Sep 22, 2020 at 10:08 AM Irene Rojo <ire.rojo at gmail.com> wrote:
+
+> Dear all,
+>
+> I am fitting maxent models within the dismo package but I have some 
+> doubts regarding the number of categorical variables (factors) that I 
+> can include in the model. All my variables are raster (.asc).
+>
+> When I perform the model with just one factor (me <- 
+> maxent(predictors, occtrain, factors="bion")) it runs and everything 
+> works fine, but when I try to add more factors (me <- 
+> maxent(predictors, occtrain, factors="bion", "morfo", "sed")) I get the following error:
+>
+> Error in .getMatrix(a) :
+>   data should be  a matrix, data.frame, or SpatialPoints* object
+>
+> When I just include one factor (whatever the variable is) it works, so 
+> I don't know if it is a syntax problem and I am not including the rest 
+> of the factors in a proper way (separated by commas), or if it is not 
+> possible to add more than one factor.
+>
+> Any advice will be much appreciated!
+>
+> Thanks in advance,
+>
+> Irene
+>
+>         [[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>
+
+	[[alternative HTML version deleted]]
+
+
+
+
+------------------------------
+
+Message: 4
+Date: Tue, 22 Sep 2020 10:28:50 +0200
+From: Irene Rojo <ire.rojo at gmail.com>
+To: Torsten Hauffe <torsten.hauffe at gmail.com>
+Cc: r-sig-ecology at r-project.org
+Subject: Re: [R-sig-eco] Error in Maxent (dismo package)
+Message-ID:
+	<CAGJ2grbPL_YjOC+5UMi4qEpTpJ4ibQ48A8+Vfgv+U3EY485Weg at mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+
+Dear Torsten,
+
+It works now, you were right. Thanks a lot!!
+
+Irene
+
+
+El mar., 22 sept. 2020 a las 10:14, Torsten Hauffe (<
+torsten.hauffe at gmail.com>) escribi?:
+
+> Hi,
+>
+> I can't try it but maybe you need a vector with all factorial predictors.
+> Hence, put them all in c().
+>
+> me <- maxent(predictors, occtrain, factors=c("bion","morfo", "sed"))
+>
+> On Tue, Sep 22, 2020 at 10:08 AM Irene Rojo <ire.rojo at gmail.com> wrote:
+>
+>> Dear all,
+>>
+>> I am fitting maxent models within the dismo package but I have some 
+>> doubts regarding the number of categorical variables (factors) that I 
+>> can include in the model. All my variables are raster (.asc).
+>>
+>> When I perform the model with just one factor (me <- 
+>> maxent(predictors, occtrain, factors="bion")) it runs and everything 
+>> works fine, but when I try to add more factors (me <- 
+>> maxent(predictors, occtrain, factors="bion", "morfo", "sed")) I get 
+>> the following error:
+>>
+>> Error in .getMatrix(a) :
+>>   data should be  a matrix, data.frame, or SpatialPoints* object
+>>
+>> When I just include one factor (whatever the variable is) it works, 
+>> so I don't know if it is a syntax problem and I am not including the 
+>> rest of the factors in a proper way (separated by commas), or if it 
+>> is not possible to add more than one factor.
+>>
+>> Any advice will be much appreciated!
+>>
+>> Thanks in advance,
+>>
+>> Irene
+>>
+>>         [[alternative HTML version deleted]]
+>>
+>> _______________________________________________
+>> R-sig-ecology mailing list
+>> R-sig-ecology at r-project.org
+>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+>>
+>
+
+	[[alternative HTML version deleted]]
+
+
+
+
+------------------------------
+
+Subject: Digest Footer
+
+_______________________________________________
+R-sig-ecology mailing list
+R-sig-ecology at r-project.org
+https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+------------------------------
+
+End of R-sig-ecology Digest, Vol 150, Issue 2
+*********************************************
+
+From j@@@b@|buen@ @end|ng |rom uv@e@  Wed Sep 23 09:13:11 2020
+From: j@@@b@|buen@ @end|ng |rom uv@e@ (Juan Antonio Balbuena)
+Date: Wed, 23 Sep 2020 09:13:11 +0200
+Subject: [R-sig-eco] Specifying contrasts for an interaction in
+ mvabund/manyglm
+In-Reply-To: <MEAPR01MB3832B5AAEFB108230257F3E7AB380@MEAPR01MB3832.ausprd01.prod.outlook.com>
+References: <mailman.6196.11.1600768802.8346.r-sig-ecology@r-project.org>
+ <CALJB7JTy+uM8r9TXQo4W8z7nA=-uUN0wfnC9x=Ty4sDYJUOQXg@mail.gmail.com>
+ <MEAPR01MB3832B5AAEFB108230257F3E7AB380@MEAPR01MB3832.ausprd01.prod.outlook.com>
+Message-ID: <d074f363-5855-fad7-a976-0606bf009a35@uv.es>
+
+Hi
+
+You may also wish to try package rrpp (Collyer & Adams 2018, 
+https://doi.org/10.1111/2041-210X.13029). The abstract reads: "a 
+pairwise function provides statistical tests for comparisons of 
+least?squares means or slopes, among designated groups".
+
+Perhaps it works for you.
+
+All the best
+
+Juan A. Balbuena
+
+El 23/09/2020 a las 02:42, Kyle Tyler escribi?:
+> Hi Diogo,
+>
+>  From my joining of factors it appears that way, but this is just to identify which season and site combo the sample comes from for the post-hoc test to run on for the interaction. Season is otherwise orthogonal with Site.
+>
+> I will look at gllvm again, but I am not sure it can perform hypothesis testing, or if it uses likelihood ratios so that I can then also determine taxa contributions to model deviance; my other reasons for using mvabund.
+>
+> Cheers,
+> Kyle
+>
+> Get Outlook for Android<https://aka.ms/ghei36>
+>
+> ________________________________
+> From: Diogo B. Provete <dbprovete at gmail.com>
+> Sent: Wednesday, September 23, 2020 1:38:38 AM
+> To: r-sig-ecology <r-sig-ecology at r-project.org>; Kyle Tyler <kyle.tyler at cdu.edu.au>
+> Subject: Specifying contrasts for an interaction in mvabund/manyglm
+>
+> Hi Kyle,
+> from the bottom of your message it seems that what you have is a nested design, with Season nested within Site. If you specify your model with just the additive effect and the interaction it doesn't take that into account.
+> I'm not sure if mvabund allows that kind of planned comparisons you want to conduct. I'd try the newer package gllvm that is much more flexible and can handle random factors.
+>
+> All the best
+> Diogo
+>
+> 	[[alternative HTML version deleted]]
+>
+> _______________________________________________
+> R-sig-ecology mailing list
+> R-sig-ecology at r-project.org
+> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology
+
+
+From pd|xon @end|ng |rom |@@t@te@edu  Wed Sep 23 13:58:26 2020
+From: pd|xon @end|ng |rom |@@t@te@edu (Dixon, Philip M [STAT])
+Date: Wed, 23 Sep 2020 11:58:26 +0000
+Subject: [R-sig-eco] mvabund: Extracting a subset of comparisons between
+ interactions
+Message-ID: <CH2PR04MB6678CDE4516DAF1C222E1222DB380@CH2PR04MB6678.namprd04.prod.outlook.com>
+
+Diogo,
+
+In similar situations, I have done the following:
+Estimate all pairwise differences between site:season combinations.  Use paste() or something equivalent so that the group means encode both site and season.  No p-value adjustment at this step.
+Post-process that table to extract only the comparisons of interest, e.g. comparisons of season means within site or comparison of site means with season.
+Determine the number of comparisons you are interested in (likely much, much smaller than 498).  Apply a Bonferroni adjustment to your subset of comparisons.
+
+I don't have R code to do this with anova.manyglm(  pairwise.com= ) output.  Sorry.  Here's an outline of what I would do:
+If you save the results from anova.manyglm(), the information you need to extract comparisons of interest will be in the row dimnames of $pairwise.comp.table.
+E.g.:
+
+all.pairs <- anova.manyglm(full_mod, p.uni="adjusted , pairwise.comp = Catch$SiteSeason)
+pair.names <- dimnames( all.pairs$pairwise.comp.table)[[1]]
+
+Then it's just a matter of using strsplit() three times.  Once to separate the two group names (using ' vs ').  Then to each group name to separate the site from the season (using '_' or whatever you used as the separator character in your paste).
+Best,
+Philip Dixon
+
+
+	[[alternative HTML version deleted]]
+
+
