@@ -603,3 +603,174 @@ https://www.transmittingscience.com/courses/ecology/evaluating-and-validating-sp
 	[[alternative HTML version deleted]]
 
 
+From we|@er2 @end|ng |rom n@tur@cun|@cz  Fri Jul 17 14:34:49 2026
+From: we|@er2 @end|ng |rom n@tur@cun|@cz (Martin Weiser)
+Date: Fri, 17 Jul 2026 14:34:49 +0200
+Subject: [R-sig-eco] variances and test of their similarity
+Message-ID: <3000b791-5a2b-4f67-a23e-8a2407caf81d@natur.cuni.cz>
+
+Dear all,
+
+could you please help me to interpret variances and their (dis-)similarity?
+
+I have two sets of values, each taken from the same set of subjects. The 
+first set of values is taken before some treatment, the other set is 
+taken afterwards, so I have two values per subject.
+
+There are 102 subjects.
+Variance before is: 0.2028815
+Variance after is: 0.1643807
+
+Looking at the qq-norm, I see no strong deviation from normal dist., in 
+any of the data groups (before and after).
+
+I have also tried DHARMa, simulating residuals from a model:
+plot(simulateResiduals(lm(before ~ 1)))
+plot(simulateResiduals(lm(after ~ 1)))
+still no warnings.
+
+In that case, I would expect var.test and bartlett.test to be OK.
+These tests both reported no significant difference in variances:
+
+ > var.test(before, after)
+F = 1.2342, num df = 101, denom df = 101, p-value = 0.292
+alternative hypothesis: true ratio of variances is not equal to 1
+95 percent confidence interval:
+  0.8337509 1.8270352
+sample estimates:
+ratio of variances
+           1.234217
+
+ > bartlett.test(list(before, after))
+Bartlett's K-squared = 1.1106, df = 1, p-value = 0.2919
+
+In that case, I would expect Levene's and Fligner-Killeen's test to say 
+the same thing, but they did not:
+
+ > fligner.test(list(before, after))
+Fligner-Killeen:med chi-squared = 4.4478, df = 1, p-value = 0.03495
+
+Levene's Test for Homogeneity of Variance (center = median)
+        Df F value  Pr(>F)
+group   1  3.3713 0.06781 .
+       202
+
+What does it mean? I have thought that Levene's and Fligner-Killeen's 
+are a bit weaker, but useful for non-normal data, so I would expect them 
+to keep high probability of the hypothesis that the variances were the 
+same (not suggesting rejection), if their stronger counterparts in this 
+case (Bartlett and F) did not not suggest to reject it as well...
+
+Can someone explain me (or point me to the explanation) what is going on 
+here, please?
+
+Thank you!
+
+With regards,
+
+Martin Weiser
+
+
+-- 
+Please expect long response time (3d+) - this is because of family reasons
+
+
+From bott@-duk@t@zo|t@n @end|ng |rom eco|re@@hu  Fri Jul 17 16:47:31 2026
+From: bott@-duk@t@zo|t@n @end|ng |rom eco|re@@hu (=?UTF-8?Q?Zolt=C3=A1n_Botta-Duk=C3=A1t?=)
+Date: Fri, 17 Jul 2026 16:47:31 +0200
+Subject: [R-sig-eco] variances and test of their similarity
+In-Reply-To: <3000b791-5a2b-4f67-a23e-8a2407caf81d@natur.cuni.cz>
+References: <3000b791-5a2b-4f67-a23e-8a2407caf81d@natur.cuni.cz>
+Message-ID: <1e81260a-66e0-4265-a17c-e4dc74bfa801@ecolres.hu>
+
+Dear Martin,
+
+var,test (the F-test), and Bartlett's test (if there is only two 
+groups)? are testing the same hypothesis, thus it is not a surprise that 
+they gave the same p-value. This p-value is valid if values ate normally 
+distributed in both groups.
+
+So, your question is valid, why tests not assuming normality indicates 
+significant departures from equal variances. My tip is that outlier 
+values are responsible for this strange result. However, I'm not sure 
+that is is sthe best explanation. Anyway, please keep in your mind that 
+figures created by DHARMa package are designed to check applicability of 
+linear models that nay be more robust against lack of normality than 
+homogeneity tests.
+
+Best wishes,
+
+Zoltan
+
+2026. 07. 17. 14:34 keltez?ssel, Martin Weiser ?rta:
+> Dear all,
+>
+> could you please help me to interpret variances and their 
+> (dis-)similarity?
+>
+> I have two sets of values, each taken from the same set of subjects. 
+> The first set of values is taken before some treatment, the other set 
+> is taken afterwards, so I have two values per subject.
+>
+> There are 102 subjects.
+> Variance before is: 0.2028815
+> Variance after is: 0.1643807
+>
+> Looking at the qq-norm, I see no strong deviation from normal dist., 
+> in any of the data groups (before and after).
+>
+> I have also tried DHARMa, simulating residuals from a model:
+> plot(simulateResiduals(lm(before ~ 1)))
+> plot(simulateResiduals(lm(after ~ 1)))
+> still no warnings.
+>
+> In that case, I would expect var.test and bartlett.test to be OK.
+> These tests both reported no significant difference in variances:
+>
+> > var.test(before, after)
+> F = 1.2342, num df = 101, denom df = 101, p-value = 0.292
+> alternative hypothesis: true ratio of variances is not equal to 1
+> 95 percent confidence interval:
+> ?0.8337509 1.8270352
+> sample estimates:
+> ratio of variances
+> ????????? 1.234217
+>
+> > bartlett.test(list(before, after))
+> Bartlett's K-squared = 1.1106, df = 1, p-value = 0.2919
+>
+> In that case, I would expect Levene's and Fligner-Killeen's test to 
+> say the same thing, but they did not:
+>
+> > fligner.test(list(before, after))
+> Fligner-Killeen:med chi-squared = 4.4478, df = 1, p-value = 0.03495
+>
+> Levene's Test for Homogeneity of Variance (center = median)
+> ?????? Df F value? Pr(>F)
+> group?? 1? 3.3713 0.06781 .
+> ????? 202
+>
+> What does it mean? I have thought that Levene's and Fligner-Killeen's 
+> are a bit weaker, but useful for non-normal data, so I would expect 
+> them to keep high probability of the hypothesis that the variances 
+> were the same (not suggesting rejection), if their stronger 
+> counterparts in this case (Bartlett and F) did not not suggest to 
+> reject it as well...
+>
+> Can someone explain me (or point me to the explanation) what is going 
+> on here, please?
+>
+> Thank you!
+>
+> With regards,
+>
+> Martin Weiser
+>
+>
+-- 
+Botta-Duk?t Zolt?n                         Zolt?n Botta-Duk?t
+tudom?nyos tan?csad?                       scientific advisor
+?kol?giai Kutat?k?zpont                    Centre for Ecological Research
+?kol?giai ?s Botanikai Int?zet             Institute of Ecology and Botany
+
+
