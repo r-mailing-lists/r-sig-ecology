@@ -20,7 +20,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100901/9b2d891c/attachment.pl>",
       "thread_id": "thread-25dbc863399e",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001493.html"
     },
     {
       "id": "msg-5f9a11b1e778",
@@ -36,11 +37,12 @@
         "<4C7C3CE3.9090105@gmail.com>",
         "<4C7E3124.5010803@gmx.de>"
       ],
-      "body_plain": "Renke L?hken wrote:\n> The habitats are replicated, sorry for the confusion!\n>\n> How can I decide if I really need a zero-inflated model or is it just\n> expert judgment?\n> I decided that I need it, because more than 50% of the data are true\n> zeros (detectability=100%) and therfore e.g. Martin et al. (2005) or\n> Zuur et al., et al. (2009) recommended zero-inflated models.\n> but:\n> \"In this study it appeared that zero inflated distributions were not\n> usually needed, which implies that observations in which a taxon does\n> not occur could usually be distinguished from those where the taxon\n> does occur (a priori or using environmental variables), i.e. most\n> zeros could be attributed to the systematic component of the model,\n> rather than taking the more complicated route and incorporating them\n> into the random component of the model.\" (Warton 2005) [p. 288]\n> --> Does this mean that I do not need a zero inflation model if the\n> detectability=100% and therefore \"all zeros\"=\"true zeros\"?\n  You can either fit a non-inflated model (negative binomial or Poisson)\nand see if the fraction of zeros is predicted reasonably\nwell, or fit a zero-inflated model and see if it improves the fit over a\nnon-inflated model (e.g., via likelihood ratio test).\nDetectability is not the only source of 'structural' zeros (I really\ndislike the terminology of 'true zeros', although I appreciate\nthat it is standard in the field) -- there are also unsuitable habitats,\netc..\n> If I am allowed to use a hurdle model, is something wrong about the\n> hurdle-function of the pscl-package?\n> I think about something like this:\n> hurdle<-\n> hurdle(NumberOfIndividuals~HabitatComplexity+Time+Colour+Treatment+HabitatDensity*Zeit+HabitatDensity*Treatment...,\n> dist = \"poisson\", link = \"logit\")\n>\n> Response variables\n> NumberOfIndividuals: Number of individuals in the habitat\n>\n> Explanatory variables:\n> HabitatComplexity: Complexity of the habitat (4 levels) [continuous\n> variable]\n> Colour: Colour of the habitat (4 levels)\n> Treatment: tap water, tap water + additive 1, tap water + additive 2\n> (3 levels)\n> Time: Resampling every 5 min (5-30 min) (6 levels) [continuous variable]\n>\n\n  The only problem with the hurdle() function is that it doesn't deal\nwith random effects. If you're willing to treat all\npredictors as fixed, and if hurdle() gives you reasonable answers, it\nwill certainly make your life easier *not* to\ndelve into the topic of zero-inflated mixed models ....\n> Citeted literature:\n>\n> Martin, T.G., Wintle, B.A., Rhodes, J.R., Kuhnert, P.M., Low Choy, S.,\n> Field, S.A., Tyre, A.J., & Possingham, H.P. (2005) Zero tolerance\n> ecology: improving ecological inference by modelling the source of\n> zero observations. /Ecology Letters/, 8, 1235-1246\n>\n> Warton, D. I. 2005. Many zeros do not mean zero in?ation: comparing\n> the goodness-of-?t of parametric models to multivariate abundance\n> data. Environmetrics 16:275-289. doi: 10.1002/env.702\n> <http://dx.doi.org/10.1002/env.702>\n>\n> A.F. Zuur et al.(2009). Mixed effects models and extensions in ecology\n> with R. Chapter 11 Zero-Truncated and Zero-Inflated Models for Count Data.\n>\n> Am 31/08/2010 11:21, schrieb Ben Bolker:\n>>   A few comments:\n>>\n>>   are the habitats replicated? If not, you have a fairly serious\n>> experimental design problem -- you can't statistically distinguish\n>> between the measured covariates and other, unmeasured/unintentional\n>> differences among the habitats ...\n>>\n>>   * are you willing to treat complexity as a continuous variable, or do\n>> you not want to assume that the 'distance' between neighboring\n>> values of complexity is the same (an ordinal variable)?\n>>\n>>  * for colour and water, you should probably simply leave these as\n>> single categorical variables and let R sort out the construction of\n>> dummy variables for you.\n>>\n>>  * you should think about whether you want to look for regular/monotonic\n>> trends with time (i.e. code time as a continuous\n>> variable) or allow for any possible temporal variable (code time a\n>> fixed, or possibly random-effect, categorical variable)\n>>   if habitats are indeed replicated you probably want something like\n>>\n>> MCMCglmm(fixed=number_in_habitat~complexity+colour+water+time,random=~habitat,\n>>    family=zipoisson,data=...)\n>>\n>>   you have a few options for the family depending on how you want to\n>> treat the zeros (hurdle vs. zero-inflated)\n>>\n>>   are you sure the data are zero-inflated  (Warton, D. I. 2005. Many\n>> zeros do not mean zero in?ation: comparing the goodness-of-?t of\n>> parametric models to multivariate abundance data. Environmetrics\n>> 16:275-289. doi: 10.1002/env.702 <http://dx.doi.org/10.1002/env.702>.  ) ?\n>>\n>>\n>>\n>> Renke L?hken wrote:\n>>     \n>>>  Hi all,\n>>> I want to analyse an experiment at which insects were allowed to\n>>> choose between four habitats with different characteristics (see\n>>> below). Number of individuals per habitat were resampled six times\n>>> (every 5 min). I want to know which variables and which interactions\n>>> of the variables have an influence on the number of individuals in the\n>>> habitats.\n>>>\n>>> Problem: The response variable shows a zero inflation (>50% of the\n>>> data) by true zeros (100% detectability).\n>>>\n>>> Question: Can I use a hurdle model (ZAP) for that or do you recommend\n>>> another method for the data analysis?\n>>>\n>>> Thanks in advance,\n>>> Renke L?hken\n>>>\n>>>\n>>> Response variables\n>>> Number of individuals in the habitat\n>>>\n>>> Explanatory variables:\n>>> Complexity of the habitat (4 levels)\n>>> Habitat has the Colour 1 (yes/no)\n>>> Habitat has the Colour 2 (yes/no)\n>>> Habitat has the Colour 3 (yes/no)\n>>> Habitat has the Colour 4 (yes/no)\n>>> Water additive 1 (yes/no)\n>>> Water additive 2 (yes/no)\n>>> Time (6 levels: 5-30 min [resampling every 5 min])\n>>>\n>>> _______________________________________________\n>>> R-sig-ecology mailing list\n>>> R-sig-ecology at r-project.org\n>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>       \n>>     \n>",
-      "body_snippet": "Renke L?hken wrote:\n> The habitats are replicated, sorry for the confusion!\n>\n> How can I decide if I really need a zero-inflated model or is it just\n> expert judgment?\n> I decided that I need it, bec",
+      "body_plain": "Renke Lühken wrote:\n> The habitats are replicated, sorry for the confusion!\n>\n> How can I decide if I really need a zero-inflated model or is it just\n> expert judgment?\n> I decided that I need it, because more than 50% of the data are true\n> zeros (detectability=100%) and therfore e.g. Martin et al. (2005) or\n> Zuur et al., et al. (2009) recommended zero-inflated models.\n> but:\n> \"In this study it appeared that zero inflated distributions were not\n> usually needed, which implies that observations in which a taxon does\n> not occur could usually be distinguished from those where the taxon\n> does occur (a priori or using environmental variables), i.e. most\n> zeros could be attributed to the systematic component of the model,\n> rather than taking the more complicated route and incorporating them\n> into the random component of the model.\" (Warton 2005) [p. 288]\n> --> Does this mean that I do not need a zero inflation model if the\n> detectability=100% and therefore \"all zeros\"=\"true zeros\"?\n  You can either fit a non-inflated model (negative binomial or Poisson)\nand see if the fraction of zeros is predicted reasonably\nwell, or fit a zero-inflated model and see if it improves the fit over a\nnon-inflated model (e.g., via likelihood ratio test).\nDetectability is not the only source of 'structural' zeros (I really\ndislike the terminology of 'true zeros', although I appreciate\nthat it is standard in the field) -- there are also unsuitable habitats,\netc..\n> If I am allowed to use a hurdle model, is something wrong about the\n> hurdle-function of the pscl-package?\n> I think about something like this:\n> hurdle<-\n> hurdle(NumberOfIndividuals~HabitatComplexity+Time+Colour+Treatment+HabitatDensity*Zeit+HabitatDensity*Treatment...,\n> dist = \"poisson\", link = \"logit\")\n>\n> Response variables\n> NumberOfIndividuals: Number of individuals in the habitat\n>\n> Explanatory variables:\n> HabitatComplexity: Complexity of the habitat (4 levels) [continuous\n> variable]\n> Colour: Colour of the habitat (4 levels)\n> Treatment: tap water, tap water + additive 1, tap water + additive 2\n> (3 levels)\n> Time: Resampling every 5 min (5-30 min) (6 levels) [continuous variable]\n>\n\n  The only problem with the hurdle() function is that it doesn't deal\nwith random effects. If you're willing to treat all\npredictors as fixed, and if hurdle() gives you reasonable answers, it\nwill certainly make your life easier *not* to\ndelve into the topic of zero-inflated mixed models ....\n> Citeted literature:\n>\n> Martin, T.G., Wintle, B.A., Rhodes, J.R., Kuhnert, P.M., Low Choy, S.,\n> Field, S.A., Tyre, A.J., & Possingham, H.P. (2005) Zero tolerance\n> ecology: improving ecological inference by modelling the source of\n> zero observations. /Ecology Letters/, 8, 1235-1246\n>\n> Warton, D. I. 2005. Many zeros do not mean zero inﬂation: comparing\n> the goodness-of-ﬁt of parametric models to multivariate abundance\n> data. Environmetrics 16:275-289. doi: 10.1002/env.702\n> <http://dx.doi.org/10.1002/env.702>\n>\n> A.F. Zuur et al.(2009). Mixed effects models and extensions in ecology\n> with R. Chapter 11 Zero-Truncated and Zero-Inflated Models for Count Data.\n>\n> Am 31/08/2010 11:21, schrieb Ben Bolker:\n>>   A few comments:\n>>\n>>   are the habitats replicated? If not, you have a fairly serious\n>> experimental design problem -- you can't statistically distinguish\n>> between the measured covariates and other, unmeasured/unintentional\n>> differences among the habitats ...\n>>\n>>   * are you willing to treat complexity as a continuous variable, or do\n>> you not want to assume that the 'distance' between neighboring\n>> values of complexity is the same (an ordinal variable)?\n>>\n>>  * for colour and water, you should probably simply leave these as\n>> single categorical variables and let R sort out the construction of\n>> dummy variables for you.\n>>\n>>  * you should think about whether you want to look for regular/monotonic\n>> trends with time (i.e. code time as a continuous\n>> variable) or allow for any possible temporal variable (code time a\n>> fixed, or possibly random-effect, categorical variable)\n>>   if habitats are indeed replicated you probably want something like\n>>\n>> MCMCglmm(fixed=number_in_habitat~complexity+colour+water+time,random=~habitat,\n>>    family=zipoisson,data=...)\n>>\n>>   you have a few options for the family depending on how you want to\n>> treat the zeros (hurdle vs. zero-inflated)\n>>\n>>   are you sure the data are zero-inflated  (Warton, D. I. 2005. Many\n>> zeros do not mean zero inﬂation: comparing the goodness-of-ﬁt of\n>> parametric models to multivariate abundance data. Environmetrics\n>> 16:275-289. doi: 10.1002/env.702 <http://dx.doi.org/10.1002/env.702>.  ) ?\n>>\n>>\n>>\n>> Renke Lühken wrote:\n>>     \n>>>  Hi all,\n>>> I want to analyse an experiment at which insects were allowed to\n>>> choose between four habitats with different characteristics (see\n>>> below). Number of individuals per habitat were resampled six times\n>>> (every 5 min). I want to know which variables and which interactions\n>>> of the variables have an influence on the number of individuals in the\n>>> habitats.\n>>>\n>>> Problem: The response variable shows a zero inflation (>50% of the\n>>> data) by true zeros (100% detectability).\n>>>\n>>> Question: Can I use a hurdle model (ZAP) for that or do you recommend\n>>> another method for the data analysis?\n>>>\n>>> Thanks in advance,\n>>> Renke Lühken\n>>>\n>>>\n>>> Response variables\n>>> Number of individuals in the habitat\n>>>\n>>> Explanatory variables:\n>>> Complexity of the habitat (4 levels)\n>>> Habitat has the Colour 1 (yes/no)\n>>> Habitat has the Colour 2 (yes/no)\n>>> Habitat has the Colour 3 (yes/no)\n>>> Habitat has the Colour 4 (yes/no)\n>>> Water additive 1 (yes/no)\n>>> Water additive 2 (yes/no)\n>>> Time (6 levels: 5-30 min [resampling every 5 min])\n>>>\n>>> _______________________________________________\n>>> R-sig-ecology mailing list\n>>> R-sig-ecology at r-project.org\n>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>       \n>>     \n>",
+      "body_snippet": "Renke Lühken wrote:\n> The habitats are replicated, sorry for the confusion!\n>\n> How can I decide if I really need a zero-inflated model or is it just\n> expert judgment?\n> I decided that I need it, bec",
       "thread_id": "thread-25dbc863399e",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001494.html"
     },
     {
       "id": "msg-1270178354f7",
@@ -56,7 +58,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100903/1e38dca7/attachment.pl>",
       "thread_id": "thread-1270178354f7",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001495.html"
     },
     {
       "id": "msg-0a4ef61d5d6c",
@@ -72,7 +75,8 @@
       "body_snippet": "Does R have a p-function for empirical distributions? In other words,\nhow can I find out what fraction of the values in my data set are\nsmaller than a given value?\n\n-- \n-------------\nJane Shevtsov\nEco",
       "thread_id": "thread-0a4ef61d5d6c",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001496.html"
     },
     {
       "id": "msg-3262fdb1aaaa",
@@ -86,11 +90,12 @@
       "references": [
         "<AANLkTimgdpMD89T5_9VUb6L7px=hy=v7tF3ETY_u21PR@mail.gmail.com>"
       ],
-      "body_plain": "On Fri, Sep 3, 2010 at 11:32 PM, Jane Shevtsov <jane.eco at gmail.com> wrote:\n> Does R have a p-function for empirical distributions? In other words,\n> how can I find out what fraction of the values in my data set are\n> smaller than a given value?\n\nMaybe\nsum(x <= crit) / length(x)\nCheers,\nPeter\n\nP?ter S?lymos\nAlberta Biodiversity Monitoring Institute\nDepartment of Biological Sciences\nCW 405, Biological Sciences Bldg\nUniversity of Alberta\nEdmonton, Alberta, T6G 2E9, Canada\nemail <- paste(\"solymos\", \"ualberta.ca\", sep = \"@\")\n\n>\n> --\n> -------------\n> Jane Shevtsov\n> Ecology Ph.D. candidate, University of Georgia\n> co-founder, <www.worldbeyondborders.org>\n> Check out my blog, <http://perceivingwholes.blogspot.com>Perceiving Wholes\n>\n> \"The whole person must have both the humility to nurture the\n> Earth and the pride to go to Mars.\" --Wyn Wachhorst, The Dream\n> of Spaceflight\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>",
+      "body_plain": "On Fri, Sep 3, 2010 at 11:32 PM, Jane Shevtsov <jane.eco at gmail.com> wrote:\n> Does R have a p-function for empirical distributions? In other words,\n> how can I find out what fraction of the values in my data set are\n> smaller than a given value?\n\nMaybe\nsum(x <= crit) / length(x)\nCheers,\nPeter\n\nPéter Sólymos\nAlberta Biodiversity Monitoring Institute\nDepartment of Biological Sciences\nCW 405, Biological Sciences Bldg\nUniversity of Alberta\nEdmonton, Alberta, T6G 2E9, Canada\nemail <- paste(\"solymos\", \"ualberta.ca\", sep = \"@\")\n\n>\n> --\n> -------------\n> Jane Shevtsov\n> Ecology Ph.D. candidate, University of Georgia\n> co-founder, <www.worldbeyondborders.org>\n> Check out my blog, <http://perceivingwholes.blogspot.com>Perceiving Wholes\n>\n> \"The whole person must have both the humility to nurture the\n> Earth and the pride to go to Mars.\" --Wyn Wachhorst, The Dream\n> of Spaceflight\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>",
       "body_snippet": "On Fri, Sep 3, 2010 at 11:32 PM, Jane Shevtsov <jane.eco at gmail.com> wrote:\n> Does R have a p-function for empirical distributions? In other words,\n> how can I find out what fraction of the values i",
       "thread_id": "thread-0a4ef61d5d6c",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001497.html"
     },
     {
       "id": "msg-9c30086ab84f",
@@ -106,7 +111,8 @@
       "body_snippet": "On 4/09/10 08:32 AM, \"Jane Shevtsov\" <jane.eco at gmail.com> wrote:\n\n> Does R have a p-function for empirical distributions? In other words,\n> how can I find out what fraction of the values in my data",
       "thread_id": "thread-0a4ef61d5d6c",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001498.html"
     },
     {
       "id": "msg-00b9647f3ee1",
@@ -118,11 +124,12 @@
       "subject_clean": "The future of adehabitat",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "Dear all,\n\nI have made major changes to the package adehabitat. Indeed, the R \nenvironment has changed a lot since I began the development of \nadehabitat in 2002 (development of namespace, etc.), and new classes and \nefficient methods have been developed to deal with spatial data (package \nsp). In addition, the number of functions available in the package has \ngrown to more than 250 functions, implementing methods for habitat \nselection analysis, home range estimation, animal movement analysis, or \nspatial operations.\n\nTherefore, I decided to:\n(i) rewrite the package adehabitat to make it more compliant with these \nevolutions of the package R,\n(ii) split adehabitat into four packages\n(iii) create a new project on R-Forge (https://r-forge.r-project.org/) \nto store the sources of these four packages.\n\nThe four new packages are:\n\n* adehabitatMA: functions to perform spatial operations (morphology, \nbuffer, etc.)\n* adehabitatHS: functions for the analysis of habitat selection\n* adehabitatHR: functions for home range estimation\n* adehabitatLT: functions for movement analysis\n\nThe home page of the project is: http://adehabitat.r-forge.r-project.org/\nThe packages can be installed in R by typing:\n\ninstall.packages(\"packagename\",repos=\"http://R-Forge.R-project.org\")\n\nI will keep these packages on R-forge for some time (at least several \nmonths), before submitting them to CRAN, to take into account users \nadvices on these packages. After their submission to CRAN, I will \ncontinue to maintain the old adehabitat on CRAN for some time, but on \nthe long term, this package will disappear. These four packages are \nexpected to become the future of adehabitat.\n\nI now describe several major changes:\n\n* the functions of the packages are documented precisely in a vignette \n(there is one vignette per package). Both their use and the theory \nunderlying these functions are described there. To access it, type:\nvignette(\"packagename\")\n\n* the home range estimation methods have been homogenized and return \nclasses compliant with the classes of the package sp:\n- the functions kernelUD, kernelbb, and kernelkc all return objects of \nclass \"estUDm\", which are lists of objects of class \"estUD\". The class \nextUD extends the class SpatialPixelsDataFrame.\n- the function clusthr and LoCoH return objects of class \"MCHu\", which \nare lists of SpatialPolygonsDataFrame\n- the function mcp returns a SpatialPolygonsDataFrame\n\n* home range estimation methods now take objects of class SpatialPoints \nas arguments\n\n* objects of class \"ltraj\" are now characterized by an additional \nattribute \"infolocs\", which is designed to store metadata on the \ntrajectories (e.g. precision on the relocations). Most functions of the \npackage adehabitatLT can be used to analyse these metadata (plotltr, \netc. see the vignette).\n\n* the method of characteristic hulls (Downs and Horner 2009), suggested \nby Paolo, on the list has been added to adehabitatHR, and returns an \nobject of class MCHu\n\n* the canonical OMI analysis, allowing exploration of habitat selection \nwith radio-tracking data, has been added to the package adehabitatHS\n\n* the autocorrelation functions described by Dray et al. (2010) for the \nanalysis of movement have been added to the package adehabitatLT;\n\n* all the packages have a namespace for management of internal functions.\n\nNote that the calculations performed by most functions of adehabitat \nhave not changed (e.g. the algorithm implemented in kernelUD of \nadehabitat is the same as the algorithm implemented in the function \nkernelUD of the package adehabitatHR), since they have been deeply \ndiscussed with users and corrected during the last five years. Only the \ninput and output of the functions have been changed.\n\nHappy testing,\n\nCl?ment Calenge.\n\n-- \nCl?ment CALENGE\nCellule d'appui ? l'analyse de donn?es\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14\n\n\n-- \nCl?ment CALENGE\nCellule d'appui ? l'analyse de donn?es\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_plain": "Dear all,\n\nI have made major changes to the package adehabitat. Indeed, the R \nenvironment has changed a lot since I began the development of \nadehabitat in 2002 (development of namespace, etc.), and new classes and \nefficient methods have been developed to deal with spatial data (package \nsp). In addition, the number of functions available in the package has \ngrown to more than 250 functions, implementing methods for habitat \nselection analysis, home range estimation, animal movement analysis, or \nspatial operations.\n\nTherefore, I decided to:\n(i) rewrite the package adehabitat to make it more compliant with these \nevolutions of the package R,\n(ii) split adehabitat into four packages\n(iii) create a new project on R-Forge (https://r-forge.r-project.org/) \nto store the sources of these four packages.\n\nThe four new packages are:\n\n* adehabitatMA: functions to perform spatial operations (morphology, \nbuffer, etc.)\n* adehabitatHS: functions for the analysis of habitat selection\n* adehabitatHR: functions for home range estimation\n* adehabitatLT: functions for movement analysis\n\nThe home page of the project is: http://adehabitat.r-forge.r-project.org/\nThe packages can be installed in R by typing:\n\ninstall.packages(\"packagename\",repos=\"http://R-Forge.R-project.org\")\n\nI will keep these packages on R-forge for some time (at least several \nmonths), before submitting them to CRAN, to take into account users \nadvices on these packages. After their submission to CRAN, I will \ncontinue to maintain the old adehabitat on CRAN for some time, but on \nthe long term, this package will disappear. These four packages are \nexpected to become the future of adehabitat.\n\nI now describe several major changes:\n\n* the functions of the packages are documented precisely in a vignette \n(there is one vignette per package). Both their use and the theory \nunderlying these functions are described there. To access it, type:\nvignette(\"packagename\")\n\n* the home range estimation methods have been homogenized and return \nclasses compliant with the classes of the package sp:\n- the functions kernelUD, kernelbb, and kernelkc all return objects of \nclass \"estUDm\", which are lists of objects of class \"estUD\". The class \nextUD extends the class SpatialPixelsDataFrame.\n- the function clusthr and LoCoH return objects of class \"MCHu\", which \nare lists of SpatialPolygonsDataFrame\n- the function mcp returns a SpatialPolygonsDataFrame\n\n* home range estimation methods now take objects of class SpatialPoints \nas arguments\n\n* objects of class \"ltraj\" are now characterized by an additional \nattribute \"infolocs\", which is designed to store metadata on the \ntrajectories (e.g. precision on the relocations). Most functions of the \npackage adehabitatLT can be used to analyse these metadata (plotltr, \netc. see the vignette).\n\n* the method of characteristic hulls (Downs and Horner 2009), suggested \nby Paolo, on the list has been added to adehabitatHR, and returns an \nobject of class MCHu\n\n* the canonical OMI analysis, allowing exploration of habitat selection \nwith radio-tracking data, has been added to the package adehabitatHS\n\n* the autocorrelation functions described by Dray et al. (2010) for the \nanalysis of movement have been added to the package adehabitatLT;\n\n* all the packages have a namespace for management of internal functions.\n\nNote that the calculations performed by most functions of adehabitat \nhave not changed (e.g. the algorithm implemented in kernelUD of \nadehabitat is the same as the algorithm implemented in the function \nkernelUD of the package adehabitatHR), since they have been deeply \ndiscussed with users and corrected during the last five years. Only the \ninput and output of the functions have been changed.\n\nHappy testing,\n\nClément Calenge.\n\n-- \nClément CALENGE\nCellule d'appui à l'analyse de données\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14\n\n\n-- \nClément CALENGE\nCellule d'appui à l'analyse de données\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
       "body_snippet": "Dear all,\n\nI have made major changes to the package adehabitat. Indeed, the R \nenvironment has changed a lot since I began the development of \nadehabitat in 2002 (development of namespace, etc.), and ",
       "thread_id": "thread-00b9647f3ee1",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001499.html"
     },
     {
       "id": "msg-e9c084739cb9",
@@ -140,7 +147,8 @@
       "body_snippet": "Dear R users,\nI am using clustering (with hclust) and PERMANOVA (adonis) in R to \ncompare richness and foliar cover data from two shrub-steppe landscapes \nseparated by about 5 miles, one grazed (measu",
       "thread_id": "thread-e9c084739cb9",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001500.html"
     },
     {
       "id": "msg-7fa8ac3e638d",
@@ -158,7 +166,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100907/d81ddb63/attachment.pl>",
       "thread_id": "thread-0a4ef61d5d6c",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001501.html"
     },
     {
       "id": "msg-4a029c49eb85",
@@ -172,11 +181,12 @@
       "references": [
         "<4C5BDFAE.80903@cebc.cnrs.fr>"
       ],
-      "body_plain": "Sorry to have missed this.\n\nThere's really no way to do this in longitude / latitude without a lot\nof manual handling. You could split into two trips, one using the\neastern hemisphere, the other the western and use a shared [-180,180]\ngrid that you sum together.\n\nWhat to do at the split coordinate depends on your actual data, there\nare many options.\n\nIf you are still looking for an answer I could have a closer look at\nyour example code, but real data would be more helpful if you can\nshare it. There are a number of problems in the code you posted that\nprevent it from being easily run.\n\nCheers, Mike.\n\n\n\n\nOn Fri, Aug 6, 2010 at 8:10 PM, Pinaud David <pinaud at cebc.cnrs.fr> wrote:\n> Dear all,\n> I want to calculate a grid of time spent per cell with albatross data. The\n> goal is then to relate this to fisheries data set on a 1x1? grid.\n> I use the trip package with tripGrid(), but have some problems with birds\n> crossing the date line.\n> Usually I use a projection to do that but here I need to keep the 1x1? grid\n> in order to relate density tu some data (fisheries...).\n> I've tried with recenter() and nowrapSpatialLines(), without success.\n> Here a code:\n>\n> library(trip)\n> library(maps) ? # to draw world maps\n>\n> d <- data.frame(x=c(seq(50, 180, 10), seq(-170, 50, 10)), y=rnorm(n=37,\n> m=-50, sd=3), tms=Sys.time()-(37:1*60*60*24), id=rep(1, 37)) ?# an example\n> coordinates(d) <- ~x+y\n> tr <- trip(d, c(\"tms\", \"id\"))\n> proj4string(at) <- CRS(\"+proj=longlat +ellps=WGS84\")\n>\n> map('world')\n> plot(tr, add=T)\n> points(coordinates(tr), t=\"l\")\n>\n> # grid\n> grid.base <- expand.grid(Long=seq(-180, 180, by=1), Lat=seq(-70, -15, by=1))\n> ? # tab coords\n> coordinates(grid.base) <- ~ Long + Lat\n> proj4string(grid.base) <- CRS(\"+proj=longlat +ellps=WGS84\")\n> gt <- makeGridTopology(grid.base, cellsize = c(1, 1)) ?# def grid topo\n>\n> # time spent per cell\n> tppc <- tripGrid(tr, grid = gt)\n> tppc01 <- tppc ? ? ? ? ? ? ? # a copy for pres/abs\n> tppc01 at data$z <- ifelse(tppc at data$z > 0, 1, 0)\n>\n> image(tppc, col=rev(heat.colors(500))) ?# seems ok\n> map('world', add=T)\n> points(coordinates(tr), t=\"l\")\n>\n> # but with presence/absence:\n> image(tppc01, col=c(\"white\", \"green\"))\n> map('world', add=T)\n> points(coordinates(tr), t=\"l\", col=\"blue\")\n>\n> Some ideas ?\n>\n>\n> Many thanks for your time.\n> David\n>\n> --\n> ***************************************************\n> David PINAUD\n> Ing?nieur de Recherche \"Analyses spatiales\"\n>\n> Centre d'Etudes Biologiques de Chiz? - CNRS UPR1934\n> 79360 Villiers-en-Bois, France poste 485\n> Tel: +33 (0)5.49.09.35.58\n> Fax: +33 (0)5.49.09.65.26\n> http://www.cebc.cnrs.fr/\n>\n> ***************************************************\n>\n>\n>\n>\n> __________ Information from ESET Mail Security, version of virus signature\n> database 5346 (20100806) __________\n>\n> The message was checked by ESET Mail Security.\n> http://www.eset.com\n>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n\n\n\n-- \nMichael Sumner\nInstitute for Marine and Antarctic Studies, University of Tasmania\nHobart, Australia\ne-mail: mdsumner at gmail.com",
+      "body_plain": "Sorry to have missed this.\n\nThere's really no way to do this in longitude / latitude without a lot\nof manual handling. You could split into two trips, one using the\neastern hemisphere, the other the western and use a shared [-180,180]\ngrid that you sum together.\n\nWhat to do at the split coordinate depends on your actual data, there\nare many options.\n\nIf you are still looking for an answer I could have a closer look at\nyour example code, but real data would be more helpful if you can\nshare it. There are a number of problems in the code you posted that\nprevent it from being easily run.\n\nCheers, Mike.\n\n\n\n\nOn Fri, Aug 6, 2010 at 8:10 PM, Pinaud David <pinaud at cebc.cnrs.fr> wrote:\n> Dear all,\n> I want to calculate a grid of time spent per cell with albatross data. The\n> goal is then to relate this to fisheries data set on a 1x1° grid.\n> I use the trip package with tripGrid(), but have some problems with birds\n> crossing the date line.\n> Usually I use a projection to do that but here I need to keep the 1x1° grid\n> in order to relate density tu some data (fisheries...).\n> I've tried with recenter() and nowrapSpatialLines(), without success.\n> Here a code:\n>\n> library(trip)\n> library(maps)   # to draw world maps\n>\n> d <- data.frame(x=c(seq(50, 180, 10), seq(-170, 50, 10)), y=rnorm(n=37,\n> m=-50, sd=3), tms=Sys.time()-(37:1*60*60*24), id=rep(1, 37))  # an example\n> coordinates(d) <- ~x+y\n> tr <- trip(d, c(\"tms\", \"id\"))\n> proj4string(at) <- CRS(\"+proj=longlat +ellps=WGS84\")\n>\n> map('world')\n> plot(tr, add=T)\n> points(coordinates(tr), t=\"l\")\n>\n> # grid\n> grid.base <- expand.grid(Long=seq(-180, 180, by=1), Lat=seq(-70, -15, by=1))\n>   # tab coords\n> coordinates(grid.base) <- ~ Long + Lat\n> proj4string(grid.base) <- CRS(\"+proj=longlat +ellps=WGS84\")\n> gt <- makeGridTopology(grid.base, cellsize = c(1, 1))  # def grid topo\n>\n> # time spent per cell\n> tppc <- tripGrid(tr, grid = gt)\n> tppc01 <- tppc   ? ? ? ? ? ? # a copy for pres/abs\n> tppc01 at data$z <- ifelse(tppc at data$z > 0, 1, 0)\n>\n> image(tppc, col=rev(heat.colors(500)))  # seems ok\n> map('world', add=T)\n> points(coordinates(tr), t=\"l\")\n>\n> # but with presence/absence:\n> image(tppc01, col=c(\"white\", \"green\"))\n> map('world', add=T)\n> points(coordinates(tr), t=\"l\", col=\"blue\")\n>\n> Some ideas ?\n>\n>\n> Many thanks for your time.\n> David\n>\n> --\n> ***************************************************\n> David PINAUD\n> Ingénieur de Recherche \"Analyses spatiales\"\n>\n> Centre d'Etudes Biologiques de Chizé - CNRS UPR1934\n> 79360 Villiers-en-Bois, France poste 485\n> Tel: +33 (0)5.49.09.35.58\n> Fax: +33 (0)5.49.09.65.26\n> http://www.cebc.cnrs.fr/\n>\n> ***************************************************\n>\n>\n>\n>\n> __________ Information from ESET Mail Security, version of virus signature\n> database 5346 (20100806) __________\n>\n> The message was checked by ESET Mail Security.\n> http://www.eset.com\n>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n\n\n\n-- \nMichael Sumner\nInstitute for Marine and Antarctic Studies, University of Tasmania\nHobart, Australia\ne-mail: mdsumner at gmail.com",
       "body_snippet": "Sorry to have missed this.\n\nThere's really no way to do this in longitude / latitude without a lot\nof manual handling. You could split into two trips, one using the\neastern hemisphere, the other the w",
       "thread_id": "thread-4a029c49eb85",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001502.html"
     },
     {
       "id": "msg-eb3ada023363",
@@ -194,7 +204,8 @@
       "body_snippet": "Hi there,\n\nIs anyone aware of a method I could use to calculate AIC values for\nmodels obtained using the thin plate splines function (Tps) from the\npackage fields?\n\nThanks,\n\nJorge\n\n-- \n---\nJorge Velas",
       "thread_id": "thread-eb3ada023363",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001503.html"
     },
     {
       "id": "msg-5425cc0a814c",
@@ -213,7 +224,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100910/13dbeeee/attachment.pl>",
       "thread_id": "thread-eb3ada023363",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001504.html"
     },
     {
       "id": "msg-f69a0642c4a6",
@@ -229,7 +241,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100911/21de3ed7/attachment.pl>",
       "thread_id": "thread-f69a0642c4a6",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001505.html"
     },
     {
       "id": "msg-07228987f3ed",
@@ -245,7 +258,8 @@
       "body_snippet": "Dear List,\n\nI have experience with ROC plots through the Epi package and ROCR for binary data, however i am now trying to repeat a experiment where the response is ordinal.\n\nI have generated the predi",
       "thread_id": "thread-07228987f3ed",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001506.html"
     },
     {
       "id": "msg-2079f8752cce",
@@ -263,7 +277,8 @@
       "body_snippet": "On Sat, 2010-09-11 at 19:24 -0700, Laura S wrote:\n> Dear all:\n> \n> I am interested in plotting species relative abundance versus niche position\n> along an environmental gradient. I would like the spec",
       "thread_id": "thread-f69a0642c4a6",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001507.html"
     },
     {
       "id": "msg-6e62ea650dd1",
@@ -279,7 +294,8 @@
       "body_snippet": "On 12/09/10 05:24 AM, \"Laura S\" <leslaura at gmail.com> wrote:\n\n> Dear all:\n> \n> I am interested in plotting species relative abundance versus niche position\n> along an environmental gradient. I would",
       "thread_id": "thread-f69a0642c4a6",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001508.html"
     },
     {
       "id": "msg-54ddbc7ce5b1",
@@ -298,7 +314,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100914/bcb63487/attachment.pl>",
       "thread_id": "thread-f69a0642c4a6",
       "thread_depth": 2,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001509.html"
     },
     {
       "id": "msg-bbf975b3471f",
@@ -318,7 +335,8 @@
       "body_snippet": "On Tue, 2010-09-14 at 08:08 -0700, Laura S wrote:\n> Dear Gavin and Jari:\n> \n> Thank you both for your responses. I greatly appreciate it. \n\nThanks Laura,\n\nOne way to do this would be\n\nset.seed(123)\n##",
       "thread_id": "thread-f69a0642c4a6",
       "thread_depth": 3,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001510.html"
     },
     {
       "id": "msg-5ff5e42a4689",
@@ -334,7 +352,8 @@
       "body_snippet": "Hey everyone,\n\nI need to make sure of how 'hurdle' from package 'pscl' estimating the count part.\n\nin the Code, we may use the command dist='poisson', does it estimate the count part by normal poisson",
       "thread_id": "thread-5ff5e42a4689",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001511.html"
     },
     {
       "id": "msg-e12872b74ebe",
@@ -352,7 +371,8 @@
       "body_snippet": "On Wed, 2010-09-15 at 10:19 +0200, Yingjie Zhang wrote:\n> Hey everyone,\n> \n> I need to make sure of how 'hurdle' from package 'pscl' estimating the\n> count part.\n> \n> in the Code, we may use the comma",
       "thread_id": "thread-5ff5e42a4689",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001512.html"
     },
     {
       "id": "msg-f8217b0f5bb2",
@@ -364,11 +384,12 @@
       "subject_clean": "ordihull does not overlay hulls correctly",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "Dear r-ecology members,\n\nI am performing a NMDS ordination and I want to add hulls\nwith ordihull, to see which sites (vegetation plots)\nbelongs to a factor \nof my environmental variable. For that I used:\n\nplot(metaf, display=\"sites\", choices = c(1,2))\nordihull(metaf, env$clus, lty = 2, col = \"blue\",\nlabel=TRUE)\n# metaf is my ordination object.\n# env$clus is the factor\n\nThe hulls vertices coincides with plots.\nBUT... when plotting metaf chossing axis c(1,3) or c(2,3),\nthe vertices do not fit with the plots.\nThe ordination space is plotted with sites but with the\nhulls corresponding to the ordination plot with axis 1 and\n2.\n\nI thank you in advance, I have been looking for a solution\ntwo days.\nthanks!\nCristabel.\n\nCristabel Dur?n Rangel. PhD Student.\nInstitute of Silviculture. Faculty of Forest and\nEnvironmental Sciences. University of Freiburg.\nGermany\nTelf: +49 (761) 203 8604 (ofc) \n\n?Man lernt die Physiognomie einer Landschaft desto besser\nkennen, je genauer man die einzelnen Z?ge auffa?t, sie\nuntereinander vergleicht und so auf dem Wege der Analysis\nden Quellen der Gen?sse nachgeht, die uns das gro?e\nNaturgem?lde bietet.?\n\t\t\t\tAlexander von Humboldt, 1799",
+      "body_plain": "Dear r-ecology members,\n\nI am performing a NMDS ordination and I want to add hulls\nwith ordihull, to see which sites (vegetation plots)\nbelongs to a factor \nof my environmental variable. For that I used:\n\nplot(metaf, display=\"sites\", choices = c(1,2))\nordihull(metaf, env$clus, lty = 2, col = \"blue\",\nlabel=TRUE)\n# metaf is my ordination object.\n# env$clus is the factor\n\nThe hulls vertices coincides with plots.\nBUT... when plotting metaf chossing axis c(1,3) or c(2,3),\nthe vertices do not fit with the plots.\nThe ordination space is plotted with sites but with the\nhulls corresponding to the ordination plot with axis 1 and\n2.\n\nI thank you in advance, I have been looking for a solution\ntwo days.\nthanks!\nCristabel.\n\nCristabel Durán Rangel. PhD Student.\nInstitute of Silviculture. Faculty of Forest and\nEnvironmental Sciences. University of Freiburg.\nGermany\nTelf: +49 (761) 203 8604 (ofc) \n\n„Man lernt die Physiognomie einer Landschaft desto besser\nkennen, je genauer man die einzelnen Züge auffaßt, sie\nuntereinander vergleicht und so auf dem Wege der Analysis\nden Quellen der Genüsse nachgeht, die uns das große\nNaturgemälde bietet.“\n\t\t\t\tAlexander von Humboldt, 1799",
       "body_snippet": "Dear r-ecology members,\n\nI am performing a NMDS ordination and I want to add hulls\nwith ordihull, to see which sites (vegetation plots)\nbelongs to a factor \nof my environmental variable. For that I us",
       "thread_id": "thread-f8217b0f5bb2",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001513.html"
     },
     {
       "id": "msg-5a72eea69537",
@@ -386,7 +407,8 @@
       "body_snippet": "On Wed, 2010-09-15 at 15:55 +0200,\ncristabel.duran at waldbau.uni-freiburg.de wrote:\n> Dear r-ecology members,\n> \n> I am performing a NMDS ordination and I want to add hulls\n> with ordihull, to see wh",
       "thread_id": "thread-f8217b0f5bb2",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001514.html"
     },
     {
       "id": "msg-8536a6582db8",
@@ -401,11 +423,12 @@
         "<web-146447363@uni-freiburg.de>",
         "<1284559885.4130.6.camel@biol102145>"
       ],
-      "body_plain": "On Wed, 15 Sep 2010 17:11:25 +0300\n Jari Oksanen <jari.oksanen at oulu.fi> wrote:\n> On Wed, 2010-09-15 at 15:55 +0200,\n> cristabel.duran at waldbau.uni-freiburg.de wrote:\n> > Dear r-ecology members,\n> > \n> > I am performing a NMDS ordination and I want to add\n> hulls\n> > with ordihull, to see which sites (vegetation plots)\n> > belongs to a factor \n> > of my environmental variable. For that I used:\n> > \n> > plot(metaf, display=\"sites\", choices = c(1,2))\n> > ordihull(metaf, env$clus, lty = 2, col = \"blue\",\n> > label=TRUE)\n> > # metaf is my ordination object.\n> > # env$clus is the factor\n> > \n> > The hulls vertices coincides with plots.\n> > BUT... when plotting metaf chossing axis c(1,3) or\n> c(2,3),\n> > the vertices do not fit with the plots.\n> > The ordination space is plotted with sites but with the\n> > hulls corresponding to the ordination plot with axis 1\n> and\n> > 2.\n> \n> Dear Cristabel,\n> \n> Did you tell ordihull() about your choices? That is:\n> \n> plot(metaf, display=\"sites\", choices = c(1,3))\n> ordihull(metaf, env$clus, lty = 2, col = \"blue\",\n> label=TRUE,\n> choices=c(1,3))\n> \n> To avoid superfluous warnings, you can alternatively do:\n> \n> pl <- plot(metaf, display=\"sites\", choices = c(1,3))\n> ordihull(pl, env$clus, lty = 2, col = \"blue\", label=TRUE)\n> \n> Vegan ordination plot functions normally return invisibly\n> an object of\n> class \"ordiplot\" with plotted scores, and you can use\n> this in subsequent\n> comments where you add new items to plots. The invisible\n> ordination\n> object is practical when you have non-standard options in\n> plots, like\n> choices or scaling, and want to be sure that the same\n> settings will be\n> used subsequently.\n> \n> The \"invisible\" object means that it is not printed, but\n> once you catch\n> and save the object, it is visible and usable. More\n> details\n> in ?invisible.\n> \n> Cheers, Jari Oksanen\n\nCristabel Dur?n Rangel. PhD Student.\nInstitute of Silviculture. Faculty of Forest and\nEnvironmental Sciences. University of Freiburg.\nGermany\nTelf: +49 (761) 203 8604 (ofc) \n\n?Man lernt die Physiognomie einer Landschaft desto besser\nkennen, je genauer man die einzelnen Z?ge auffa?t, sie\nuntereinander vergleicht und so auf dem Wege der Analysis\nden Quellen der Gen?sse nachgeht, die uns das gro?e\nNaturgem?lde bietet.?\n\t\t\t\tAlexander von Humboldt, 1799\n\nDear Jari,\n\nthank you for your fast answer!\nI specify in ordihull the choices,\nit works! \nThank you very much!\n\nbest regards,\nCristabel.",
+      "body_plain": "On Wed, 15 Sep 2010 17:11:25 +0300\n Jari Oksanen <jari.oksanen at oulu.fi> wrote:\n> On Wed, 2010-09-15 at 15:55 +0200,\n> cristabel.duran at waldbau.uni-freiburg.de wrote:\n> > Dear r-ecology members,\n> > \n> > I am performing a NMDS ordination and I want to add\n> hulls\n> > with ordihull, to see which sites (vegetation plots)\n> > belongs to a factor \n> > of my environmental variable. For that I used:\n> > \n> > plot(metaf, display=\"sites\", choices = c(1,2))\n> > ordihull(metaf, env$clus, lty = 2, col = \"blue\",\n> > label=TRUE)\n> > # metaf is my ordination object.\n> > # env$clus is the factor\n> > \n> > The hulls vertices coincides with plots.\n> > BUT... when plotting metaf chossing axis c(1,3) or\n> c(2,3),\n> > the vertices do not fit with the plots.\n> > The ordination space is plotted with sites but with the\n> > hulls corresponding to the ordination plot with axis 1\n> and\n> > 2.\n> \n> Dear Cristabel,\n> \n> Did you tell ordihull() about your choices? That is:\n> \n> plot(metaf, display=\"sites\", choices = c(1,3))\n> ordihull(metaf, env$clus, lty = 2, col = \"blue\",\n> label=TRUE,\n> choices=c(1,3))\n> \n> To avoid superfluous warnings, you can alternatively do:\n> \n> pl <- plot(metaf, display=\"sites\", choices = c(1,3))\n> ordihull(pl, env$clus, lty = 2, col = \"blue\", label=TRUE)\n> \n> Vegan ordination plot functions normally return invisibly\n> an object of\n> class \"ordiplot\" with plotted scores, and you can use\n> this in subsequent\n> comments where you add new items to plots. The invisible\n> ordination\n> object is practical when you have non-standard options in\n> plots, like\n> choices or scaling, and want to be sure that the same\n> settings will be\n> used subsequently.\n> \n> The \"invisible\" object means that it is not printed, but\n> once you catch\n> and save the object, it is visible and usable. More\n> details\n> in ?invisible.\n> \n> Cheers, Jari Oksanen\n\nCristabel Durán Rangel. PhD Student.\nInstitute of Silviculture. Faculty of Forest and\nEnvironmental Sciences. University of Freiburg.\nGermany\nTelf: +49 (761) 203 8604 (ofc) \n\n„Man lernt die Physiognomie einer Landschaft desto besser\nkennen, je genauer man die einzelnen Züge auffaßt, sie\nuntereinander vergleicht und so auf dem Wege der Analysis\nden Quellen der Genüsse nachgeht, die uns das große\nNaturgemälde bietet.“\n\t\t\t\tAlexander von Humboldt, 1799\n\nDear Jari,\n\nthank you for your fast answer!\nI specify in ordihull the choices,\nit works! \nThank you very much!\n\nbest regards,\nCristabel.",
       "body_snippet": "On Wed, 15 Sep 2010 17:11:25 +0300\n Jari Oksanen <jari.oksanen at oulu.fi> wrote:\n> On Wed, 2010-09-15 at 15:55 +0200,\n> cristabel.duran at waldbau.uni-freiburg.de wrote:\n> > Dear r-ecology members,\n>",
       "thread_id": "thread-f8217b0f5bb2",
       "thread_depth": 2,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001515.html"
     },
     {
       "id": "msg-bc859b4fdac7",
@@ -426,7 +449,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100915/9a18a002/attachment.pl>",
       "thread_id": "thread-f69a0642c4a6",
       "thread_depth": 4,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001516.html"
     },
     {
       "id": "msg-45f83b0e1543",
@@ -442,7 +466,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100920/67921635/attachment.pl>",
       "thread_id": "thread-45f83b0e1543",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001517.html"
     },
     {
       "id": "msg-b25248578d58",
@@ -460,7 +485,8 @@
       "body_snippet": "-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA1\n\nOn 10-09-20 12:10 PM, Conrado Galdino wrote:\n> Dear all,\n>\n> I would like to know how to do a 'symmetrical dot density graphic'\n> (example image in the l",
       "thread_id": "thread-45f83b0e1543",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001518.html"
     },
     {
       "id": "msg-be791f31fb95",
@@ -476,7 +502,8 @@
       "body_snippet": "hi there,\n\ni try to estimate a species pool across plots under two experimental\nconditions (control / treatment) using specpool(..,index=c(\"boot\",\"jack1\").\n\nnow this all works well, but i have concern",
       "thread_id": "thread-be791f31fb95",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001519.html"
     },
     {
       "id": "msg-36a673f7b939",
@@ -492,7 +519,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100921/d509037f/attachment.pl>",
       "thread_id": "thread-36a673f7b939",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001520.html"
     },
     {
       "id": "msg-69afa38e5638",
@@ -508,7 +536,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100921/0aafda47/attachment.pl>",
       "thread_id": "thread-69afa38e5638",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001521.html"
     },
     {
       "id": "msg-bd13f20a08fe",
@@ -526,7 +555,8 @@
       "body_snippet": "Dear Cameron,\n\nA while ago, I had asked a similar question to Marti Anderson. Here's is\nwhat she had replied:\n\n        \"I have actually moved away from doing 2-way PERMDISP types of\n        analyses. ",
       "thread_id": "thread-69afa38e5638",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001522.html"
     },
     {
       "id": "msg-5a6a1ce11f89",
@@ -545,7 +575,8 @@
       "body_snippet": "On Wed, 2010-09-22 at 08:37 +1200, Etienne Lalibert? wrote:\n> Dear Cameron,\n> \n> A while ago, I had asked a similar question to Marti Anderson. Here's is\n> what she had replied:\n> \n>         \"I have a",
       "thread_id": "thread-69afa38e5638",
       "thread_depth": 2,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001523.html"
     },
     {
       "id": "msg-b744f068abda",
@@ -565,7 +596,8 @@
       "body_snippet": "You're welcome. But thanks should not go to me but to Marti Anderson,\nwho was kind enough to take some time to answer the question very\nclearly in the first place. If you could add some notes about th",
       "thread_id": "thread-69afa38e5638",
       "thread_depth": 3,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001524.html"
     },
     {
       "id": "msg-ff47bb0c66ad",
@@ -581,7 +613,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100922/c273417e/attachment.pl>",
       "thread_id": "thread-ff47bb0c66ad",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001525.html"
     },
     {
       "id": "msg-9dad96a63fe8",
@@ -595,11 +628,12 @@
       "references": [
         "<0D6399D2E9A66846B227AE8661541B291272C2@CTSPITDCEMMVX28.cihs.ad.gov.on.ca>"
       ],
-      "body_plain": "> I'm using the function clusthr in the adehabitatHR package to replicate\n> an analysis begun years ago using Ranges6 software. Authors used Kenward\n> et al.'s (2001) modified nearest-neighbor cluster analysis to generate\n> outlier-exclusive convex polygons.  They used Kenward et al.'s iterative\n> method for outlier exclusion, with an alpha level of 0.001, to\n> objectively exclude outliers without selecting an arbitrary % of\n> locations to include.  The proportion of locations included in\n> outlier-exclusive home range polygons therefore varied among home ranges\n> for different animals/seasons etc.\n>\n>\n>\n> Is it possible to specify this method of outlier exclusion when using\n> the clusthr function?  I only found reference to the percent argument,\n> which requires the user to specify the proportion of locations to\n> include.\n>    \n\nActually, the OED method is not (yet) implemented in adehabitatHR .\nHowever, I just noted your suggestion on my todo list.\nThank you for this suggestion,\nBest regards,\n\nCl?ment Calenge\n\n\n\n>\n>\n> Thanks,\n>\n> Eric\n>\n>\n>\n>\n>\n>\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>    \n\n\n-- \nCl?ment CALENGE\nCellule d'appui ? l'analyse de donn?es\nDirection des Etudes et de la Recherche\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_plain": "> I'm using the function clusthr in the adehabitatHR package to replicate\n> an analysis begun years ago using Ranges6 software. Authors used Kenward\n> et al.'s (2001) modified nearest-neighbor cluster analysis to generate\n> outlier-exclusive convex polygons.  They used Kenward et al.'s iterative\n> method for outlier exclusion, with an alpha level of 0.001, to\n> objectively exclude outliers without selecting an arbitrary % of\n> locations to include.  The proportion of locations included in\n> outlier-exclusive home range polygons therefore varied among home ranges\n> for different animals/seasons etc.\n>\n>\n>\n> Is it possible to specify this method of outlier exclusion when using\n> the clusthr function?  I only found reference to the percent argument,\n> which requires the user to specify the proportion of locations to\n> include.\n>    \n\nActually, the OED method is not (yet) implemented in adehabitatHR .\nHowever, I just noted your suggestion on my todo list.\nThank you for this suggestion,\nBest regards,\n\nClément Calenge\n\n\n\n>\n>\n> Thanks,\n>\n> Eric\n>\n>\n>\n>\n>\n>\n> \t[[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>    \n\n\n-- \nClément CALENGE\nCellule d'appui à l'analyse de données\nDirection des Etudes et de la Recherche\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
       "body_snippet": "> I'm using the function clusthr in the adehabitatHR package to replicate\n> an analysis begun years ago using Ranges6 software. Authors used Kenward\n> et al.'s (2001) modified nearest-neighbor cluster",
       "thread_id": "thread-36a673f7b939",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001526.html"
     },
     {
       "id": "msg-b37574459570",
@@ -615,7 +649,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100922/b53a6c3e/attachment.pl>",
       "thread_id": "thread-b37574459570",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001527.html"
     },
     {
       "id": "msg-5b579b3243fa",
@@ -631,7 +666,8 @@
       "body_snippet": "On 22/09/10 21:42 PM, \"Mike Rennie\" <mikerennie.r at gmail.com> wrote:\n\n> Hi all,\n> \n> I have been running principal coordinates analysis on a \"chord\" distance\n> matrix (stand normalized for some) usi",
       "thread_id": "thread-b37574459570",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001528.html"
     },
     {
       "id": "msg-3883bfc3dfa4",
@@ -650,7 +686,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100922/7e7661d4/attachment.pl>",
       "thread_id": "thread-b37574459570",
       "thread_depth": 2,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001529.html"
     },
     {
       "id": "msg-25c8cff54d85",
@@ -666,7 +703,8 @@
       "body_snippet": "On 22/09/10 22:01 PM, \"Mike Rennie\" <mikerennie.r at gmail.com> wrote:\n\n> Thanks Jari- however, when I try this code, it gives me some results for\n> runs with stresses, says I have a solution reached,",
       "thread_id": "thread-b37574459570",
       "thread_depth": 3,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001530.html"
     },
     {
       "id": "msg-4bbb12efef19",
@@ -685,7 +723,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100922/07dc4f5b/attachment.pl>",
       "thread_id": "thread-b37574459570",
       "thread_depth": 4,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001531.html"
     },
     {
       "id": "msg-fe9c2f938674",
@@ -697,11 +736,12 @@
       "subject_clean": "mrpp between pairs of factor levels",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "Dear list,\n\nI'm performing a mrpp analysis for my data (spp), the\ngrouping factor is mhab.\nmhab has five levels: \"b\"      \"br\"     \"c\"      \"nd\"\n    \"nongap\" \"t\" \n\nSo, for a mrpp with factor mhab with all levels I'm doing:\nmrpp(data=spp, grouping=mhab, dist=\"bray\",\npermutations=1000)\n\nBUT now I want is to perform a mrpp with only levels \"b\"\nand \"nd\".\n\nI tried several ways without success:\nmrpp(data=spp, grouping=c(mhab==\"b\" & \"nd\") , dist=\"bray\",\npermutations=1000)\nmrpp(data=spp, grouping=c(mhab==\"b\" & mhab==\"nd\") ,\ndist=\"bray\", permutations=1000)\nmrpp(data=spp, grouping=levels(which(envno34$mhab== \"b\") &\nwhich(envno34$mhab== \"b\")), dist=\"bray\", permutations=1000)\n\nI got this errors:\n- Error in x * w : non-numeric argument to binary operator\n- Error in levels(mhab(which(mhab == \"b\") & which(mhab ==\n : \n   attempt to apply non-function\n- Error in mhab == \"b\" & \"nd\" : \n   operations are possible only for numeric, logical or\ncomplex types\n...etc...etc..\n\nI think it should be possible to choose the factor levels\nwhich I want to work with, otherwise I should fix this\nissue from \nmy species and environmental matrices.\n\nI appreciate your help!\nThank you :-)\nCristabel.\n\nCristabel Dur?n Rangel. PhD Student.\nInstitute of Silviculture. Faculty of Forest and\nEnvironmental Sciences. University of Freiburg.\nGermany\nTelf: +49 (761) 203 8604 (ofc) \n\n?Man lernt die Physiognomie einer Landschaft desto besser\nkennen, je genauer man die einzelnen Z?ge auffa?t, sie\nuntereinander vergleicht und so auf dem Wege der Analysis\nden Quellen der Gen?sse nachgeht, die uns das gro?e\nNaturgem?lde bietet.?\n\t\t\t\tAlexander von Humboldt, 1799",
+      "body_plain": "Dear list,\n\nI'm performing a mrpp analysis for my data (spp), the\ngrouping factor is mhab.\nmhab has five levels: \"b\"      \"br\"     \"c\"      \"nd\"\n    \"nongap\" \"t\" \n\nSo, for a mrpp with factor mhab with all levels I'm doing:\nmrpp(data=spp, grouping=mhab, dist=\"bray\",\npermutations=1000)\n\nBUT now I want is to perform a mrpp with only levels \"b\"\nand \"nd\".\n\nI tried several ways without success:\nmrpp(data=spp, grouping=c(mhab==\"b\" & \"nd\") , dist=\"bray\",\npermutations=1000)\nmrpp(data=spp, grouping=c(mhab==\"b\" & mhab==\"nd\") ,\ndist=\"bray\", permutations=1000)\nmrpp(data=spp, grouping=levels(which(envno34$mhab== \"b\") &\nwhich(envno34$mhab== \"b\")), dist=\"bray\", permutations=1000)\n\nI got this errors:\n- Error in x * w : non-numeric argument to binary operator\n- Error in levels(mhab(which(mhab == \"b\") & which(mhab ==\n : \n   attempt to apply non-function\n- Error in mhab == \"b\" & \"nd\" : \n   operations are possible only for numeric, logical or\ncomplex types\n...etc...etc..\n\nI think it should be possible to choose the factor levels\nwhich I want to work with, otherwise I should fix this\nissue from \nmy species and environmental matrices.\n\nI appreciate your help!\nThank you :-)\nCristabel.\n\nCristabel Durán Rangel. PhD Student.\nInstitute of Silviculture. Faculty of Forest and\nEnvironmental Sciences. University of Freiburg.\nGermany\nTelf: +49 (761) 203 8604 (ofc) \n\n„Man lernt die Physiognomie einer Landschaft desto besser\nkennen, je genauer man die einzelnen Züge auffaßt, sie\nuntereinander vergleicht und so auf dem Wege der Analysis\nden Quellen der Genüsse nachgeht, die uns das große\nNaturgemälde bietet.“\n\t\t\t\tAlexander von Humboldt, 1799",
       "body_snippet": "Dear list,\n\nI'm performing a mrpp analysis for my data (spp), the\ngrouping factor is mhab.\nmhab has five levels: \"b\"      \"br\"     \"c\"      \"nd\"\n    \"nongap\" \"t\" \n\nSo, for a mrpp with factor mhab with",
       "thread_id": "thread-fe9c2f938674",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001532.html"
     },
     {
       "id": "msg-2314786e6e95",
@@ -717,7 +757,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100924/e74aaef8/attachment.pl>",
       "thread_id": "thread-2314786e6e95",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001533.html"
     },
     {
       "id": "msg-3271ad1dd1e4",
@@ -735,7 +776,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100924/a300375d/attachment.pl>",
       "thread_id": "thread-fe9c2f938674",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001534.html"
     },
     {
       "id": "msg-e74d73534a6f",
@@ -753,7 +795,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100924/be73df70/attachment.pl>",
       "thread_id": "thread-2314786e6e95",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001535.html"
     },
     {
       "id": "msg-6291018ab9b6",
@@ -765,11 +808,12 @@
       "subject_clean": "CI for mixed models with lme",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "Dear list members,\n\nI am fitting 2 linear mixed model with function lme and I cannot get the \nCI for \"modelo2\" with function \"intervlas\" (below are the output from \nthe 2 models).\nAny clue why?  Thank you very much in advance.  Manuel.\n\n > intervals(modelo1)$fixed\n                 lower      est.     upper\n(Intercept)  29.21725  42.85153  56.48581\ntempo       -24.41173 -19.74592 -15.08011\nattr(,\"label\")\n[1] \"Fixed effects:\"\n\n > intervals(modelo2)$fixed\nError en intervals.lme(modelo2) :\n   Cannot get confidence intervals on var-cov components: Non-positive \ndefinite approximate variance-covariance\n\n\nmodelo1 = lme(ipa ~ tempo, data=ipa, random = ~1 | localidad)\n > summary(modelo1)\nLinear mixed-effects model fit by REML\n  Data: ipa\n        AIC      BIC    logLik\n   2062.101 2075.172 -1027.050\n\nRandom effects:\n  Formula: ~1 | localidad\n         (Intercept) Residual\nStdDev:    44.61678 36.95279\n\nFixed effects: ipa ~ tempo\n                 Value Std.Error  DF   t-value p-value\n(Intercept)  42.85153  6.898734 146  6.211507       0\ntempo       -19.74592  2.360827 146 -8.363982       0\n  Correlation:\n       (Intr)\ntempo 0\n\nStandardized Within-Group Residuals:\n         Min          Q1         Med          Q3         Max\n-2.50376489 -0.45760686 -0.07812592  0.39097892  5.25554463\n\nNumber of Observations: 196\nNumber of Groups: 49\n\n\nmodelo2 = lme(ipa ~ tempo, random = ~1 | tempo/localidad, data=ipa)\n > summary(modelo2)\nLinear mixed-effects model fit by REML\n  Data: ipa\n        AIC     BIC    logLik\n   2144.981 2161.32 -1067.490\n\nRandom effects:\n  Formula: ~1 | tempo\n         (Intercept)\nStdDev:    5.540235\n\n  Formula: ~1 | localidad %in% tempo\n         (Intercept) Residual\nStdDev:     54.1832 19.60406\n\nFixed effects: ipa ~ tempo\n                 Value Std.Error  DF   t-value p-value\n(Intercept)  42.85153  4.961152 192  8.637415   0.000\ntempo       -19.74592  4.437389   2 -4.449895   0.047\n  Correlation:\n       (Intr)\ntempo 0\n\nStandardized Within-Group Residuals:\n         Min          Q1         Med          Q3         Max\n-0.42528137 -0.17487600 -0.08655534  0.06944999  2.05895746\n\nNumber of Observations: 196\nNumber of Groups:\n                tempo localidad %in% tempo\n                    4                  196\n\n-- \nManuel Sp?nola, Ph.D.\nInstituto Internacional en Conservaci?n y Manejo de Vida Silvestre\nUniversidad Nacional\nApartado 1350-3000\nHeredia\nCOSTA RICA\nmspinola at una.ac.cr\nmspinola10 at gmail.com\nTel?fono: (506) 2277-3598\nFax: (506) 2237-7036",
+      "body_plain": "Dear list members,\n\nI am fitting 2 linear mixed model with function lme and I cannot get the \nCI for \"modelo2\" with function \"intervlas\" (below are the output from \nthe 2 models).\nAny clue why?  Thank you very much in advance.  Manuel.\n\n > intervals(modelo1)$fixed\n                 lower      est.     upper\n(Intercept)  29.21725  42.85153  56.48581\ntempo       -24.41173 -19.74592 -15.08011\nattr(,\"label\")\n[1] \"Fixed effects:\"\n\n > intervals(modelo2)$fixed\nError en intervals.lme(modelo2) :\n   Cannot get confidence intervals on var-cov components: Non-positive \ndefinite approximate variance-covariance\n\n\nmodelo1 = lme(ipa ~ tempo, data=ipa, random = ~1 | localidad)\n > summary(modelo1)\nLinear mixed-effects model fit by REML\n  Data: ipa\n        AIC      BIC    logLik\n   2062.101 2075.172 -1027.050\n\nRandom effects:\n  Formula: ~1 | localidad\n         (Intercept) Residual\nStdDev:    44.61678 36.95279\n\nFixed effects: ipa ~ tempo\n                 Value Std.Error  DF   t-value p-value\n(Intercept)  42.85153  6.898734 146  6.211507       0\ntempo       -19.74592  2.360827 146 -8.363982       0\n  Correlation:\n       (Intr)\ntempo 0\n\nStandardized Within-Group Residuals:\n         Min          Q1         Med          Q3         Max\n-2.50376489 -0.45760686 -0.07812592  0.39097892  5.25554463\n\nNumber of Observations: 196\nNumber of Groups: 49\n\n\nmodelo2 = lme(ipa ~ tempo, random = ~1 | tempo/localidad, data=ipa)\n > summary(modelo2)\nLinear mixed-effects model fit by REML\n  Data: ipa\n        AIC     BIC    logLik\n   2144.981 2161.32 -1067.490\n\nRandom effects:\n  Formula: ~1 | tempo\n         (Intercept)\nStdDev:    5.540235\n\n  Formula: ~1 | localidad %in% tempo\n         (Intercept) Residual\nStdDev:     54.1832 19.60406\n\nFixed effects: ipa ~ tempo\n                 Value Std.Error  DF   t-value p-value\n(Intercept)  42.85153  4.961152 192  8.637415   0.000\ntempo       -19.74592  4.437389   2 -4.449895   0.047\n  Correlation:\n       (Intr)\ntempo 0\n\nStandardized Within-Group Residuals:\n         Min          Q1         Med          Q3         Max\n-0.42528137 -0.17487600 -0.08655534  0.06944999  2.05895746\n\nNumber of Observations: 196\nNumber of Groups:\n                tempo localidad %in% tempo\n                    4                  196\n\n-- \nManuel Spínola, Ph.D.\nInstituto Internacional en Conservación y Manejo de Vida Silvestre\nUniversidad Nacional\nApartado 1350-3000\nHeredia\nCOSTA RICA\nmspinola at una.ac.cr\nmspinola10 at gmail.com\nTeléfono: (506) 2277-3598\nFax: (506) 2237-7036",
       "body_snippet": "Dear list members,\n\nI am fitting 2 linear mixed model with function lme and I cannot get the \nCI for \"modelo2\" with function \"intervlas\" (below are the output from \nthe 2 models).\nAny clue why?  Thank",
       "thread_id": "thread-6291018ab9b6",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001536.html"
     },
     {
       "id": "msg-23aec8b2e698",
@@ -787,7 +831,8 @@
       "body_snippet": "Manuel,\n\nThe problem is that tempo is declared as both a fixed effect and a \nrandom effect in modelo2.  If tempo were a factor, that would be a \ndisaster because the same effect (differences among gro",
       "thread_id": "thread-23aec8b2e698",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001537.html"
     },
     {
       "id": "msg-b460eae94556",
@@ -807,7 +852,8 @@
       "body_snippet": "Dear list,\n\nI'm using the cocorresp-package as well and was wondering if any R analog\nfor the predictive correspondence analysis and cross valuation is already\nincluded in the package?\n\nKind regards,\n",
       "thread_id": "thread-b460eae94556",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001538.html"
     },
     {
       "id": "msg-88ec229acf36",
@@ -823,7 +869,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100927/514dcee9/attachment.pl>",
       "thread_id": "thread-88ec229acf36",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001539.html"
     },
     {
       "id": "msg-6620505db2a6",
@@ -839,7 +886,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100927/55f41063/attachment.pl>",
       "thread_id": "thread-6620505db2a6",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001540.html"
     },
     {
       "id": "msg-234cca88c04b",
@@ -860,7 +908,8 @@
       "body_snippet": "On Mon, 2010-09-27 at 03:02 -0700, wout opdekamp wrote:\n> Dear list,\n> \n> I'm using the cocorresp-package as well and was wondering if any R analog\n> for the predictive correspondence analysis and cro",
       "thread_id": "thread-b460eae94556",
       "thread_depth": 1,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001541.html"
     },
     {
       "id": "msg-8fda8d191279",
@@ -876,7 +925,8 @@
       "body_snippet": "Hello everyone,\n\nI am using nlm to optimize my own function. But it continuously  gice warnings as follows:\n\n'In eval (expr, envir, erlos) iterations terminated because half step-size are very small..",
       "thread_id": "thread-8fda8d191279",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001542.html"
     },
     {
       "id": "msg-4ac86cdad46b",
@@ -888,11 +938,12 @@
       "subject_clean": "New package GAD (General ANOVA Design)",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "Hi, everyone.\n\nGAD package analyses complex ANOVA models with any combination of\northogonal/nested and fixed/random factors, as described by Underwood\n(1997). There are two restrictions: (i) data must be balanced; (ii)\nfixed nested factors are not allowed. Homogeneity of variances is\nchecked using Cochran's C test and \"a posteriori\" comparisons of means\nare done using Student-Newman-Keuls (SNK) procedure.\n\nBest,\n\nMaur?cio G. Camargo",
+      "body_plain": "Hi, everyone.\n\nGAD package analyses complex ANOVA models with any combination of\northogonal/nested and fixed/random factors, as described by Underwood\n(1997). There are two restrictions: (i) data must be balanced; (ii)\nfixed nested factors are not allowed. Homogeneity of variances is\nchecked using Cochran's C test and \"a posteriori\" comparisons of means\nare done using Student-Newman-Keuls (SNK) procedure.\n\nBest,\n\nMaurício G. Camargo",
       "body_snippet": "Hi, everyone.\n\nGAD package analyses complex ANOVA models with any combination of\northogonal/nested and fixed/random factors, as described by Underwood\n(1997). There are two restrictions: (i) data must",
       "thread_id": "thread-4ac86cdad46b",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001543.html"
     },
     {
       "id": "msg-06cf4668d17a",
@@ -908,7 +959,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20100930/87032550/attachment.pl>",
       "thread_id": "thread-06cf4668d17a",
       "thread_depth": 0,
-      "month": "2010-09"
+      "month": "2010-09",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2010-September/001544.html"
     }
   ],
   "threads": [
