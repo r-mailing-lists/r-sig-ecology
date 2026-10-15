@@ -17,7 +17,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081002/6127ca66/attachment.pl>",
       "thread_id": "thread-b000e47de4ff",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000333.html"
     },
     {
       "id": "msg-6acf04beaa79",
@@ -31,11 +32,12 @@
       "references": [
         "<79a13c220810012043j1fd0f0e7o42cd42877deafcc9@mail.gmail.com>"
       ],
-      "body_plain": "Hi Tim,\n\n>> p.sett\n>>     \n> *********** List of class ltraj ***********\n> Type of the traject: Type II (time recorded)\n> Regular traject. Time lag between two locs: 900 seconds\n> Characteristics of the bursts:\n>        id      burst nb.reloc  NAs          date.begin            date.end\n> 1   p1801 1988038937        6    1 2006-08-09 09:00:00 2006-08-09 10:15:00\n> 2   p1801 1988038938        3    0 2006-08-10 02:00:00 2006-08-10 02:30:00\n> 3   p1801 1988038939        9    1 2006-08-11 03:00:00 2006-08-11 05:00:00\n> 4   p1801 1988038940       17    5 2006-08-12 02:00:00 2006-08-12 06:00:00\n> 5   p1801 1988038941       23   10 2006-08-13 02:00:00 2006-08-13 07:30:00\n> ...\n> 237 p1801 1988039304      126  110 2007-08-10 01:15:00 2007-08-11 08:30:00\n> 238 p1801 1988039305        1    0 2007-08-11 02:45:00 2007-08-11 02:45:00\n>\n> Ideally what I'd like to do is define the simulation using the\n> characteristics of a given 'burst' from my ltraj object. I'd appreciate some\n> pointers on the syntax of calling the simulation using the the\n> characteristics of each row in p.sett. Sample code follows:\n>\n>   \n>> sim.levy<-simm.levy(date=1:126, id=p.sett$id==\"1801\",\n>>     \n> burst=p.sett$burst==\"1988039304\", x0=c(174.48255,-36.819058), typeII=T)\n> Error in as.ltraj(data.frame(co, si), date, id, burst, typeII = typeII) :\n>   id should be of the same length as xy, or of length 1\n>\n> How do I define the arguments of the function using the elements of a given\n> burst?\n>   \n\n\nFirst note that the \"burst\" and \"id\" are stored as attributes of each \nelement of the list of class ltraj, and not as elements of the list \nthemselves. It means that p.sett$burst and p.sett$id do not exist. To \nget the burst or the id of the trajectories of the list, you can simply type\n\nburst(p.sett)\nid(p.sett)\n\nSee the help page of as.ltraj() for trajectory management with \nadehabitat. Now, it seems that you want to simulate a levy walk at the \nsame times as your actual trajectory, beginning at the same point. In \nthis case, you should use the following code:\n\nres <- lapply(1:length(p.sett), function(i) {   \n           simm.levy(date = p.sett[[i]]$date, id = id(p.sett)[i],\n                            x0 = c(p.sett[[i]]$x[1], p.sett[[i]]$y[1]),\n                            burst = burst(p.sett)[i], typeII = T, mu=2)\n})\nresult <- do.call(\"c\", res)\nplot(result)\n\nBut note that you may have to change the parameter mu, depending on what \nyou want to do. See the help page of simm.levy.\nBTW, there is a bug in the function concerning the parameter x0. If you \nwant to use parameter x0 (required only if you want to match the \ntrajectory with maps), you should use the following fixed function, \nwhich will be included in the next version of adehabitat:\n\nsimm.levy <- function (date = 1:500, mu = 2, l0 = 1, x0 = c(0, 0), id = \n\"A1\",\n    burst = id, typeII = TRUE)\n{\n    if (typeII)\n        class(date) <- c(\"POSIX\", \"POSIXct\")\n    n <- length(date)\n    dt <- c(diff(unclass(date)))\n    if (all(dt - dt[1] > 1e-07))\n        stop(\"the time lag between relocations should be constant\")\n    ang <- runif(n - 2, -pi, pi)\n    v = dt * (l0 * (runif(n - 1)^(1/(1 - mu))))\n    ang = cumsum(c(runif(1, 0, 2 * pi), ang))\n    si = c(x0[2], x0[2]+cumsum(v * sin(ang)))\n    co = c(x0[1], x0[1]+cumsum(v * cos(ang)))\n    res <- as.ltraj(data.frame(co, si), date, id, burst, typeII = typeII)\n    return(res)\n}\n\n\nHope this helps,\n\n\nCl?ment.\n\n-- \nCl?ment CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_plain": "Hi Tim,\n\n>> p.sett\n>>     \n> *********** List of class ltraj ***********\n> Type of the traject: Type II (time recorded)\n> Regular traject. Time lag between two locs: 900 seconds\n> Characteristics of the bursts:\n>        id      burst nb.reloc  NAs          date.begin            date.end\n> 1   p1801 1988038937        6    1 2006-08-09 09:00:00 2006-08-09 10:15:00\n> 2   p1801 1988038938        3    0 2006-08-10 02:00:00 2006-08-10 02:30:00\n> 3   p1801 1988038939        9    1 2006-08-11 03:00:00 2006-08-11 05:00:00\n> 4   p1801 1988038940       17    5 2006-08-12 02:00:00 2006-08-12 06:00:00\n> 5   p1801 1988038941       23   10 2006-08-13 02:00:00 2006-08-13 07:30:00\n> ...\n> 237 p1801 1988039304      126  110 2007-08-10 01:15:00 2007-08-11 08:30:00\n> 238 p1801 1988039305        1    0 2007-08-11 02:45:00 2007-08-11 02:45:00\n>\n> Ideally what I'd like to do is define the simulation using the\n> characteristics of a given 'burst' from my ltraj object. I'd appreciate some\n> pointers on the syntax of calling the simulation using the the\n> characteristics of each row in p.sett. Sample code follows:\n>\n>   \n>> sim.levy<-simm.levy(date=1:126, id=p.sett$id==\"1801\",\n>>     \n> burst=p.sett$burst==\"1988039304\", x0=c(174.48255,-36.819058), typeII=T)\n> Error in as.ltraj(data.frame(co, si), date, id, burst, typeII = typeII) :\n>   id should be of the same length as xy, or of length 1\n>\n> How do I define the arguments of the function using the elements of a given\n> burst?\n>   \n\n\nFirst note that the \"burst\" and \"id\" are stored as attributes of each \nelement of the list of class ltraj, and not as elements of the list \nthemselves. It means that p.sett$burst and p.sett$id do not exist. To \nget the burst or the id of the trajectories of the list, you can simply type\n\nburst(p.sett)\nid(p.sett)\n\nSee the help page of as.ltraj() for trajectory management with \nadehabitat. Now, it seems that you want to simulate a levy walk at the \nsame times as your actual trajectory, beginning at the same point. In \nthis case, you should use the following code:\n\nres <- lapply(1:length(p.sett), function(i) {   \n           simm.levy(date = p.sett[[i]]$date, id = id(p.sett)[i],\n                            x0 = c(p.sett[[i]]$x[1], p.sett[[i]]$y[1]),\n                            burst = burst(p.sett)[i], typeII = T, mu=2)\n})\nresult <- do.call(\"c\", res)\nplot(result)\n\nBut note that you may have to change the parameter mu, depending on what \nyou want to do. See the help page of simm.levy.\nBTW, there is a bug in the function concerning the parameter x0. If you \nwant to use parameter x0 (required only if you want to match the \ntrajectory with maps), you should use the following fixed function, \nwhich will be included in the next version of adehabitat:\n\nsimm.levy <- function (date = 1:500, mu = 2, l0 = 1, x0 = c(0, 0), id = \n\"A1\",\n    burst = id, typeII = TRUE)\n{\n    if (typeII)\n        class(date) <- c(\"POSIX\", \"POSIXct\")\n    n <- length(date)\n    dt <- c(diff(unclass(date)))\n    if (all(dt - dt[1] > 1e-07))\n        stop(\"the time lag between relocations should be constant\")\n    ang <- runif(n - 2, -pi, pi)\n    v = dt * (l0 * (runif(n - 1)^(1/(1 - mu))))\n    ang = cumsum(c(runif(1, 0, 2 * pi), ang))\n    si = c(x0[2], x0[2]+cumsum(v * sin(ang)))\n    co = c(x0[1], x0[1]+cumsum(v * cos(ang)))\n    res <- as.ltraj(data.frame(co, si), date, id, burst, typeII = typeII)\n    return(res)\n}\n\n\nHope this helps,\n\n\nClément.\n\n-- \nClément CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
       "body_snippet": "Hi Tim,\n\n>> p.sett\n>>     \n> *********** List of class ltraj ***********\n> Type of the traject: Type II (time recorded)\n> Regular traject. Time lag between two locs: 900 seconds\n> Characteristics of t",
       "thread_id": "thread-b000e47de4ff",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000334.html"
     },
     {
       "id": "msg-5b5b90a4c76e",
@@ -51,7 +53,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081002/dbc5258d/attachment.pl>",
       "thread_id": "thread-5b5b90a4c76e",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000335.html"
     },
     {
       "id": "msg-ba4c297cee13",
@@ -67,7 +70,8 @@
       "body_snippet": "Dear all,\n\nWe have a problem with a large dataset that we want to cluster. The\ndataset is in a long format: 1154024 rows with presence data. Each row\nhas the name of the species and the location. We h",
       "thread_id": "thread-ba4c297cee13",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000336.html"
     },
     {
       "id": "msg-0081695cbe0c",
@@ -85,7 +89,8 @@
       "body_snippet": "\"ONKELINX, Thierry\" <Thierry.ONKELINX at inbo.be>\nwrites:\n\n> Dear all,\n>\n> We have a problem with a large dataset that we want to cluster. The\n> dataset is in a long format: 1154024 rows with presence",
       "thread_id": "thread-ba4c297cee13",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000337.html"
     },
     {
       "id": "msg-59fcbb3593dd",
@@ -104,7 +109,8 @@
       "body_snippet": "Dear Thierry,\n\nthe 'mefa' package should do this, and I am also interested in the\ntesting of the package for such a large number of species. I have used\nit before with 75K records, but only with ~160 ",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000338.html"
     },
     {
       "id": "msg-c4f9844ba327",
@@ -120,7 +126,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/c10607a0/attachment.pl>",
       "thread_id": "thread-ba4c297cee13",
       "thread_depth": 2,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000339.html"
     },
     {
       "id": "msg-423ce720922b",
@@ -138,7 +145,8 @@
       "body_snippet": "This method for converting long to wide format seems to work well with \npretty large datasets and it uses only base functions.\n\n# this function will return a site*species matrix\n# based on the formula",
       "thread_id": "thread-ba4c297cee13",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000340.html"
     },
     {
       "id": "msg-380a59e61d9e",
@@ -154,7 +162,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/a48333e6/attachment.pl>",
       "thread_id": "thread-ba4c297cee13",
       "thread_depth": 2,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000341.html"
     },
     {
       "id": "msg-7c79a0f59d32",
@@ -173,7 +182,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081007/1a95ad77/attachment.pl>",
       "thread_id": "thread-ba4c297cee13",
       "thread_depth": 3,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000342.html"
     },
     {
       "id": "msg-f147348aba05",
@@ -191,7 +201,8 @@
       "body_snippet": "Thats great, thanks. I always like it when someone can suggest a better \nor cleaner way to do something in code.\n\n-Chris\n\nFarrar.David at epamail.epa.gov wrote:\n> Thanks for the illustration of xtabs.",
       "thread_id": "thread-ba4c297cee13",
       "thread_depth": 3,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000343.html"
     },
     {
       "id": "msg-d05526505b28",
@@ -207,7 +218,8 @@
       "body_snippet": "Hi,\n\nI have searched in archives to looking for a library (or script, or method) for\nto evaluate a mortality analysis.\n\nI test different drugs (9 test, 1 positive control, and 1 negative) on 30\ninsect",
       "thread_id": "thread-d05526505b28",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000344.html"
     },
     {
       "id": "msg-0e642e37ebed",
@@ -223,7 +235,8 @@
       "body_snippet": "Not sure if i should really post this here, but i am an ecology\nstudent and my project is certainly ecological so........\n\nmy goal is to use R to write functions for and automate a series of\nanalyses ",
       "thread_id": "thread-0e642e37ebed",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000345.html"
     },
     {
       "id": "msg-cca64d8fd46e",
@@ -237,11 +250,12 @@
       "references": [
         "<f7134c940810080432m74357c46i31c46666bbb17a05@mail.gmail.com>"
       ],
-      "body_plain": "Stephen Cole wrote:\n> Not sure if i should really post this here, but i am an ecology\n> student and my project is certainly ecological so........\n>\n> my goal is to use R to write functions for and automate a series of\n> analyses i would like to do on a large data set.  The calculations are\n> not very difficult in themselves, however they will be very time\n> consuming (Plus I think R will be extremely useful and this is another\n> excuse to learn how to program).\n>\n> I have a vector of 20 values\n>\n> x <- c(20,18, 45, 16, 47, 47, 15, 26, 14,14,12,16,35,27,18,94,16,26,\n> 26,30)\n>\n> 1.\n> I  want to select random pairs from this data set but do it without\n> replacement exhaustively\n>\n> I know i can select random pairs without replacement using\n>\n> sample(N,n,replace=F)\n> However i am wondering if there is any way to get 10 random pairs from\n> this data set without repeating any of the data points\n> that is to say if i got a (20, 94) for one pair, i would like to get 9\n> other pairs from the data without again getting 20 or 94?\n>   \n\n\nx <- c(20,18, 45, 16, 47, 47, 15, 26, 14,14,12,16,35,27,18,94,16,26,\n26,30)\n\nmatrix(sample(x), ncol=2)\n\n\n> 2.\n> The second thing i would like to do is be able to select all possible\n> pairs of numbers and calculate each pairs variance.  I think i will\n> need a for loop here but I am unsure of how to do the programing.  I\n> am reading two books on S and s-plus now and hope they are some help.\n> I thought i would also post on this list and get some expert advice\n> for the more experienced R users\n>   \n\n## All possible pairs\nuu <- expand.grid(x,x)\n\n## the variance on two values? are you sure?\n## technically:\napply(uu, 1, var) \n\n\nHTH\n\nCl?ment\n\n> Thank-you very much\n>\n> Stephen Cole\n> Marine Ecology Lab\n> Saint Francis Xavier University\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n>   \n\n\n-- \nCl?ment CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_plain": "Stephen Cole wrote:\n> Not sure if i should really post this here, but i am an ecology\n> student and my project is certainly ecological so........\n>\n> my goal is to use R to write functions for and automate a series of\n> analyses i would like to do on a large data set.  The calculations are\n> not very difficult in themselves, however they will be very time\n> consuming (Plus I think R will be extremely useful and this is another\n> excuse to learn how to program).\n>\n> I have a vector of 20 values\n>\n> x <- c(20,18, 45, 16, 47, 47, 15, 26, 14,14,12,16,35,27,18,94,16,26,\n> 26,30)\n>\n> 1.\n> I  want to select random pairs from this data set but do it without\n> replacement exhaustively\n>\n> I know i can select random pairs without replacement using\n>\n> sample(N,n,replace=F)\n> However i am wondering if there is any way to get 10 random pairs from\n> this data set without repeating any of the data points\n> that is to say if i got a (20, 94) for one pair, i would like to get 9\n> other pairs from the data without again getting 20 or 94?\n>   \n\n\nx <- c(20,18, 45, 16, 47, 47, 15, 26, 14,14,12,16,35,27,18,94,16,26,\n26,30)\n\nmatrix(sample(x), ncol=2)\n\n\n> 2.\n> The second thing i would like to do is be able to select all possible\n> pairs of numbers and calculate each pairs variance.  I think i will\n> need a for loop here but I am unsure of how to do the programing.  I\n> am reading two books on S and s-plus now and hope they are some help.\n> I thought i would also post on this list and get some expert advice\n> for the more experienced R users\n>   \n\n## All possible pairs\nuu <- expand.grid(x,x)\n\n## the variance on two values? are you sure?\n## technically:\napply(uu, 1, var) \n\n\nHTH\n\nClément\n\n> Thank-you very much\n>\n> Stephen Cole\n> Marine Ecology Lab\n> Saint Francis Xavier University\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n>   \n\n\n-- \nClément CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
       "body_snippet": "Stephen Cole wrote:\n> Not sure if i should really post this here, but i am an ecology\n> student and my project is certainly ecological so........\n>\n> my goal is to use R to write functions for and aut",
       "thread_id": "thread-0e642e37ebed",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000346.html"
     },
     {
       "id": "msg-33425e7ced93",
@@ -259,7 +273,8 @@
       "body_snippet": "Also in my computer reshape did not work for large datasets. I conturned\nthe problem by writing my own program making using loops. This takes a\nfew hours for a non-expert like me (my code is slow and ",
       "thread_id": "thread-33425e7ced93",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000347.html"
     },
     {
       "id": "msg-79dbf06fa43a",
@@ -275,7 +290,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081008/3d33b975/attachment.pl>",
       "thread_id": "thread-79dbf06fa43a",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000348.html"
     },
     {
       "id": "msg-23b40d63cac0",
@@ -293,7 +309,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081008/3b359ee3/attachment.pl>",
       "thread_id": "thread-79dbf06fa43a",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000349.html"
     },
     {
       "id": "msg-9e3cdd1cf352",
@@ -311,7 +328,8 @@
       "body_snippet": "We don't currently have a policy on cross-posting, and hopefully won't\nneed to develop a formal one. In general, cross-posting is gently\ndiscouraged, especially simultaneous cross-posting, or near-sim",
       "thread_id": "thread-79dbf06fa43a",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000350.html"
     },
     {
       "id": "msg-1e9eaa2138c2",
@@ -327,7 +345,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/7e756257/attachment.pl>",
       "thread_id": "thread-1e9eaa2138c2",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000351.html"
     },
     {
       "id": "msg-96cbad1991c3",
@@ -343,7 +362,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/8a2f41ae/attachment.pl>",
       "thread_id": "thread-96cbad1991c3",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000352.html"
     },
     {
       "id": "msg-73190108314e",
@@ -361,7 +381,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/4389495c/attachment.pl>",
       "thread_id": "thread-73190108314e",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000353.html"
     },
     {
       "id": "msg-d2ccb68d58cf",
@@ -377,7 +398,8 @@
       "body_snippet": "Hello,\n\nI am pursuing the development of an individual-based model in R \nbut there is a series of technical issues for which I don't know \nwhere to find information.\n\nI have written R functions before",
       "thread_id": "thread-d2ccb68d58cf",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000354.html"
     },
     {
       "id": "msg-3c20374323bc",
@@ -393,7 +415,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081010/53e50612/attachment.pl>",
       "thread_id": "thread-3c20374323bc",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000355.html"
     },
     {
       "id": "msg-b5a3910de7dc",
@@ -409,7 +432,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081009/b6e18f66/attachment.pl>",
       "thread_id": "thread-d2ccb68d58cf",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000356.html"
     },
     {
       "id": "msg-c7c7c4594169",
@@ -427,7 +451,8 @@
       "body_snippet": "\"Dulce M. Bustamante\" <dbusta1 at ufl.edu> writes:\n\n> I have written R functions before for simple simulations, but this\n> model will have more complexities and each individual will need to be\n> evalu",
       "thread_id": "thread-d2ccb68d58cf",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000357.html"
     },
     {
       "id": "msg-6ae17803aba4",
@@ -447,7 +472,8 @@
       "body_snippet": "Dear all,\n\nThanks for your responses. The biggest problem seems to be cast() for\nthe reshape package which could not handle the dataset. Peter's solution\nusing the mefa package worked fine. I found an",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000358.html"
     },
     {
       "id": "msg-40d562b20531",
@@ -461,11 +487,12 @@
       "references": [
         "<79a13c220810091353l4af1b34dxd0a13efd93ea89fb@mail.gmail.com>"
       ],
-      "body_plain": "Hi Tim,\n\n\nTim Sippel wrote:\n> Hi again-\n> Clement, thanks very much for your response to my question a few days ago\n> and revised code for the simm.levy function.  Ultimately what I am aiming to\n> do is partition animal trajectories into distinct behavioural segments using\n> the functions modpartltraj, bestpartmod and partmod.ltraj.  In the function\n> mopartltraj one is required to define a reference model of animal movement\n> (argument called 'limod') to compare to a real trajectory (arguement 'tr').\n> The example 'limod' given with the functions assumes a fairly simplistic\n> normal distribution with different means for different behaviours.  However,\n> could the 'limod' argument be from a simulation of a movement process such\n> as a levy walk (simm.levy) or multi-variate Ornstein-Uhlenbeck Process\n> (simm.mou)?  \n>   \n\nUntil now, we mainly used this function to partition a trajectory into \nsegments based on the (disputable) hypothesis that the step length is \ndrawn from a normal distribution. We chose to model the step length as a \nnormal distribution because this is a common choice for the step length \ndistribution in animal movement analysis (but see Morales et al. 2004, \nEcology, 85, 2436-2445, for arguments against this choice). This \napproach gave us interesting results: for example, on the help page of \nthe function modpartltraj, we partition the trajectory of a porpoise, \nand this partitioning shows that this trajectory, that I would have \npartitioned visually into 3 segments (\"patchy\" moves, then more \"linear\" \nmoves, then again \"patchy moves\"), is more likely built by 4 segments \n(\"patchy\" moves, then more \"linear and slow\" moves, then \"linear and \nfast\" moves and finally again \"patchy\" moves). This approach helps to \nsee patterns in the data...\n\nActually, we did not try any other model (as noted on the help page, the \nmethod is still under research), but theoretically, the method can be \nused with other models, provided that each chosen model enable you to \nestimate a probability (density) for each step of the actual trajectory. \nActually, the argument 'limod' should be a list of functions, each \nfunction giving the probability density of a step with given parameters \n(length, orientation, etc.) under a given model (see the help page of \nmodpartltraj).\n\nSo it is theoretically possible (though untested) to pass to the \nargument 'limod' a list of functions giving the probability density of a \ngiven step according to the MOU or the Levy walk with specified \nparameters (these functions implementing the formulae found in the \nliterature on these movements models). But these functions are not yet \navailable in adehabitat and the user has to program them... \nAlternatively, these functions may theoretically rely on simulations to \ncompute these probabilities (using some kind of kernel smoothing to \nestimate the probability density of the steps from the simulations of a \ngiven model, or something similar)... but IMHO this approach would first \nrequire to be carefully tested...\nHope this helps\nCheers,\n\n\nCl?ment.\n\n-- \nCl?ment CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
+      "body_plain": "Hi Tim,\n\n\nTim Sippel wrote:\n> Hi again-\n> Clement, thanks very much for your response to my question a few days ago\n> and revised code for the simm.levy function.  Ultimately what I am aiming to\n> do is partition animal trajectories into distinct behavioural segments using\n> the functions modpartltraj, bestpartmod and partmod.ltraj.  In the function\n> mopartltraj one is required to define a reference model of animal movement\n> (argument called 'limod') to compare to a real trajectory (arguement 'tr').\n> The example 'limod' given with the functions assumes a fairly simplistic\n> normal distribution with different means for different behaviours.  However,\n> could the 'limod' argument be from a simulation of a movement process such\n> as a levy walk (simm.levy) or multi-variate Ornstein-Uhlenbeck Process\n> (simm.mou)?  \n>   \n\nUntil now, we mainly used this function to partition a trajectory into \nsegments based on the (disputable) hypothesis that the step length is \ndrawn from a normal distribution. We chose to model the step length as a \nnormal distribution because this is a common choice for the step length \ndistribution in animal movement analysis (but see Morales et al. 2004, \nEcology, 85, 2436-2445, for arguments against this choice). This \napproach gave us interesting results: for example, on the help page of \nthe function modpartltraj, we partition the trajectory of a porpoise, \nand this partitioning shows that this trajectory, that I would have \npartitioned visually into 3 segments (\"patchy\" moves, then more \"linear\" \nmoves, then again \"patchy moves\"), is more likely built by 4 segments \n(\"patchy\" moves, then more \"linear and slow\" moves, then \"linear and \nfast\" moves and finally again \"patchy\" moves). This approach helps to \nsee patterns in the data...\n\nActually, we did not try any other model (as noted on the help page, the \nmethod is still under research), but theoretically, the method can be \nused with other models, provided that each chosen model enable you to \nestimate a probability (density) for each step of the actual trajectory. \nActually, the argument 'limod' should be a list of functions, each \nfunction giving the probability density of a step with given parameters \n(length, orientation, etc.) under a given model (see the help page of \nmodpartltraj).\n\nSo it is theoretically possible (though untested) to pass to the \nargument 'limod' a list of functions giving the probability density of a \ngiven step according to the MOU or the Levy walk with specified \nparameters (these functions implementing the formulae found in the \nliterature on these movements models). But these functions are not yet \navailable in adehabitat and the user has to program them... \nAlternatively, these functions may theoretically rely on simulations to \ncompute these probabilities (using some kind of kernel smoothing to \nestimate the probability density of the steps from the simulations of a \ngiven model, or something similar)... but IMHO this approach would first \nrequire to be carefully tested...\nHope this helps\nCheers,\n\n\nClément.\n\n-- \nClément CALENGE\nOffice national de la chasse et de la faune sauvage\nSaint Benoist - 78610 Auffargis\ntel. (33) 01.30.46.54.14",
       "body_snippet": "Hi Tim,\n\n\nTim Sippel wrote:\n> Hi again-\n> Clement, thanks very much for your response to my question a few days ago\n> and revised code for the simm.levy function.  Ultimately what I am aiming to\n> do ",
       "thread_id": "thread-3c20374323bc",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000359.html"
     },
     {
       "id": "msg-713349dac377",
@@ -486,7 +513,8 @@
       "body_snippet": "> Thanks for your responses. The biggest problem seems to be cast() for\n> the reshape package which could not handle the dataset. Peter's solution\n> using the mefa package worked fine. I found an othe",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 2,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000365.html"
     },
     {
       "id": "msg-1f047c00e52a",
@@ -508,7 +536,8 @@
       "body_snippet": "Hi Hadley,\n\nR ran out of memory. I got the \"can't allocate vector of xxx mb\" type of\nerror.\n\nI did something like this.\n\nDataset #reading a two column (species, location) dataframe from a\ndatabase. 11",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 3,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000360.html"
     },
     {
       "id": "msg-98a06ca63d20",
@@ -524,7 +553,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081010/4bb9924f/attachment.pl>",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 4,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000361.html"
     },
     {
       "id": "msg-64724bacef10",
@@ -540,7 +570,8 @@
       "body_snippet": "Thank you very much for the recommendations you provide.  They are \nall very helpful.\n\nRegards,\n\n\n--------\n\nDulce M. Bustamante\nPh.D. Candidate\nFlorida Medical Entomology Laboratory\nUniversity of Flor",
       "thread_id": "thread-64724bacef10",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000362.html"
     },
     {
       "id": "msg-f6d2ca33080d",
@@ -556,7 +587,8 @@
       "body_snippet": "Hello,\n\nI am working on developing code for a boosted classification tree that\npredicts membership within 4 non-ordered classes, using the gbm or gbmplus\npackages in R. I've been successful (I think) ",
       "thread_id": "thread-f6d2ca33080d",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000363.html"
     },
     {
       "id": "msg-1c23fd535dc9",
@@ -574,7 +606,8 @@
       "body_snippet": "On Fri, Oct 10, 2008 at 10:41 AM, Jill Johnstone\n<jill.johnstone at usask.ca> wrote:\n> Hello,\n>\n> I am working on developing code for a boosted classification tree that\n> predicts membership within 4 ",
       "thread_id": "thread-f6d2ca33080d",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000364.html"
     },
     {
       "id": "msg-3463216f0f97",
@@ -590,7 +623,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081013/35662d31/attachment.pl>",
       "thread_id": "thread-3463216f0f97",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000366.html"
     },
     {
       "id": "msg-4018faec0afa",
@@ -612,7 +646,8 @@
       "body_snippet": "Hi Hadley,\n\nHere is a more elaborate report of what I did and what when wrong. The\nexample is not reproducible because the dataset is to large. A smaller\ndummy dataset is not an option as it works wit",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 3,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000367.html"
     },
     {
       "id": "msg-766ea25a2df3",
@@ -635,7 +670,8 @@
       "body_snippet": "Hi all,\n\nI have a related question concerning cluster analysis of large data \nsets.  In my case, the matrix is reasonably small for R to work with, \nbut I have so many species (~2000) that it is not p",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 4,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000368.html"
     },
     {
       "id": "msg-d494c145111a",
@@ -659,7 +695,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081014/72958e29/attachment.pl>",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 5,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000369.html"
     },
     {
       "id": "msg-4a7b90107135",
@@ -683,7 +720,8 @@
       "body_snippet": "Hi Phil,\n\nI'd start by asking if you can categorize your species in some sort of  \nmeaningful manner.  If so you can color code the labels of your  \ndendrogram.  The package 'ape' includes 'tip.color=",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 5,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000370.html"
     },
     {
       "id": "msg-7e2234f231b6",
@@ -701,7 +739,8 @@
       "body_snippet": "> I am a relatively new user of R, and I am trying to select a model via\n> all-subsets regression.\n> \n> I am curious about the 'leaps' and 'regsubsets' functions in the 'leaps'\n> package...\n> \n> Is th",
       "thread_id": "thread-3463216f0f97",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000371.html"
     },
     {
       "id": "msg-9e3a355a6394",
@@ -720,7 +759,8 @@
       "body_snippet": "Hi Paul,\n\nI don't know of a function that does all-subsets selection via AIC\n(step performs stepwise selection).  But if you're fitting linear\nmodels, selection via AIC and Cp will be similar, or the ",
       "thread_id": "thread-3463216f0f97",
       "thread_depth": 2,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000372.html"
     },
     {
       "id": "msg-2e8105b49add",
@@ -738,7 +778,8 @@
       "body_snippet": "Hello,\n\nyou can use (in a pure R approach) the simecol package which interfaces C to\nspeed up simulations.\nhttp://simecol.r-forge.r-project.org/.\n\nFurthermore you can also have a look at my applicatio",
       "thread_id": "thread-d2ccb68d58cf",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000373.html"
     },
     {
       "id": "msg-63922f83e43d",
@@ -761,7 +802,8 @@
       "body_snippet": "Hi Thierry,\n\nThanks for the more detailed report.  I think the new version of\nreshape will help, but I just checked and it's current a total mess\nand will need a lot of work before it's ready for anyo",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 4,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000374.html"
     },
     {
       "id": "msg-d3fda20a1ed3",
@@ -779,7 +821,8 @@
       "body_snippet": "Hi Phil,\nCan you plot the dendorgam in pieces? if you look at \nexample(hclust) the show an example where they plot the dendrogram\nshowing 10 aggregated groups from the centroids of a previous dendrogr",
       "thread_id": "thread-d3fda20a1ed3",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000375.html"
     },
     {
       "id": "msg-47151612d494",
@@ -795,7 +838,8 @@
       "body_snippet": "Hi all,\n\nThe pre-installed Windows Vista 64-bit in my new laptop does not  \nsupport Gap Light Analyzer. Has anyone used R to analyze hemispheric  \nphotos and calculate % canopy openness, LAI, etc.? Wh",
       "thread_id": "thread-47151612d494",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000376.html"
     },
     {
       "id": "msg-d2f5bfbad144",
@@ -831,7 +875,8 @@
       "body_snippet": "You may also want to take a look at the simecol pakage.\n\nhttp://simecol.r-forge.r-project.org/\n\nJulian\n\nDulce M. Bustamante wrote:\n> Hello,\n> \n> I am pursuing the development of an individual-based mo",
       "thread_id": "thread-d2ccb68d58cf",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000378.html"
     },
     {
       "id": "msg-6dcac53a889a",
@@ -847,7 +892,8 @@
       "body_snippet": "Greetings all,\n\nI am trying to create a graph that has a time component on the X axis, \nand for each of my sample dates I want to  have a histogram orientated \nvertically of measured crayfish lengths.",
       "thread_id": "thread-6dcac53a889a",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000379.html"
     },
     {
       "id": "msg-fdfa0374d59a",
@@ -865,7 +911,8 @@
       "body_snippet": "This may or may not help but similar techniques are buried in the code\nfor this graph example.  The connection for the code is on the left.\nHope it helps.\n\nhttp://addictedtor.free.fr/graphiques/RGraph",
       "thread_id": "thread-6dcac53a889a",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000380.html"
     },
     {
       "id": "msg-9c4573dabbe1",
@@ -881,7 +928,8 @@
       "body_snippet": "Is there a way to output the X,Y,Z values for the contour lines from \nordisurf?  \n\nFor example, I am using this statement:\ntmp<-with(enviro,ordisurf(fish.nmds,enviro$Temp,choices=c(1,2),add=TRUE))\n\nna",
       "thread_id": "thread-9c4573dabbe1",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000381.html"
     },
     {
       "id": "msg-71267631f3ca",
@@ -905,7 +953,8 @@
       "body_snippet": "Thierry and Hadley,\n\n     Sorry to be late coming into this (I forgot I subscribed to sig-eco).\n\n     package labdsv has a function called matrify() which takes a three \ncolumn data.frame (sample,taxa",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 5,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000382.html"
     },
     {
       "id": "msg-16ff457a21ba",
@@ -930,7 +979,8 @@
       "body_snippet": "Dear Dave,\n\nBelow you'll find a testreport of your function. It works fine with my\ndataset allthough it is slower than the plain and simple table function.\nBut that off course will only work with pres",
       "thread_id": "thread-59fcbb3593dd",
       "thread_depth": 6,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000383.html"
     },
     {
       "id": "msg-04a4b2fd6c2b",
@@ -948,7 +998,8 @@
       "body_snippet": "On Thu, 2008-10-23 at 14:44 -0500, Christopher Chizinski wrote:\n> Is there a way to output the X,Y,Z values for the contour lines from \n> ordisurf?  \n> \n> For example, I am using this statement:\n> tmp",
       "thread_id": "thread-9c4573dabbe1",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000384.html"
     },
     {
       "id": "msg-c1e82811569b",
@@ -967,7 +1018,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081027/5b266495/attachment.pl>",
       "thread_id": "thread-9c4573dabbe1",
       "thread_depth": 2,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000385.html"
     },
     {
       "id": "msg-6cb1bbc95789",
@@ -983,7 +1035,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081029/8b36c8ef/attachment.pl>",
       "thread_id": "thread-6cb1bbc95789",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000386.html"
     },
     {
       "id": "msg-822cf35cda3f",
@@ -999,7 +1052,8 @@
       "body_snippet": "Most non-linear least squares algorithms estimate the derivatives\nnumerically.  SAS PROC NLIN does that when you omit the expressions\nfor the analytical derivatives (DER.A = ...).  My experience has\nb",
       "thread_id": "thread-822cf35cda3f",
       "thread_depth": 0,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000387.html"
     },
     {
       "id": "msg-43bba9a673e0",
@@ -1015,7 +1069,8 @@
       "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20081030/c9f37752/attachment.pl>",
       "thread_id": "thread-6cb1bbc95789",
       "thread_depth": 1,
-      "month": "2008-10"
+      "month": "2008-10",
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2008-October/000388.html"
     }
   ],
   "threads": [
