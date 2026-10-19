@@ -102,12 +102,15 @@
       "subject_clean": "bootstrapping gam models with multiple explanatory terms",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120503/ef6d20f0/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120503/ef6d20f0/attachment.pl>",
+      "body_plain": "Hello R users,\n\nI may be thinking about this all wrong. If I am, please let me know.\n\nMy question is about bootstrapping gam models. I want to know if there is a\nway to produce bootstrapped smoothers in a gam model that has more than one\nsignificant explanatory term. I know how to achieve this when the model\nonly has one term. The code that I am using to do so is below. It produces\na nice graph of y values in response to my explanatory variable (x), along\nwith bootstrapped smoothers in a grey color and the smoother produced by\nthe gam package in black. In my mind this is a very useful graph to help\ndetermine the \"realness\" of the fitted smoother that gam produces. I should\nnote a thanks to Charles Geyer who had code on his STATS 5601 website that\nhas helped me immensely thus far.\n\nx <- SI1 ## my explanatory variable\ny <- NO3.sp3 ## my dependent/response variable\n\nmodel <- gam(y ~ s(x, bs = \"cr\")) ## I know I can use other smoother types.\nI am still experimenting with this aspect.\nplot(x, y)\ncurve(predict(model, newdata = data.frame(x = x)), add = TRUE)\nn <- length(x)\nnboot <- 100\nfor (i in 1:nboot) {\n   k.star <- sample(n, replace = TRUE)\n   x.star <- x[k.star]\n   y.star <- y[k.star]\n   model.star <- gam(y.star ~ s(x.star, bs = \"cr\"))\n   curve(predict(model.star, data.frame(x.star = x)),\n       add = TRUE, col = \"grey\")\n}\npoints(x, y, pch = 16)\ncurve(predict(model, newdata = data.frame(x = x)), add = TRUE, lwd = 2)\n\nBut now lets say I have a model with two explanatory variables ( x and z)\nand for the sake of this discussion, both terms are significant (i.e., the\ndata is better explained by having them in the model). The model in this\ncase would be:\n\nnew.model <- gam(y ~ s(x, bs = \"cr\")+ s(z, bs = \"cr\"))\n\nI know by using \"plot (new.model, resid = T, pch = 16)\" I can see the\nsmoothers and 95% CI produced by the gam package with the data values\noverlayed.\n\nIs there a way to produce bootstrapped smoothers for each term from the\nsame model (new.model) so that I can visualize them in the same way as the\nplot function allows me? I thought of having separate single-term models\nfor each explanatory variable (Y~s(x) and y~s(z)), but doing so is not\ncorrect since removing one term from a model causes the parameter values of\nthe other term to change. Any suggestions on the bootstrapping code that\nwould produce such a graphical output would be appreciated, especially\nsince I am new to the bootstrapping coding.\n\nI hope that is clear and thanks in advance for any help that anyone can\noffer.\n\n-- \nBasil Iannone\nUniversity of Illinois at Chicago\nDepartment of Biological Sciences (MC 066)\n845 W. Taylor St.\nChicago, IL  60607-7060\nEmail: bianno2 at uic.edu\nPhone: 312-355-3231\nFax: 312-413-2435\nhttp://www2.uic.edu/~bianno2\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hello R users,\n\nI may be thinking about this all wrong. If I am, please let me know.\n\nMy question is about bootstrapping gam models. I want to know if there is a\nway to produce bootstrapped smoothers ",
       "thread_id": "thread-2fd06c794e5a",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003014.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003014.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120503/ef6d20f0/attachment.pl"
+      ]
     },
     {
       "id": "msg-3ec98e3b2ef5",
@@ -122,12 +125,15 @@
         "<CAAHjLoZR2WyND3VxxSQYCdyYEDMXCiqNzpaf+6v_-6jM5ROFqA@mail.gmail.com>",
         "<0F43A499-A443-497E-A67E-DCCB7B6CA06A@ufl.edu>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120503/382ba950/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120503/382ba950/attachment.pl>",
+      "body_plain": "Thanks, Mollie!  That's a very good (in retrospect, obvious) point I had\noverlooked about needing effective samples to be non-zero.  I've had a look\nat the paper that Ben cited, and I appreciate your tip regarding the\nscale() function.  Very handy!\n\n- Jason\n\nOn Thu, May 3, 2012 at 3:55 PM, Mollie Brooks <mbrooks at ufl.edu> wrote:\n\n>\n>\n> Your effective sample size (what determines how many parameters you can\n> fit) is more like the number of non-zero observations you have. Then you\n> can estimate about one tenth that many parameters. So for the model you're\n> trying to fit, you would need 50 to 80 non-zero observations.\n>\n> I would first try fitting a zero-inflated Poisson because they're less\n> finicky than negative binomial. It's the negative binomial part of your\n> models that seem to be broken.\n>\n> As Ben said on the mixed models list, it could help to center and scale\n> the continuous predictors using scale().\n> cheers,\n> Mollie\n>\n> > [cut]\n>\n\n\n> > Reading other posts, I know that my values are all >= 0, and there are\n> > no missing values that could be causing this, but there ARE lots of\n> > zeroes.  My sample size is decent (about 35 observations per\n> > treatment, per elevation).\n> > So my questions are essentially as\n> > follows:\n> >\n> > 1) Why am I getting all these NaNs, and why can’t I run the full\n> > (saturated) model, including continuous as well as categorical\n> > predictors and interactions?  How can I begin the process of model\n> > simplification if I can’t get the full model to run?\n> >\n> > 2) If this is a result of the many zeroes in my data set, is there a\n> > way to work around this?\n> >\n> > Any advice would be greatly appreciated.\n> >\n> > Jason Straka\n> > University of Victoria\n>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Thanks, Mollie!  That's a very good (in retrospect, obvious) point I had\noverlooked about needing effective samples to be non-zero.  I've had a look\nat the paper that Ben cited, and I appreciate your ",
       "thread_id": "thread-fc7db2c74d0d",
       "thread_depth": 2,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003015.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003015.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120503/382ba950/attachment.pl"
+      ]
     },
     {
       "id": "msg-2de77bd9fb76",
@@ -214,12 +220,15 @@
       "subject_clean": "data normality",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120506/f71fb38c/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120506/f71fb38c/attachment.pl>",
+      "body_plain": "Dear all,\n  I have two questions about data normality.\n  I used stepwise multiple regression to determine which variables contributed to tree growth, and want to built a model to explain tree growth. Sample size is about 50 tree species, I think it is not a large sample size, and some variables are not normal distribution.\n1. Do I have to transform them to normal distributions before I perform multiple regression?\n2. Two variables can not transform to normal distributions although I used some methods (e.g log, sqrt, boxcoxfit), what should I do for the two variables?\nThank you and best wishes!\n                                                                                                                     Yong Shen                                           \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\n  I have two questions about data normality.\n  I used stepwise multiple regression to determine which variables contributed to tree growth, and want to built a model to explain tree growth. ",
       "thread_id": "thread-d57208b02e2b",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003020.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003020.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120506/f71fb38c/attachment.pl"
+      ]
     },
     {
       "id": "msg-98aae4ca2a47",
@@ -351,12 +360,15 @@
         "<6B57C54A-BEE8-4FF6-9375-34DC9DAE8071@oulu.fi>",
         "<1336647234.23563.87.camel@prometheus.geog.ucl.ac.uk>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/f0476b3b/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/f0476b3b/attachment.pl>",
+      "body_plain": "Hi all,\n\nIm using envfit with some decomposition data currently but with a PCA\nresult (via vegan:::rda()). Is envfit still valid for PCA results? I guess\nit doesnt make so very much difference, just the interpretation is slightly\ndifferent.\nOr am I barking up the wrong tree by using this approach?\n\nCheers,\n\nAlan\n\n--------------------------------------------------\nEmail: aghaynes at gmail.com\nMobile: +41794385586\nSkype: aghaynes\n\n\nOn 10 May 2012 12:53, Gavin Simpson <gavin.simpson at ucl.ac.uk> wrote:\n\n> I've removed R-Help from this now...\n>\n> On Thu, 2012-05-10 at 10:13 +0000, Jari Oksanen wrote:\n> > On 10/05/2012, at 11:45 AM, Gavin Simpson wrote:\n> <snip />\n> > > As you provide little or no context I'll explain what envfit() does\n> etc.\n> > >\n> > > The idea goes back a long way (!) and is in my 1995 edition of Jongman\n> > > et al Data Analysis in Community and Landscape Ecology (Cambridge\n> > > University Press) though most likely was in 1987 version too. See\n> > > Section 5.4 of the Ordination chapter by Ter Braak in that book.\n> > >\n> > > The idea is to find the direction (in the k-dimensional ordination\n> > > space) that has maximal correlation with an external variable.\n> >\n> >\n> > Hello,\n>\n> <snip />\n>\n> > Then about Bray-Curtis. The referee may be correct when writing that\n> > the fitted vectors are not directly related to Bray-Curtis. You fit\n> > the vectors to the NMDS ordination, and that is a non-linear mapping\n> > from Bray-Curtis to the metric ordination space.  There are two points\n> > here: non-linearity and stress. Because of these, it is not strictly\n> > about B-C. Of course, the referee is wrong when writing about NMDS\n> > axes: the fitted vector has nothing to do with axes (unless you rotate\n> > your axis parallel to the fitted vector which you can do). The NMDS is\n> > based on Bray-Curtis, but it is not the same, and the vector fitting\n> > is based on NMDS. So why not write that is about NMDS? Why to insist\n> > on Bray-Curtis which is only in the background?\n>\n> Right, agreed. The analysis is one step removed from the B-C but the\n> point of doing the nMDS was to find a low-d mapping of these B-C\n> distances so in the sense that *if* the mapping is a good one then we\n> can talk about correlations between \"distances\" between sites and the\n> environmental variables. Whilst it might be strictly more correct to\n> talk about this from the point of view of the nMDS the implication is\n> that for significant envfit()s there is a significant linear correlation\n> between the environmental variable(s) and the approximate ranked\n> distances between samples.\n>\n> I mean, if all we talk about is the nMDS who cares? it is the\n> implications of this for the system under study that are of interest.\n>\n> That said, B-C is just one of many ways to think of distance so to my\n> mind I wouldn't even talk about the B-C distance either; the interest is\n> in differences between sites/samples. The relevance of B-C or some other\n> coefficient only comes in when considering if they are a good descriptor\n> of the \"distance\" between samples for the variables you are considering.\n>\n> Cheers,\n>\n> G\n>\n> > Cheers, Jari Oksanen\n> >\n>\n> --\n> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n>  Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n>  ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n>  Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n>  Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n>  UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi all,\n\nIm using envfit with some decomposition data currently but with a PCA\nresult (via vegan:::rda()). Is envfit still valid for PCA results? I guess\nit doesnt make so very much difference, just t",
       "thread_id": "thread-f88fec82915c",
       "thread_depth": 3,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003027.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003027.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/f0476b3b/attachment.pl"
+      ]
     },
     {
       "id": "msg-0d6bd476b621",
@@ -460,12 +472,15 @@
         "<CAPdSD+5Ot+1TZYMqPmq3gj5pPb-y_KEgb89+c-U5--Tfk43t8A@mail.gmail.com>",
         "<1336654625.8526.73.camel@zouzel.natur.cuni.cz>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/e15819ca/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/e15819ca/attachment.pl>",
+      "body_plain": "Thanks both, Im happy to have my thoughts confirmed.\n\nGavin, I ran all of the variables I included through ordisurf aswell as\nenvfit to see if there were non-linearities, and, in all bar a single case,\nthe surface isobars happened to be straight. As it turns out, the one that\nwasnt linear didnt make sense in terms of the analysis in any case.\n\nA question perhaps more for Jari, the PCA results (eigenvalues and vectors,\nbut not rank) from rda seem to be slightly different in terms of scale than\nother functions (e.g. labdsv:::pca which wraps stats:::prcomp i believe).\nPlots look identical, except for the size of the axis scores - rda scores\nseem to be approximately 1/5th of pca scores. Why is that? Is there a\nsolution to rescale them?\n\n\nThanks again,\n\nAlan\n\n\n--------------------------------------------------\nEmail: aghaynes at gmail.com\nMobile: +41794385586\nSkype: aghaynes\n\n\nOn 10 May 2012 14:57, Martin Weiser <weiser2 at natur.cuni.cz> wrote:\n\n> Hi Alan,\n> I think that PCA is even better with envfit than NMDS with envfit. This\n> is because PCA works in linear euclidean world, so correlation makes\n> better sense in this case. You are correlating points on lines (envfit)\n> with points on lines (PCA), rather than points on lines (envfit) with\n> undetermined something non-regularly stressed (NMDS).\n> But this is just my feeling, I may be wrong easily, but in that case I\n> hope someone will correct me.\n> Best,\n> Martin Weiser\n>\n> Alan Haynes píše v Čt 10. 05. 2012 v 13:17 +0200:\n> > Hi all,\n> >\n> > Im using envfit with some decomposition data currently but with a PCA\n> > result (via vegan:::rda()). Is envfit still valid for PCA results? I\n> guess\n> > it doesnt make so very much difference, just the interpretation is\n> slightly\n> > different.\n> > Or am I barking up the wrong tree by using this approach?\n> >\n> > Cheers,\n> >\n> > Alan\n> >\n> > --------------------------------------------------\n> > Email: aghaynes at gmail.com\n> > Mobile: +41794385586\n> > Skype: aghaynes\n> >\n> >\n> > On 10 May 2012 12:53, Gavin Simpson <gavin.simpson at ucl.ac.uk> wrote:\n> >\n> > > I've removed R-Help from this now...\n> > >\n> > > On Thu, 2012-05-10 at 10:13 +0000, Jari Oksanen wrote:\n> > > > On 10/05/2012, at 11:45 AM, Gavin Simpson wrote:\n> > > <snip />\n> > > > > As you provide little or no context I'll explain what envfit() does\n> > > etc.\n> > > > >\n> > > > > The idea goes back a long way (!) and is in my 1995 edition of\n> Jongman\n> > > > > et al Data Analysis in Community and Landscape Ecology (Cambridge\n> > > > > University Press) though most likely was in 1987 version too. See\n> > > > > Section 5.4 of the Ordination chapter by Ter Braak in that book.\n> > > > >\n> > > > > The idea is to find the direction (in the k-dimensional ordination\n> > > > > space) that has maximal correlation with an external variable.\n> > > >\n> > > >\n> > > > Hello,\n> > >\n> > > <snip />\n> > >\n> > > > Then about Bray-Curtis. The referee may be correct when writing that\n> > > > the fitted vectors are not directly related to Bray-Curtis. You fit\n> > > > the vectors to the NMDS ordination, and that is a non-linear mapping\n> > > > from Bray-Curtis to the metric ordination space.  There are two\n> points\n> > > > here: non-linearity and stress. Because of these, it is not strictly\n> > > > about B-C. Of course, the referee is wrong when writing about NMDS\n> > > > axes: the fitted vector has nothing to do with axes (unless you\n> rotate\n> > > > your axis parallel to the fitted vector which you can do). The NMDS\n> is\n> > > > based on Bray-Curtis, but it is not the same, and the vector fitting\n> > > > is based on NMDS. So why not write that is about NMDS? Why to insist\n> > > > on Bray-Curtis which is only in the background?\n> > >\n> > > Right, agreed. The analysis is one step removed from the B-C but the\n> > > point of doing the nMDS was to find a low-d mapping of these B-C\n> > > distances so in the sense that *if* the mapping is a good one then we\n> > > can talk about correlations between \"distances\" between sites and the\n> > > environmental variables. Whilst it might be strictly more correct to\n> > > talk about this from the point of view of the nMDS the implication is\n> > > that for significant envfit()s there is a significant linear\n> correlation\n> > > between the environmental variable(s) and the approximate ranked\n> > > distances between samples.\n> > >\n> > > I mean, if all we talk about is the nMDS who cares? it is the\n> > > implications of this for the system under study that are of interest.\n> > >\n> > > That said, B-C is just one of many ways to think of distance so to my\n> > > mind I wouldn't even talk about the B-C distance either; the interest\n> is\n> > > in differences between sites/samples. The relevance of B-C or some\n> other\n> > > coefficient only comes in when considering if they are a good\n> descriptor\n> > > of the \"distance\" between samples for the variables you are\n> considering.\n> > >\n> > > Cheers,\n> > >\n> > > G\n> > >\n> > > > Cheers, Jari Oksanen\n> > > >\n> > >\n> > > --\n> > > %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n> > >  Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n> > >  ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n> > >  Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n> > >  Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n> > >  UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n> > > %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n> > >\n> > > _______________________________________________\n> > > R-sig-ecology mailing list\n> > > R-sig-ecology at r-project.org\n> > > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> > >\n> >\n> >       [[alternative HTML version deleted]]\n> >\n> > _______________________________________________\n> > R-sig-ecology mailing list\n> > R-sig-ecology at r-project.org\n> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Thanks both, Im happy to have my thoughts confirmed.\n\nGavin, I ran all of the variables I included through ordisurf aswell as\nenvfit to see if there were non-linearities, and, in all bar a single case",
       "thread_id": "thread-f88fec82915c",
       "thread_depth": 5,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003032.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003032.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/e15819ca/attachment.pl"
+      ]
     },
     {
       "id": "msg-dad9db2c9f2a",
@@ -502,12 +517,15 @@
       "subject_clean": "Question about Mantel Test",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/bd6b746a/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/bd6b746a/attachment.pl>",
+      "body_plain": "Hi every body.\n\nI have some questions about Mantel Test. I expect that with experience in\nspatial analysis of people in this list I can resolve them. Your\nexplanations and suggestions will help me so much, so, thanks in advance.\n\nFor contextualizing. I want to explore the association between some\nenvironmental variables: precipitation, temperature, bio-climatic\nindicators (construction of \"bio variables\" proposed in WorlClim), EVI\n(Enhanced Vegetation Index from MODIS-NDVI), NPP (Net Primary Product from\nMODIS), and VCF (Vegetation Continues Fields for trees from MODIS).\n\n*1. *At first instance, I thought to calculate Pearson´s correlation\ncoefficient from Mantel Test approach, however, I have some doubts about\nwhat I am actually doing with this.\n\nI think that I can obtain a more accurate correlation coefficient with out\nthe problem of spatial auto-correlation, due to permutation implicit in\nMantel Test, using as matrices for calculate it  two grids of the set of\nenvironmental variables.\n\nMy real questions comes from the definition of matrices used in Mantel\nTest, because they are proposed from literature to represent a relationship\nbetween points included in them (often distances), but the grids do not\nrepresent this, they are the raw values of environmental variables. In\nfact, Legendre recommends that Mantel tests should not be used to test\nhypotheses about the relationships of the original data tables.\n\nSo am I correct in try to perform a correlation coefficient with out the\nproblem of spatial auto-correlation between any two grids using the Mantel\nTest?\n\n*2. *An other option that I have thought for involving distances is to\nperform the Mantel Test using a distance matrix between the two grids (this\ndistance measure could be the correlation coefficient) and the geographic\ndistance between grid points (Euclidean distance), since this is a way to\nexplore if a variable is spatially autocorrelated, even this is less used\nthan Moran Index or Correlogram.\n\nHowever, I am not sure if with this option I would test the spatial\ncorrelation of the distance measure used, or I would obtain a correlation\nindex of the association of the two grids (distance measure used) with out\nthe problem of spatial auto-correlation due to permutation. Or both?\n\n*3.* How else can you recommend me to measure the relationship between two\nenvironmental grids trying to minimize the effect of spatial\nauto-correlation?\n\nRegards to all and thanks in advance for your help.\n\n-- \nJaime Burbano Girón\nMaestría en Ciencias Biológicas - Ecología\nUniversidad Nacional de Colombia\nBogotá - Colombia\n(57) 3168573713\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi every body.\n\nI have some questions about Mantel Test. I expect that with experience in\nspatial analysis of people in this list I can resolve them. Your\nexplanations and suggestions will help me so ",
       "thread_id": "thread-1f45c5ac434c",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003034.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003034.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120510/bd6b746a/attachment.pl"
+      ]
     },
     {
       "id": "msg-3b7717cc911f",
@@ -538,12 +556,15 @@
       "subject_clean": "CA",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120511/a0e2173f/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120511/a0e2173f/attachment.pl>",
+      "body_plain": "Hi,i would like use CA code in my data\n\nit is a metrics with 16 column ( abundance of fish larva) and 84 raw, this\nraw in three groups: Coralline,non-coralline and creek habitat . the data\nare non-normal and i have to use non-parametric analyses ,i want to find\nsimilarity or dissimilarity between these habitat.\ni used the nmds in past but the stress wasn't good fitness\n\nplease guide me\n\nthanks\n\nMahnaz\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,i would like use CA code in my data\n\nit is a metrics with 16 column ( abundance of fish larva) and 84 raw, this\nraw in three groups: Coralline,non-coralline and creek habitat . the data\nare non-nor",
       "thread_id": "thread-65d1f3f7150a",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003036.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003036.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120511/a0e2173f/attachment.pl"
+      ]
     },
     {
       "id": "msg-4a1ee4852291",
@@ -593,12 +614,15 @@
       "subject_clean": "Combining two matrices",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120513/9f503923/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120513/9f503923/attachment.pl>",
+      "body_plain": "Dear all,\n\nI have two species-by-site matrices and I'd like to combine them in one\nmatrix. The rows (n=20) of each matrix present plants 1-20. So, the new\nmatrix should have 40 rows. As these matrices have some shared species and\nsome exclusive species, the new matrix should have the species from the two\nmatrix, but when certain species that doesn't occur for example in Matrix\n1, its value will be 0. I've tried the functions merge, cbind and rbind but\nI wasn't able to do it. Please, see the following example to make it clear\n;-)\n\n\nBy using for example the following matrices:\n\nmatrix1 <- matrix(c(1,2,3, 11,12,13), nrow = 2, ncol=3, byrow=TRUE,\n               dimnames = list(c(\"plant1\", \"plant2\"),\n                               c(\"sp1\", \"sp2\", \"sp3\")))\n\nmatrix2 <- matrix(c(1,2,3, 0,21,9), nrow = 2, ncol=3, byrow=TRUE,\n               dimnames = list(c(\"plant3\", \"plant4\"),\n                               c(\"sp1\", \"sp2\", \"sp4\")))\n\nI'd like to combine them  like this:\n\nnew.matrix <- matrix(c(1, 2, 3, 0, 11, 12, 13, 0, 1, 2, 0, 3, 0,21,0,9),\n              nrow = 4, ncol=4, byrow=TRUE,\n               dimnames = list(c(\"plant1\", \"plant2\", \"plant3\", \"plant4\"),\n                               c(\"sp1\", \"sp2\", \"sp3\", \"sp4\")))\n\nOnce I have 200 columns and 80 rows, I'm pretty sure that R can help me to\ndo it automatically ;-)\n\n\nAll the best,\nThiago.\n\n\n-- \nThiago Gonçalves-Souza, Ms.\nUniversidade Estadual Paulista (UNESP)\nDepartamento de Zoologia e Botânica\nPrograma de Pós-Graduação em Biologia Animal (Doutorado)\nE-mail alternativo: thiagoaracno at gmail.com\nHome page:<http://www.wix.com/thiagocalvesouza/tg-s>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\n\nI have two species-by-site matrices and I'd like to combine them in one\nmatrix. The rows (n=20) of each matrix present plants 1-20. So, the new\nmatrix should have 40 rows. As these matrices",
       "thread_id": "thread-9be80be1dff8",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003039.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003039.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120513/9f503923/attachment.pl"
+      ]
     },
     {
       "id": "msg-e0972a0171f4",
@@ -705,12 +729,15 @@
       "subject_clean": "Path Analysis and Partial Correlation",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/e05bb4c5/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/e05bb4c5/attachment.pl>",
+      "body_plain": "Dear all,\nI have one response variable and several explanatory variables, and I want to know the contribution of each explanatory variable to the response variable. Path analysis and partial correlation analysis seem to be suitable for my aim. But I have three questions as follows:\n1) My response data is count data. I have analyzed the relationship between response data and explanatory data using Poisson regression, and have found out these significant factors. Before regression, I have stanstardized explanatory table using scale() function. Can I identify the contribution of each significant factor according to the partial regression coefficient directly?\n2) Can path analysis and partial correlation analysis be based on Poisson regression (i.e. calculate the path coefficient or partial correlation coefficent without changing the link function of \"glm\") \n3) I am not sure the difference of these two method, so I don't know which method is more suitable for my analysis.\n \nThanks very much for any suggestion.\n \nGuojun\nMay 14th, 2012\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\nI have one response variable and several explanatory variables, and I want to know the contribution of each explanatory variable to the response variable. Path analysis and partial correlati",
       "thread_id": "thread-811802c6980c",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003045.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003045.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/e05bb4c5/attachment.pl"
+      ]
     },
     {
       "id": "msg-a1bd04175a22",
@@ -760,12 +787,15 @@
       "references": [
         "<alpine.LNX.2.00.1205151057550.3824@salmo.appl-ecosys.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/4890c144/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/4890c144/attachment.pl>",
+      "body_plain": "Rich:   You could try quantile regression from the quantreg package.\n\nBrian\n\n\nBrian S. Cade, PhD\n\nU. S. Geological Survey\nFort Collins Science Center\n2150 Centre Ave., Bldg. C\nFort Collins, CO  80526-8818\n\nemail:  brian_cade at usgs.gov\ntel:  970 226-9326\n\n\n\nFrom:\nRich Shepard <rshepard at appl-ecosys.com>\nTo:\nr-sig-ecology at r-project.org\nDate:\n05/15/2012 12:17 PM\nSubject:\n[R-sig-eco] Continuous (Non-Count) Skewed Data With Many Zeros\nSent by:\nr-sig-ecology-bounces at r-project.org\n\n\n\n   The water chemistry data of metal concentrations are not normally\ndistributed (based on Q-Q plots) and are not improved by transformation\n(log10, sqrt, cubic root). For the 30 metal species the percentage of \nzeros\nranges from none (10 metals) to 48.6; average 5.6. Most metals are at very\nlow concentrations with infrequent spikes which might be very high.\n\n   Those with fewer zeros are not a concern, but I'd like your thoughts on \n1)\nat what percentage do the number of zeros become a concern and 2) how to\ncharacterize and model these data.\n\nRich\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Rich:   You could try quantile regression from the quantreg package.\n\nBrian\n\n\nBrian S. Cade, PhD\n\nU. S. Geological Survey\nFort Collins Science Center\n2150 Centre Ave., Bldg. C\nFort Collins, CO  80526-",
       "thread_id": "thread-a1bd04175a22",
       "thread_depth": 1,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003047.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003047.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/4890c144/attachment.pl"
+      ]
     },
     {
       "id": "msg-071b3b19bcca",
@@ -797,12 +827,15 @@
       "subject_clean": "Continuous (Non-Count) Skewed Data With Many Zeros",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/34555a70/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/34555a70/attachment.pl>",
+      "body_plain": "Hi, I would suggest that you look at zero-inflated models for continuous responses.Good luck,Salvador  Salvador Sánchez-ColónConsultoría Ambiental y EstadísticaMéxico DFMobile: 04455-3200-8559E-mail: salvadorsanchezcolon at prodigy.net.mx\nDe: r-sig-ecology-bounces at r-project.org\nPara: r-sig-ecology at r-project.org\nCc: \nFecha: Tue, 15 May 2012 11:15:39 -0700 (PDT)\nAsunto: [R-sig-eco] Continuous (Non-Count) Skewed Data With Many Zeros\n\n>    The water chemistry data of metal concentrations are not normally> distributed (based on Q-Q plots) and are not improved by transformation> (log10, sqrt, cubic root). For the 30 metal species the percentage of zeros> ranges from none (10 metals) to 48.6; average 5.6. Most metals are at very> low concentrations with infrequent spikes which might be very high.> >    Those with fewer zeros are not a concern, but I'd like your thoughts on 1)> at what percentage do the number of zeros become a concern and 2) how to> characterize and model these data.> > Rich> > _______________________________________________> R-sig-ecology mailing list> R-sig-ecology at r-project.org> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi, I would suggest that you look at zero-inflated models for continuous responses.Good luck,Salvador  Salvador Sánchez-ColónConsultoría Ambiental y EstadísticaMéxico DFMobile: 04455-3200-8559E-mail: ",
       "thread_id": "thread-bcb6a1ca6f0f",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003049.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003049.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120515/34555a70/attachment.pl"
+      ]
     },
     {
       "id": "msg-b8f35b85f31b",
@@ -853,12 +886,15 @@
       "subject_clean": "Continuous (Non-Count) Skewed Data with Many Zeros",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120516/be372d4e/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120516/be372d4e/attachment.pl>",
+      "body_plain": "Rich: one approach is to fit the data to a gamma distribution, and take the mean and variance from that. I've found Bolker's book, Ecological Models & Data in R, to be helpful in understanding the gamma distribution. If you're not familiar with Newman et al. Estimating mean and variance for environmental studies with below detection limit observations Water Resources Bulletin 25, pp. 905-916, it is mandatory reading. Below is some R code provided by a statistician, Jim Baldwin, for estimating [NO3] mean and variance in an experiment involving three tree species and two levels of plant diversity. NO3 concentrations have many of the properties you describe for metal concentrations. The code has provisions for dealing with left-censored data, but the exact details escape me at the moment. --Seth\n\n# Estimating gamma distribution parameters given the data is\n# left-censored at 0.04.\n\n# Rather than estimate the shape and scale parameters and then\n# determining the mean and variance, the mean and variance are\n# found directly by re-parametrizing the gamma density function.\n\n# Get original data\n\n  setwd(\"c:\\\\documents and settings\\\\jbaldwin\\\\desktop\\\\seth\")\n\n  g = read.csv(\"Task1404_Treats_3-4 NO3 min set.csv\")\n\n# Define function returning the log of the likelihood\n\nlogL = function(z,x) {\n\n  shape = z[1]^2/z[2] # Shape parameter from mean (z[1]) and variance (z[2])\n\n  scale = z[2]/z[1]   # Scale parameter from mean (z[1]) and variance (z[2])\n\n  # Non-censored data values\n\n  xx = x[(!is.na(x)) & (x > 0.04)]\n\n  # Number of censored data values\n\n  n = length(x[(!is.na(x)) & (x <= 0.04)])\n\n  # Return log of the likelihood\n\n  n*pgamma(0.04,shape=shape,scale=scale,log.p=TRUE) +\n\n    sum(dgamma(xx,shape=shape,scale=scale,log=TRUE))\n}\n\n# MLE function for mean and variance\nmle.censored = function(species,treatment) {\n\n  # Extract data for specified species and treatment\n  x = g$NO3[g$KEYSPECI==species & g$TREATMNT==treatment]\n\n  # Get maximum likelihood estimates\n  mle.g = optim(c(1,1),logL,method = \"L-BFGS-B\",lower=0.0001,upper=Inf,\n    hessian=TRUE,x=x,control=list(fnscale=-1))\n\n  # Calculate estimate of covariance matrix\n  mle.g$VarCovMatrix = -solve(mle.g$hessian)\n\n  # Save a copy of the data\n  mle.g$x = x\n\n  # Return the data frame with all of the results\n  mle.g\n\n}\n\n# Get estimates for each combination of species and treatment\n  mle13 = mle.censored(1,3)\n  mle14 = mle.censored(1,4)\n  mle23 = mle.censored(2,3)\n  mle24 = mle.censored(2,4)\n  mle33 = mle.censored(3,3)\n  mle34 = mle.censored(3,4)\n\n# Collect all terms\n  # Maximum likelihood estimates of population means\n  mu.mle = c(mle13$par[1],mle14$par[1],mle23$par[1],mle24$par[1],\n             mle33$par[1],mle34$par[1])\n  # Maximum likelihood estimates of population variances\n  var.mle = c(mle13$par[2],mle14$par[2],mle23$par[2],mle24$par[2],\n              mle33$par[2],mle34$par[2])\n  # Estimate of standard error of estimates of population means\n  mu.se = c(mle13$VarCov[1,1],mle14$VarCov[1,1],mle23$VarCov[1,1],\n            mle24$VarCov[1,1],mle33$VarCov[1,1],mle34$VarCov[1,1])^0.5\n  # Estimate of standard error of estimates of population variances\n  var.se = c(mle13$VarCov[2,2],mle14$VarCov[2,2],mle23$VarCov[2,2],\n            mle24$VarCov[2,2],mle33$VarCov[2,2],mle34$VarCov[2,2])^0.5\n  # Species and treatment id\n  id = c(\"s1 t3\",\"s1 t4\",\"s2 t3\",\"s2 t4\",\"s3 t3\",\"s3 t4\")\n\n# Plot means and approximate 95% confidence intervals\n  plot(c(min(mu-1.96*mu.se),max(mu+1.96*mu.se)),c(0.5,6.5),type=\"n\",\n    xlab=\"Mean NO3 concentration\",ylab=\"\",axes=FALSE)\n  axis(1)\n  axis(2,c(1:6),id,las=1)\n  box()\n  for (i in c(1:6)) {\n      points(mu[i],i,pch=16)\n      lines(c(mu[i]-1.96*mu.se[i],mu[i]+1.96*mu.se[i]),c(i,i))\n  }\n\n\n\n\nThis electronic message contains information generated by the USDA solely for the intended recipients. Any unauthorized interception of this message or the use or disclosure of the information it contains may violate the law and subject the violator to civil or criminal penalties. If you believe you have received this message in error, please notify the sender and delete the email immediately.\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Rich: one approach is to fit the data to a gamma distribution, and take the mean and variance from that. I've found Bolker's book, Ecological Models & Data in R, to be helpful in understanding the gam",
       "thread_id": "thread-ee6a7dd66a41",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003053.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003053.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120516/be372d4e/attachment.pl"
+      ]
     },
     {
       "id": "msg-6d455695b5a4",
@@ -952,12 +988,15 @@
         "<OF29D6811C.E565EAEA-ON852579FF.00655446-882579FF.0065E59C@nps.gov>",
         "<alpine.LNX.2.00.1205151434440.3824@salmo.appl-ecosys.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120516/9ee4ed38/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120516/9ee4ed38/attachment.pl>",
+      "body_plain": "Rich:  I repeat - check out quantile regression in the quantreg package. \nIf you have censored data (below detection limits), there are censored \nversions of quantile regression that can be used, crg() function has 3 \nalternative estimators.\n\nBrian\n\nBrian S. Cade, PhD\n\nU. S. Geological Survey\nFort Collins Science Center\n2150 Centre Ave., Bldg. C\nFort Collins, CO  80526-8818\n\nemail:  brian_cade at usgs.gov\ntel:  970 226-9326\n\n\n\nFrom:\nRich Shepard <rshepard at appl-ecosys.com>\nTo:\nr-sig-ecology at r-project.org\nDate:\n05/15/2012 03:52 PM\nSubject:\nRe: [R-sig-eco] Continuous (Non-Count) Skewed Data With Many Zeros\nSent by:\nr-sig-ecology-bounces at r-project.org\n\n\n\nOn Tue, 15 May 2012, Tom_Philippi at nps.gov wrote:\n\n> Are those true zeros, or below detection limit values?\n\nTom,\n\n   Recorded as a combination of both. Data were collected over ~31 years \nby\ndifferent folks, analyzed by different labs, and stored in spreadsheets\n(gak!) with no standardized formatting. It's probably reasonable to assume\nthat any entry of zero is really below the detection limit; if the \nchemical\nwas actually not present it would still be below the detecion limit.\n\n> My only experience with water chemistry data had non-detects, not zeros,\n> and I had to use the NADA package. On the bright side, I didn't have to\n> worry about lots of zeros...\n\n   I'll go find the NADA package.\n\nThanks,\n\nRich\n\n-- \nRichard B. Shepard, Ph.D.          |   Integrity - Credibility - \nInnovation\nApplied Ecosystem Services, Inc.   |    Helping Ensure Our Clients' \nFutures\n<http://www.appl-ecosys.com>     Voice: 503-667-4517      Fax: \n503-667-8863\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Rich:  I repeat - check out quantile regression in the quantreg package. \nIf you have censored data (below detection limits), there are censored \nversions of quantile regression that can be used, crg(",
       "thread_id": "thread-a1bd04175a22",
       "thread_depth": 3,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003058.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003058.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120516/9ee4ed38/attachment.pl"
+      ]
     },
     {
       "id": "msg-2f43caee1759",
@@ -1064,12 +1103,15 @@
       "subject_clean": "adehabitatLT help in plot pathways",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120517/c69428b0/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120517/c69428b0/attachment.pl>",
+      "body_plain": "Dear all,\n\nI'm now using the package adehabitatLT to handle with animals movements.\nDespite things are going ok  I cannot superimpose the various animals\npathways that plot.ltraj (or simple plot) function generates. My big\nquestion is: Is it possible to do such procedure? Alternatively: Does some\nof you can suggest some way to do this task?\n\nThanks in advance,\nCheers,\n\n-- \n»Conrado A. B. Galdino\n---\n\nPrograma de Pós-Graduação em Zoologia da PUC-Minas\nAv. Dom José Gaspar, 500 - Coração Eucarístico, 30535-610, Belo\nHorizonte-MG, Brasil\nFone: (31) 3319-4407\nCurrículo Lattes <http://lattes.cnpq.br/3366127364836718>\nPerfil no Google Scholar\nCitations<http://scholar.google.com/citations?user=vIk1I1UAAAAJ>\n\n-Baixe minhas publicações:\n-My papers for download:\nhttp://www.mendeley.com/profiles/conrado-galdino/publications/journal/\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\n\nI'm now using the package adehabitatLT to handle with animals movements.\nDespite things are going ok  I cannot superimpose the various animals\npathways that plot.ltraj (or simple plot) func",
       "thread_id": "thread-04283708d5c3",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003064.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003064.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120517/c69428b0/attachment.pl"
+      ]
     },
     {
       "id": "msg-1cad468b88aa",
@@ -1081,12 +1123,15 @@
       "subject_clean": "Does weighting presence equal to background in species distribution modeling using glm in the stats package work correctly??",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120518/3246ba62/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120518/3246ba62/attachment.pl>",
+      "body_plain": "In species distribution modeling where one uses a large sample of \nbackground points to capture background variation in \npresence\\pseudo-absence or use\\available models (0\\1 response) it is \nfrequently recommended that one weight the data so the sum of the absence \nweights is equal to the sum of presence weights so that the model isn?t \nswamped by an overwhelming and arbitrary number of background points.  My \nconcern is I don't know that glm in the R stats package handles this \ncorrectly. \n\nWhen weights are set in glm they are ignored in the stepAIC and I'm \nwondering if this should be the case.  For example if I have a data set \nwith 75 presence and 75 absence I fit glm.  If I repeat the 75 absences 10 \ntimes say and then weigh the absences so total weight of absence equals \ntotal weight of presence fitting any individual glm to the two sets give \nalmost the same answer (in coefficients, null and residual deviance but \nNOT in likelihood extracted using logLik).  Then when I use the step \ncommand in R to select the best from a series of models I get quite \ndifferent answers for two reasons.  Step uses the likelihood which is not \nthe same in the two models (and I'm not sure why given that they have the \nsame deviance).  The second reason is that the step function in R uses AIC \n= - 2*log L + k * edf where edf is effective degrees of freedom.  It seems \nthat if you're setting the weights then the the step function should \nadjust the degrees of freedom it uses accordingly.  I've tried adjusting \nthe stepwise regression by multiplying the penalty term in step by \nsum(data$Weights)/length(data$Weights) where I generally set the penalty \nto 2 for AIC or  log(nrow(data)) for BIC.  Indeed when I use this approach \nI get much more similar predictions from the two models but because the \nlikelihood is different I don't always get exactly the same predictions \nfrom the two models.  I was wondering if there is a statistical \nexplanation for why the answers should be different and if not, why I \ncan't get the correct answer.  I tried the same thing on STATA this \nafternoon and it was interesting to note that STATA did give the same \nlikelihood for the two models and the same answer for stepwise selection. \n\nI'm aware that GLM in the standard stats package in R is intended to use \nweights only to specify an integer number of binomial trials under the \nassumption that the response is proportion of success but had read that \nthe only consequence of using non-integer weights with a Bernoulli \nresponse was that starting values are difficult to choose and convergence \nto the maximum likelihood isn't guaranteed.  I was  willing to accept this \npossibility but it's seeming that the issues with using glm in this way \nmight run more deep.  Another option would be to consider the \npresence\\background as strata with different sampling probabilities and \nuse the survey package svyglm but I'm not sure how to do the automatic \nmodel selection in that case. \n\nI've noticed that many papers and software programs use R code with non \ninteger weights set in this or a similar way: BIOMOD uses the glm with \nweights and stepwise model selection without any consideration of the \nabove issues, Phillips and Elith (Logistic Methods for Resource Selection \nFunctions and Presence-Only Species Distribution Models), Guisan, Edwards \nand Hastie (Generalized linear and generalized additive models in studies \nof species distributions: setting the scene) though they use a custom \nstepwise selection based on the deviance rather than the likelihood. \n\nAnyway, if anyone has any insight on how to appropriately set weights in \nglm and use stepwise model selection, I'd really appreciate your \nrecommendations. \n\nMarian Talbert\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "In species distribution modeling where one uses a large sample of \nbackground points to capture background variation in \npresence\\pseudo-absence or use\\available models (0\\1 response) it is \nfrequentl",
       "thread_id": "thread-1cad468b88aa",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003065.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003065.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120518/3246ba62/attachment.pl"
+      ]
     },
     {
       "id": "msg-c1c767095350",
@@ -1151,12 +1196,15 @@
       "subject_clean": "PCA as a predictive model",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/b166b7be/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/b166b7be/attachment.pl>",
+      "body_plain": "Hello R-sig-ecology group,\n\nI was wondering if anyone is aware of an example where PCA is used as a\npredictive model? A community analysis example might be to predict the PC\nvalues of a sample given its community composition. I had thrown this\nquestion up on a statistics forum (\nhttp://stats.stackexchange.com/questions/28916/can-empirical-orthogonal-function-eof-analysis-be-used-as-a-predictive-model)\nbut have gotten hardly any response. I imagined that there are some folks\nhere that would have some insight into this problem.\n\nMany thanks,\nMarc\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hello R-sig-ecology group,\n\nI was wondering if anyone is aware of an example where PCA is used as a\npredictive model? A community analysis example might be to predict the PC\nvalues of a sample given i",
       "thread_id": "thread-f7daa79e9e99",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003069.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003069.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/b166b7be/attachment.pl"
+      ]
     },
     {
       "id": "msg-6244ae29719c",
@@ -1190,12 +1238,15 @@
         "<CACg2Sf1Hs6t+sKv36tAgqX9d68jv3fn70YRAT0XLR4r7wW8VAw@mail.gmail.com>",
         "<66C03CD1145C95448A4D73676DD9C2ED2C987C@nippu2.univ.yo.oulu.fi>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/aa8438ce/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/aa8438ce/attachment.pl>",
+      "body_plain": "Hi Jari,\n\nThat's good to hear - I hadn't made the connection to cca/rda. This will\nhelp me find pertinent literature as well.\n\nMany thanks,\nMarc\n\nOn Wed, May 23, 2012 at 9:33 AM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:\n\n> Marc,\n>\n> Basic R stats functions like prcomp have a predict method that can be used\n> to \"predict\" (calculate) scores with 'newdata'. This is standard, and has\n> been in R for ever. Most textbooks of multivariate analysis should handle\n> this issue.\n>\n> In community ecological context, see functions predict.cca and predict.rda\n> in vegan. These take argument 'newdata' which can be new community data --\n> depending on what you want to predict (argument 'type'). Function\n> calibrate.cca documented in the same help page can be used to predict\n> values of constraining variables in constrained ordination (CCA, RDA) from\n> community composition, also with 'newdata' communities.\n>\n> Cheers, Jari Oksanen\n>\n> ________________________________________\n> From: r-sig-ecology-bounces at r-project.org [\n> r-sig-ecology-bounces at r-project.org] on behalf of Marc Taylor [\n> marchtaylor at gmail.com]\n> Sent: 23 May 2012 10:19\n> To: r-sig-ecology at r-project.org\n> Subject: [R-sig-eco] PCA as a predictive model\n>\n> Hello R-sig-ecology group,\n>\n> I was wondering if anyone is aware of an example where PCA is used as a\n> predictive model? A community analysis example might be to predict the PC\n> values of a sample given its community composition. I had thrown this\n> question up on a statistics forum (\n>\n> http://stats.stackexchange.com/questions/28916/can-empirical-orthogonal-function-eof-analysis-be-used-as-a-predictive-model\n> )\n> but have gotten hardly any response. I imagined that there are some folks\n> here that would have some insight into this problem.\n>\n> Many thanks,\n> Marc\n>\n>         [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Jari,\n\nThat's good to hear - I hadn't made the connection to cca/rda. This will\nhelp me find pertinent literature as well.\n\nMany thanks,\nMarc\n\nOn Wed, May 23, 2012 at 9:33 AM, Jari Oksanen <jari.ok",
       "thread_id": "thread-f7daa79e9e99",
       "thread_depth": 2,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003071.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003071.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/aa8438ce/attachment.pl"
+      ]
     },
     {
       "id": "msg-e1d7878b5de9",
@@ -1211,12 +1262,15 @@
         "<66C03CD1145C95448A4D73676DD9C2ED2C987C@nippu2.univ.yo.oulu.fi>",
         "<CACg2Sf2G_tpg-HiV6qp+K0sReY87omH6s8W33Qxxoa7K0bW6jQ@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/948442ca/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/948442ca/attachment.pl>",
+      "body_plain": "Hi Jari - one more question if you don't mind. Since the weights of the PCs\nare related to the the amount of variance that they explain in the original\ndata - is it problematic to predict the PC scores with a second data set\nthat has a different amount of variance (e.g. due to differing number of\nsamples)? In both the 1st and 2nd data sets I have been using scaled values\nfor the variables (mean=0 and sd=1 for each sample).\nCheers,\nMarc\n\n\nOn Wed, May 23, 2012 at 9:59 AM, Marc Taylor <marchtaylor at gmail.com> wrote:\n\n> Hi Jari,\n>\n> That's good to hear - I hadn't made the connection to cca/rda. This will\n> help me find pertinent literature as well.\n>\n> Many thanks,\n> Marc\n>\n>\n> On Wed, May 23, 2012 at 9:33 AM, Jari Oksanen <jari.oksanen at oulu.fi>wrote:\n>\n>> Marc,\n>>\n>> Basic R stats functions like prcomp have a predict method that can be\n>> used to \"predict\" (calculate) scores with 'newdata'. This is standard, and\n>> has been in R for ever. Most textbooks of multivariate analysis should\n>> handle this issue.\n>>\n>> In community ecological context, see functions predict.cca and\n>> predict.rda in vegan. These take argument 'newdata' which can be new\n>> community data -- depending on what you want to predict (argument 'type').\n>> Function calibrate.cca documented in the same help page can be used to\n>> predict values of constraining variables in constrained ordination (CCA,\n>> RDA) from community composition, also with 'newdata' communities.\n>>\n>> Cheers, Jari Oksanen\n>>\n>> ________________________________________\n>> From: r-sig-ecology-bounces at r-project.org [\n>> r-sig-ecology-bounces at r-project.org] on behalf of Marc Taylor [\n>> marchtaylor at gmail.com]\n>> Sent: 23 May 2012 10:19\n>> To: r-sig-ecology at r-project.org\n>> Subject: [R-sig-eco] PCA as a predictive model\n>>\n>> Hello R-sig-ecology group,\n>>\n>> I was wondering if anyone is aware of an example where PCA is used as a\n>> predictive model? A community analysis example might be to predict the PC\n>> values of a sample given its community composition. I had thrown this\n>> question up on a statistics forum (\n>>\n>> http://stats.stackexchange.com/questions/28916/can-empirical-orthogonal-function-eof-analysis-be-used-as-a-predictive-model\n>> )\n>> but have gotten hardly any response. I imagined that there are some folks\n>> here that would have some insight into this problem.\n>>\n>> Many thanks,\n>> Marc\n>>\n>>         [[alternative HTML version deleted]]\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Jari - one more question if you don't mind. Since the weights of the PCs\nare related to the the amount of variance that they explain in the original\ndata - is it problematic to predict the PC score",
       "thread_id": "thread-f7daa79e9e99",
       "thread_depth": 3,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003072.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003072.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/948442ca/attachment.pl"
+      ]
     },
     {
       "id": "msg-f12e088c5ba5",
@@ -1233,12 +1287,15 @@
         "<CACg2Sf2G_tpg-HiV6qp+K0sReY87omH6s8W33Qxxoa7K0bW6jQ@mail.gmail.com>",
         "<CACg2Sf2NEQ-JoNRdw-bJ9stehuiN69g1RmdDoysnb=Hf3VyRQA@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/e8a2c60f/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/e8a2c60f/attachment.pl>",
+      "body_plain": "Marc,\n\nI see no danger. When you predict with 'newdata', that 'newdata' should have no influence on the original PCA. You can use predict(..., newdata) for cross validation.  If you look at the code of stats:::predict.prcomp, you see that the prediction is only (i) scaling and centring your new data with the means and scale of the original data, and (ii) rotation of these scaled values to the original PCs. This is the last line of stats:::predict.prcomp:\n\nscale(newdata, object$center, object$scale) %*% object$rotation\n\nThe PCA result 'object' saves the original 'center' and 'scale' (which can be FALSE or SD of variables) of your original variables, and applies those to your 'newdata' before rotating to PCs.\n\nCheers, Jari Oksanen\n________________________________\nFrom: Marc Taylor [marchtaylor at gmail.com]\nSent: 23 May 2012 11:55\nTo: Jari Oksanen\nCc: r-sig-ecology at r-project.org\nSubject: Re: [R-sig-eco] PCA as a predictive model\n\nHi Jari - one more question if you don't mind. Since the weights of the PCs are related to the the amount of variance that they explain in the original data - is it problematic to predict the PC scores with a second data set that has a different amount of variance (e.g. due to differing number of samples)? In both the 1st and 2nd data sets I have been using scaled values for the variables (mean=0 and sd=1 for each sample).\nCheers,\nMarc\n\n\nOn Wed, May 23, 2012 at 9:59 AM, Marc Taylor <marchtaylor at gmail.com<mailto:marchtaylor at gmail.com>> wrote:\nHi Jari,\n\nThat's good to hear - I hadn't made the connection to cca/rda. This will help me find pertinent literature as well.\n\nMany thanks,\nMarc\n\n\nOn Wed, May 23, 2012 at 9:33 AM, Jari Oksanen <jari.oksanen at oulu.fi<mailto:jari.oksanen at oulu.fi>> wrote:\nMarc,\n\nBasic R stats functions like prcomp have a predict method that can be used to \"predict\" (calculate) scores with 'newdata'. This is standard, and has been in R for ever. Most textbooks of multivariate analysis should handle this issue.\n\nIn community ecological context, see functions predict.cca and predict.rda in vegan. These take argument 'newdata' which can be new community data -- depending on what you want to predict (argument 'type'). Function calibrate.cca documented in the same help page can be used to predict values of constraining variables in constrained ordination (CCA, RDA) from community composition, also with 'newdata' communities.\n\nCheers, Jari Oksanen\n\n________________________________________\nFrom: r-sig-ecology-bounces at r-project.org<mailto:r-sig-ecology-bounces at r-project.org> [r-sig-ecology-bounces at r-project.org<mailto:r-sig-ecology-bounces at r-project.org>] on behalf of Marc Taylor [marchtaylor at gmail.com<mailto:marchtaylor at gmail.com>]\nSent: 23 May 2012 10:19\nTo: r-sig-ecology at r-project.org<mailto:r-sig-ecology at r-project.org>\nSubject: [R-sig-eco] PCA as a predictive model\n\nHello R-sig-ecology group,\n\nI was wondering if anyone is aware of an example where PCA is used as a\npredictive model? A community analysis example might be to predict the PC\nvalues of a sample given its community composition. I had thrown this\nquestion up on a statistics forum (\nhttp://stats.stackexchange.com/questions/28916/can-empirical-orthogonal-function-eof-analysis-be-used-as-a-predictive-model)\nbut have gotten hardly any response. I imagined that there are some folks\nhere that would have some insight into this problem.\n\nMany thanks,\nMarc\n\n       [[alternative HTML version deleted]]\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org<mailto:R-sig-ecology at r-project.org>\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Marc,\n\nI see no danger. When you predict with 'newdata', that 'newdata' should have no influence on the original PCA. You can use predict(..., newdata) for cross validation.  If you look at the code o",
       "thread_id": "thread-f7daa79e9e99",
       "thread_depth": 4,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003073.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003073.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/e8a2c60f/attachment.pl"
+      ]
     },
     {
       "id": "msg-9f843073b6e9",
@@ -1256,12 +1313,15 @@
         "<CACg2Sf2NEQ-JoNRdw-bJ9stehuiN69g1RmdDoysnb=Hf3VyRQA@mail.gmail.com>",
         "<66C03CD1145C95448A4D73676DD9C2ED2C9994@nippu2.univ.yo.oulu.fi>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/52b9b39e/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/52b9b39e/attachment.pl>",
+      "body_plain": "Excellent - thanks Jari.\nCheers,\nMarc\n\nOn Wed, May 23, 2012 at 11:05 AM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:\n\n>  Marc,\n>\n> I see no danger. When you predict with 'newdata', that 'newdata' should\n> have no influence on the original PCA. You can use predict(..., newdata)\n> for cross validation.  If you look at the code of stats:::predict.prcomp,\n> you see that the prediction is only (i) scaling and centring your new data\n> with the means and scale of the original data, and (ii) rotation of these\n> scaled values to the original PCs. This is the last line of\n> stats:::predict.prcomp:\n>\n> scale(newdata, object$center, object$scale) %*% object$rotation\n>\n> The PCA result 'object' saves the original 'center' and 'scale' (which can\n> be FALSE or SD of variables) of your original variables, and applies those\n> to your 'newdata' before rotating to PCs.\n>\n> Cheers, Jari Oksanen\n>  ------------------------------\n> *From:* Marc Taylor [marchtaylor at gmail.com]\n> *Sent:* 23 May 2012 11:55\n> *To:* Jari Oksanen\n> *Cc:* r-sig-ecology at r-project.org\n> *Subject:* Re: [R-sig-eco] PCA as a predictive model\n>\n>  Hi Jari - one more question if you don't mind. Since the weights of the\n> PCs are related to the the amount of variance that they explain in the\n> original data - is it problematic to predict the PC scores with a second\n> data set that has a different amount of variance (e.g. due to differing\n> number of samples)? In both the 1st and 2nd data sets I have been using\n> scaled values for the variables (mean=0 and sd=1 for each sample).\n> Cheers,\n> Marc\n>\n>\n> On Wed, May 23, 2012 at 9:59 AM, Marc Taylor <marchtaylor at gmail.com>wrote:\n>\n>> Hi Jari,\n>>\n>> That's good to hear - I hadn't made the connection to cca/rda. This will\n>> help me find pertinent literature as well.\n>>\n>> Many thanks,\n>> Marc\n>>\n>>\n>> On Wed, May 23, 2012 at 9:33 AM, Jari Oksanen <jari.oksanen at oulu.fi>wrote:\n>>\n>>> Marc,\n>>>\n>>> Basic R stats functions like prcomp have a predict method that can be\n>>> used to \"predict\" (calculate) scores with 'newdata'. This is standard, and\n>>> has been in R for ever. Most textbooks of multivariate analysis should\n>>> handle this issue.\n>>>\n>>> In community ecological context, see functions predict.cca and\n>>> predict.rda in vegan. These take argument 'newdata' which can be new\n>>> community data -- depending on what you want to predict (argument 'type').\n>>> Function calibrate.cca documented in the same help page can be used to\n>>> predict values of constraining variables in constrained ordination (CCA,\n>>> RDA) from community composition, also with 'newdata' communities.\n>>>\n>>> Cheers, Jari Oksanen\n>>>\n>>> ________________________________________\n>>> From: r-sig-ecology-bounces at r-project.org [\n>>> r-sig-ecology-bounces at r-project.org] on behalf of Marc Taylor [\n>>> marchtaylor at gmail.com]\n>>> Sent: 23 May 2012 10:19\n>>> To: r-sig-ecology at r-project.org\n>>> Subject: [R-sig-eco] PCA as a predictive model\n>>>\n>>> Hello R-sig-ecology group,\n>>>\n>>> I was wondering if anyone is aware of an example where PCA is used as a\n>>> predictive model? A community analysis example might be to predict the PC\n>>> values of a sample given its community composition. I had thrown this\n>>> question up on a statistics forum (\n>>>\n>>> http://stats.stackexchange.com/questions/28916/can-empirical-orthogonal-function-eof-analysis-be-used-as-a-predictive-model\n>>> )\n>>> but have gotten hardly any response. I imagined that there are some folks\n>>> here that would have some insight into this problem.\n>>>\n>>> Many thanks,\n>>> Marc\n>>>\n>>>         [[alternative HTML version deleted]]\n>>>\n>>> _______________________________________________\n>>> R-sig-ecology mailing list\n>>> R-sig-ecology at r-project.org\n>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>\n>>\n>>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Excellent - thanks Jari.\nCheers,\nMarc\n\nOn Wed, May 23, 2012 at 11:05 AM, Jari Oksanen <jari.oksanen at oulu.fi> wrote:\n\n>  Marc,\n>\n> I see no danger. When you predict with 'newdata', that 'newdata' sh",
       "thread_id": "thread-f7daa79e9e99",
       "thread_depth": 5,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003074.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003074.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/52b9b39e/attachment.pl"
+      ]
     },
     {
       "id": "msg-f2479990cb1b",
@@ -1301,12 +1361,15 @@
         "<CACg2Sf2NEQ-JoNRdw-bJ9stehuiN69g1RmdDoysnb=Hf3VyRQA@mail.gmail.com>",
         "<4FBCAAB3.90101@senckenberg.de>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/64d2076f/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/64d2076f/attachment.pl>",
+      "body_plain": "Thank you Bob - you and Jari seem to be of consensus here :-)\n\nI will have to double check that what I am doing really gives the same\nresult as predict.prcomp. My problem is that I have set up my PCA in a\nslightly different way than you have - or for that matter, different from\nmany of the ordination examples in R -\n\nMy matrix columns are the \"samples\" and the rows are the \"variables\" - just\nthe transpose of what is typical. So I have been calculating the PC\nloadings based on the sample covariances and not the variable covariances.\nIf you don't mind my excursion from ecology, I'll explain that my data\nconsists of measured light spectra (350-800nm) with a value at each nm.\nThus my matrix consists of 451 rows and each column is a sample. I have\nbeen applying my scaling to the samples and not the variables. So, the\nlength of my centers is the length of the number of samples. I thus run\ninto problems when I want to predict from a newdata that contains a\ndifferent number of samples. In the end, I think I am getting reasonable\npredictions by doing this in the way that I described here:\nhttp://stats.stackexchange.com/questions/28916/can-empirical-orthogonal-function-eof-analysis-be-used-as-a-predictive-model/28986#28986\nIt would, however, be comforting to reproduce this prediction in the\nstandard way... I'll keep experimenting.\nCheers, Marc\n\n\nOn Wed, May 23, 2012 at 11:15 AM, Bob O'Hara <bohara at senckenberg.de> wrote:\n\n> On 05/23/2012 10:55 AM, Marc Taylor wrote: -\n>\n>> Hi Jari - one more question if you don't mind. Since the weights of the\n>> PCs\n>> are related to the the amount of variance that they explain in the\n>> original\n>> data - is it problematic to predict the PC scores with a second data set\n>> that has a different amount of variance (e.g. due to differing number of\n>> samples)? In both the 1st and 2nd data sets I have been using scaled\n>> values\n>> for the variables (mean=0 and sd=1 for each sample).\n>> Cheers,\n>> Marc\n>>\n> I'll pretend to be Jari for a moment. :-)\n>\n> PCA just scales and rotates the data in cunning ways, so with the new data\n> you need to scale and rotate it in the same way. If you scale the values\n> first then you've already changed the scaling.\n>\n> What you need to do is either do PCA on the raw data or scale the new data\n> using the mean and varianes of the old data.\n>\n> library(MASS)\n>\n> NVar=5; NObs=50\n> Sigma=matrix(c(\n>  10,0.2,   0, 0,0.4,\n> 0.2,   5,0.1, 0,0.6,\n>   0,0.1,1.0, 0.2,0,\n>   0,   0,0.2, 5, 0,\n> 0.4,0.6,  0, 0,1), nrow=5)\n>\n> # simulate data\n> Data=mvrnorm(NObs, rnorm(NVar), Sigma=Sigma)\n> # Do PCA on scaled data\n> Data.Sc=scale(Data)\n> PC=princomp(Data.Sc)\n>\n> # Simulate new data\n> NewData=mvrnorm(10, rnorm(NVar), Sigma=Sigma)\n> # Do PCA on new data. First do it wrong...\n> PC.wrong=predict(PC, newdata=scale(NewData))\n>\n> # Now scale correctly\n>\n> NewData.Sc=scale(NewData, center=attr(Data.Sc, \"scaled:center\"),\n> scale=attr(Data.Sc, \"scaled:scale\")\n> PC.right=predict(PC, newdata=NewData.Sc)\n>\n> HTH\n>\n> Bob\n>\n> --\n>\n> Bob O'Hara\n>\n> Biodiversity and Climate Research Centre\n> Senckenberganlage 25\n> D-60325 Frankfurt am Main,\n> Germany\n>\n> Tel: +49 69 798 40226\n> Mobile: +49 1515 888 5440\n> WWW:   http://www.bik-f.de/root/**index.php?page_id=219<http://www.bik-f.de/root/index.php?page_id=219>\n> Blog: http://blogs.nature.com/boboh\n> Journal of Negative Results - EEB: www.jnr-eeb.org\n>\n>\n> ______________________________**_________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/**listinfo/r-sig-ecology<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Thank you Bob - you and Jari seem to be of consensus here :-)\n\nI will have to double check that what I am doing really gives the same\nresult as predict.prcomp. My problem is that I have set up my PCA ",
       "thread_id": "thread-f7daa79e9e99",
       "thread_depth": 5,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003076.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003076.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120523/64d2076f/attachment.pl"
+      ]
     },
     {
       "id": "msg-15bdbf7cc26f",
@@ -1318,12 +1381,15 @@
       "subject_clean": "Poisson regression",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120524/32e0cbe3/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120524/32e0cbe3/attachment.pl>",
+      "body_plain": "Dear all\n\n\nto find relation between non-normal response with independents variable i\nuse this code:\n\nmodel1<-gam(Clupeidae~s(depth)+s(temperature)+s(salinity),poisson)\n\nthe result shown is:\n\nThere were 50 or more warnings (use warnings() to see the first 50)\n> warnings(model1)\nWarning messages:\n1: In dpois(y, mu, log = TRUE) : non-integer x = 2.079542 Error in\ncat(list(...), file, sep, fill, labels, append) :\n  argument 2 (type 'list') cannot be handled by 'cat'\n\n\nwhat is meaning it?\n\ndo i allow use it for continue?\n\nthanks\n-- \nMahnaz\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all\n\n\nto find relation between non-normal response with independents variable i\nuse this code:\n\nmodel1<-gam(Clupeidae~s(depth)+s(temperature)+s(salinity),poisson)\n\nthe result shown is:\n\nThere wer",
       "thread_id": "thread-15bdbf7cc26f",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003077.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003077.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120524/32e0cbe3/attachment.pl"
+      ]
     },
     {
       "id": "msg-f43138289381",
@@ -1373,12 +1439,15 @@
       "subject_clean": "Multiple comparisons among predictors generated from same data",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120524/3f0c48ce/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120524/3f0c48ce/attachment.pl>",
+      "body_plain": "Hello,\n\nI'm planning on using a regression model to describe seed set of plants (my\nresponse) using some sort of predictor based on temperature.  I have a\nnumber of temperature variables calculated from the same set of data\n(hourly temperatures for the growing season, converted to variables such as\naverage temperature, maximum temperature, minimum temperature, degree-days\nabove zero Celsius, degree days above ten Celsius, etc...), and I want to\ndecide which one should be included in my model. I know that I would\nideally select one based on \"prior knowledge\" of the system (e.g. so-called\n\"planned comparisons\" or choosing a temperature threshold that is known to\nbe important for the development of seeds), but not much is known about\nthis system.\n\nI've been warned against testing the significance of multiple predictors\nusing p-values, unless I use Bonferroni correction (or some equivalent).\nUnfortunately, using Bonferroni correction would result in something like p\n= 0.05/7 (for seven different temperature variables); a rather small value\nfor detecting anything! I was wondering whether it would be appropriate to\ninstead use likelihood-based techniques (direct comparisons of\nlog-likelihoods or AIC scores) to compare a series of models using each of\nthe alternative predictors in turn, and choose the most relevant\ntemperature variable (i.e. predictor) based on that.\n\nThoughts on the validity of this approach? Would any adjustments have to be\nmade for multiple comparisons if I used this strategy?\n\nJason Straka\nUniversity of Victoria\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hello,\n\nI'm planning on using a regression model to describe seed set of plants (my\nresponse) using some sort of predictor based on temperature.  I have a\nnumber of temperature variables calculated fr",
       "thread_id": "thread-25f57624b3c5",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003080.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003080.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120524/3f0c48ce/attachment.pl"
+      ]
     },
     {
       "id": "msg-1a34f6e1dad4",
@@ -1449,12 +1518,15 @@
         "<CAAHjLoZ2ZX_h2gf9w5oyEQcrOiVXzuOHsk5RtB_uBac=NGVXmA@mail.gmail.com>",
         "<1337933900.30485.33.camel@prometheus.geog.ucl.ac.uk>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120527/b428ca59/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120527/b428ca59/attachment.pl>",
+      "body_plain": "Thank you for the replies, Gavin and Bob.  You make some great points -\nparticularly about the variables being correlated.\nThe model is really for prediction rather than for generating meaningful\ncoefficients.  I'll look into lasso and elastic net.  (It looks like\n\"glmnet\" is a good package to start with?).  The other interesting\ncomplication is that my data are zero-inflated and overdispersed so a lot\nof techniques that are easily applied to typical regression models don't\nwork as well for the particular functions I've been using (zero-inflated\nand hurdle models in the \"pscl\" package).\n\nOn Fri, May 25, 2012 at 1:18 AM, Gavin Simpson <gavin.simpson at ucl.ac.uk>wrote:\n\n> On Thu, 2012-05-24 at 15:00 -0700, J Straka wrote:\n> > Hello,\n> >\n> > I'm planning on using a regression model to describe seed set of plants\n> (my\n> > response) using some sort of predictor based on temperature.  I have a\n> > number of temperature variables calculated from the same set of data\n> > (hourly temperatures for the growing season, converted to variables such\n> as\n> > average temperature, maximum temperature, minimum temperature,\n> degree-days\n> > above zero Celsius, degree days above ten Celsius, etc...), and I want to\n> > decide which one should be included in my model. I know that I would\n> > ideally select one based on \"prior knowledge\" of the system (e.g.\n> so-called\n> > \"planned comparisons\" or choosing a temperature threshold that is known\n> to\n> > be important for the development of seeds), but not much is known about\n> > this system.\n>\n> What is the model for? Understanding so you want to interpret the\n> coefficients directly as something meaningful or for prediction?\n>\n> If the latter I would say it doesn't really matter; choose the model\n> that gives the best out-of-sample predictions (lowest error etc), or\n> average predictions over a set of best/good models. Simply choosing the\n> best model via some sort of selection procedure may result in a model\n> with high variance (change the data a bit and different variables would\n> be selected). If so, consider a regression method that applies shrinkage\n> to the coefficients such as the lasso or the elastic net; this will lead\n> to a small bit of bias in the estimates of the coefficients but should\n> reduce the variance of the final model because you are considering the\n> selection of variables as part of the model itself.\n>\n> If you want to interpret the model coefficients as something real then\n> you have to be very careful doing any form of selection; the stepwise\n> procedures and best subsets all can potentially lead to strong bias in\n> the model coefficients. Be removing a variable from the model in effect\n> you are saying that the sample estimate of the effect of that variable\n> on the response is 0, not some small (statistically insignificant)\n> value.\n>\n> This is a very tricky thing to get right and I'm not sure I know the\n> right answer (or even if there is one!?).\n>\n> > I've been warned against testing the significance of multiple predictors\n> > using p-values, unless I use Bonferroni correction (or some equivalent).\n> > Unfortunately, using Bonferroni correction would result in something\n> like p\n> > = 0.05/7 (for seven different temperature variables); a rather small\n> value\n> > for detecting anything! I was wondering whether it would be appropriate\n> to\n> > instead use likelihood-based techniques (direct comparisons of\n> > log-likelihoods or AIC scores) to compare a series of models using each\n> of\n> > the alternative predictors in turn, and choose the most relevant\n> > temperature variable (i.e. predictor) based on that.\n>\n> Choosing models by AIC or BIC is just the same as doing it using\n> p-values; the selection procedure has all the problems I mention above.\n> LRTs require a significance test of the ratio of the two likelihoods, so\n> you are still doing a series of sequential tests that you might want to\n> control the overal error rate of.\n>\n> There are other corrections for multiple testing. For example, see the\n> p.adjust() function in R for some options.\n>\n> HTH\n>\n> G\n>\n> > Thoughts on the validity of this approach? Would any adjustments have to\n> be\n> > made for multiple comparisons if I used this strategy?\n> >\n> > Jason Straka\n> > University of Victoria\n> >\n> >       [[alternative HTML version deleted]]\n> >\n> > _______________________________________________\n> > R-sig-ecology mailing list\n> > R-sig-ecology at r-project.org\n> > https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n> >\n>\n> --\n> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n>  Dr. Gavin Simpson             [t] +44 (0)20 7679 0522\n>  ECRC, UCL Geography,          [f] +44 (0)20 7679 0565\n>  Pearson Building,             [e] gavin.simpsonATNOSPAMucl.ac.uk\n>  Gower Street, London          [w] http://www.ucl.ac.uk/~ucfagls/\n>  UK. WC1E 6BT.                 [w] http://www.freshwaters.org.uk\n> %~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%~%\n>\n>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Thank you for the replies, Gavin and Bob.  You make some great points -\nparticularly about the variables being correlated.\nThe model is really for prediction rather than for generating meaningful\ncoef",
       "thread_id": "thread-25f57624b3c5",
       "thread_depth": 2,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003084.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003084.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120527/b428ca59/attachment.pl"
+      ]
     },
     {
       "id": "msg-2e37f599f3c0",
@@ -1466,12 +1538,15 @@
       "subject_clean": "Space-Time Model for NVDI",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120529/375e49a9/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120529/375e49a9/attachment.pl>",
+      "body_plain": "Hello everybody.\n\nI would like to perform a space-time model for predict vegetation dynamics\n(2020 and 2050) from NVDI series in the period 2000-2011.\n\nUntil now, I have explored Earth Trends Modeler module in IDRISI Selva but\nit just work for analyzing trends and does not predict. Right now, I am\nexploring Spatio-Temporal geostatistcs trying to fit some of space-time\ncovariance valid functions but for now... I just started with separable\nmodels. Also I have thought to work with a STARMA model but I have not\nfound how to perform this on R. However in any case, I do not think this is\nthe right way.\n\nI am looking predict something illustrative to take a comparison point with\na LUCC prediction model, I can not spend much time on this. Does anybody\ncan help me with a simple idea.\n\nThanks in advance, and my best regards.\n-- \nJaime Burbano Girón\nMaestría en Ciencias Biológicas - Ecología\nUniversidad Nacional de Colombia\nBogotá - Colombia\n(57) 3168573713\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hello everybody.\n\nI would like to perform a space-time model for predict vegetation dynamics\n(2020 and 2050) from NVDI series in the period 2000-2011.\n\nUntil now, I have explored Earth Trends Modeler ",
       "thread_id": "thread-2e37f599f3c0",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003085.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003085.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120529/375e49a9/attachment.pl"
+      ]
     },
     {
       "id": "msg-b2e676a06bac",
@@ -1483,12 +1558,15 @@
       "subject_clean": "adehabitatLT - lavielle segmentation, first passage time",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120530/fcaa02c1/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120530/fcaa02c1/attachment.pl>",
+      "body_plain": "Hi all,\n\n\n\nI am using the adehabitatLT package to identify ARS zones in seabird GPS\ntracks, utilising a first passage time approach.  I would like to use the\nlavielle() function to segment tracks, using first passage time at\nappropriate scales as the parameter for segmentation.  I have generated fpt\nat appropriate scales, identified using varlogfpt.   I have an input data\nframe (a1_lav) with x, y, datetime, fpt@*r*km (where x and y are UTM).  I\nhave tried:\n\n\n\n> lavielle(a1_lav, Lmin=5, Kmax=10, ld=1, type=\"meanvar\", which=\"fpt_11km\")\n\n\n\nBut get an error message:\n\n\n\nError in lavielle.default(g151_burst1_lav, Lmin = 5, Kmax = 10, ld = 1,  :\n\n  No missing values allowed in the series\n\n\n\nThe fpt vector has several ‘NA’s at certain scales, which must be the\nmissing values.\n\n\n\nAny tips on how to use lavielle() more effectively to automate the process\nof identifying ARS zones using fpt, or a way around the ‘NA’s issue, would\nbe very much appreciated.\n\n\n\nMany thanks,\n\n\n\nKylie Scales\n\n\nPostgraduate Researcher\n\nPlymouth Marine Laboratory\n\nProspect Place\n\nPlymouth, UK\n+44 (0)1752 633165\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi all,\n\n\n\nI am using the adehabitatLT package to identify ARS zones in seabird GPS\ntracks, utilising a first passage time approach.  I would like to use the\nlavielle() function to segment tracks, usi",
       "thread_id": "thread-b2e676a06bac",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003086.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003086.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120530/fcaa02c1/attachment.pl"
+      ]
     },
     {
       "id": "msg-de382b6046a2",
@@ -1558,12 +1636,15 @@
       "subject_clean": "species richness",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120530/67e36f5d/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120530/67e36f5d/attachment.pl>",
+      "body_plain": "Hi,\n\n\nI am interested in testing whether increasing the number of plant\nspecies sampled increases the number of herbivore species I find, irrespective\nof the number of herbivores collected.\n\n\nTo do that, I was thinking of fixing the number of\nherbivores collected (e.g. 100) and randomly pulling 99 samples of 100\nherbivores from all possible combinations of 2 plant species, 3 plant species,\n4 plant species, etc. This should then yield a curve with number of plant\nspecies on the x axis and average number of herbivore species found on the y\naxis, always for a sample of 100 herbivores.\n\n\nDoes such a function already exist?\n\n\nMy data (see below) is in matrix form with columns representing\nherbivore species (14) and rows representing plant species (14), with the numbers in the\ncells representing number of specimens collected per herbivore and plant\nspecies combination. \n\n\nI’m not quite sure how to tackle this….\n\n\nThanks!\n\n \n\nLinda\n\n\n \n \n  V1\n  V2\n  V3\n  V4\n  V5\n  V6\n  V7\n  V8\n  V9\n  V10\n  V11\n  V12\n  V13\n  V14\n \n \n  1\n  142\n  2\n  8\n  0\n  0\n  0\n  166\n  0\n  0\n  0\n  1\n  1\n  2\n \n \n  0\n  40\n  2\n  1\n  0\n  0\n  0\n  144\n  0\n  4\n  0\n  0\n  0\n  0\n \n \n  0\n  21\n  0\n  0\n  0\n  0\n  0\n  94\n  0\n  0\n  0\n  0\n  0\n  0\n \n \n  0\n  4\n  0\n  0\n  0\n  0\n  0\n  122\n  0\n  0\n  0\n  0\n  0\n  0\n \n \n  0\n  20\n  2\n  0\n  0\n  0\n  0\n  34\n  0\n  0\n  0\n  0\n  1\n  0\n \n \n  1\n  12\n  0\n  1\n  0\n  0\n  0\n  20\n  0\n  1\n  0\n  0\n  0\n  0\n \n \n  0\n  14\n  0\n  0\n  0\n  0\n  0\n  1\n  0\n  0\n  0\n  0\n  0\n  0\n \n \n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n \n \n  0\n  0\n  0\n  0\n  0\n  0\n  1\n  20\n  0\n  0\n  0\n  0\n  0\n  0\n \n \n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n  0\n \n \n  0\n  23\n  2\n  0\n  0\n  23\n  1\n  464\n  69\n  0\n  4\n  0\n  20\n  0\n \n \n  5\n  6\n  3\n  1\n  1\n  8\n  0\n  123\n  21\n  1\n  0\n  0\n  12\n  0\n \n \n  0\n  1\n  0\n  0\n  0\n  0\n  0\n  41\n  0\n  0\n  0\n  0\n  0\n  0\n \n \n  0\n  14\n  0\n  0\n  0\n  0\n  0\n  3\n  0\n  0\n  0\n  0\n  0\n  0\n \n\n \t\t \t   \t\t  \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\n\n\nI am interested in testing whether increasing the number of plant\nspecies sampled increases the number of herbivore species I find, irrespective\nof the number of herbivores collected.\n\n\nTo do th",
       "thread_id": "thread-75cf2e87996d",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003090.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003090.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120530/67e36f5d/attachment.pl"
+      ]
     },
     {
       "id": "msg-596abbc8c005",
@@ -1575,12 +1656,15 @@
       "subject_clean": "cozigam",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120531/8b74f6ed/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120531/8b74f6ed/attachment.pl>",
+      "body_plain": "Dear all\n\n\n\nfor finding the regression in base of my data with many zero in Clupeidae ,i\nused this code:\n\n\n\nres.tps <- cozigam(Clupeidae~s(temperature,salinity)+s(depth), constraint =\n\"proportional\", family=gaussian)\n\n\n\nbut for checking of this model( find the goodfiness,,,) i have problem. i\nwill be happy  any person help.\n\n\n\nthanks\n\n-- \nMahnaz\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all\n\n\n\nfor finding the regression in base of my data with many zero in Clupeidae ,i\nused this code:\n\n\n\nres.tps <- cozigam(Clupeidae~s(temperature,salinity)+s(depth), constraint =\n\"proportional\", ",
       "thread_id": "thread-596abbc8c005",
       "thread_depth": 0,
       "month": "2012-05",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003091.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2012-May/003091.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20120531/8b74f6ed/attachment.pl"
+      ]
     },
     {
       "id": "msg-c326a1e30f3d",

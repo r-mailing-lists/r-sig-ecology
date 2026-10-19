@@ -143,12 +143,15 @@
       "subject_clean": "plot confidence intervals of a line from a mixed model",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110909/f882f288/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110909/f882f288/attachment.pl>",
+      "body_plain": "Rob;\nI found an example of how to get confidence intervals for predictions from a GLMM on Ben Bolker's GLMM website - (see the Owls examples http://glmm.wikidot.com/examples ).  As an example, I modified the code to work for a model of wading bird capture rate as a function of group size by species interaction that included a random effect for sample location.  The pvar is the se without the random effect variance, and the tvar adds the variance for the random effect.  phi, plo and thi, tlo are the 95% confidence intervals.  The GLMM website is a treasure trove for help with GLMM.\n\nGlobal_model.glmer.bin <- glmer(CAPTURES~ group.bin*SPECIES + (1|SAMPLE) , offset = log(seconds/60), family = poisson, data=Heron.data.nz)\n#get predictions from model (based on B. Bolker analysis of Zurr owl data)\npframe0 <- with(Heron.data.nz,expand.grid(SPECIES=levels(SPECIES),group.bin=levels(group.bin)))\n## construct model matrix\nmm <- model.matrix(~group.bin*SPECIES ,data=pframe0)\n## predictions from each model; first construct linear predictor, then transform to raw scale\npframe1 <- data.frame(pframe0,eta=mm%*%fixef(Global_model.glmer.bin))\npframe1 <- with(pframe1,data.frame(pframe1,captures.minute=exp(eta)))\npvar1 <- diag(mm %*% tcrossprod(vcov(Global_model.glmer.bin),mm))\ntvar1 <- pvar1+VarCorr(Global_model.glmer.bin)$SAMPLE\npframe1 <- data.frame(pframe1,pse=sqrt(pvar1),tse=sqrt(tvar1))\npframe1 <- with(pframe1, data.frame(pframe1, plo=exp(eta-1.96*pse), phi=exp(eta+1.96*pse), tlo=exp(eta-1.96*tse), thi=exp(eta+1.96*tse)))\n\nHope this helps,\nEric\n\nEric D. Stolen, Ph.D.\nMail Code: IHA-300\nKennedy Space Center, FL  32899\noffice: 321-476-4119; cell: 321-480-6799; fax: 321-853-2939; email: eric.d.stolen at nasa.gov<mailto:eric.d.stolen at nasa.gov>\n\n\"..in mathematics you don't understand things. You just get used to them.\"  - John von Neumann\n\n\"It is better to have an approximate answer to the right question, than an exact answer to the wrong question.\" -  John Tukey\n\n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Rob;\nI found an example of how to get confidence intervals for predictions from a GLMM on Ben Bolker's GLMM website - (see the Owls examples http://glmm.wikidot.com/examples ).  As an example, I modif",
       "thread_id": "thread-0a27b28ab3be",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002355.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002355.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110909/f882f288/attachment.pl"
+      ]
     },
     {
       "id": "msg-d4fc1507a0ca",
@@ -160,12 +163,15 @@
       "subject_clean": "generalized least squares linear model (gls in package nlme)",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/a4a45581/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/a4a45581/attachment.pl>",
+      "body_plain": "Dear R-sig-ecology list members,\n\nI was hoping someone might point me in the right direction on using gls\nmodels. I am analyzing the output of a global circulation model coupled with\na biological model (specifically primary production). I would like to\ndetermine what the main drivers of (modeled) phytoplankton blooms are for an\narea. Since my data is both spatially and temporally structured, I was\ndirected toward using a type of \"longitudinal analysis\" where one can first\ndefine some sort of multivariate correlation structure for the variables. I\nhave arrived to the gls model of the nlme package since this seems to allow\nfor such a setup. I was hoping someone might take a look at what I have done\nthus far and see if I'm on the right track here - this is all very new to me\nand I have a lack of experience with time-series related statistics in\ngeneral. Also, and recommendations of literature resources are heartily\nwelcome.\n\nMy structure of my data.frame (DBA_anom) is shown below - I have columns of\nsequential days (DATE), spatial locations (GRID), and several variables (all\nare daily anomalies). As seen in my formula description, chlorophyll a\n(CHLA) is my response variable and the remaining are independent variables.\nI have chosen an corAR1 correlation structure (autoregressive process of\norder 1) although I have no idea if another type might be more appropriate.\nIn this case, the structure is defined as  ~ t | g, specifying a time\ncovariate\nt and, optionally, a grouping factor g.\n\nBased on what I know already of the simulation, the results seem to make\nsense - e.g the results of the ANOVA at the bottom of the script shows\nSIarea to be the most significant variable (highest F).\n\nA stepwise exploration using the step() function does not work with a gls\nmodel object, but this may be possible with the update() function of the\nnlme package. I also wonder if this would be an appropriate exploration for\na simpler model.\n\nThanks for your time - hopefully someone can provide to direction to me!\n\nCheers,\nMarc\n\n\n\n###################\n> head(DBA_anom)\n  DATE GRID    KPPmld         SSS         SST       SIarea         CHLA\n1    1    1 -1.099484  0.03482175  0.13215766 -0.009744769 -0.086013247\n2    2    1 -6.220489  0.02844477  0.04879755  0.000000000 -0.041327087\n3    3    1 -7.536396  0.04694104  0.21328189  0.000000000 -0.023285689\n4    4    1 -5.664270  0.04505420  0.06484846  0.000000000 -0.002691314\n5    5    1 -8.342507  0.01160550 -0.15004615  0.095788471 -0.003169540\n6    6    1 -6.925568 -0.01270628  0.01866706  0.466559513 -0.032798964\n          ZOOC        DIN        DSI         DFE\n1  0.590302229 -1.0477360  -9.778822 -0.06953455\n2  0.023382768 -0.9736977 -10.206437 -0.06445179\n3  0.047022633 -1.0361627 -10.845212 -0.06637471\n4 -0.005949132 -0.8703099 -10.050054 -0.05785720\n5  0.009903580 -0.7285638  -8.736636 -0.05251756\n6 -0.016031075 -0.5012228  -6.452740 -0.04318130\n###\n> fmla <- as.formula(paste(\"CHLA ~ \", paste(predictors, collapse= \"+\")))\n> fmla\nCHLA ~ KPPmld + SSS + SST + SIarea + DIN + DSI + DFE\n> head(DBA_anom)\n  DATE GRID    KPPmld         SSS         SST       SIarea         CHLA\n1    1    1 -1.099484  0.03482175  0.13215766 -0.009744769 -0.086013247\n2    2    1 -6.220489  0.02844477  0.04879755  0.000000000 -0.041327087\n3    3    1 -7.536396  0.04694104  0.21328189  0.000000000 -0.023285689\n4    4    1 -5.664270  0.04505420  0.06484846  0.000000000 -0.002691314\n5    5    1 -8.342507  0.01160550 -0.15004615  0.095788471 -0.003169540\n6    6    1 -6.925568 -0.01270628  0.01866706  0.466559513 -0.032798964\n          ZOOC        DIN        DSI         DFE\n1  0.590302229 -1.0477360  -9.778822 -0.06953455\n2  0.023382768 -0.9736977 -10.206437 -0.06445179\n3  0.047022633 -1.0361627 -10.845212 -0.06637471\n4 -0.005949132 -0.8703099 -10.050054 -0.05785720\n5  0.009903580 -0.7285638  -8.736636 -0.05251756\n6 -0.016031075 -0.5012228  -6.452740 -0.04318130\n###\n> res.gls_anom <- gls(fmla, DBA_anom, correlation = corCAR1(form = ~ DATE |\nGRID), method=\"REML\")\n###\n> summary(res.gls_anom)\nGeneralized least squares fit by REML\n  Model: fmla\n  Data: DBA_anom\n        AIC       BIC   logLik\n  -32916.18 -32845.11 16468.09\n\nCorrelation Structure: Continuous AR(1)\n Formula: ~DATE | GRID\n Parameter estimate(s):\n      Phi\n0.3485592\n\nCoefficients:\n                 Value  Std.Error   t-value p-value\n(Intercept) -0.0001083 0.00062559  -0.17308  0.8626\nKPPmld      -0.0003412 0.00003203 -10.65268  0.0000\nSSS          0.0532678 0.00598450   8.90096  0.0000\nSST         -0.0479192 0.00180631 -26.52881  0.0000\nSIarea      -0.1301407 0.00343821 -37.85133  0.0000\nDIN         -0.0172110 0.00130407 -13.19795  0.0000\nDSI          0.0013754 0.00019727   6.97226  0.0000\nDFE          0.4400665 0.04611328   9.54316  0.0000\n\n Correlation:\n       (Intr) KPPmld SSS    SST    SIarea DIN    DSI\nKPPmld -0.008\nSSS     0.001 -0.306\nSST     0.004 -0.162 -0.319\nSIarea  0.001  0.081 -0.028  0.220\nDIN     0.000 -0.092 -0.453  0.352 -0.031\nDSI     0.006 -0.052  0.017  0.104  0.079  0.060\nDFE     0.008 -0.101 -0.195 -0.033  0.000 -0.421 -0.362\n\nStandardized residuals:\n          Min            Q1           Med            Q3           Max\n-6.0586360710 -0.4968217538  0.0008766495  0.5019521421  7.8378320187\n\nResidual standard error: 0.04141364\nDegrees of freedom: 9024 total; 9016 residual\n###\n> anova(res.gls_anom)\nDenom. DF: 9016\n            numDF   F-value p-value\n(Intercept)     1    0.1069  0.7437\nKPPmld          1   72.4948  <.0001\nSSS             1   15.2707  0.0001\nSST             1  290.9227  <.0001\nSIarea          1 1534.5205  <.0001\nDIN             1   79.9421  <.0001\nDSI             1  125.1287  <.0001\nDFE             1   91.0719  <.0001\n###################\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear R-sig-ecology list members,\n\nI was hoping someone might point me in the right direction on using gls\nmodels. I am analyzing the output of a global circulation model coupled with\na biological mode",
       "thread_id": "thread-d4fc1507a0ca",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002356.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002356.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/a4a45581/attachment.pl"
+      ]
     },
     {
       "id": "msg-0f2a6da0aea2",
@@ -177,12 +183,15 @@
       "subject_clean": "Wrapped cauchy distribution",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/0b756797/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/0b756797/attachment.pl>",
+      "body_plain": "Hi,\n\nI’ve been using the CircStats library to fit a wrapped Cauchy distribution\nto some angular data that I have, using the function:\n\n \n\nwrpcauchy.ml(turn1, mu0, rho0, acc=1e-015)\n\n \n\nWhat I don’t understand is that I get mu values that are larger than pi –\nI’m assuming they should lie from –pi to + pi.\n\nHas anyone else experienced this, or am I doing something wrong? I have\nchecked and all my angular data (step1) are in radians and lie within –pi\nand +pi.\n\n \n\nThanks,\n\nLene Jung Kjaer\n\n \n\n___________________________\n\nLene Jung Kjær\n\nStudsdalvej 20, Taulov\n\n7000 Fredericia, Danmark\n\nTlf: 29 86 96 14\n\nemail: ljkjar at hotmail.com \n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\n\nI’ve been using the CircStats library to fit a wrapped Cauchy distribution\nto some angular data that I have, using the function:\n\n \n\nwrpcauchy.ml(turn1, mu0, rho0, acc=1e-015)\n\n \n\nWhat I don’t un",
       "thread_id": "thread-0f2a6da0aea2",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002357.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002357.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110913/0b756797/attachment.pl"
+      ]
     },
     {
       "id": "msg-f84b52055d3b",
@@ -211,12 +220,15 @@
       "subject_clean": "Envfit function",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110915/ffd68c31/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110915/ffd68c31/attachment.pl>",
+      "body_plain": "Dear R-sig-ecology list members,\n\nI'm using the envfit function in the vegan package to fit environmental\nvariables as vectors onto an NMDS orientation.  If there are large scale\ndifferences between variables, do I need to normalize the data first?  And,\nas a somewhat related matter, do I need to worry about the distribution of\nthe data?  Any help or advice on these questions would be most appreciated!\nThanks, Steve\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear R-sig-ecology list members,\n\nI'm using the envfit function in the vegan package to fit environmental\nvariables as vectors onto an NMDS orientation.  If there are large scale\ndifferences between v",
       "thread_id": "thread-97c4568c9c3a",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002359.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002359.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110915/ffd68c31/attachment.pl"
+      ]
     },
     {
       "id": "msg-663dca333b45",
@@ -264,12 +276,15 @@
       "subject_clean": "Appropriate mixed model?",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110916/5805d42f/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110916/5805d42f/attachment.pl>",
+      "body_plain": "Dear R-sig-ecology list members,\n\nI've got a dataset of mean fish sizes across a large number of sites within a river system. I am trying to determine the relative significance of variation at the level of major tributaries (the river can be split into a number of subcatchments) compared to variation linked to more local factors (continuous variables such as pH, conductivity etc., along with some categorical variables such as local landuse as well). Fish and environmental data are from the same sites.\n\nI had thought of approaching this using lmer to fit a random effects model of the form:\n\nfish.mod1<-lmer(fishsize ~ 1 + (1 + pH + landuse + conductivity (etc..) | subcatchment))\n\nand then examining the contributions to total variance.  Does this seem an appropriate way to proceed? I have gone round in circles with various options for a few days and thought I would get a broader opinion.\nThere is the added complication that data have been collected over a number of years, so ideally I would like to account for between-year variation as well. Is this simply the case of adding year as nested variable after subcatchment:\n\ni.e. fish.mod2<-lmer(fishsize ~ 1 + (1 + pH + landuse + conductivity (etc..) | subcatchment/year))\n\nAny advice would be appreciated!\n\nCheers,\n\nRob\n_________________________________________\nDr Rob Briers\nSchool of Life, Sport and Social Sciences\nEdinburgh Napier University\nSighthill Campus\nEdinburgh\nEH11 4BN\nTel: +44(0)-131-455-2503\nFax: +44(0)-131-455-2291\n\n\n\nEdinburgh Napier University is one of Scotland's top universities for graduate employability.  93.2% of graduates are in work or further study within six months of leaving. The university is also proud winner of the Queen's Anniversary Prize for Higher and Further Education 2009, awarded for innovative housing construction for environmental benefit and quality of life.\n\nThis message is intended for the addressee(s) only\\ and ...{{dropped:19}}",
+      "body_snippet": "Dear R-sig-ecology list members,\n\nI've got a dataset of mean fish sizes across a large number of sites within a river system. I am trying to determine the relative significance of variation at the lev",
       "thread_id": "thread-3e50c8ade54f",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002362.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002362.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110916/5805d42f/attachment.pl"
+      ]
     },
     {
       "id": "msg-d57da10a4626",
@@ -320,12 +335,15 @@
       "subject_clean": "returning site and species coordinates in NMDS using vegan",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/00968912/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/00968912/attachment.pl>",
+      "body_plain": "Hi,\nI am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g. \nspp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds\nI am able to plot the results (species nicely overlaying sites) using \nplot(spp.mds,display=\"species\",type=\"t\",family=\"sans\",font=2,xlim=c(-0.4,0.4),ylim=c(-0.4,0.4))# and points(env.mds,display=\"sites\")\nHowever, try as I might, I am not able to make this figure look pretty enough in R to satisfy journal editors/reviewers. I want to redraw the results in Excel, but I don't know how to extract species and site coordinates from spp.mds. I see that I can do this using isoMDS in MASS, but I'd prefer to use vegan. Perhaps I'm missing something obvious, but I haven't been able to find it anywhere so far. How does one go about extracting those coordinates?\nThanks in advance.\nLauren\n \t\t \t   \t\t  \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\nI am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g. \nspp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds\nI am able to plot the results (species nicely overlaying ",
       "thread_id": "thread-df4af4c77aea",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002365.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002365.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/00968912/attachment.pl"
+      ]
     },
     {
       "id": "msg-9b026319c5d6",
@@ -339,12 +357,15 @@
       "references": [
         "<BAY169-W98AAEA11D2716E96F7B59ACE0A0@phx.gbl>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/07f94b21/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/07f94b21/attachment.pl>",
+      "body_plain": "Hi Lauren,\n\nsite.scores<-scores(mds.result, display=\"sites\")\nspecies.scores<-scores(mds.result, display=\"species\")\n\nNote that your result from metaMDS function should be based on \"raw data\"\nnot on \"distance matrices\". If your input to metaMDS function is a distance\nmatrix you will not be able to recover species scores.\n\nvictor\n\n\n\nOn Tue, Sep 20, 2011 at 5:54 PM, L Quinn <lquinn at hotmail.com> wrote:\n\n>\n> Hi,\n> I am running a simple NMDS as outlined by Jari Oksanen in vegantutor, e.g.\n> spp.dist<-vegdist(spp)spp.mds<-metaMDS(spp,trace=FALSE)spp.mds\n> I am able to plot the results (species nicely overlaying sites) using\n> plot(spp.mds,display=\"species\",type=\"t\",family=\"sans\",font=2,xlim=c(-0.4,0.4),ylim=c(-0.4,0.4))#\n> and points(env.mds,display=\"sites\")\n> However, try as I might, I am not able to make this figure look pretty\n> enough in R to satisfy journal editors/reviewers. I want to redraw the\n> results in Excel, but I don't know how to extract species and site\n> coordinates from spp.mds. I see that I can do this using isoMDS in MASS, but\n> I'd prefer to use vegan. Perhaps I'm missing something obvious, but I\n> haven't been able to find it anywhere so far. How does one go about\n> extracting those coordinates?\n> Thanks in advance.\n> Lauren\n>\n>        [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\n\n-- \nvictor\n_______________________________\n\nVictor Lemes Landeiro\nhttp://ppbio.inpa.gov.br/Port/public/disciplinas2/introducaor/document_view\nfones\n(62)85764316(Oi); (62)81702517(Tim)\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Lauren,\n\nsite.scores<-scores(mds.result, display=\"sites\")\nspecies.scores<-scores(mds.result, display=\"species\")\n\nNote that your result from metaMDS function should be based on \"raw data\"\nnot on \"di",
       "thread_id": "thread-df4af4c77aea",
       "thread_depth": 1,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002366.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002366.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110920/07f94b21/attachment.pl"
+      ]
     },
     {
       "id": "msg-74bf70d8200e",
@@ -453,12 +474,15 @@
       "subject_clean": "Display or save very long matrix",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110921/cb8bb186/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110921/cb8bb186/attachment.pl>",
+      "body_plain": "Hi,\n\nI extract the coordinates and pixel values on my image. Thus I want to\ndisplay all my matrix and save it in a (. txt) file.   \nI used this code:\n\n>library(raster)\n>adresse<-\"C:\\\\Users\\\\Documents\\\\DISC D\\\\\\Images282\"\n>a <- raster(adresse) \n>CentreRaster <- rasterToPoints(a)\n>PixelColonne <- as.data.frame(CentreRaster)\n>PixelColonne <- cbind(PixelColonne,coordonnee =\npaste(PixelColonne[,1],PixelColonne[,2],sep=\" \"))\n>colnames(PixelColonne) <-\nc(\"Longitude\",\"Latitude\",\"ValeurPixel\",\"Coordonnees\")\n>return(PixelColonne)\n>}\n>Mat1 <- RasterToColonne(adresse) \n>Mat1[1:5168101,]  # number of rows = 5168101 \n\nIn the result, I have not all the matrix. Only a part of the matrix\nappears. \nHow can I save the entire matrix to a file (. txt)?   \n\nThank you in advance \nMomadou\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\n\nI extract the coordinates and pixel values on my image. Thus I want to\ndisplay all my matrix and save it in a (. txt) file.   \nI used this code:\n\n>library(raster)\n>adresse<-\"C:\\\\Users\\\\Documents\\",
       "thread_id": "thread-9566fd94a542",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002372.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002372.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110921/cb8bb186/attachment.pl"
+      ]
     },
     {
       "id": "msg-b0ad2c10d088",
@@ -492,12 +516,15 @@
         "<1316639164.64537.YahooMailNeo@web28614.mail.ukl.yahoo.com>",
         "<CAM_vju=HaQt7QM7WnqTgRRuSra290xsU+9P7KUnv0LKHpb1oWQ@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/47e34073/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/47e34073/attachment.pl>",
+      "body_plain": "Hi,\nThank Sarah and David for your help.\nfor David\nGalbraith\nFor the\nmoment, I did not use any text editor, I want to save all my matrix in a file\nwhich can be (.txt) or another.\n   Sorry Sarah I missed a code line, also I tried write.table but I have not a saved file in my folder. \nRasterToColonne transforms raster to Colum.  Here, the complete code used:\n \n>library(raster)\n>adresse<-\"C:\\\\Users\\\\Documents\\\\DISC D\\\\Images282\"\n>RasterToColonne <- function(AdresseRaster){ # to transform\nraster to Colum \n>a <- raster(adresse)\n>CentreRaster <- rasterToPoints(a)\n>PixelColonne <- as.data.frame(CentreRaster)\n>PixelColonne <- cbind(PixelColonne,coordonnee =\n> paste(PixelColonne[,1],PixelColonne[,2],sep=\" \"))\n>colnames(PixelColonne) <-\n> c(\"Longitude\",\"Latitude\",\"ValeurPixel\",\"Coordonnees\")\n>return(PixelColonne)\n>}\n>Mat1 <- RasterToColonne(adresse)\n>write.table(\"C:\\\\Users\\\\Documents\\\\DISC D\\\\ Mat1.txt\",sep=\"\n\")\nThank you for your help \n\nDe : Sarah Goslee <sarah.goslee at gmail.com>\nÀ : momadou sow <momadou at yahoo.fr>\nCc : \"R-sig-ecology at r-project.org\" <R-sig-ecology at r-project.org>\nEnvoyé le : Jeudi 22 Septembre 2011 0h16\nObjet : Re: [R-sig-eco] Display or save very long matrix\n\nHi,\n\nI'm not sure why you want to display a matrix of that size to the screen, but\nwhy not use write.table() to save it to a file?\n\n>Mat1 <- RasterToColonne(adresse)\n\nIf that isn't enough, then we might need to know what the function\nRasterToColonne() does. Or is that the function that you only included\nhalf of in your email?\n\nSarah\n\nOn Wed, Sep 21, 2011 at 5:06 PM, momadou sow <momadou at yahoo.fr> wrote:\n> Hi,\n>\n> I extract the coordinates and pixel values on my image. Thus I want to\n> display all my matrix and save it in a (. txt) file.\n> I used this code:\n>\n>>library(raster)\n>>adresse<-\"C:\\\\Users\\\\Documents\\\\DISC D\\\\\\Images282\"\n>>a <- raster(adresse)\n>>CentreRaster <- rasterToPoints(a)\n>>PixelColonne <- as.data.frame(CentreRaster)\n>>PixelColonne <- cbind(PixelColonne,coordonnee =\n> paste(PixelColonne[,1],PixelColonne[,2],sep=\" \"))\n>>colnames(PixelColonne) <-\n> c(\"Longitude\",\"Latitude\",\"ValeurPixel\",\"Coordonnees\")\n>>return(PixelColonne)\n>>}\n>>Mat1 <- RasterToColonne(adresse)\n>>Mat1[1:5168101,]  # number of rows = 5168101\n>\n> In the result, I have not all the matrix. Only a part of the matrix\n> appears.\n> How can I save the entire matrix to a file (. txt)?\n>\n> Thank you in advance\n> Momadou\n>        [[alternative HTML version deleted]]\n>\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n\n\n\n-- \nSarah Goslee\nhttp://www.stringpage.com\nhttp://www.sarahgoslee.com\nhttp://www.functionaldiversity.org\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\nThank Sarah and David for your help.\nfor David\nGalbraith\nFor the\nmoment, I did not use any text editor, I want to save all my matrix in a file\nwhich can be (.txt) or another.\n   Sorry Sarah I miss",
       "thread_id": "thread-9566fd94a542",
       "thread_depth": 2,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002374.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002374.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/47e34073/attachment.pl"
+      ]
     },
     {
       "id": "msg-f324b905d522",
@@ -535,12 +562,15 @@
         "<1316687009.33332.YahooMailNeo@web28602.mail.ukl.yahoo.com>",
         "<CAM_vjunHHzJkWrfKhf5PnHMpEa1Gw09judjBd_4O2-9UUXbMDw@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/488865c3/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/488865c3/attachment.pl>",
+      "body_plain": "Hi,\nThank very much Sarah, With your help, the problem is solved.\nMomadou\n\nDe : Sarah Goslee <sarah.goslee at gmail.com>\nÀ : momadou sow <momadou at yahoo.fr>\nCc : \"R-sig-ecology at r-project.org\" <R-sig-ecology at r-project.org>\nEnvoyé le : Jeudi 22 Septembre 2011 13h56\nObjet : Re: Re : [R-sig-eco] Display or save very long matrix\n\nExcerpted from below, because all else is irrelevant:\n>write.table(\"C:\\\\Users\\\\Documents\\\\DISC D\\\\ Mat1.txt\",sep=\" \")\n\nYou need to tell R *what* to write to a file, not just the file name.\nPlease read ?write.table and also try\nwrite.table(Mat1, \"C:\\\\Users\\\\Documents\\\\DISC D\\\\ Mat1.txt\",sep=\" \")\n\nSarah\n\nOn Thu, Sep 22, 2011 at 6:23 AM, momadou sow <momadou at yahoo.fr> wrote:\n> Hi,\n> Thank Sarah and David for your help.\n> for David Galbraith\n> For the moment, I did not use any text editor, I want to save all my matrix\n> in a file which can be (.txt) or another.\n>    Sorry Sarah I missed a code line, also I tried write.table but I have not\n> a saved file in my folder.\n> RasterToColonne transforms raster to Colum.  Here, the complete code used:\n>\n>>library(raster)\n>>adresse<-\"C:\\\\Users\\\\Documents\\\\DISC D\\\\Images282\"\n>>RasterToColonne <- function(AdresseRaster){ # to transform raster to Colum\n>>a <- raster(adresse)\n>>CentreRaster <- rasterToPoints(a)\n>>PixelColonne <- as.data.frame(CentreRaster)\n>>PixelColonne <- cbind(PixelColonne,coordonnee =\n>> paste(PixelColonne[,1],PixelColonne[,2],sep=\" \"))\n>>colnames(PixelColonne) <-\n>> c(\"Longitude\",\"Latitude\",\"ValeurPixel\",\"Coordonnees\")\n>>return(PixelColonne)\n>>}\n>>Mat1 <- RasterToColonne(adresse)\n>>write.table(\"C:\\\\Users\\\\Documents\\\\DISC D\\\\ Mat1.txt\",sep=\" \")\n> Thank you for your help\n> De : Sarah Goslee <sarah.goslee at gmail.com>\n> À : momadou sow <momadou at yahoo.fr>\n> Cc : \"R-sig-ecology at r-project.org\" <R-sig-ecology at r-project.org>\n> Envoyé le : Jeudi 22 Septembre 2011 0h16\n> Objet : Re: [R-sig-eco] Display or save very long matrix\n>\n> Hi,\n>\n> I'm not sure why you want to display a matrix of that size to the screen,\n> but\n> why not use write.table() to save it to a file?\n>\n>>Mat1 <- RasterToColonne(adresse)\n>\n> If that isn't enough, then we might need to know what the function\n> RasterToColonne() does. Or is that the function that you only included\n> half of in your email?\n>\n> Sarah\n>\n> On Wed, Sep 21, 2011 at 5:06 PM, momadou sow <momadou at yahoo.fr> wrote:\n>> Hi,\n>>\n>> I extract the coordinates and pixel values on my image. Thus I want to\n>> display all my matrix and save it in a (. txt) file.\n>> I used this code:\n>>\n>>>library(raster)\n>>>adresse<-\"C:\\\\Users\\\\Documents\\\\DISC D\\\\\\Images282\"\n>>>a <- raster(adresse)\n>>>CentreRaster <- rasterToPoints(a)\n>>>PixelColonne <- as.data.frame(CentreRaster)\n>>>PixelColonne <- cbind(PixelColonne,coordonnee =\n>> paste(PixelColonne[,1],PixelColonne[,2],sep=\" \"))\n>>>colnames(PixelColonne) <-\n>> c(\"Longitude\",\"Latitude\",\"ValeurPixel\",\"Coordonnees\")\n>>>return(PixelColonne)\n>>>}\n>>>Mat1 <- RasterToColonne(adresse)\n>>>Mat1[1:5168101,]  # number of rows = 5168101\n>>\n>> In the result, I have not all the matrix. Only a part of the matrix\n>> appears.\n>> How can I save the entire matrix to a file (. txt)?\n>>\n>> Thank you in advance\n>> Momadou\n>>\n-- \nSarah Goslee\nhttp://www.functionaldiversity.org\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\nThank very much Sarah, With your help, the problem is solved.\nMomadou\n\nDe : Sarah Goslee <sarah.goslee at gmail.com>\nÀ : momadou sow <momadou at yahoo.fr>\nCc : \"R-sig-ecology at r-project.org\" <R-",
       "thread_id": "thread-9566fd94a542",
       "thread_depth": 4,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002376.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002376.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/488865c3/attachment.pl"
+      ]
     },
     {
       "id": "msg-cb8e459080bb",
@@ -552,12 +582,15 @@
       "subject_clean": "vegan rda",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/e8336d7b/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/e8336d7b/attachment.pl>",
+      "body_plain": "Dear R users\n\nI am calculating a RDA for a dependent matrix (different variables for  \ntree performance) and different explanatory variables (species  \nidentitiy, diversity, soil data, ground vegetation). I would very much  \nappreciate some help with my txt input file for the vegan function.\n\nAs for standard RDA's I have different plots (lines, the dependent  \nmatrix) and for each plot a value for diversity, soil and vegetation  \n(in columns, the environmental matrix). I additionally have different  \nspecies for each plot (separated in columns). In standard RDA's for  \nvegetational data you put your dependent variable (e.g. number of a  \nspecific species in the specific plot) below your species columns.\nProblem: I do not have vegetational data with values 0, 1,2, 3 for  \neach plot and species. I have 6 species in total, but the plots have a  \npredetermined diversity level (e.g. 1, 2, 4, 6). So in comparison to  \nvegetational data I do not have '0' values. For example in my 4  \nspecies plot I have 4 species and two missing (NA) values. I have read  \nsome papers using the same analysis for biodiversity experiments, so  \nit should be appropriate. So I decided to put the dependent variables  \nseparately in different variables and to give species values as the  \nproportion within the plot (2-species plot: 0.5+0.5, 1-species plot:  \n1.0).\n\nMy txt file looks like\n\ntree height - crown PA - tree biomass (all dependent variables) -  \nDiversity - Species A - Species B - Species C - Species D - Soil -  \nVegetation\n10                     20              \n15 \n                                                                            2 \n              0                      0.5                  \n0.5            0                    16        25\n20                      56               \n36 \n                                                                          1 \n              1                      0                        \n0              0                   22        45\n\n\nSo I changed the code for rda (dependent variable on the right of the  \ntilde and the explanatory variable on the left of the tilde). In  \nstandad RDA the dependent variable would be on the left. I tried this,  \nbut then I was getting points for the dependent variables and not  \narrows. it is because RDA tried to do an RDA on the dfferent species  \n(but there is no dependent variable, but just die identity). However,  \nI get some error message changing the R-code: Error in  \nmodel.frame.default(formula, data, na.action = na.fail, xlev = xlev) :\n   invalid type (list) for variable 'height'. And a second problem is  \nthat I wanted to include the other environmental matrix (env). I tried  \nto include the second matrix on the right of the tilde, but rda was  \nproducing an error.\n\nA last question: Some rare NA values within my env matrix. na.rm=TRUE  \ndoes not seem to work with rda. Does anyone know how to work with NA  \nvalues and RDA (according to the list it seems a bit more complex, but  \nmaybe in the meanwhile there is a better solution).\n\nMany thanks for any hint or comments\nSibylle\n\nME<-read.table(\"ME_rda.txt\", na.strings=\"*\", header=TRUE)\n\nheight<-ME[,3:6]\nmortality<-ME[,7:9]\nspecies<-ME[,11:16]\nenv<-ME[,10:33]\n\n\nlibrary(vegan)\nME_rda<-rda(species~height, scale=TRUE)\nME_rda\nplot(ME_rda, scaling=-1)\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear R users\n\nI am calculating a RDA for a dependent matrix (different variables for  \ntree performance) and different explanatory variables (species  \nidentitiy, diversity, soil data, ground vegetati",
       "thread_id": "thread-cb8e459080bb",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002377.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002377.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110922/e8336d7b/attachment.pl"
+      ]
     },
     {
       "id": "msg-78009fa3f9bf",
@@ -569,12 +602,15 @@
       "subject_clean": "glm coefficients",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/bd44ca0c/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/bd44ca0c/attachment.pl>",
+      "body_plain": "Hello,\n\n\nIs there a way to add up coefficients from a glm model for an ANCOVA to get\nthe coefficients for each term?\n\nFor example, in the following:\ndat <- data.frame(response = rnorm(9), size = rnorm(9),  covariate =\nc(1,1,1,1,0,0,0,0,0))\nmodel <- glm(response ~ size * covariate, data = dat)\n> coef(model)\n   (Intercept)           size                covariate       size:covariate\n    -0.2995964     -0.1969266      0.7158756      1.2829886\n\nwe are interested in the coefficients for the intercepts for size at both\nlevels of the covariate  (0 and 1), and the slopes for each line. This\nrequires adding up coefficients from the above output.\n\nAre there built in base functions or in other packages that do these\nadditions?\n\n\nThanks!\n__\nScott Chamberlain\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hello,\n\n\nIs there a way to add up coefficients from a glm model for an ANCOVA to get\nthe coefficients for each term?\n\nFor example, in the following:\ndat <- data.frame(response = rnorm(9), size = rnorm",
       "thread_id": "thread-78009fa3f9bf",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002378.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002378.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/bd44ca0c/attachment.pl"
+      ]
     },
     {
       "id": "msg-883f7c53c096",
@@ -586,12 +622,15 @@
       "subject_clean": "Help with optim",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/34973228/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/34973228/attachment.pl>",
+      "body_plain": "Hi,\n\n \n\nI’m trying to estimate different parameters in an alternative wrapped Cauchy\ndistribution (where mu (mui) is dependent on several variables (such as c, z\nand mu0), where c is a constant) and using the following log-likelihood and\nMLE functions:\n\n \n\n###log likelihood for  wrapped cauchy ###\n\nwrappedCauchy.lik<-function(theta,y,x,z){\n\nn<-nrow(y)\n\n \n\nmu0 <- theta[1]\n\nrho <- theta[2]\n\nc <- theta[3]\n\nmui <- mu0+(x-mu0)*(1-exp(-c*z))\n\n \n\nlogl<-sum(log((1-(rho^2))/(1+(rho^2)-2*rho*cos(y-mui))/(2*pi)))\n\nreturn(-logl)\n\n}\n\n \n\n##Method for MLE###\n\nd <- optim(c(mu0,rho0, 2.3),wrappedCauchy.lik,y=turn1,x = HRturns1, z =\nHRDistance1, method=\"CG\")\n\n \n\n \n\nThe problem here is that the optim results are equal to the initial values\nand therefore changes dependent on those values – am I doing something wrong\nhere?\n\nWhen I run a simpler version of the wrapped cauchy – just estimating mu and\nrho (without mu being dependent on c), the optim estimates seem to work as\nthe are different from the initial values. Is it a problem trying to get MLE\nfor a constant – in this case c?\n\n \n\nThanks\n\nLene\n\n \n\n___________________________\n\nLene Jung Kjær\n\nStudsdalvej 20, Taulov\n\n7000 Fredericia, Danmark\n\nTlf: 29 86 96 14\n\nemail: ljkjar at hotmail.com \n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\n\n \n\nI’m trying to estimate different parameters in an alternative wrapped Cauchy\ndistribution (where mu (mui) is dependent on several variables (such as c, z\nand mu0), where c is a constant) and u",
       "thread_id": "thread-883f7c53c096",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002379.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002379.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110923/34973228/attachment.pl"
+      ]
     },
     {
       "id": "msg-2a212ca12c9c",
@@ -685,12 +724,15 @@
         "<CD3C742A-21FD-4900-8120-D8E04F9A0B22@umbc.edu>",
         "<DD674815A0F34C8ABA829864D156FC42@botanica1>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/65473539/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/65473539/attachment.pl>",
+      "body_plain": "Aitor - this is extremely helpful.  One last question.  How can I get the standard error for a coefficient if the one reported is for the difference?\n\nThanks - Chris\n\n\n-- \nChristopher M. Swan, Ph.D.\nAssociate Professor\nDept. of Geography & Environmental Systems\nUniversity of Maryland, Baltimore County\n211 Sondheim Hall\n1000 Hilltop Circle\nBaltimore, MD 21250\nChris.Swan at umbc.edu\nhttp://www.umbc.edu/people/cmswan\n(410) 455-3957\n\n\n\n\n\n\n\n\n\nOn Sep 25, 2011, at 11:09 AM, Aitor Gastón wrote:\n\n> Chris,\n> \n> In your example, the intercept for CatVar1=1  is 0.7988+(-2.0183).\n> The standar error of the CatVar1 line is the standard error of the difference\n> \n> You can use the multcomp package for pairwise comparisons, try this:\n> \n> set.seed(100) #fixed seed to get reproducible results\n> dat <- data.frame(response = rnorm(100), size = rnorm(100),  CatVar =\n> sample(c(\"A\",\"B\",\"C\"),100,replace=T))\n> model <- glm(response ~ size * CatVar, data = dat)\n> coef(model)\n> \n> plot(dat$size,dat$response,col=dat$CatVar)\n> abline(a=coef(model)[1],b=coef(model)[2],col=1)\n> abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,5)]),col=2)\n> abline(a=sum(coef(model)[c(1,4)]),b=sum(coef(model)[c(2,6)]),col=3)\n> \n> require(multcomp)\n> summary(glht(model,linfct=mcp(CatVar=\"Tukey\")))\n> \n> --------------------------------------------------\n> From: \"Chris Swan\" <cmswan at umbc.edu>\n> Sent: Sunday, September 25, 2011 4:08 PM\n> To: \"Aitor Gastón\" <aitor.gaston at upm.es>\n> Cc: \"Scott Chamberlain\" <scttchamberlain4 at gmail.com>; <R-sig-ecology at r-project.org>\n> Subject: Re: [R-sig-eco] glm coefficients\n> \n>> I am following this and have two other questions.\n>> \n>> 1) The first is how to get the correct standard errors for each of the coefficients?  In the example offered, asking for summary(model) will yield, in part, the following (please understand my output will differ given the data generated is random):\n>> \n>> Coefficients:\n>>            Estimate Std. Error t value Pr(>|t|)\n>> (Intercept)    0.7988     0.5801   1.377    0.227\n>> size          -0.5437     0.7997  -0.680    0.527\n>> CatVar1       -2.0183     1.0573  -1.909    0.115\n>> size:CatVar1  -0.5047     1.2368  -0.408    0.700\n>> \n>> \n>> To get the intercept for the CatVar1=1 line, one needs 0.7988-(-2.0183) = 2.18.  Is the standard error for this estimate 1.0573?\n>> \n>> \n>> 2) Suppose there were three or more categorical variables.  How can one perform pairwise comparisons between coefficients AND get the associated SE of the difference?  It seems that this would be quite desirable, yet I cannot find a package for this. I am looking for a method similar to the SAS implementation of the ESTIMATE statement.\n>> \n>> \n>> \n>> -- \n>> Christopher M. Swan, Ph.D.\n>> Associate Professor\n>> Dept. of Geography & Environmental Systems\n>> University of Maryland, Baltimore County\n>> 211 Sondheim Hall\n>> 1000 Hilltop Circle\n>> Baltimore, MD 21250\n>> Chris.Swan at umbc.edu\n>> http://www.umbc.edu/people/cmswan\n>> (410) 455-3957\n>> \n>> \n>> \n>> \n>> \n>> \n>> \n>> \n>> \n>> On Sep 24, 2011, at 4:52 PM, Aitor Gastón wrote:\n>> \n>>> In your example there is not categorical variables and you need at least one for ANCOVA.\n>>> Try the following, is the same dataset using factor() to create a categorical variable (named CatVar):\n>>> \n>>> dat <- data.frame(response = rnorm(9), size = rnorm(9),  CatVar =\n>>> factor(c(1,1,1,1,0,0,0,0,0)))\n>>> model <- glm(response ~ size * CatVar, data = dat)\n>>> coef(model)\n>>> \n>>> You will get:\n>>> \n>>> (Intercept)         size      CatVar1 size:CatVar1\n>>> 0.2141371   -0.7847063   -1.8409264    3.3637699\n>>> \n>>> The first coefficient (labeled \"Intercept\") is the intercept for CatVar = 0.\n>>> The second coefficient (labeled \"size\") is the slope for CatVar=0\n>>> The third coefficient (labeled \"CatVar1\") is the difference between the intercept for CatVar = 0 and the intercept for CatVar = 1\n>>> The fourth coefficient (\"labeled size:CatVar\") is the difference between the slope for CatVar = 0 and the slope for CatVar = 1\n>>> \n>>> You can check it plotting this:\n>>> \n>>> plot(dat$size,dat$response,col=dat$CatVar)\n>>> abline(a=coef(model)[1],b=coef(model)[2],col=1)\n>>> abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,4)]),col=2)\n>>> \n>>> This way of presenting coefficients is the default in R (treatment contrast) but there are other alternatives, see ?contr.treatment.\n>>> \n>>> Hope it helps,\n>>> \n>>> Aitor\n>>> \n>>> \n>>> --------------------------------------------------\n>>> From: \"Scott Chamberlain\" <scttchamberlain4 at gmail.com>\n>>> Sent: Friday, September 23, 2011 5:59 PM\n>>> To: <R-sig-ecology at r-project.org>\n>>> Subject: [R-sig-eco] glm coefficients\n>>> \n>>>> Hello,\n>>>> \n>>>> \n>>>> Is there a way to add up coefficients from a glm model for an ANCOVA to get\n>>>> the coefficients for each term?\n>>>> \n>>>> For example, in the following:\n>>>> dat <- data.frame(response = rnorm(9), size = rnorm(9),  covariate =\n>>>> c(1,1,1,1,0,0,0,0,0))\n>>>> model <- glm(response ~ size * covariate, data = dat)\n>>>>> coef(model)\n>>>> (Intercept)           size                covariate size:covariate\n>>>>  -0.2995964     -0.1969266      0.7158756      1.2829886\n>>>> \n>>>> we are interested in the coefficients for the intercepts for size at both\n>>>> levels of the covariate  (0 and 1), and the slopes for each line. This\n>>>> requires adding up coefficients from the above output.\n>>>> \n>>>> Are there built in base functions or in other packages that do these\n>>>> additions?\n>>>> \n>>>> \n>>>> Thanks!\n>>>> __\n>>>> Scott Chamberlain\n>>>> \n>>>> [[alternative HTML version deleted]]\n>>>> \n>>>> _______________________________________________\n>>>> R-sig-ecology mailing list\n>>>> R-sig-ecology at r-project.org\n>>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>>> \n>>> \n>>> _______________________________________________\n>>> R-sig-ecology mailing list\n>>> R-sig-ecology at r-project.org\n>>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>> \n> \n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Aitor - this is extremely helpful.  One last question.  How can I get the standard error for a coefficient if the one reported is for the difference?\n\nThanks - Chris\n\n\n-- \nChristopher M. Swan, Ph.D.\nA",
       "thread_id": "thread-78009fa3f9bf",
       "thread_depth": 4,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002384.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002384.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/65473539/attachment.pl"
+      ]
     },
     {
       "id": "msg-6721b97ee963",
@@ -708,12 +750,15 @@
         "<DD674815A0F34C8ABA829864D156FC42@botanica1>",
         "<92232315-EFCB-45BE-BD65-9C602E3FA792@umbc.edu>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/44d11ea1/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/44d11ea1/attachment.pl>",
+      "body_plain": "By default R will calculate the standard error for the intercept of the first (alphabetically) level of the categorical variable, i.e., the reference level.\n\n \n\nYou could change the reference level using relevel() and refit the model.\n\n \n\nThis approach will return the numbers you want, but I'm not sure if it makes sense for an ANCOVA or ANOVA. I understand that the goal of those analysis is to compare intercepts and slopes between levels, and that's why R calculates the standard errors of the differences.\n\n\n\nAitor\n\n \n\n\n\nFrom: Chris Swan \nSent: Sunday, September 25, 2011 7:38 PM\nTo: Aitor Gastón \nCc: Scott Chamberlain ; R-sig-ecology at r-project.org \nSubject: Re: [R-sig-eco] glm coefficients\n\n\nAitor - this is extremely helpful.  One last question.  How can I get the standard error for a coefficient if the one reported is for the difference? \n\n\nThanks - Chris\n\n\n\n\n-- \nChristopher M. Swan, Ph.D.\nAssociate Professor\nDept. of Geography & Environmental Systems\nUniversity of Maryland, Baltimore County\n211 Sondheim Hall\n1000 Hilltop Circle\nBaltimore, MD 21250\nChris.Swan at umbc.edu\nhttp://www.umbc.edu/people/cmswan\n(410) 455-3957\n\n\n\n\n\n\n\n\n\n\n\nOn Sep 25, 2011, at 11:09 AM, Aitor Gastón wrote:\n\n\n  Chris,\n\n  In your example, the intercept for CatVar1=1  is 0.7988+(-2.0183).\n  The standar error of the CatVar1 line is the standard error of the difference\n\n  You can use the multcomp package for pairwise comparisons, try this:\n\n  set.seed(100) #fixed seed to get reproducible results\n  dat <- data.frame(response = rnorm(100), size = rnorm(100),  CatVar =\n  sample(c(\"A\",\"B\",\"C\"),100,replace=T))\n  model <- glm(response ~ size * CatVar, data = dat)\n  coef(model)\n\n  plot(dat$size,dat$response,col=dat$CatVar)\n  abline(a=coef(model)[1],b=coef(model)[2],col=1)\n  abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,5)]),col=2)\n  abline(a=sum(coef(model)[c(1,4)]),b=sum(coef(model)[c(2,6)]),col=3)\n\n  require(multcomp)\n  summary(glht(model,linfct=mcp(CatVar=\"Tukey\")))\n\n  --------------------------------------------------\n  From: \"Chris Swan\" <cmswan at umbc.edu>\n  Sent: Sunday, September 25, 2011 4:08 PM\n  To: \"Aitor Gastón\" <aitor.gaston at upm.es>\n  Cc: \"Scott Chamberlain\" <scttchamberlain4 at gmail.com>; <R-sig-ecology at r-project.org>\n  Subject: Re: [R-sig-eco] glm coefficients\n\n\n    I am following this and have two other questions.\n\n\n\n    1) The first is how to get the correct standard errors for each of the coefficients?  In the example offered, asking for summary(model) will yield, in part, the following (please understand my output will differ given the data generated is random):\n\n\n\n    Coefficients:\n\n               Estimate Std. Error t value Pr(>|t|)\n\n    (Intercept)    0.7988     0.5801   1.377    0.227\n\n    size          -0.5437     0.7997  -0.680    0.527\n\n    CatVar1       -2.0183     1.0573  -1.909    0.115\n\n    size:CatVar1  -0.5047     1.2368  -0.408    0.700\n\n\n\n\n\n    To get the intercept for the CatVar1=1 line, one needs 0.7988-(-2.0183) = 2.18.  Is the standard error for this estimate 1.0573?\n\n\n\n\n\n    2) Suppose there were three or more categorical variables.  How can one perform pairwise comparisons between coefficients AND get the associated SE of the difference?  It seems that this would be quite desirable, yet I cannot find a package for this. I am looking for a method similar to the SAS implementation of the ESTIMATE statement.\n\n\n\n\n\n\n\n    -- \n\n    Christopher M. Swan, Ph.D.\n\n    Associate Professor\n\n    Dept. of Geography & Environmental Systems\n\n    University of Maryland, Baltimore County\n\n    211 Sondheim Hall\n\n    1000 Hilltop Circle\n\n    Baltimore, MD 21250\n\n    Chris.Swan at umbc.edu\n\n    http://www.umbc.edu/people/cmswan\n\n    (410) 455-3957\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    On Sep 24, 2011, at 4:52 PM, Aitor Gastón wrote:\n\n\n\n      In your example there is not categorical variables and you need at least one for ANCOVA.\n\n      Try the following, is the same dataset using factor() to create a categorical variable (named CatVar):\n\n\n\n      dat <- data.frame(response = rnorm(9), size = rnorm(9),  CatVar =\n\n      factor(c(1,1,1,1,0,0,0,0,0)))\n\n      model <- glm(response ~ size * CatVar, data = dat)\n\n      coef(model)\n\n\n\n      You will get:\n\n\n\n      (Intercept)         size      CatVar1 size:CatVar1\n\n      0.2141371   -0.7847063   -1.8409264    3.3637699\n\n\n\n      The first coefficient (labeled \"Intercept\") is the intercept for CatVar = 0.\n\n      The second coefficient (labeled \"size\") is the slope for CatVar=0\n\n      The third coefficient (labeled \"CatVar1\") is the difference between the intercept for CatVar = 0 and the intercept for CatVar = 1\n\n      The fourth coefficient (\"labeled size:CatVar\") is the difference between the slope for CatVar = 0 and the slope for CatVar = 1\n\n\n\n      You can check it plotting this:\n\n\n\n      plot(dat$size,dat$response,col=dat$CatVar)\n\n      abline(a=coef(model)[1],b=coef(model)[2],col=1)\n\n      abline(a=sum(coef(model)[c(1,3)]),b=sum(coef(model)[c(2,4)]),col=2)\n\n\n\n      This way of presenting coefficients is the default in R (treatment contrast) but there are other alternatives, see ?contr.treatment.\n\n\n\n      Hope it helps,\n\n\n\n      Aitor\n\n\n\n\n\n      --------------------------------------------------\n\n      From: \"Scott Chamberlain\" <scttchamberlain4 at gmail.com>\n\n      Sent: Friday, September 23, 2011 5:59 PM\n\n      To: <R-sig-ecology at r-project.org>\n\n      Subject: [R-sig-eco] glm coefficients\n\n\n\n        Hello,\n\n\n\n\n\n        Is there a way to add up coefficients from a glm model for an ANCOVA to get\n\n        the coefficients for each term?\n\n\n\n        For example, in the following:\n\n        dat <- data.frame(response = rnorm(9), size = rnorm(9),  covariate =\n\n        c(1,1,1,1,0,0,0,0,0))\n\n        model <- glm(response ~ size * covariate, data = dat)\n\n          coef(model)\n\n        (Intercept)           size                covariate size:covariate\n\n         -0.2995964     -0.1969266      0.7158756      1.2829886\n\n\n\n        we are interested in the coefficients for the intercepts for size at both\n\n        levels of the covariate  (0 and 1), and the slopes for each line. This\n\n        requires adding up coefficients from the above output.\n\n\n\n        Are there built in base functions or in other packages that do these\n\n        additions?\n\n\n\n\n\n        Thanks!\n\n        __\n\n        Scott Chamberlain\n\n\n\n        [[alternative HTML version deleted]]\n\n\n\n        _______________________________________________\n\n        R-sig-ecology mailing list\n\n        R-sig-ecology at r-project.org\n\n        https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n\n\n      _______________________________________________\n\n      R-sig-ecology mailing list\n\n      R-sig-ecology at r-project.org\n\n      https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "By default R will calculate the standard error for the intercept of the first (alphabetically) level of the categorical variable, i.e., the reference level.\n\n \n\nYou could change the reference level us",
       "thread_id": "thread-78009fa3f9bf",
       "thread_depth": 5,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002385.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002385.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/44d11ea1/attachment.pl"
+      ]
     },
     {
       "id": "msg-c2c152e3816b",
@@ -725,12 +770,15 @@
       "subject_clean": "Calculating spatial autocorrelation (Moran's I) when have zero-inflated data?",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/92398338/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/92398338/attachment.pl>",
+      "body_plain": "Dear all:\n\nI was wondering if you have suggestions on how to analyze the spatial\nautocorrelation of tree abundance in a grid of contiguous quadrats given\nthat the data set follows a zero inflated distribution, i.e., in many\nquadrats the abundance of a species is zero.\n\nThank you for your time and consideration,\nLaura\n\n-- \n\" Genius is the summed production of the many with the names of the few\nattached for easy recall, unfairly so to other scientists\"\n\n- E. O. Wilson (The Diversity of Life)\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all:\n\nI was wondering if you have suggestions on how to analyze the spatial\nautocorrelation of tree abundance in a grid of contiguous quadrats given\nthat the data set follows a zero inflated dist",
       "thread_id": "thread-c2c152e3816b",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002386.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002386.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110925/92398338/attachment.pl"
+      ]
     },
     {
       "id": "msg-e2f2522a0a61",
@@ -841,12 +889,15 @@
       "subject_clean": "Confidence intervals in lmer",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/64730d83/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/64730d83/attachment.pl>",
+      "body_plain": "Dear list members,\n\nI have a significant interaction between two continuous variables (it\nhappens to be a mixed model in lmer, but I imagine the same is applicable to\na glm). The interaction tells me that the relationship between z and y\nchanges as a function of x, but I want to know whether y has a significant\neffect on z at a given value of x. For instance, the interaction might show\nthat the relationship between body weight and fitness changes with age, but\nI want to know if the association between body weight and fitness is\nsignificantly positive at the age of 1. Therefore, I'd like to estimate 95%\nCIs or SEs around the association between body weight and fitness at a given\nage, but have yet to work out how to do it. Any suggestions would be greatly\nappreciated.\n\nBest wishes,\nAdam\n\n\n\n\n-- \nAdam Hayward\nPost-Doctoral Research Associate\nDepartment of Animal and Plant Sciences\nAlfred Denny Building\nUniversity of Sheffield\nWestern Bank\nSheffield S10 2TN\nUK\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear list members,\n\nI have a significant interaction between two continuous variables (it\nhappens to be a mixed model in lmer, but I imagine the same is applicable to\na glm). The interaction tells me ",
       "thread_id": "thread-63d3cfa82206",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002392.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002392.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/64730d83/attachment.pl"
+      ]
     },
     {
       "id": "msg-bc8a78a1cf95",
@@ -858,12 +909,15 @@
       "subject_clean": "\"lack of fit\" computation from LME model?",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/ccb55711/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/ccb55711/attachment.pl>",
+      "body_plain": "Dear list,\nI recently submitted a paper in which I analyzed plant growth response to several environmental factors in several sites. I wanted to account for the variation attributable to the different sites, so I made \"site\" a random effect in a simple LME regression model (e.g. m<-lme(plantgrowth~nitrogen,random=~1|site,method=\"ML\"); library nlme). I had 10 observations in each of 11 sites. Seemed fairly straightforward to me.\nWhen reviews came back, one reviewer and the editor requested that I compute a \"lack of fit\" term for my regressions without which they couldn't be confident that linear models were most appropriate for my data. I have not done this before, and I have not seen anything about this for LME models when I have searched. I have only seen it for regular regression tests, but I don't think I can apply what I would find in regular regression tests to this LME model because I would lose the random effect. I know about model checking via diagnostic plots, etc, but I don't think this is what they want. They seem to want me to generate an F statistic and a p value for this \"lack of fit\" term. \nMy questions are: \n1.) is this even possible/practical within a LME model? \n2.) if so, what steps should I take to complete this task?3.) if not, can you suggest other diagnostics that might satisfy what they're looking for?\nI have a feeling this is a fairly elementary question/procedure, so I hope I am not wasting anyone's time. Please help if you can. I am happy to provide any more information that may be needed.\nThank you in advance.\nLauren Quinn\n\n\n\n   \t\t \t   \t\t  \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear list,\nI recently submitted a paper in which I analyzed plant growth response to several environmental factors in several sites. I wanted to account for the variation attributable to the different",
       "thread_id": "thread-bc8a78a1cf95",
       "thread_depth": 0,
       "month": "2011-09",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002393.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-September/002393.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110927/ccb55711/attachment.pl"
+      ]
     },
     {
       "id": "msg-16e3f7cfe6f3",

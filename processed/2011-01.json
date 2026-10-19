@@ -30,12 +30,15 @@
       "subject_clean": "species label for ordicoeno",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110105/557bda6e/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110105/557bda6e/attachment.pl>",
+      "body_plain": "I'm trying to determine the species represented in a plot produced using ordicoeno from BiodiversityR.\nplot1 <- ordiplot(mdsresults, type = \"t\")ordicoeno(plotdata, plot1)\nIt produces a nice coenocline, but I can't figure out how to identify the species represented by the curves. Any help? \t\t \t   \t\t  \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "I'm trying to determine the species represented in a plot produced using ordicoeno from BiodiversityR.\nplot1 <- ordiplot(mdsresults, type = \"t\")ordicoeno(plotdata, plot1)\nIt produces a nice coenocline",
       "thread_id": "thread-438113cbd256",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001794.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001794.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110105/557bda6e/attachment.pl"
+      ]
     },
     {
       "id": "msg-0f6a8dad39f3",
@@ -86,12 +89,15 @@
       "references": [
         "<BF8973D1-3DFE-4C74-B3F6-8E5A0AF8D366@me.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/ea5acf6c/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/ea5acf6c/attachment.pl>",
+      "body_plain": "Did you have something like this in mind?\n\n#prepare the data\ntraits <- data.frame(letters[1:9],\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9))\ncolnames(traits) <- c(\"species\", 1:8)\ncomcops <- data.frame(community = paste(\"com\", rep(1:3, each = 3), sep =\n\"\"),\n        species = sample(letters[1:9], 9, replace = TRUE))\n\n> traits\n  species 1 2 3 4 5 6 7 8\n1       a c u j f e x w s\n2       b k w w v m l d k\n3       c j x q r a t a n\n4       d b v o w p o c a\n5       e h g g a n n r d\n6       f x d b p v i p j\n7       g r i m k g r l v\n8       h p l n l t p m z\n9       i g a l d x h z q\n\n> comcops\n  community species\n1      com1       f\n2      com1       c\n3      com1       b\n4      com2       c\n5      com2       a\n6      com2       h\n7      com3       h\n8      com3       d\n9      com3       e\n\nall(comcops$species %in% traits$species) #check\n\n#mambo jumbo\ntraits[as.character(comcops$species), ]\nmix.all <- apply(comcops, 1, function(x, df.traits) {\n            out <- df.traits[which(df.traits$species == x[2]), ]\n            return(out)\n        }, df.traits = traits)\nmix.all <- do.call(\"rbind\", mix.all)\n\nfinal <- cbind(community = comcops$community, mix.all)\n\n> split(final, final$community)\n$com1\n  community species 1 2 3 4 5 6 7 8\n6      com1       f x d b p v i p j\n3      com1       c j x q r a t a n\n2      com1       b k w w v m l d k\n\n$com2\n   community species 1 2 3 4 5 6 7 8\n31      com2       c j x q r a t a n\n5       com2       a c u j f e x w s\n8       com2       h p l n l t p m z\n\n$com3\n   community species 1 2 3 4 5 6 7 8\n81      com3       h p l n l t p m z\n4       com3       d b v o w p o c a\n51      com3       e h g g a n n r d\n\n\nTo maximize your chances of getting a reply, I would suggest you provide the\nlist with a minimal working example of (fake) data you're working with.\n\n\nCheers,\nRoman\n\n\n\nOn Thu, Jan 6, 2011 at 12:39 PM, Peter Francis <peterfrancis at me.com> wrote:\n\n> Dear List,\n>\n> I have a data frame called trait with roughly 800 species in, each species\n> have 15 columns of information:\n>\n> Species         1       2       3       etc..\n> a                       t       y       h\n> b                       f       j       u\n> c                       r       y       u\n>\n> etc..\n>\n>\n> I then have another data frame called com with the composition of species\n> in each region, there are 506 different communities:\n>\n> community       species\n> NA1102          a\n> NA1102          c\n> NA0402          b\n> NA0402          c\n> AT1302          a\n> AT1302          b\n>\n> etc..\n>\n>\n> What i want to do is extract the information held in the first data frame\n> for each community and save this as a new data frame.\n>\n> Resulting in : -\n>\n> community_NA1102\n>\n> a                       t       y       h\n> c                       r       y       u\n>\n> community_NA0402\n>\n> b                       f       j       u\n> c                       r       y       u\n>\n> Thanks in advance for any suggestions / code.\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\n\n-- \nIn God we trust, all others bring data.\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Did you have something like this in mind?\n\n#prepare the data\ntraits <- data.frame(letters[1:9],\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(lette",
       "thread_id": "thread-6ced2438c004",
       "thread_depth": 1,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001797.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001797.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/ea5acf6c/attachment.pl"
+      ]
     },
     {
       "id": "msg-8fd7822eb88b",
@@ -103,12 +109,15 @@
       "subject_clean": "omit levels from boxplots",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/0d84bee5/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/0d84bee5/attachment.pl>",
+      "body_plain": "Good day list members,\n\n \n\nI was wondering if anyone knows a way to omit specific columns or anova\ncells from boxplots.  \n\n \n\nE.g. I produce a boxplot as:\n\n \n\n>boxplot(y ~ ageclass + sex,data=dat)\n\n \n\nwhere ageclass has 4 levels (including 1-year-old), and sex has 2\nlevels, but the only males included in the analysis are one-year-olds. \n\nThe resulting boxplot illustrates differences among age classes of\nfemales, and between male and female one-year-olds.\n\nHowever, it has 3 blank columns, corresponding to subadult, young adult,\nand mature age classes of males.  \n\nI'd like to exclude those blank columns from the figure.\n\n \n\nThanks in advance,\n\n \n\nEric\n\n \n\n \n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Good day list members,\n\n \n\nI was wondering if anyone knows a way to omit specific columns or anova\ncells from boxplots.  \n\n \n\nE.g. I produce a boxplot as:\n\n \n\n>boxplot(y ~ ageclass + sex,data=dat)\n\n \n",
       "thread_id": "thread-8fd7822eb88b",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001798.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001798.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/0d84bee5/attachment.pl"
+      ]
     },
     {
       "id": "msg-2f41979cda7e",
@@ -183,12 +192,15 @@
         "<AANLkTin526XCFbi=8JeYQpKr6q_aT3pjG0RBN2JO_+bg@mail.gmail.com>",
         "<3E5D0839-5231-4734-A055-361DB6F02D5D@me.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/f63ab174/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/f63ab174/attachment.pl>",
+      "body_plain": "Dear list and Roman,\n\nI have ( with the aid of a contact) found a way around this using the merge command and thought i would share it:-\n\n> x <- merge(spec, comm, by.x=\"Species\", by.y='species')\n\n> x\n Species X1 X2 X3 community\n1       a  t  y  h    NA1102\n2       a  t  y  h    AT1302\n3       b  f  j  u    NA0402\n4       b  f  j  u    AT1302\n5       c  r  y  u    NA1102\n6       c  r  y  u    NA0402\n\nand then use the split command to separate based on community ( as kindly suggested by Roman)\n\n> split(x, x$community)\n\nPeter\nOn 6 Jan 2011, at 12:48, Peter Francis wrote:\n\nHi,\n\nThat is wonderful thank you very much, and sorry for not including woking data,\n\nPeter \nOn 6 Jan 2011, at 12:46, Roman Luštrik wrote:\n\nDid you have something like this in mind?\n\n#prepare the data\ntraits <- data.frame(letters[1:9],\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9),\n        sample(letters, 9))\ncolnames(traits) <- c(\"species\", 1:8)\ncomcops <- data.frame(community = paste(\"com\", rep(1:3, each = 3), sep = \"\"),\n        species = sample(letters[1:9], 9, replace = TRUE))\n\n> traits\n  species 1 2 3 4 5 6 7 8\n1       a c u j f e x w s\n2       b k w w v m l d k\n3       c j x q r a t a n\n4       d b v o w p o c a\n5       e h g g a n n r d\n6       f x d b p v i p j\n7       g r i m k g r l v\n8       h p l n l t p m z\n9       i g a l d x h z q\n\n> comcops\n  community species\n1      com1       f\n2      com1       c\n3      com1       b\n4      com2       c\n5      com2       a\n6      com2       h\n7      com3       h\n8      com3       d\n9      com3       e\n\nall(comcops$species %in% traits$species) #check\n\n#mambo jumbo\ntraits[as.character(comcops$species), ]\nmix.all <- apply(comcops, 1, function(x, df.traits) {\n            out <- df.traits[which(df.traits$species == x[2]), ]\n            return(out)\n        }, df.traits = traits)\nmix.all <- do.call(\"rbind\", mix.all)\n\nfinal <- cbind(community = comcops$community, mix.all)\n\n> split(final, final$community)\n$com1\n  community species 1 2 3 4 5 6 7 8\n6      com1       f x d b p v i p j\n3      com1       c j x q r a t a n\n2      com1       b k w w v m l d k\n\n$com2\n   community species 1 2 3 4 5 6 7 8\n31      com2       c j x q r a t a n\n5       com2       a c u j f e x w s\n8       com2       h p l n l t p m z\n\n$com3\n   community species 1 2 3 4 5 6 7 8\n81      com3       h p l n l t p m z\n4       com3       d b v o w p o c a\n51      com3       e h g g a n n r d\n\n\nTo maximize your chances of getting a reply, I would suggest you provide the list with a minimal working example of (fake) data you're working with.\n\n\nCheers,\nRoman\n\n\n\nOn Thu, Jan 6, 2011 at 12:39 PM, Peter Francis <peterfrancis at me.com> wrote:\nDear List,\n\nI have a data frame called trait with roughly 800 species in, each species have 15 columns of information:\n\nSpecies         1       2       3       etc..\na                       t       y       h\nb                       f       j       u\nc                       r       y       u\n\netc..\n\n\nI then have another data frame called com with the composition of species in each region, there are 506 different communities:\n\ncommunity       species\nNA1102          a\nNA1102          c\nNA0402          b\nNA0402          c\nAT1302          a\nAT1302          b\n\netc..\n\n\nWhat i want to do is extract the information held in the first data frame for each community and save this as a new data frame.\n\nResulting in : -\n\ncommunity_NA1102\n\na                       t       y       h\nc                       r       y       u\n\ncommunity_NA0402\n\nb                       f       j       u\nc                       r       y       u\n\nThanks in advance for any suggestions / code.\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n-- \nIn God we trust, all others bring data.\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear list and Roman,\n\nI have ( with the aid of a contact) found a way around this using the merge command and thought i would share it:-\n\n> x <- merge(spec, comm, by.x=\"Species\", by.y='species')\n\n> x\n",
       "thread_id": "thread-7a0ff75f05e9",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001802.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001802.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110106/f63ab174/attachment.pl"
+      ]
     },
     {
       "id": "msg-a63b7d1d8756",
@@ -260,12 +272,15 @@
       "subject_clean": "standardized coefficients from GLM model averaging with poisson?",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110110/7f727876/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110110/7f727876/attachment.pl>",
+      "body_plain": "hi all,\n\nI am doing analyses that involve many environmental variables and abundance\nof a particular species.  I have used model averaging as a kind of first\nstep to identify important variables that then get used in other more\ndetailed analyses (e.g. structural equation modeling).  In the case I'm\ncurrently working on, the abundances of one species can be pretty low, so it\nseems like a case in which I should be going to GLM and using a poisson and\nlog link function.\n\nI hit upon the BMA package to do Bayesian model averaging in a GLM\nframework.  BMA gives me two kinds of output... the mean coefficient value\nfrom the posterior distribution for each predictor variable and the\nposterior confidence in that value.  That's all fine, but I hit upon an\nissue in picking out the most important variables (which I need to do when I\nmove to the next step in my analyses).  The coefficient values are not\nstandardized, so I can't rank the variables by the absolute magnitude of\ntheir coefficients.  Also, it doesn't really make sense to rank them based\non posterior probabilities, since you can have very high confidence in a\ncoefficient estimate that is not particularly large.\n\nSo here's the question.... Can I get standardized coefficients (like\nstandardized betas) out of a GLM with poisson?  If so, does anyone know how\nto do it in the BMA package (it does not appear to be a built in option, but\nmaybe I'm missing something).  Could I do a transformation ahead of time\nthat would put the predictor variables on the same scale, thus creating\nstandardized coefficients as output?  It occurs to me that I could normalize\nthem, which would put them on the same scale, but does that make sense going\ninto a GLM using poisson???  Could I \"normalize\" them to a poisson ahead of\ntime?  How would I do that?\n\nthanks!\nMatt\n\n\n-- \nMatthew L Forister\nAssistant Professor\nDepartment of Biology / MS 314\n1664 N. Virginia St.\nUniversity of Nevada, Reno\nReno, Nevada 89557\n--\nE-mail: forister at gmail.com\nOffice phone: (775) 784 - 6770\nLab phone: (775) 784 - 7083\nFax: (775) 784 - 1302\nOffice: room 257 Fleischmann Agriculture Building\n--\nWebpage:\nhttps://sites.google.com/site/greatbasinbuglab/\n--\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "hi all,\n\nI am doing analyses that involve many environmental variables and abundance\nof a particular species.  I have used model averaging as a kind of first\nstep to identify important variables that ",
       "thread_id": "thread-230b2b958a9f",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001806.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001806.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110110/7f727876/attachment.pl"
+      ]
     },
     {
       "id": "msg-aee77de6aff6",
@@ -391,12 +406,15 @@
       "references": [
         "<4D2C7002.8060700@googlemail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110111/eeef6f1c/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110111/eeef6f1c/attachment.pl>",
+      "body_plain": "Another thing you could try (*really* speeds it up) is to change \"0\" to NA\nand use the function na.locf from the zoo package.  Check out that\nfunction's documentation for an idea of how you might be able to do it.\nI've used it for very similar tasks.  If any NA's remain (that you would\nprefer be \"0\"), you could just change them back to 0 like\n\nexp$Marker[is.na(exp$Marker)] <- \"0\"\n\nGood luck,\nAndy\n\n\nOn Tue, Jan 11, 2011 at 6:58 AM, B.-Markus Schuller <\nb.markus.schuller at googlemail.com> wrote:\n\n> Hey,\n>\n> I have a vector containing mostly zeroes. At varying positions are markers\n> that mark different channels (\"B\", 1, 2).\n>\n> > head(exp$Marker, 100)\n>  [1] \"B\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\"\n> \"0\"\n>  [19] \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\"\n> \"0\"\n>  [37] \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\"\n> \"0\"\n>  [55] \"0\" \"0\" \"0\" \"0\" \"0\" \"1\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\"\n> \"0\"\n>  [73] \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\"\n> \"0\"\n>  [91] \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\" \"0\"\n>\n> I would like to change all zeroes between two markers to the marker that\n> came before.\n> E.g. everything after \"B\" shall be \"B\" until the 1. Then everything shall\n> be 1 until the next \"B\" and so on. I hope you can imagine what I intend.\n>\n> I tried it in a loop:\n>\n> for(i in 1:length(exp$Marker)){\n>  if(! exp$Marker[i] %in% c(\"B\", 1, 2))\n>    exp$Marker[i] <- exp$Marker[i-1]\n> }\n>\n> but that takes forever. Can anyone point me to another solution?\n> E.g. identify all so far not marked elements, like this\n>\n> exp$Marker[which(! exp$Marker %in% c(\"B\", 1, 2))]\n>\n> and change them to the desired values. But i cannot figure out how to\n> change them selectively...\n>\n> Thanks for your help!\n>\n> Cheers,\n> Mango\n> --\n> -----------------------------------------\n> B.-Markus Schuller aka Mango\n>\n> Sensory Ecology Group\n> Max-Planck-Institute for Ornithology\n> 82319 Seewiesen, Germany\n>\n> phone: +49 (0)8157 932 -378\n> fax:   +49 (0)8157 932 -344\n> email: schuller at orn.mpg.de\n> http://www.orn.mpg.de/nwg/abtsiemers.html\n> -----------------------------------------\n> Never run for the bus.\n> Never skip tea.\n>\n>\n>\n> -----\n> No virus found in this message.\n> Checked by AVG - www.avg.com\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Another thing you could try (*really* speeds it up) is to change \"0\" to NA\nand use the function na.locf from the zoo package.  Check out that\nfunction's documentation for an idea of how you might be a",
       "thread_id": "thread-2157eadab0d9",
       "thread_depth": 1,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001813.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001813.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110111/eeef6f1c/attachment.pl"
+      ]
     },
     {
       "id": "msg-399b3c072204",
@@ -427,12 +445,15 @@
       "subject_clean": "multivariate regression tree analysis with mvpart - De'Ath's example",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110111/46368d85/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110111/46368d85/attachment.pl>",
+      "body_plain": "All,\nI am trying to replicate figure 2 in Glenn De'Ath's 2002 report, Ecology \n83:1105-1117\nThe figure caption says that data were spes standardized andsite \nstandardized to the same mean, and that euclidean distance was usedin \nthe analysis.\nhere is my script, using the \"spider\" data in the mvpart package:\n\nI tried two different standardizing functions, which do not produce the \nsame scaling result:\n\n1. using sweep (which produces a dataset that I was able to duplicate in \nexcel)\n\ndata(spider)\n\nspider.mean<-sweep(spider[,1:12],2,apply(spider[,1:12],2,mean))\n\nspider.means<-sweep(spider.mean,1,apply(spider.mean,1,mean))\n\nspider.mrt<-mvpart(data.matrix(spider.means[1:12]) \n~herbs+reft+moss+sand+twigs+water,spider, method=\"mrt\", dissim=\"euc\", \nxv=\"min\")\n\nThe resulting tree has first split with \"herbs\" instead of with twigs \n(as in De'Ath).\n\n\n2.using scaler (which produces a different dataset:\n\nspider.std<- scaler(spider, col=\"mean1\", row=\"mean1\")\n\nspider.std.dat<-as.data.frame(spider.std)\n\nspider.mrt<-mvpart(data.matrix(spider.std.dat[1:12])\n~herbs+reft+moss+sand+twigs+water,spider.std.dat,method=\"mrt\",dissim=\"euc\",xv=\"1se\")\n\n  Here, the first split is with \"water\".\n\nso I have not been able to reproduce De'Ath's result, and\nthere are at least 3 different configurations of the regression tree for \nspider data, depending on how it is calculated.\n\nSo, can I obtain consistent results using mvpart with my own data, in \norder to compare them to the clusters that I obtained with hclust?\n\nwith thanks,\nMike Marsh\nacting Conservation Chair,\nWashington Native Plant Society\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "All,\nI am trying to replicate figure 2 in Glenn De'Ath's 2002 report, Ecology \n83:1105-1117\nThe figure caption says that data were spes standardized andsite \nstandardized to the same mean, and that eu",
       "thread_id": "thread-745e27909426",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001815.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001815.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110111/46368d85/attachment.pl"
+      ]
     },
     {
       "id": "msg-92ac60705273",
@@ -535,12 +556,15 @@
       "references": [
         "<web-153034289@uni-freiburg.de>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110113/024c70ea/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110113/024c70ea/attachment.pl>",
+      "body_plain": "Cristabel:\n\ncheck that the number of scores equals the length of your naming vector, i.e.,\n\ndim(ScoresNMDS) [1]\n\nshoud be equal to\n\nlength(pos$for_pos_anl)\n\nAnd check also  that the mentioned categories are \nrealy present in the vector, e.g.:\n\ntable(pos$for_pos_anl)\n\nHTH,\n\nMarcelino\n\n\nAt 08:50 13/01/2011, cristabel.duran at waldbau.uni-freiburg.de wrote:\n>Dear list, I have a problem adding points with \n>different symbols to my NMDS ordination graph. I \n>performed a NMDS ordination with this vegan \n>function (metaMSD) as follow:       metaf <- \n>metaMDS(spp, distance = \"bray\", k = 3, trymax = \n>1000, wascores = T, autotrasform = F, shrink=T, \n>noshare = 1) spp is my species matrix. Then, I \n>want to assign different colors and symbols to \n>my plots (\"sites\") according to three \n>categories. These categories are in the vector \n>called pos with the categories \"gap\", \"border\" \n>and \"forest\". For that I am using the following \n>functions and \n>commands:      ScoresNMDS<-scores(metaf) \n>plot(metaf,type=\"none\",choices = \n>c(1,3)) \n>points.metaMDS(ScoresNMDS[pos$for_pos_anl==\"border\",], \n>display=\"sites\",choices = c(1,3), pch=16, \n>cex=0.8, \n>col=\"green\") \n>points.metaMDS(ScoresNMDS[pos$for_pos_anl==\"gap\",],display=\"sites\",choices \n>= c(1,3),pch=17, cex=0.8, \n>col=\"black\") \n>points.metaMDS(ScoresNMDS[pos$for_pos_anl==\"forest\",],display=\"sites\",choices \n>= c(1,3), pch=4,col=\"red\",cex=0.8, bg=\"red\") The \n>problem: I get a empty ordination graph, were I \n>am able to add the points corresponding to the \n>first two categories (\"border\" and \"gap\"). The \n>strange thing, is that it is impossible to add \n>the third category, I get this error \n>message:       Error in dimnames(x) <- dn \n>:    length of 'dimnames' [1] not equal to array \n>extent Already tried: - The length of my \n>explanatory variable (pos) have the same length \n>that the species matrix. - Changing the name \n>from my open office spreadsheet, in the case \n>there is a strange character. - Change colors \n>and symbols. - etc...etc. What I also do not \n>understand, is why it works for some categories \n>of the same vector and why not for the last \n>category. The same happens with ordiellipse and \n>ordihull. I would appreciate your help! Thanks \n>in advance and have a nice day! Cristabel. \n>Cristabel DurÃ¡n Rangel. PhD Student. Institute \n>of Silviculture. Faculty of Forest and \n>Environmental Sciences. University of Freiburg. \n>Germany Telf: +49 (761) 203 8604 (ofc) „Man \n>lernt die Physiognomie einer Landschaaft desto \n>besser kennen, je genauer man die einzelnen \n>ZÃ¼ge auffaÃŸt, sie untereinander vergleicht und \n>so auf dem Wege der Analysis den Quellen der \n>GenÃ¼sse nachgeht, die uns das groÃŸe \n>NaturgemÃ¤lde \n>bietet.â€œ \n>Alexander von Humboldt, 1799 \n>_______________________________________________ \n>R-sig-ecology mailing list \n>R-sig-ecology at r-project.org \n>https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n____________________________________\n\nMarcelino de la Cruz Rot\nDepto. Biologia Vegetal\nEUIT Agricola\nUniversidad Politecnica de Madrid\n\ntel: 34 + 913365435\n____________________________________  \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Cristabel:\n\ncheck that the number of scores equals the length of your naming vector, i.e.,\n\ndim(ScoresNMDS) [1]\n\nshoud be equal to\n\nlength(pos$for_pos_anl)\n\nAnd check also  that the mentioned categori",
       "thread_id": "thread-b7e3d814fd68",
       "thread_depth": 1,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001821.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001821.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110113/024c70ea/attachment.pl"
+      ]
     },
     {
       "id": "msg-5a173b63bfef",
@@ -644,12 +668,15 @@
       "subject_clean": "Vol 34, 8, How to form the similarity matrix of such kind of data?",
       "in_reply_to": "<mailman.1.1295002801.14820.r-sig-ecology@r-project.org>",
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110114/2a9e89cf/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110114/2a9e89cf/attachment.pl>",
+      "body_plain": "Hi Yong,\n\nfirst, I would change rows by lines, more specific, put species as rows and sites as lines. \n\nThen, use \"vegdist\" function, it will give to you a similarity matrix between sites. For this, you will have to load \"vegan package\" (probably is already instaled in your R). You can also configure wich similarity (or dissimilarity) index you want changing some parameters. (type \"help(vegdist)\" in your R)\n\nFor instance, last time I used a absence/presence with Bray Curtis (to build a similarity cluster between sites), I used this following parameters\n\n\"YOUR OBJECT NAME\"<-vegdist(\"YOUR MATRIX\",method=\"bray\",binary=TRUE)\n\nI think Bray Curtis is the right choice for your data. You can also build clusters using HCLUST function, for this, load CLUSTER package.\n\nCheers, hope I helped you,\n\nRafael (Brazil)\n\n\nRafael Vieira Nunes\nBiólogo, CRBIo 70735/04-D\nUniversidade Federal do Mato Grosso - UFMT\nhttp://lattes.cnpq.br/5048661854935501\nhttp://www-museum.unl.edu/research/entomology/workers/RNunes.htm\n\n\n\n\n\n      \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Yong,\n\nfirst, I would change rows by lines, more specific, put species as rows and sites as lines. \n\nThen, use \"vegdist\" function, it will give to you a similarity matrix between sites. For this, y",
       "thread_id": "thread-ea0177ee8f96",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001827.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001827.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110114/2a9e89cf/attachment.pl"
+      ]
     },
     {
       "id": "msg-a4bc1aa6eac4",
@@ -680,12 +707,15 @@
       "references": [
         "<dcd5630777537519bd44808ccb4e0589.squirrel@www.sci.muni.cz>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110114/87d29f3e/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110114/87d29f3e/attachment.pl>",
+      "body_plain": "This is from the highstat website on DFA (Analyzing ecological\ndata<http://highstat.com/Book1/RChapter17.zip>).\nBook is from 2007 and things may have changed in between?\n\n#DFA was programmed in FORTRAN, and is available from Brodgar\n#www.brodgar.com\n#To the best of our knowledge, no R code exists\n\n\nCheers,\nRoman\n\n\n\nOn Fri, Jan 14, 2011 at 5:07 PM, <syrovat at sci.muni.cz> wrote:\n\n> Hello,\n> does anybody know, are Min/Max Autocorrelation Factor Analysis (MAFA)\n> and/or Dynamic Factor Analysis (DFA) implemented in a R package?\n>\n> Solow, A.R. (1994). Detecting Change in the Composition of a Multispecies\n> Community. Biometrics, 50, 556-565\n> Zuur, A.F. et al. (2003). Estimating common trends in multivariate time\n> series using dynamic factor  analysis. Environmetrics, 14(7):665-685.\n>\n> Thank you in advance,\n> Vit\n>\n> --\n> Vit Syrovatka\n> Department of Botany and Zoology\n> Masaryk University\n> Kotlarska 2\n> CZ-611 37 Brno, Czech Republic\n>\n> Tel.: +420-532146342\n> E-mail: syrovat at sci.muni.cz\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\n\n-- \nIn God we trust, all others bring data.\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "This is from the highstat website on DFA (Analyzing ecological\ndata<http://highstat.com/Book1/RChapter17.zip>).\nBook is from 2007 and things may have changed in between?\n\n#DFA was programmed in FORTRA",
       "thread_id": "thread-a4bc1aa6eac4",
       "thread_depth": 1,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001829.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001829.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110114/87d29f3e/attachment.pl"
+      ]
     },
     {
       "id": "msg-871ff53c6bc2",
@@ -717,12 +747,15 @@
       "subject_clean": "Comparing among groups: Issue of non-independent pairwise beta diversity comparisons",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110116/5ce56b09/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110116/5ce56b09/attachment.pl>",
+      "body_plain": "Dear all:\n\nI have box plots at the moment of beta-diversity pairwise comparisons\ngrouped by a categorical variable.  Not all the pair-wise comparisons are\nindependent.\n\nGiven the violation of independence of some pairwise comparisons, I was\nwondering the best R package to use in order to compare among groups.\n\nPlease let me know if you have any suggestions.\n\nThank you for your time and consideration,\nLaura\n\n-- \n\" Genius is the summed production of the many with the names of the few\nattached for easy recall, unfairly so to other scientists\"\n\n- E. O. Wilson (The Diversity of Life)\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all:\n\nI have box plots at the moment of beta-diversity pairwise comparisons\ngrouped by a categorical variable.  Not all the pair-wise comparisons are\nindependent.\n\nGiven the violation of independ",
       "thread_id": "thread-1899a2ba0031",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001831.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001831.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110116/5ce56b09/attachment.pl"
+      ]
     },
     {
       "id": "msg-a78cc2f335d6",
@@ -736,12 +769,15 @@
       "references": [
         "<AANLkTi=_oDc+fix1kRh=8NjDh-kG=agNQdH5L5LOu7LY@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110117/8a990360/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110117/8a990360/attachment.pl>",
+      "body_plain": "Dear Laura,\n\nYou may want to compare distances to centroid instead of individual pairwise\ndistances (note that the latter also implies some non-independence; the\nissue is described in Anderson 2006 Biometrics). This can be done via\n\n?betadisper\n\nin vegan. The following refs from Marti Anderson are very helpful,\nespecially the 2010 one for a more general treatment of beta diversity\nanalyses:\n\nAnderson, M. J. 2006. Distance-based tests for homogeneity of multivariate\ndispersions. Biometrics 62:245-253.\n\nAnderson, M. J., T. O. Crist, J. M. Chase, M. Vellend, B. D. Inouye, A. L.\nFreestone, N. J. Sanders, H. V. Cornell, L. S. Comita, K. F. Davies, S. P.\nHarrison, N. J. B. Kraft, J. C. Stegen, and N. G. Swenson. 2010. Navigating\nthe multiple meanings of â diversity: a roadmap for the practicing\necologist. Ecology Letters:in press.\n\nAnderson, M. J., K. E. Ellingsen, and B. H. McArdle. 2006. Multivariate\ndispersion as a measure of beta diversity. Ecology Letters 9:683-693.\n\nHope that helps,\n\nEtienne\n\n2011/1/17 Laura S <leslaura at gmail.com>\n\n> Dear all:\n>\n> I have box plots at the moment of beta-diversity pairwise comparisons\n> grouped by a categorical variable.  Not all the pair-wise comparisons are\n> independent.\n>\n> Given the violation of independence of some pairwise comparisons, I was\n> wondering the best R package to use in order to compare among groups.\n>\n> Please let me know if you have any suggestions.\n>\n> Thank you for your time and consideration,\n> Laura\n>\n> --\n> \" Genius is the summed production of the many with the names of the few\n> attached for easy recall, unfairly so to other scientists\"\n>\n> - E. O. Wilson (The Diversity of Life)\n>\n>        [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear Laura,\n\nYou may want to compare distances to centroid instead of individual pairwise\ndistances (note that the latter also implies some non-independence; the\nissue is described in Anderson 2006 Bi",
       "thread_id": "thread-1899a2ba0031",
       "thread_depth": 1,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001832.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001832.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110117/8a990360/attachment.pl"
+      ]
     },
     {
       "id": "msg-c68c648ac1db",
@@ -753,12 +789,15 @@
       "subject_clean": "Request for e-mailing list",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110117/9bf1e646/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110117/9bf1e646/attachment.pl>",
+      "body_plain": "my email address is omarihalima at yahoo.com\n\nregards\n\n\n      \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "my email address is omarihalima at yahoo.com\n\nregards\n\n\n      \n\t[[alternative HTML version deleted]]",
       "thread_id": "thread-c68c648ac1db",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001833.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001833.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110117/9bf1e646/attachment.pl"
+      ]
     },
     {
       "id": "msg-5c922c619c5c",
@@ -859,12 +898,15 @@
       "subject_clean": "post-treatment measurements as covariable?",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/58196d6c/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/58196d6c/attachment.pl>",
+      "body_plain": "Dear All,\n\nI \nam trying to analyze the effect of a warming treatment on plant growth. \nThe warming treatment is associated with some drying of the soil, and I \nwould like to determine if/how much of the growth response is due to \ndrying. My original idea was to include soil moisture as a covariable in\n the model (which would include all variation from plot to plot, \nincluding that due to the warming treatment) and see how this changed \nthe warming effect. However, I recently looked at Gelman and Hill \n(2007), where they explain in chapter 9 that including post-treatment \nvariables is highly problematic. I would greatly appreciate any \nsuggestions (or references) for a more appropriate way to distinguish \nbetween direct effects of warming and indirect effects due to reduced \nsoil moisture.\n\noriginal model format:\nmodel <- lm(growth ~ cov + warming, data = x)\n\n(probably incorrect) model with soil moisture added as covariable:\nmodel <- lm(growth ~ cov + soilmoisture + warming, data = x)\n\nvariables:\ngrowth = response variable (annual shoot length measured in x individual plots)\ncov = pre-warming covariable (annual shoot length in years before warming)\nsoilmoisture = soil moisture measured in each individual plot (continuous variable, measured during years with warming)\nwarming = categorical variable (warmed or unwarmed)\n\nThank you in advance for your help!\nMelissa\n\n----\nMelissa Dawes, PhD\nResearch Group Alpine Ecosystems\nWSL Institute for Snow and Avalanche Research SLF\nFlüelastrasse 11\n7260 Davos Dorf\nSwitzerland\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear All,\n\nI \nam trying to analyze the effect of a warming treatment on plant growth. \nThe warming treatment is associated with some drying of the soil, and I \nwould like to determine if/how much of t",
       "thread_id": "thread-3c03caabb2a2",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001839.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001839.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/58196d6c/attachment.pl"
+      ]
     },
     {
       "id": "msg-133fe95356b5",
@@ -878,11 +920,14 @@
       "references": [
         "<mailman.1.1295434801.31948.r-sig-ecology@r-project.org>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/fc08f989/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/fc08f989/attachment.pl>",
+      "body_plain": "Hi Melissa,\n\nHave you tried variance partitioning (varpart function in Vegan package). It \ntheory it can show you how much percentage of the variance in you plant growth \nis explained by warming alone, how much by moisture alone, and how much by their \ninteraction.\n\n\nDragos \n\n \nDragos George Zaharescu\n-----------------------------------------\nFaculty of Biological Sciences\nVigo University, apd. 137\n36310, Vigo, SPAIN\n-----------------------------------------\n\n             zdragos at uvigo.es\nHomepage: http://webs.uvigo.es/zdragos/\n-----------------------------------------\n\n\n   5. post-treatment measurements as covariable? (melissa.dawes at slf.ch)\n\n\n----------------------------------------------------------------------\n\n------------------------------\n\nMessage: 5\nDate: Wed, 19 Jan 2011 11:24:57 +0100\nFrom: melissa.dawes at slf.ch\nTo: r-sig-ecology at r-project.org\nSubject: [R-sig-eco] post-treatment measurements as covariable?\nMessage-ID:\n    <OF6EEDFA2C.AB268F73-ONC125781D.00393781-C125781D.00393784 at wsl.ch>\nContent-Type: text/plain\n\nDear All,\n\nI \nam trying to analyze the effect of a warming treatment on plant growth. \nThe warming treatment is associated with some drying of the soil, and I \nwould like to determine if/how much of the growth response is due to \ndrying. My original idea was to include soil moisture as a covariable in\nthe model (which would include all variation from plot to plot, \nincluding that due to the warming treatment) and see how this changed \nthe warming effect. However, I recently looked at Gelman and Hill \n(2007), where they explain in chapter 9 that including post-treatment \nvariables is highly problematic. I would greatly appreciate any \nsuggestions (or references) for a more appropriate way to distinguish \nbetween direct effects of warming and indirect effects due to reduced \nsoil moisture.\n\noriginal model format:\nmodel <- lm(growth ~ cov + warming, data = x)\n\n(probably incorrect) model with soil moisture added as covariable:\nmodel <- lm(growth ~ cov + soilmoisture + warming, data = x)\n\nvariables:\ngrowth = response variable (annual shoot length measured in x individual plots)\ncov = pre-warming covariable (annual shoot length in years before warming)\nsoilmoisture = soil moisture measured in each individual plot (continuous\nvariable, measured during years with warming)\nwarming = categorical variable (warmed or unwarmed)\n\n[[elided Yahoo spam]]\nMelissa\n\n----\nMelissa Dawes, PhD\nResearch Group Alpine Ecosystems\nWSL Institute for Snow and Avalanche Research SLF\nFl端elastrasse 11\n7260 Davos Dorf\nSwitzerland\n\n\n    [[alternative HTML version deleted]]\n\n\n\n------------------------------\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\nEnd of R-sig-ecology Digest, Vol 34, Issue 12\n*********************************************\n\n\n\n      \n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Melissa,\n\nHave you tried variance partitioning (varpart function in Vegan package). It \ntheory it can show you how much percentage of the variance in you plant growth \nis explained by warming alone",
       "thread_id": "thread-133fe95356b5",
       "thread_depth": 0,
-      "month": "2011-01"
+      "month": "2011-01",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/fc08f989/attachment.pl"
+      ]
     },
     {
       "id": "msg-d044cfd08663",
@@ -913,12 +958,15 @@
       "subject_clean": "permutest.cca and means seperation?",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/e5c7ccda/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/e5c7ccda/attachment.pl>",
+      "body_plain": "Hi,\nWith a CCA object such as outputed by capscale, I see that it is possible to calculate significance on a class factor with permutest.cca.\n\nHowever, with multiple levels of a factor, is there a means separation technique for pairwise comparisons like permutest.betadisper but instead designed to use on centroids identified in a CCA object?\n\nThanks, Michael Wilson\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi,\nWith a CCA object such as outputed by capscale, I see that it is possible to calculate significance on a class factor with permutest.cca.\n\nHowever, with multiple levels of a factor, is there a mea",
       "thread_id": "thread-519113d2701e",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001842.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001842.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110119/e5c7ccda/attachment.pl"
+      ]
     },
     {
       "id": "msg-450006f47d9e",
@@ -968,12 +1016,15 @@
       "subject_clean": "Error message in betadisper vegan",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110120/654e1e1a/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110120/654e1e1a/attachment.pl>",
+      "body_plain": "Dear all,\n\nI am trying to compare variablility in environmental variables between groups of samples using function 'betadisper' in vegan package. I have done this previuosly on biotic data and it has worked fine. But now I get an error message:\n\nError: (subscript) logical subscript too long\n\n\nI am wondering what this means (what is causing this error) and how I can deal with it? I tried to search online but found no useful information.\n\n\n\nI am thankful for any advice I can get on this matter!\n\n\n\n/Emma\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\n\nI am trying to compare variablility in environmental variables between groups of samples using function 'betadisper' in vegan package. I have done this previuosly on biotic data and it has ",
       "thread_id": "thread-9e523c37a357",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001845.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001845.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110120/654e1e1a/attachment.pl"
+      ]
     },
     {
       "id": "msg-408ff5f01d79",
@@ -1117,12 +1168,15 @@
       "subject_clean": "number of observations used in scatterplot.matrix()",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/caf7cbb4/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/caf7cbb4/attachment.pl>",
+      "body_plain": "Dear all,\n\nI have a script (please see below) that gives a scatter plot matrix on \nthe upper panel, and the spearman rho and probability values on the \nlower panel. It also gives the density function of each variable in the \ndiagonal, adds a smoother and a linear regression line to each scatter \nplot, and puts significant spearman coefficient values in red.\nNow I would like to add to the lower panel information, the value of \nn=number of observations used to calculate the spearman correlation \ncoefficient. Does anyone know I could I add that parameter to my \nfunction panel.cor?\n\nThank you!\n\nKind regards,\n\nDulce\n\n################\n\npanel.cor <- function (x, y,method=\"spearman\",digits=2,...)\n{\n         points(x,y,type=\"n\");\n         usr <- par(\"usr\"); on.exit(par(usr))\n         par(usr = c(0, 1, 0, 1));\n         correl <- cor.test(x, y,method=method);\n         r=correl$estimate;\n         pval=correl$p.value;\n         color=\"black\";\n         if (pval<0.05) color=\"red\";\n         txt <- format(r,digits=2)\n         pval <- format(pval,digits=2)\n         txt <- paste(\"rho=\", txt, \"\\np=\",pval,sep=\"\")\n         text(0.5, 0.5, txt,col=color)\n}\n\nscatterplot.matrix (~ var1 + var2 + var3 , data=mydata,\n                                 main=\"Mydata\", smooth=TRUE, \nlower.panel=panel.cor, pch=20, cex=0.5, \ncol=c(\"red\",\"black\"),cex.labels=1, font.labels=2, lwd=0.5)\n\n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\n\nI have a script (please see below) that gives a scatter plot matrix on \nthe upper panel, and the spearman rho and probability values on the \nlower panel. It also gives the density function ",
       "thread_id": "thread-406d4baeb063",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001853.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001853.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/caf7cbb4/attachment.pl"
+      ]
     },
     {
       "id": "msg-7e7deb3a0647",
@@ -1156,12 +1210,15 @@
         "<746A0F92-A739-4E9E-84C6-C9D00F71D1F6@uni-greifswald.de>",
         "<AANLkTimQ+S4dFLGpZim6TU-x00JT5MnUfk4RJKq-9kU1@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/14c61836/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/14c61836/attachment.pl>",
+      "body_plain": "Dear all,\nhere are the test data and a test sweave example. I hope it works\n\n\tSpecies.1\tSpecies.2\tSpecies.3\tSpecies.4\tSpecies.5\tSpecies.6\tSpecies.7\t \nSpecies.8\tSpecies.9\tSpecies.10\nSample.1\t0\t0\t0\t0\t0\t0\t1\t0\t2\t0\nSample.2\t0\t0\t0\t0\t6\t0\t0\t0\t0\t0\nSample.3\t1\t0\t0\t1\t0\t4\t0\t0\t3\t0\nSample.4\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\nSample.5\t0\t0\t4\t0\t1\t0\t1\t0\t0\t1\nSample.6\t2\t0\t0\t0\t1\t0\t0\t0\t1\t0\nSample.7\t0\t0\t0\t0\t0\t1\t0\t0\t0\t0\nSample.8\t0\t2\t0\t0\t4\t0\t3\t0\t0\t0\nSample.9\t4\t0\t0\t5\t0\t0\t0\t1\t0\t0\n\n\n\\documentclass[10 pt, a4paper]{article}\n\\usepackage{Sweave}\n\\begin{document}\n<<>>=\nrequire(vegan)\ntest<-read.table(\"test.txt\", head=T)\nattach(test)\ndim(test)\nsum(test)\n@\n\\begin{figure}\n<<fig=true>>=\npool.test<-poolaccum(test)\nplot(pool.test)\n@\n\\end{figure}\n\\end{document}\n\nThe file sweave_test-002.pdf is generated but cannot be opened  \n(Warning message in Adobe Reader: \"There was an error opening this  \ndocument. This file ccannot be opened because it has no pages.\"\n\nMy computational environment: Mac 10.5.8, R 2.12.1 GUI 1.35 Leopard  \nbuild 64-bit, TexShop 2.37\n\nBest, Martin\n\n\nOn 21 Jan 2011, at 14:36, romunov wrote:\n\n> Could you provide us with a reproducible example (R+Sweave)? This  \n> sounds interesting.\n>\n>\n>\n> On Fri, Jan 21, 2011 at 2:32 PM, Martin Unterseher <martin.unterseher at uni-greifswald.de \n> > wrote:\n> Dear Jari,\n>\n> thank you for your help. The plots are fine and really valuable.\n> However, when I tried to generate a Sweave-based file, all plot()  \n> commands following poolaccum() (e.g.\n>\n> \\begin{figure}\n> <<fig=true>>\n> pool.data<-poolaccum(data)\n> plot(pool.data)\n> @\n> \\end{figure}\n>\n> resulted in empty or corrupted pdf files. I solved this problem by  \n> manually saving the poolaccum- plots as pdf and including them in  \n> the resulting .tex file. Some time-consuming handwork, but ok. So  \n> there is no urgent need for response.\n>\n> Best wishes\n> Martin\n> On 19 Jan 2011, at 08:58, Jari Oksanen wrote:\n>\n> Martin,\n>\n> I have supposed that functions poolaccum() and estaccumR() do this. If\n> they are not suitable for your needs, please tell me what you want to\n> achieve.\n>\n> These two functions have been in vegan since release 1.15-4 (7\n> September, 2009).\n>\n> Cheers, Jari Oksanen\n>\n>\n> On Tue, 2011-01-18 at 09:22 +0100, Martin Unterseher wrote:\n> Dear all,\n>\n> as far as I know, functions specpool and estimateR (both in package\n> vegan) provide only the final values of the non-parametric estimators.\n> In contrast to that, EstimateS calculates a real curve of each\n> estimator function. To me this is of importance to evaluate the\n> stability and reliability of the final value calculated by the\n> respective estimator.\n>\n> Carsten Dormann found a way to achieve this in R and provided this\n> function for me:\n>\n> reps=100\n> sequence.abies.myk<-1:nrow(abies.myk.com) #abies.myk.com is my\n> species-samples matrix from mycorrhizal fungi of Abies alba\n> res.abies.myk<-matrix(ncol=9, nrow=length(sequence.abies.myk))\n> colnames(res.abies.myk)<-names(est.abies.myk) #est.abies.myk is the\n> result from specpool(abies.myk.com)\n> for (i in sequence.abies.myk)\n> {\n>   sample.raw.abies.myk <- replicate(reps,\n> specpool(abies.myk.com[sample(x=1:nrow(abies.myk.com), size=i),]),\n> simplify=TRUE)\n>   subsample.abies.myk <- matrix(unlist(sample.raw.abies.myk),\n> nrow=9, ncol=reps)\n>   rownames(subsample.abies.myk) <- names(sample.raw.abies.myk)\n>   res.abies.myk[i, ] <- rowMeans(subsample.abies.myk)\n> }\n>\n> It works fine. For small data sets and many replications, curves\n> shapes are in concordance with the EstimateS output. For larger data\n> however, calculations with high values of \"reps\" would take hours to\n> days. If you use small values for \"reps\" instead the curves will\n> appear jagged and are often not publishable.\n>\n> Does any one know of alternatives to display estimator curves in R?\n>\n> Thanks\n> Martin\n> __________\n>\n> Dr. Martin Unterseher\n> Universität Greifswald\n> Institut für Botanik und Landschaftsökologie\n> Lehrstuhl für Allgemeine und Spezielle Botanik\n> Grimmer Str. 88\n> 17487 Greifswald\n>\n> Tel. 03834 / 864184\n> Fax. 03834 / 864114\n>\n> http://www.botanik.uni-greifswald.de/100.html\n> http://dgfm-ev.de/index.php?id=munterseher\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n> __________\n>\n> Dr. Martin Unterseher\n> Universität Greifswald\n> Institut für Botanik und Landschaftsökologie\n> Lehrstuhl für Allgemeine und Spezielle Botanik\n> Grimmer Str. 88\n> 17487 Greifswald\n>\n> Tel. 03834 / 864184\n> Fax. 03834 / 864114\n>\n> http://www.botanik.uni-greifswald.de/100.html\n> http://dgfm-ev.de/index.php?id=munterseher\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n>\n> -- \n> In God we trust, all others bring data.\n\n__________\n\nDr. Martin Unterseher\nUniversität Greifswald\nInstitut für Botanik und Landschaftsökologie\nLehrstuhl für Allgemeine und Spezielle Botanik\nGrimmer Str. 88\n17487 Greifswald\n\nTel. 03834 / 864184\nFax. 03834 / 864114\n\nhttp://www.botanik.uni-greifswald.de/100.html\nhttp://dgfm-ev.de/index.php?id=munterseher\n\n\n\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear all,\nhere are the test data and a test sweave example. I hope it works\n\n\tSpecies.1\tSpecies.2\tSpecies.3\tSpecies.4\tSpecies.5\tSpecies.6\tSpecies.7\t \nSpecies.8\tSpecies.9\tSpecies.10\nSample.1\t0\t0\t0\t0\t0\t",
       "thread_id": "thread-33f40ac01b5e",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001855.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001855.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/14c61836/attachment.pl"
+      ]
     },
     {
       "id": "msg-e393871de126",
@@ -1175,12 +1232,15 @@
       "references": [
         "<4D399279.4030201@icman.csic.es>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/9045b347/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/9045b347/attachment.pl>",
+      "body_plain": "Hi, maybe something like this should do the trick:\n\n          n <- nrow(x)\n\n>         txt <- paste(\"rho=\", txt, \"\\np=\",pval, \"n=\", n, sep=\"\")\n\n\nHTH\nLuciano\n\n\n2011/1/21 Maria Dulce Subida <mdsubida at icman.csic.es>\n\n> Dear all,\n>\n> I have a script (please see below) that gives a scatter plot matrix on\n> the upper panel, and the spearman rho and probability values on the\n> lower panel. It also gives the density function of each variable in the\n> diagonal, adds a smoother and a linear regression line to each scatter\n> plot, and puts significant spearman coefficient values in red.\n> Now I would like to add to the lower panel information, the value of\n> n=number of observations used to calculate the spearman correlation\n> coefficient. Does anyone know I could I add that parameter to my\n> function panel.cor?\n>\n> Thank you!\n>\n> Kind regards,\n>\n> Dulce\n>\n> ################\n>\n> panel.cor <- function (x, y,method=\"spearman\",digits=2,...)\n> {\n>         points(x,y,type=\"n\");\n>         usr <- par(\"usr\"); on.exit(par(usr))\n>         par(usr = c(0, 1, 0, 1));\n>         correl <- cor.test(x, y,method=method);\n>         r=correl$estimate;\n>         pval=correl$p.value;\n>         color=\"black\";\n>         if (pval<0.05) color=\"red\";\n>         txt <- format(r,digits=2)\n>         pval <- format(pval,digits=2)\n>\n           n <- nrow(x)\n\n>         txt <- paste(\"rho=\", txt, \"\\np=\",pval, \"n=\", n, sep=\"\")\n>         text(0.5, 0.5, txt,col=color)\n> }\n>\n> scatterplot.matrix (~ var1 + var2 + var3 , data=mydata,\n>                                 main=\"Mydata\", smooth=TRUE,\n> lower.panel=panel.cor, pch=20, cex=0.5,\n> col=c(\"red\",\"black\"),cex.labels=1, font.labels=2, lwd=0.5)\n>\n>\n>\n>\n>\n>        [[alternative HTML version deleted]]\n>\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi, maybe something like this should do the trick:\n\n          n <- nrow(x)\n\n>         txt <- paste(\"rho=\", txt, \"\\np=\",pval, \"n=\", n, sep=\"\")\n\n\nHTH\nLuciano\n\n\n2011/1/21 Maria Dulce Subida <mdsubida at ",
       "thread_id": "thread-406d4baeb063",
       "thread_depth": 1,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001856.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001856.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/9045b347/attachment.pl"
+      ]
     },
     {
       "id": "msg-9aa2af7b754a",
@@ -1195,12 +1255,15 @@
         "<4D399279.4030201@icman.csic.es>",
         "<AANLkTikPaCcpTNMuG0EtiT+=nzZ4H+CZUx5ggv9Qz4yj@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/e69a99e7/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/e69a99e7/attachment.pl>",
+      "body_plain": "Hi Luciano,\n\nThank you for your suggestion. However I'm afraid it will not work, \nsince the actual number of observations used by cor.test() is not the \ntotal number of observations (nrow(x))  I have.\ncor.test() omits observations with NAs in x or in y, which do actually \noccur in my data sets.\n\nKind regards,\n\nDulce\n\n\nEl 21/01/2011 16:13, Luciano Selzer escribió:\n> Hi, maybe something like this should do the trick:\n>           n <- nrow(x)\n>\n>             txt <- paste(\"rho=\", txt, \"\\np=\",pval, \"n=\", n, sep=\"\")\n>\n>\n> HTH\n> Luciano\n>\n>\n> 2011/1/21 Maria Dulce Subida <mdsubida at icman.csic.es \n> <mailto:mdsubida at icman.csic.es>>\n>\n>     Dear all,\n>\n>     I have a script (please see below) that gives a scatter plot matrix on\n>     the upper panel, and the spearman rho and probability values on the\n>     lower panel. It also gives the density function of each variable\n>     in the\n>     diagonal, adds a smoother and a linear regression line to each scatter\n>     plot, and puts significant spearman coefficient values in red.\n>     Now I would like to add to the lower panel information, the value of\n>     n=number of observations used to calculate the spearman correlation\n>     coefficient. Does anyone know I could I add that parameter to my\n>     function panel.cor?\n>\n>     Thank you!\n>\n>     Kind regards,\n>\n>     Dulce\n>\n>     ################\n>\n>     panel.cor <- function (x, y,method=\"spearman\",digits=2,...)\n>     {\n>             points(x,y,type=\"n\");\n>             usr <- par(\"usr\"); on.exit(par(usr))\n>             par(usr = c(0, 1, 0, 1));\n>             correl <- cor.test(x, y,method=method);\n>             r=correl$estimate;\n>             pval=correl$p.value;\n>             color=\"black\";\n>             if (pval<0.05) color=\"red\";\n>             txt <- format(r,digits=2)\n>             pval <- format(pval,digits=2)\n>\n>            n <- nrow(x)\n>\n>             txt <- paste(\"rho=\", txt, \"\\np=\",pval, \"n=\", n, sep=\"\")\n>             text(0.5, 0.5, txt,col=color)\n>     }\n>\n>     scatterplot.matrix (~ var1 + var2 + var3 , data=mydata,\n>                                     main=\"Mydata\", smooth=TRUE,\n>     lower.panel=panel.cor, pch=20, cex=0.5,\n>     col=c(\"red\",\"black\"),cex.labels=1, font.labels=2, lwd=0.5)\n>\n>\n>\n>\n>\n>            [[alternative HTML version deleted]]\n>\n>     _______________________________________________\n>     R-sig-ecology mailing list\n>     R-sig-ecology at r-project.org <mailto:R-sig-ecology at r-project.org>\n>     https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Luciano,\n\nThank you for your suggestion. However I'm afraid it will not work, \nsince the actual number of observations used by cor.test() is not the \ntotal number of observations (nrow(x))  I have.",
       "thread_id": "thread-406d4baeb063",
       "thread_depth": 2,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001857.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001857.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110121/e69a99e7/attachment.pl"
+      ]
     },
     {
       "id": "msg-66658062c5f5",
@@ -1292,12 +1355,15 @@
         "<4D38761C.9040902@gmail.com>",
         "<4D388449.7050708@stat.colostate.edu>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110122/618d8d5f/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110122/618d8d5f/attachment.pl>",
+      "body_plain": "Phillip and Ben,\n\nThanks a bunch. I now understand why sequential and marginal results are not\nthe same, although I have to read up a little on the \"contrast\" that Ben\nmentioned.\n\nThanks for the clarification.\n\nOn Thu, Jan 20, 2011 at 12:51 PM, Phillip Chapman <\npchapman at stat.colostate.edu> wrote:\n\n> Basil,\n>\n> I think that the issue is how lme (and R generally) parameterizes factorial\n> models.  The \"marginal\" anova fits each effect after the others.  That does\n> not produce what SAS calls type III sums of squares unless the model has no\n> interactions or you use the \"sum to zero\" parameterization.\n>\n> Consider a tiny example:\n>\n> A  B\n> 1  1\n> 1  2\n> 2  1\n> 2  2\n>\n> The default R design matrix will be:\n>\n> int    A     B    A:B\n>  1    0      0     0\n>  1    0      1     0\n>  1    1      0     0\n>  1    1      1     1\n>\n> Fitting columns sequentially gives the usual A, B and A:B sums of squares.\n> Fitting these \"marginally\", the B column will be added last, thus the anova\n> will compare the full model to the model with only the int, A and A:B\n> columns.  With only those three columns the model is constrained so that the\n> first row A=1,B=1 has the same mean as the second row A=1,B=2, so the\n> equality of those two means is the hypothesis tested.  That is not the same\n> hypothesis as the type III B hypothesis.  The type III B null hypothesis is\n> that the average of the means for rows 1 and 3 equals the average of the\n> means for rows 2 and 4 (e.g. B low vs B high).\n>\n> If you use the contr.sum option, then the design matrix will be:\n>\n> int    A     B    A:B\n>  1    -1    -1     1\n>  1    -1     1    -1\n>  1    1     -1   -1\n>  1    1      1     1\n>\n> These columns are orthogonal, so the order of fit does not matter and\n> sequential SS's equal marginal SS's\n>\n> Phil Chapman\n>\n>\n> On 1/20/2011 10:51 AM, Ben Bolker wrote:\n>\n>> On 11-01-20 12:24 PM, Iannone, Basil wrote:\n>>\n>>> Dear R users,\n>>>\n>>> I am having a problem with interpreting \"anova\" results of a linear mixed\n>>> effects model.\n>>>\n>>> The data I am analyzing is from study that was set up as a randomized\n>>> block design with two factors at two levels. The model is:\n>>>\n>>>        m1<- lme(Y~A*B, random = ~1|Block)\n>>>\n>>> The design is completely balanced and no data are missing. When I run a\n>>> sequential anova I get a p-value = 0.02 for factor B. When I run a\n>>> marginal anova (specified by \"type = \"marginal\"\"), I get a p-value = 0.29\n>>> for factor B. The model summary (\"summary (m1)\" ) agrees with the\n>>> marginal\n>>> test and shows a p-value = 0.29 for factor B. Further when I graph values\n>>> of Y against levels of B, I see no difference.\n>>>\n>>> I thought that sequential and marginal anovas should produce the same\n>>> results when the design is balanced. Can someone please explain to me why\n>>> the results of the \"anova(m1)\" differ from the results of \"anova(m1, type\n>>> = \"marginal\")\" and \"summary(m1).\"\n>>>\n>>> Thanks for your help,\n>>>\n>>    Haven't spent a lot of time thinking this through, but I'm guessing\n>> that the problem is with the interaction term.\n>>    Can you give a reproducible example (to save me the trouble of making\n>> one up)?\n>>\n>> _______________________________________________\n>> R-sig-ecology mailing list\n>> R-sig-ecology at r-project.org\n>> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>>\n>\n>\n\n\n-- \nBasil Iannone\nUniversity of Illinois at Chicago\nDepartment of Biological Sciences (MC 066)\n845 W. Taylor St.\nChicago, IL  60607-7060\nEmail: bianno2 at uic.edu\nPhone: 312-355-3231\nFax: 312-413-2435\nhttp://www2.uic.edu/~bianno2\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Phillip and Ben,\n\nThanks a bunch. I now understand why sequential and marginal results are not\nthe same, although I have to read up a little on the \"contrast\" that Ben\nmentioned.\n\nThanks for the clari",
       "thread_id": "thread-c4d543a4ffc7",
       "thread_depth": 3,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001862.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001862.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110122/618d8d5f/attachment.pl"
+      ]
     },
     {
       "id": "msg-2d345f4a6573",
@@ -1442,12 +1508,15 @@
         "<568B3B76-DD6B-4F12-97FC-9F16E7B620DF@me.com>",
         "<AANLkTi=VZfjHNgZshsmjcARuJR37jGRaQr7pZWS_M5NN@mail.gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110125/19678cf4/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110125/19678cf4/attachment.pl>",
+      "body_plain": "Thanks Pedro and Zoltan, that is very much appreciated.\n\nI agree the relationship between maximum x and latitude is the strongest. \n\nTo put \"x\" into context, it is plant functional diversity. I have accounted for species richness i.e there are more plants near the equator therefore if it is not accounted for there will ultimately be more functional diversity.\n\nSo the fact, despite species number being accounted for it is interesting that this pattern still occurs.\n\nI have two question if you don't mind?\n\n1. My data is based on WWF Eco-regions, and this probably introduces spatial autocorrelation into the mix, can this be accounted for in quantile regression?\n\n2. I have another variable i wish to model phylogenetic diversity - i want to see - if the patterns observed are the same and try and quantify it. I.e is there a method to describe (mathematically)  the line so i can compare?\n\nThank,\n\nPeter\n\n\nOn 25 Jan 2011, at 19:55, Pedro Lima Pequeno wrote:\n\nHi, Peter.\n \nX values seem to be higher near the Equator, on average. Nevertheless, the strongest relation seems to be between maximum values of X and latitude. That is, perhaps something associated with latitude limits the potential size of X. I would try a quantile regression model. Quantile regression allows you to fit regression lines through any quantile of the response variable (standard regression relates only the mean value of the response to predictors). For modeling upper values of the response, you could use upper quantiles such as 95% or 99%. You could try a non linear quantile regression model, since the relationship you are interested in is non-monotonic. Package \"quantreg\" has functions for fitting quantile regression models in a frequentist framework. Of course, there are several functions for modeling non-monotonic relations. Also, you need to guess starting values for model parameters, since model fitting is iterative.\n \nHere is some code just for illustration; there are probably better functions for modeling this particular relation.\nlibrary(quantreg)\n \nplot(latitude, x)\n \nmod = nlrq(x ~ -a*latitude^2*exp(-b*latitude) + c, start = c(a=0.00001,b = 0.01,c = 0.015), tau = 0.95)\n#  obs.: this function is an adaptation of Ricker's standard model for non-monotonic ecological relations\n\nsummary(mod)\nnewvalues = seq(-40, 80, length = 478)\nlines(newvalues, predict(mod, list(latitude=newvalues)), col = 3, lw = 2)\n \nHope it helps,\nPedro A. C. Lima Pequeno\n \n2011/1/25 Peter Francis <peterfrancis at me.com>\n\nDear List,\n\nI am looking at the relationship between a quantity and the distance from the equator.\n\nAsking the question does latitude effect the value of x - i.e is x higher or lower as you move away from the equator\n\nI have plotted x against latitude(plot(latitude,x))  and there seems to be something there, however i was wanting to investigate in a more quantitative way. I had thought of models but my experience is relatively low and i am unsure what method would be best for my pattern of data. Any advice would be greatly appreciated.\n\n###data###\nx <-\nc(0.015348175, 0.014102894, 0.013158871, 0.012796208, 0.012547266,\n0.012499614, 0.011580142, 0.011274077, 0.011026623, 0.010934845,\n0.010866659, 0.01075808, 0.010581273, 0.010548757, 0.010415088,\n0.010395809, 0.010328903, 0.009754356, 0.009652272, 0.009533795,\n0.009179444, 0.009141853, 0.009140609, 0.008882345, 0.008671247,\n0.008426542, 0.008407421, 0.008248698, 0.008228469, 0.008169984,\n0.008158929, 0.007978867, 0.007893121, 0.007886193, 0.007785512,\n0.007613687, 0.007591255, 0.007542375, 0.007532009, 0.007497797,\n0.007487081, 0.007469353, 0.007369905, 0.007169296, 0.007122561,\n0.007070457, 0.006975594, 0.006948638, 0.006805148, 0.006791063,\n0.006783499, 0.006733242, 0.006733242, 0.006701148, 0.006691116,\n0.006672124, 0.006660939, 0.006571554, 0.006552405, 0.006536592,\n0.006523875, 0.006480761, 0.006471293, 0.006454864, 0.006365157,\n0.006356432, 0.006323978, 0.006260515, 0.006188042, 0.006187938,\n0.006181114, 0.006181114, 0.006079529, 0.006017497, 0.006008061,\n0.005953895, 0.005920824, 0.005899296, 0.00589274, 0.005862688,\n0.005853862, 0.005811885, 0.005778694, 0.005736366, 0.005686819,\n0.005686362, 0.005621206, 0.005607628, 0.005567988, 0.005532497,\n0.005493249, 0.005433072, 0.005429215, 0.005420174, 0.005408397,\n0.005382781, 0.005304967, 0.005298177, 0.005273268, 0.005158224,\n0.005135415, 0.005092708, 0.005048508, 0.005048015, 0.005044948,\n0.005028163, 0.005028163, 0.005014717, 0.004967595, 0.00489943,\n0.004887419, 0.004887419, 0.004887419, 0.004861756, 0.004842995,\n0.00476598, 0.004734517, 0.004689229, 0.004657052, 0.004624096,\n0.004618037, 0.00460988, 0.004606092, 0.004531219, 0.004527051,\n0.004506577, 0.004482963, 0.004476035, 0.004476035, 0.004476035,\n0.004476035, 0.004476035, 0.004419306, 0.004413048, 0.004366397,\n0.00434048, 0.00434048, 0.004302982, 0.004296803, 0.004290441,\n0.004285631, 0.004275535, 0.004254518, 0.004207445, 0.004173182,\n0.004155142, 0.004134336, 0.004110218, 0.004106806, 0.004105657,\n0.004091356, 0.004018147, 0.004003681, 0.003994852, 0.003993325,\n0.003983061, 0.003966886, 0.003918854, 0.003917177, 0.003891429,\n0.003842899, 0.003842899, 0.003834539, 0.003832233, 0.003818814,\n0.003789309, 0.003707218, 0.003697771, 0.003668882, 0.003668882,\n0.003602582, 0.003602582, 0.003602582, 0.003591953, 0.003537737,\n0.003513987, 0.003464507, 0.003459366, 0.003437983, 0.003400975,\n0.003377825, 0.003366575, 0.003285648, 0.003270708, 0.003260783,\n0.00318234, 0.00318234, 0.003151494, 0.0031, 0.003094114, 0.003082046,\n0.003081427, 0.003069106, 0.003069106, 0.003052216, 0.003036596,\n0.003035941, 0.003032508, 0.003023303, 0.003020964, 0.003019848,\n0.002981245, 0.002978949, 0.002969224, 0.002958385, 0.002955199,\n0.002954933, 0.002954933, 0.002950752, 0.002918346, 0.002906109,\n0.002902979, 0.002901011, 0.002896504, 0.002877516, 0.002849816,\n0.002843091, 0.002828998, 0.002817939, 0.002816043, 0.002803956,\n0.002798723, 0.002790437, 0.002777884, 0.002777884, 0.002777884,\n0.002777884, 0.002777884, 0.002777884, 0.002777884, 0.002777555,\n0.002776965, 0.002771398, 0.002752354, 0.00272757, 0.002717057,\n0.002701395, 0.002687727, 0.002635401, 0.002635401, 0.002635401,\n0.002635401, 0.002631182, 0.002623146, 0.002616387, 0.002584465,\n0.002578125, 0.002577877, 0.002548996, 0.002488092, 0.002476084,\n0.002474694, 0.002451195, 0.002443587, 0.002442069, 0.002439442,\n0.002439442, 0.002425784, 0.002418847, 0.002409969, 0.002404593,\n0.002401727, 0.002401727, 0.002401727, 0.002400578, 0.002364737,\n0.00235511, 0.002326208, 0.002326208, 0.002323944, 0.002317546,\n0.002275955, 0.002261807, 0.002219485, 0.002217373, 0.002210748,\n0.002208339, 0.002199135, 0.002192113, 0.002171856, 0.002171856,\n0.002156217, 0.002126684, 0.002090031, 0.002086738, 0.002086209,\n0.002078779, 0.002047235, 0.002040628, 0.002036937, 0.002036773,\n0.002036773, 0.002017393, 0.002009864, 0.001999733, 0.001998787,\n0.001990045, 0.001986944, 0.001975691, 0.001971625, 0.001945183,\n0.001936149, 0.001926163, 0.001919142, 0.001897503, 0.001897503,\n0.001887366, 0.001866615, 0.001865528, 0.001860441, 0.001851106,\n0.001850471, 0.001807395, 0.001807281, 0.001794796, 0.001790554,\n0.001778587, 0.001773777, 0.001770118, 0.001726876, 0.001716987,\n0.001705133, 0.001692117, 0.001675794, 0.001605834, 0.001605667,\n0.001598937, 0.001575879, 0.001565384, 0.001546179, 0.001534643,\n0.001525447, 0.001522089, 0.001502833, 0.001481944, 0.001473202,\n0.001452109, 0.001449217, 0.001446246, 0.001446246, 0.001422652,\n0.001422652, 0.001375286, 0.001361211, 0.001356151, 0.001347116,\n0.001339627, 0.001339627, 0.00133279, 0.001331517, 0.001331517,\n0.001331517, 0.001331517, 0.001322368, 0.001306458, 0.001296254,\n0.001257304, 0.001238302, 0.001238302, 0.001238302, 0.001223937,\n0.001191425, 0.001189038, 0.001180128, 0.001176136, 0.001144119,\n0.001122304, 0.001109047, 0.001072805, 0.001072805, 0.001072805,\n0.001072805, 0.001072805, 0.001072805, 0.001072805, 0.001072805,\n0.001072805, 0.001072805, 0.001072805, 0.001072805, 0.001072805,\n0.001072805, 0.001072805, 0.001072805, 0.001072805, 0.001072805,\n0.001072805, 0.001072805, 0.001060498, 0.001051146, 0.001051146,\n0.001015594, 0.000997827, 0.000979584, 0.000979125, 0.000959362,\n0.000932058, 0.000927945, 0.000927867, 0.000909772, 0.000898857,\n0.000891068, 0.000816096, 0.000804403, 0.000783013, 0.000781831,\n0.000750918, 0.000744673, 0.000739314, 0.000738508, 0.000735344,\n0.000712073, 0.000679757, 0.000679757, 0.000674523, 0.000636956,\n0.000629264, 0.000623775, 0.000621972, 0.000620247, 0.000617503,\n0.000615432, 0.000580207, 0.000548295, 0.000540084, 0.000527764,\n0.000518084, 0.000510753, 0.000507758, 0.000493544, 0.000490135,\n0.000468122, 0.000468122, 0.000466777, 0.000440226, 0.000420408,\n0.000409094, 0.000393234, 0.000373562, 0.000373562, 0.000373562,\n0.000373562, 0.000373562, 0.000373562, 0.000373562, 0.000373562,\n0.000347605, 0.000344458, 0.000343825, 0.000335533, 0.000315615,\n0.000313374, 0.000313148, 0.000246113, 0.000239747, 0.000227964,\n0.000224992, 0.000215867, 0.000197565, 0.000196167, 0.000171385,\n0.000170994, 0.000156109, 0.000129517, 0.000126808, 0.000126808,\n9.35e-05, 6.5e-05, 6.5e-05, 5.95e-05, 5.59e-05, 4.36e-05, 4.36e-05,\n4.36e-05, 3.74e-05, 3.34e-05, 2.14e-05, 2.02e-05)\n\nlatitude <- c(4.845, -21.9, 6.395, 19.79, 5.385, -25.565, -27.83, 19.93,\n-10.995, 6.255, 7.035, 2.51, 15.16, 20.985, -29.59, -10.12, 27.655,\n14.405, -0.165, 24.04, 20.765, -12.385, -12.03, 9.955, 11.46,\n3.425, 1.01, -4.22, 12.52, 36.325, 8.46, 22.655, 15.11, 41.925,\n34.395, 12.12, -30.375, -0.535, 17.47, -11.415, 30.11, 4.84,\n-32.045, -18.435, 36.37, 20.55, 2.395, 1.895, -1.17, 35.7, 24.72,\n-1.365, -1.035, 37.045, 17.745, 0.955, -15.34, 4.65, -22.675,\n-34.015, -23.56, 39.615, -4.415, 28.98, 36.96, 16.39, 41.26,\n-0.75, 18.58, 4.395, -32.605, -0.365, 4.975, -17, 40.67, 7.43,\n5.07, 2.125, 1.25, 21.28, 3.695, -6.16, 11.13, -35.655, 21.905,\n10.54, 5.145, 1.615, 10.29, 13.345, 42.71, 10.405, 39.17, -6.625,\n7.845, 19.115, 23.295, 18.065, 7.31, -5.53, 56.1, 10.23, -25.705,\n44.31, 17.135, -20.11, -6.87, -5.21, 15.635, -11.675, -46.71,\n39, 42.845, -11.505, 18.855, -6.895, 29.55, 11.865, 16.875, -32.09,\n-14.44, 32.46, 33.49, -11.655, 7.275, -12.305, -3.35, -34.16,\n-3.855, 33.455, 38.615, 54.455, 10.63, 30.775, 37.525, 25.325,\n30.935, 43.085, 7.69, -2.235, 11.225, 10.51, 22.26, 9.005, 40.255,\n-11.045, 6.33, -1.46, 33.385, -26.69, 9, 29.405, -29.125, 6.57,\n34.56, -4.67, -17.94, 28.615, -28.205, 10.95, -2.545, 30.49,\n26.935, -4.45, -7.855, -14.835, 29.88, 7.95, 34.84, 39.8, -28.745,\n38.275, 43.15, -19.85, 10.695, 0.43, -0.78, -5.69, -5.285, 38.085,\n0.685, -3.385, -2.515, 15.44, -20.16, 40.185, 50.705, -6.71,\n-37.8, 28.555, -1.58, -0.065, -10.97, 36.505, 48.14, -19.835,\n-5.755, 18.3, 14.4, 7.28, 6.965, 36.95, 24.62, -29.885, 16.33,\n10.795, -12.5, -0.58, -7.085, 14.885, -14.515, 0.53, 5.84, -32.88,\n29.945, -13.44, 23.045, 65.91, 31.525, 20.04, 17.94, -7.855,\n-27.86, -8.355, 15.41, 18.165, 18.425, 47.655, 51.59, 56.745,\n-2.39, -42.475, 18.05, -14.01, 23.055, -42.19, -24.14, 26.935,\n66.305, 68.565, 71.13, 74.72, 38.305, -6.09, -14.18, 31.73, 5.025,\n-4.035, -22.18, -16.525, -15.675, 37.645, 23.95, 36.48, -12.39,\n47.24, 48.425, -37.45, 18.13, 6.78, 22.71, -40.75, -17.15, 30.16,\n41.445, -1.52, 8.795, -2.91, 27.955, 22.075, -12.75, -19.575,\n-20.53, 12.665, -7.415, -12.54, 16.46, 23.89, 41.805, -13.615,\n-1.475, 38.37, 33.15, 46.965, 33.04, 18.575, -6.08, 10.935, 19.14,\n17.165, 38.645, 40.49, 25.725, 25.785, 16.285, 46.095, 8.95,\n15.15, -18.045, 45.095, 26.115, 37.54, -0.295, -2.77, -3.445,\n46.19, -10.32, 11.33, -6.09, -5.435, 17.76, -26.505, -24.855,\n-2.89, 31.965, 42.825, -19.13, 30.43, 29.525, -13.855, 22.8,\n0.29, 33.635, 19.055, 37.14, 4.755, -5.4, -1.7, 26.87, -7.1,\n19.81, 33.005, 15.805, 1.15, 42.47, 10.73, -15.695, 32.38, 27.93,\n45.155, -26.425, -21.545, 36.165, -21.265, 5.775, 20.55, -0.885,\n2.82, 8.16, -7.37, 19.11, 39.72, 40.5, -7.91, 19.43, 23.605,\n16.935, -11.65, 8.99, 9, 18.845, 41.575, 33.51, -29.935, 37.055,\n-28.54, -31.89, 18.34, -32.745, -15.29, -0.96, 0.41, 3.235, 4.12,\n12.505, 22.675, 26.05, 35.625, 38.825, 39.015, 40.825, 42.075,\n43.48, 44.33, 46.735, 53.115, 57.18, 60.945, 42.555, 21.825,\n30.85, 37.205, -26, -28.705, -25.1, 13.195, 22.515, 17.925, -24.31,\n-3.495, 3.08, 20.91, -34.72, 18.98, 22.035, 41.88, -1.83, 7.37,\n17.175, 39.735, -21.705, 4.835, -28.215, -21.96, 29.755, -5.74,\n32.945, 35.14, 21.065, 20.885, -19.72, -5.18, 8.745, 36.335,\n17.01, 46.885, 16.285, 27.935, -36.145, -0.85, 12.935, 18.34,\n26.99, 26.335, 14.32, 32.01, 5.675, -25.82, -32.665, 4.035, 14.055,\n16.65, 20.585, 30.365, 38.725, 46.025, -42.595, 81.835, -32.405,\n24.455, 12.87, 30.595, 20.505, -29.405, 19.99, 42.565, 6.78,\n12.84, 39.43, 20.065, 35.13, 35.91, 18.39, -34.33, -5.805, 20.715,\n18.18, 19.575, 20.535, 44.73, 42.605, -13.615, 7.745, 11.37,\n9.455, 42.595, 31.305, 9.835)\n\n_______________________________________________\nR-sig-ecology mailing list\nR-sig-ecology at r-project.org\nhttps://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Thanks Pedro and Zoltan, that is very much appreciated.\n\nI agree the relationship between maximum x and latitude is the strongest. \n\nTo put \"x\" into context, it is plant functional diversity. I have a",
       "thread_id": "thread-6e5d7122bb2b",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001870.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001870.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110125/19678cf4/attachment.pl"
+      ]
     },
     {
       "id": "msg-f1170171892e",
@@ -1481,12 +1550,15 @@
       "subject_clean": "accessing glmer model fit and random component",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110126/e89328a9/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110126/e89328a9/attachment.pl>",
+      "body_plain": "Dear list;\nI am working on a GLMM of wading bird capture rates as a function of species, group size and prey density:\nGlobal_model.glmer <- glmer(CAPTURES~ grpCat*SPECIES + fish_density + (1|SAMPLE) , offset = log(seconds/60), family = poisson, data=Heron.data.nz)\n\nI'm trying to access: 1) the necessity of the random effect, and 2) the overall fit of the model.\n\nFor the first question, I would like to compare the models with and without the random term.  However, I can't figure out how to get glmer() to fit the model without the random component.  I realize that I can fit such a model using glm(), but I'm worried that the likelihood's won't be comparable, due to a different omission of constant terms in the likelihoods between packages\n\nFor the second problem, I've tried a qq plot of the residuals provided by glmer(), but I'm not sure this is the correct approach.\n\nAny suggestions would be greatly appreciated.\n\nEric D. Stolen, Ph.D.\nMail Code: IHA-300\nKennedy Space Center, FL  32899\noffice: 321-476-4119; cell: 321-480-6799; fax: 321-853-2939; email: eric.d.stolen at nasa.gov\n\n\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Dear list;\nI am working on a GLMM of wading bird capture rates as a function of species, group size and prey density:\nGlobal_model.glmer <- glmer(CAPTURES~ grpCat*SPECIES + fish_density + (1|SAMPLE) ,",
       "thread_id": "thread-441dfacbf63e",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001872.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001872.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110126/e89328a9/attachment.pl"
+      ]
     },
     {
       "id": "msg-7dc58e7e90c2",
@@ -1498,12 +1570,15 @@
       "subject_clean": "Problem on figuring which weights I should use in a GLM()",
       "in_reply_to": null,
       "references": [],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110126/0ca7da9d/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110126/0ca7da9d/attachment.pl>",
+      "body_plain": "Hi everyone,\n\ni'm using glm() to analyze a dataset where I have herbivory values expressed\nas percentage (values between 0 and 1).\nSome plants were sampled in 3 different occasions. The thing is that the\nnumber of sampled plants differs among the samples and I want to verify\nwhether herbivory % differs among the samples.\nPretty simple, right?\n\nBut i'm facing a problem when choosing weights: should I give column\n\"weight\" the number of species in that same sample, like this>\n\nSample  //    Herbivory    //    Weight\nJan                   ..                     3\nJan                                          3\nJan                                          3\nFeb                                          4\nFeb                                          4\nFeb                                          4\nFeb                                          4\nApr                                          5\nApr                                          5\nApr                                          5\nApr                                          5\nApr                                          5\n\nor should i leave weights out of the formula, as R supposedly takes it into\naccount?\n\njust as reference, im using glm(herbivory~sample, quasibinomial,\nweights=weight)\nand again, my data is already converted as proportions, so numbers aren't\nnoted as 2%, but as 0,02.\n\n\nThanks in advance and best wishes from Brazil.\n-----------------------------------------\nClaudio Magalhaes\nCientista Ambiental\nLIPA - Lab. de Interações Planta-Animal\nPrograma de Pós-Graduação em Biologia Vegetal - UFPE\n+558188694866\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi everyone,\n\ni'm using glm() to analyze a dataset where I have herbivory values expressed\nas percentage (values between 0 and 1).\nSome plants were sampled in 3 different occasions. The thing is that ",
       "thread_id": "thread-7dc58e7e90c2",
       "thread_depth": 0,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001873.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001873.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110126/0ca7da9d/attachment.pl"
+      ]
     },
     {
       "id": "msg-642f6e82a6ba",
@@ -1553,12 +1628,15 @@
       "references": [
         "<EB5B1F92-D2C2-44A0-A7B8-7696E6B3E609@gmail.com>"
       ],
-      "body_plain": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110127/e6e6494f/attachment.pl>",
-      "body_snippet": "An embedded and charset-unspecified text was scrubbed...\nName: not available\nURL: <https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110127/e6e6494f/attachment.pl>",
+      "body_plain": "Hi Chris,\n\nThe geoR package contains a variog function for creating variograms, and\nthis can be used to examine spatial structure in model residuals.\n Variograms provide another way to look for spatial dependence in data.\n\nI'm sure there's a function implementing Moran's I, but I don't know what it\nis offhand - you might try searching for it on rseek.org or the CRAN site.\n\nCheers,\n\nWill\n\n__________________________\nWill Fields\nwill_fields at ncsu.edu\nDepartment of Biology\nNorth Carolina State University\nhttp://www4.ncsu.edu/wrfield2/\n\nOn Thu, Jan 27, 2011 at 11:32 AM, Chris Mcowen <chrismcowen at gmail.com>wrote:\n\n> Dear List,\n>\n> I apologise if this is not the correct place to ask this, however as\n> ecologists' s i guess a high proportion of you would of had to deal with\n> spatial autocorrelation.\n>\n> First,\n>\n> I have seen a method that used a GAM and included the coordinates of the\n> grid cells ( sample locations, in my case this will be long&lat) as a smooth\n> factor to account for spatial autocorrelation.\n>\n> I was wondering if anybody here had done this as i can not find a example,\n> and am unsure how to structure the GAM.\n>\n> Second,\n>\n> Another spatial question -\n>\n> >> Spatial correlograms were constructed using Moran’s I coefficients at 10\n> distance classes.\n> >\n>\n> Once again, has anyone done anything like this?\n>\n> Thanks,\n>\n> Chris\n> _______________________________________________\n> R-sig-ecology mailing list\n> R-sig-ecology at r-project.org\n> https://stat.ethz.ch/mailman/listinfo/r-sig-ecology\n>\n\n\t[[alternative HTML version deleted]]",
+      "body_snippet": "Hi Chris,\n\nThe geoR package contains a variog function for creating variograms, and\nthis can be used to examine spatial structure in model residuals.\n Variograms provide another way to look for spatia",
       "thread_id": "thread-642f6e82a6ba",
       "thread_depth": 1,
       "month": "2011-01",
-      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001876.html"
+      "source_url": "https://stat.ethz.ch/pipermail/r-sig-ecology/2011-January/001876.html",
+      "restored_from": [
+        "https://stat.ethz.ch/pipermail/r-sig-ecology/attachments/20110127/e6e6494f/attachment.pl"
+      ]
     },
     {
       "id": "msg-b16b81e92699",
